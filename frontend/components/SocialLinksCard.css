@@ -1,0 +1,79 @@
+/* Desktop: lives in the hero aside below the testimonials.
+   Mobile: hidden there and shown at the end of the page instead. */
+.mobile-social-section {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .hero-side .social-links-card {
+    display: none;
+  }
+  .mobile-social-section {
+    display: block;
+    margin: 24px auto 0;
+    max-width: 560px;
+    width: 100%;
+  }
+  .mobile-social-section .social-links-card {
+    text-align: center;
+  }
+  .mobile-social-section .social-links-actions {
+    justify-content: center;
+  }
+}
+
+.mini-hero.social-links-card {
+  background: linear-gradient(135deg, #1c1917 0%, #451a03 60%, #1c1917 100%);
+  color: #fff;
+  min-height: auto;
+  padding: 18px;
+}
+
+.mini-hero.social-links-card .tag {
+  color: #fbbf24 !important;
+}
+
+.mini-hero.social-links-card h3 {
+  color: #fff;
+  margin: 10px 0 6px;
+  font-size: 18px;
+}
+
+.mini-hero.social-links-card p {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+}
+
+.social-links-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.social-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.social-link-btn:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.social-link-btn.telegram {
+  background: linear-gradient(135deg, #2aabee, #229ed9);
+}
+
+.social-link-btn.instagram {
+  background: linear-gradient(135deg, #f58529, #dd2a7b 60%, #8134af);
+}

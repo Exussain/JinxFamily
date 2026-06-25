@@ -1,0 +1,117 @@
+const SITE_NAME = 'نوبیکس شاپ';
+const SITE_TITLE = 'نوبیکس شاپ | فعال‌سازی محصولات آنلاین';
+const SITE_DESCRIPTION =
+  'خرید و فعال‌سازی قانونی محصولات دیجیتال: اشتراک ChatGPT و Gemini، کروپک و وی‌باکس فورتنایت، گیفت کارت و اشتراک‌های آنلاین — تحویل سریع، پرداخت امن و پشتیبانی ۲۴/۷';
+
+export const metadata = {
+  metadataBase: new URL('https://nubixshop.ir'),
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [
+    'نوبیکس شاپ', 'فعال‌سازی محصولات آنلاین', 'خرید اشتراک قانونی',
+    'اشتراک ChatGPT', 'خرید چت جی‌پی‌تی', 'اشتراک جیمینی', 'Gemini', 'هوش مصنوعی',
+    'وی‌باکس', 'وی باکس', 'V-Bucks', 'کروپک', 'بتل پس', 'استارتر پک', 'Fortnite', 'فورتنایت',
+    'گیفت کارت', 'گیفت کارت پلی‌استیشن', 'گیفت کارت استیم', 'اشتراک اسپاتیفای'
+  ],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'fa_IR',
+    url: 'https://nubixshop.ir',
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: SITE_NAME }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
+  icons: [
+    { rel: 'icon', url: '/web_logo.webp', type: 'image/webp' },
+    { rel: 'apple-touch-icon', url: '/web_logo.webp' },
+    { rel: 'shortcut icon', url: '/web_logo.webp' }
+  ],
+};
+
+import './globals.css';
+import { CartProvider } from "../lib/useCart";
+import { ThemeProvider } from "../components/ThemeProvider";
+import AnnouncementBar from "../components/AnnouncementBar";
+import Footer from "../components/Footer";
+import DeferredWidgets from "../components/DeferredWidgets";
+import AppShell from "../components/AppShell";
+
+const themeInitScript = `
+(() => {
+  try {
+    document.documentElement.dataset.theme = 'dark';
+  } catch (e) {
+    document.documentElement.dataset.theme = 'dark';
+  }
+})();
+`;
+
+
+const siteJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://nubixshop.ir/#organization',
+      name: SITE_NAME,
+      alternateName: 'NubixShop',
+      url: 'https://nubixshop.ir',
+      logo: 'https://nubixshop.ir/web_logo.webp',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://nubixshop.ir/#website',
+      name: SITE_NAME,
+      url: 'https://nubixshop.ir',
+      inLanguage: 'fa-IR',
+      publisher: { '@id': 'https://nubixshop.ir/#organization' },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://nubixshop.ir/?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="fa" dir="rtl" data-theme="dark" suppressHydrationWarning>
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+        />
+        {/* Preload the most-used Persian font weights (self-hosted) so text paints fast */}
+        <link rel="preload" href="/fonts/vazirmatn/vazirmatn-arabic-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/vazirmatn/vazirmatn-arabic-700.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <ThemeProvider>
+          <CartProvider>
+            <div className="snow-overlay" aria-hidden="true" />
+            <div className="snow-overlay snow-overlay-secondary" aria-hidden="true" />
+            <div className="site-shell">
+              <AppShell>{children}</AppShell>
+            </div>
+          </CartProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

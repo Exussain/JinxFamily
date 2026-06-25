@@ -1,0 +1,6 @@
+Django>=4.2,<5
+uvicorn
+requests
+python-dotenv
+resend>=0.6.0
+PySocks  # SOCKS5 support for requests/resend to bypass national filtering (127.0.0.1:10808)

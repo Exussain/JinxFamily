@@ -1,0 +1,22 @@
+{
+  "name": "nubixstore-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002 -H 0.0.0.0 --webpack",
+    "dev:https": "sh -c 'CERT_DIR=$(cd .. && pwd)/.certs; NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_EXTRA_CA_CERTS=\"$CERT_DIR/nubixshop-local.crt\" exec next dev -p 3002 -H 0.0.0.0 --experimental-https --experimental-https-key \"$CERT_DIR/nubixshop-local.key\" --experimental-https-cert \"$CERT_DIR/nubixshop-local.crt\" \"$@\"' --",
+    "build": "next build",
+    "start": "next start -p 3002"
+  },
+  "dependencies": {
+    "@hcaptcha/react-hcaptcha": "^1.16.0",
+    "https-proxy-agent": "^9.1.0",
+    "next": "^16.2.7",
+    "node-fetch": "^3.3.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
+}
