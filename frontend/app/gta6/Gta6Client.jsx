@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import TelegramContact from "../../components/TelegramContact";
@@ -42,6 +42,13 @@ export default function Gta6Client() {
   const [instantFee, setInstantFee] = useState(INSTANT_FEE);
   const [instantProductId, setInstantProductId] = useState(null);
   const [instant, setInstant] = useState(false); // buyer's choice
+
+  const [openFaqs, setOpenFaqs] = useState(() => []);
+  const toggleFaq = useCallback((index) => {
+    setOpenFaqs((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
+  }, []);
 
   useEffect(() => {
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -94,10 +101,28 @@ export default function Gta6Client() {
   const capHelp = isXbox ? "نوع اکانت چیست؟" : "ظرفیت چیست؟";
 
   const cover = platform.images[editionKey];
-  const price = pricing[editionKey]?.[capacityKey] || { toman: 0, originalToman: 0 };
+  const price = pricing[editionKey]?.[capacityKey] || { toman: 0, originalToman: 0, lira: 0 };
   const variantId = price.variant_id ?? null;
   const hasPrice = Number(price.toman) > 0;
   const hasDiscount = hasPrice && Number(price.originalToman) > Number(price.toman);
+
+  const faqItems = [
+    {
+      q: "مراحل کلی فعال‌سازی",
+      type: "intro",
+      content: ACTIVATION.intro,
+    },
+    ...platformCaps.map((c) => ({
+      q: `راهنمای فعال‌سازی ${c.fa}`,
+      type: "steps",
+      steps: ACTIVATION.steps[c.key] || [],
+    })),
+    {
+      q: isXbox ? "نکات مهم و ایمنی" : "نکات مهم و ایمنی برای همه ظرفیت‌ها",
+      type: "safety",
+      steps: ACTIVATION.safety[platformKey] || [],
+    },
+  ];
   const canBuy = hasPrice && !!productId && !!variantId;
   const showInstant = instantEnabled && Number(instantFee) > 0;
   const instantOn = showInstant && instant;
@@ -247,6 +272,7 @@ export default function Gta6Client() {
                     <>
                       {hasDiscount && <s className="gta-price-old">{faNum(price.originalToman)} تومان</s>}
                       <div className="gta-price">{faNum(totalToman)} <small>تومان</small></div>
+                      {Number(price.lira) > 0 && <div className="gta-price-lira">{faNum(price.lira)} <small>₺</small></div>}
                       {instantOn && <div className="gta-price-usd">شامل فعال‌سازی فوری (+{faNum(instantFee)})</div>}
                     </>
                   ) : (
@@ -337,7 +363,7 @@ export default function Gta6Client() {
                 </ul>
               </div>
             </div>
-            <div className="gta-edition-note">💡 {edition.note}</div>
+            {edition.note && <div className="gta-edition-note">💡 {edition.note}</div>}
           </div>
         </section>
 
@@ -351,12 +377,10 @@ export default function Gta6Client() {
           <div className="gta-cap-cards">
             {platformCaps.map((c) => {
               const risk = RISK_LABEL[c.risk] || RISK_LABEL.low;
-              const active = capacityKey === c.key;
               return (
-                <button
+                <div
                   key={c.key}
-                  className={`gta-cap-card ${active ? "active" : ""} ${c.recommended ? "rec" : ""}`}
-                  onClick={() => setCapacityKey(c.key)}
+                  className={`gta-cap-card ${c.recommended ? "rec" : ""}`}
                 >
                   <div className="gta-cap-card-head">
                     <span className="gta-cap-card-fa">{c.fa}</span>
@@ -368,45 +392,57 @@ export default function Gta6Client() {
                   </div>
                   <p className="gta-cap-card-text">{c.details}</p>
                   {c.recommended && <span className="gta-cap-card-rec">پیشنهاد فروشگاه</span>}
-                </button>
+                </div>
               );
             })}
           </div>
         </section>
 
-        {/* ───────────────────────── ACTIVATION ───────────────────────── */}
-        <section className="card gta-section">
+        {/* ───────────────────────── ACTIVATION / FAQ ───────────────────────── */}
+        <section id="activation" className="card gta-section">
           <div className="gta-sec-head">
             <span className="gta-sec-num">۰۴</span>
-            <h2>راهنمای فعال‌سازی</h2>
-            <div className="gta-mini-tabs">
-              {platformCaps.map((c) => (
-                <button
-                  key={c.key}
-                  className={`gta-mini-tab ${capacityKey === c.key ? "active" : ""}`}
-                  onClick={() => setCapacityKey(c.key)}
-                >
-                  {c.fa}
-                </button>
-              ))}
-            </div>
+            <h2>سوالات متداول و فعال‌سازی</h2>
           </div>
-          <p className="gta-p gta-overview">{ACTIVATION.intro}</p>
-          <ol className="gta-steps">
-            {(ACTIVATION.steps[capacityKey] || []).map((s, i) => (
-              <li key={i} className="gta-step">
-                <span className="gta-step-n">{faNum(i + 1)}</span>
-                <span className="gta-step-t">{s}</span>
-              </li>
-            ))}
-          </ol>
-          <div className="gta-safety">
-            <div className="gta-safety-title">{isXbox ? "نکات مهم و ایمنی" : "نکات مهم و ایمنی برای همه ظرفیت‌ها"}</div>
-            <ul className="gta-list warn">
-              {(ACTIVATION.safety[platformKey] || []).map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
+          <p className="gta-p gta-overview">در این بخش می‌توانید راهنمای نصب و فعال‌سازی مربوط به پلتفرم انتخابی خود را مشاهده نمایید.</p>
+          <div className="gta-faq-list">
+            {faqItems.map((item, index) => {
+              const isOpen = openFaqs.includes(index);
+              return (
+                <div key={index} className={`gta-faq-item ${isOpen ? "open" : ""}`} style={{ "--accent": edition.accent }}>
+                  <button
+                    className="gta-faq-q"
+                    onClick={() => toggleFaq(index)}
+                    aria-expanded={isOpen}
+                  >
+                    <span>{item.q}</span>
+                    <span className="gta-faq-icon">▼</span>
+                  </button>
+                  {isOpen && (
+                    <div className="gta-faq-a">
+                      {item.type === "intro" && <p>{item.content}</p>}
+                      {item.type === "steps" && (
+                        <ol className="gta-steps">
+                          {item.steps.map((s, i) => (
+                            <li key={i} className="gta-step">
+                              <span className="gta-step-n">{faNum(i + 1)}</span>
+                              <span className="gta-step-t">{s}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                      {item.type === "safety" && (
+                        <ul className="gta-list warn">
+                          {item.steps.map((s, i) => (
+                            <li key={i}>{s}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -419,6 +455,7 @@ export default function Gta6Client() {
             <span className="gta-sticky-edition">{edition.fa} · {capacity.fa}</span>
             <span className="gta-sticky-price">
               {hasPrice ? `${faNum(totalToman)} تومان` : "به‌زودی"}
+              {Number(price.lira) > 0 && <span className="gta-sticky-lira"> — {faNum(price.lira)} ₺</span>}
             </span>
           </div>
           <button className="gta-cta sm" onClick={handlePrimary} disabled={!canBuy} style={{ "--accent": edition.accent }}>
@@ -546,6 +583,8 @@ export default function Gta6Client() {
         .gta-price { font-size: 26px; font-weight: 900; color: #fff; }
         .gta-price small { font-size: 13px; font-weight: 800; color: #c4bfe0; }
         .gta-price-ask { font-size: 22px; font-weight: 900; color: var(--cyan); }
+        .gta-price-lira { font-size: 15px; font-weight: 800; color: #34d399; }
+        .gta-price-lira small { font-size: 11px; font-weight: 700; color: #34d399; }
         .gta-price-usd { font-size: 12px; font-weight: 700; color: #b9b4d8; }
         .gta-cta {
           flex: 1; min-width: 220px; padding: 15px 22px; border: none; border-radius: 14px; cursor: pointer;
@@ -642,6 +681,50 @@ export default function Gta6Client() {
           .gta-sticky-edition { font-size: 11.5px; font-weight: 800; color: #b9b4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           .gta-sticky-price { font-size: 14px; font-weight: 900; color: #fff; }
           .gta-cta.sm { flex: 0 0 auto; min-width: 0; padding: 12px 20px; font-size: 14px; }
+        }
+        /* FAQ styles */
+        .gta-faq-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+        .gta-faq-item {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 12px;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+        .gta-faq-item.open {
+          border-color: var(--accent);
+          background: rgba(255, 255, 255, 0.04);
+        }
+        .gta-faq-q {
+          width: 100%;
+          text-align: right;
+          padding: 16px 20px;
+          background: transparent;
+          border: none;
+          color: #fff;
+          font-weight: 600;
+          font-size: 1.05rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+        .gta-faq-q:hover { color: var(--accent); }
+        .gta-faq-icon {
+          font-size: 0.9rem;
+          transition: transform 0.3s ease;
+          color: rgba(255,255,255,0.4);
+        }
+        .gta-faq-item.open .gta-faq-icon {
+          transform: rotate(180deg);
+          color: var(--accent);
+        }
+        .gta-faq-a {
+          padding: 0 20px 20px;
+          color: rgba(255,255,255,0.8);
+          font-size: 0.95rem;
+          line-height: 1.7;
         }
       `}</style>
     </div>

@@ -13,6 +13,7 @@ const CAPS = [
   // PlayStation 5
   { key: "cap2", label: "PS5 — ظرفیت ۲ (پیشنهادی)" },
   { key: "cap3", label: "PS5 — ظرفیت ۳ (آنلاین)" },
+  { key: "full_ps5", label: "PS5 — کامل (روی اکانت خودتان)" },
   // Xbox Series X|S
   { key: "home", label: "Xbox — هوم (پیشنهادی)" },
   { key: "switch", label: "Xbox — سوییچ (اقتصادی)" },
@@ -20,6 +21,7 @@ const CAPS = [
 ];
 
 const grp = (n) => Number(n || 0).toLocaleString("en-US");
+const liraRateNum = (raw) => Math.round(Number(raw || 0) / 10) || 0;
 
 export default function Gta6AdminPage() {
   const [cfg, setCfg] = useState(null);
@@ -27,6 +29,8 @@ export default function Gta6AdminPage() {
   const [saving, setSaving] = useState(false);
   const [forbidden, setForbidden] = useState(false);
   const [toast, setToast] = useState(null);
+  const [liveLiraRate, setLiveLiraRate] = useState(0);
+  const [currencyRatesLoading, setCurrencyRatesLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -57,13 +61,36 @@ export default function Gta6AdminPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const res = await fetch(`/api/currency-rates`, { cache: "no-store", credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          const tryNum = Number(data?.try) || 0;
+          if (tryNum) setLiveLiraRate(tryNum);
+        }
+      } catch {} finally {
+        setCurrencyRatesLoading(false);
+      }
+    };
+    fetchRates();
+    const id = setInterval(fetchRates, 60000);
+    return () => clearInterval(id);
+  }, []);
+
   const setCell = (edition, cap, field, value) => {
     const num = Math.max(0, Number(String(value).replace(/[^\d]/g, "")) || 0);
     setCfg((prev) => {
       if (!prev) return prev;
       const pricing = { ...prev.pricing };
       const ed = { ...(pricing[edition] || {}) };
-      ed[cap] = { ...(ed[cap] || {}), [field]: num };
+      const cell = { ...(ed[cap] || {}) };
+      cell[field] = num;
+      if (field === "lira" && num > 0 && liraRateNum(liveLiraRate) > 0) {
+        cell.toman = num * liraRateNum(liveLiraRate);
+      }
+      ed[cap] = cell;
       pricing[edition] = ed;
       return { ...prev, pricing };
     });
@@ -112,7 +139,7 @@ export default function Gta6AdminPage() {
       <div className="g6-top">
         <div>
           <h1>🎮 مدیریت پیش‌خرید GTA VI</h1>
-          <p>قیمت هر نسخه و ظرفیت (تومان) و روشن/خاموش کردن پلتفرم ایکس‌باکس. قیمت‌ها مستقیماً روی واریانت‌های محصول اعمال می‌شوند.</p>
+          <p>قیمت هر نسخه و ظرفیت (تومان و لیر) و روشن/خاموش کردن پلتفرم ایکس‌باکس. قیمت‌ها مستقیماً روی واریانت‌های محصول اعمال می‌شوند.</p>
         </div>
         <div className="g6-links">
           <Link href="/panel/admin" className="g6-link">→ پنل مدیریت</Link>
@@ -168,17 +195,26 @@ export default function Gta6AdminPage() {
             </span>
           </div>
 
+          <div className="g6-card">
+            <div className="g6-rate-bar">
+              <span>نرخ لحظه‌ای لیر:</span>
+              <strong>{currencyRatesLoading ? "..." : `${liraRateNum(liveLiraRate).toLocaleString("fa-IR")} تومان`}</strong>
+              {!currencyRatesLoading && <span className="g6-hint">(هر ۱ لیر = {liraRateNum(liveLiraRate).toLocaleString("fa-IR")} تومان)</span>}
+            </div>
+          </div>
+
           {EDITIONS.map((ed) => (
             <div key={ed.key} className="g6-card">
               <h2>{ed.label} <small>(${ed.usd})</small></h2>
               <div className="g6-grid">
                 {CAPS.map((cap) => {
                   const cell = cfg.pricing?.[ed.key]?.[cap.key] || {};
+                  const tomanSell = Number(cell.toman) || 0;
                   return (
                     <div key={cap.key} className="g6-cell">
                       <div className="g6-cell-title">{cap.label}</div>
                       <label>
-                        <span>قیمت (تومان)</span>
+                        <span>قیمت فروش (تومان)</span>
                         <input
                           inputMode="numeric"
                           value={grp(cell.toman)}
@@ -194,6 +230,21 @@ export default function Gta6AdminPage() {
                           placeholder="۰ = بدون تخفیف"
                         />
                       </label>
+                      <label>
+                        <span>قیمت لیر</span>
+                        <input
+                          inputMode="numeric"
+                          value={grp(cell.lira)}
+                          onChange={(e) => setCell(ed.key, cap.key, "lira", e.target.value)}
+                          placeholder="مثلاً ۴۱۲۰"
+                        />
+                      </label>
+                      <div className="g6-profit">
+                        <span>قیمت نهایی: </span>
+                        <span className="g6-profit-pos">
+                          {tomanSell.toLocaleString("fa-IR")} تومان
+                        </span>
+                      </div>
                     </div>
                   );
                 })}
@@ -227,11 +278,11 @@ export default function Gta6AdminPage() {
         .g6-forbidden { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--text); font-weight: 700; }
         .g6-toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
         .g6-toggle label { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; color: var(--text); cursor: pointer; }
-        .g6-toggle input { width: 18px; height: 18px; }
+        .g6-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: #7c4dff; cursor: pointer; }
         .g6-hint { font-size: 12px; color: var(--muted); }
         .g6-instant-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
         .g6-instant-toggle { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; color: var(--text); cursor: pointer; }
-        .g6-instant-toggle input { width: 18px; height: 18px; }
+        .g6-instant-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: #7c4dff; cursor: pointer; }
         .g6-instant-fee { display: grid; gap: 4px; font-size: 11.5px; color: var(--muted); }
         .g6-instant-fee input {
           padding: 9px 11px; border: 2px solid var(--line); border-radius: 9px; background: var(--card);
@@ -258,6 +309,11 @@ export default function Gta6AdminPage() {
         .g6-toast { font-size: 13px; font-weight: 800; }
         .g6-toast.ok { color: #19c37d; }
         .g6-toast.err { color: #ef4444; }
+        .g6-rate-bar { display: flex; align-items: center; gap: 8px; font-size: 14px; flex-wrap: wrap; }
+        .g6-rate-bar strong { color: #34d399; font-size: 18px; }
+        .g6-profit { margin-top: 6px; font-size: 12px; font-weight: 800; display: flex; gap: 4px; }
+        .g6-profit-pos { color: #34d399; }
+        .g6-profit-neg { color: #ef4444; }
       `}</style>
     </div>
   );

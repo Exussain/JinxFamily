@@ -62,6 +62,8 @@ urlpatterns = [
     path('admin/accounting', views.admin_accounting),
     path('admin/orders/<str:tracking>/settle', views.admin_settle_order),
     path('admin/orders/settle-bulk', views.admin_settle_bulk),
+    path('admin/orders/unit-settle', views.admin_unit_settle),
+    path('admin/accounting/oldest-unsettled', views.admin_oldest_unsettled),
     path('discounts/validate', views.discount_validate),
     path('stats', views.public_stats),
     path('testimonials', views.public_testimonials),

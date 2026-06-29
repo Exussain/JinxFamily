@@ -9,17 +9,17 @@ from shop.models import Product, ProductVariant, SiteSetting, ProductComment
 # Capacity keys are unique per platform: cap2/cap3 → PS5, home/switch/full → Xbox.
 # Xbox switch mirrors PS cap3, Xbox home mirrors PS cap2, Xbox full is the premium tier.
 PRICES = {
-    "standard": {"cap2": 7887000, "cap3": 5258000, "home": 7887000, "switch": 5258000, "full": 13599000},
-    "ultimate": {"cap2": 9600000, "cap3": 6407000, "home": 9600000, "switch": 6407000, "full": 16215000},
+    "standard": {"cap2": 7887000, "cap3": 5258000, "full_ps5": 13599000, "home": 7887000, "switch": 5258000, "full": 13599000},
+    "ultimate": {"cap2": 9600000, "cap3": 6407000, "full_ps5": 16215000, "home": 9600000, "switch": 6407000, "full": 16215000},
 }
 EDITION_FA = {"standard": "استاندارد ادیشن", "ultimate": "آلتیمیت ادیشن"}
 CAP_FA = {
-    "cap2": "ظرفیت ۲", "cap3": "ظرفیت ۳",
+    "cap2": "ظرفیت ۲", "cap3": "ظرفیت ۳", "full_ps5": "ظرفیت کامل",
     "home": "ظرفیت هوم", "switch": "ظرفیت سوییچ", "full": "ظرفیت کامل",
 }
-CAP_PLATFORM = {"cap2": "PS5", "cap3": "PS5", "home": "Xbox", "switch": "Xbox", "full": "Xbox"}
+CAP_PLATFORM = {"cap2": "PS5", "cap3": "PS5", "full_ps5": "PS5", "home": "Xbox", "switch": "Xbox", "full": "Xbox"}
 EDITIONS = ("standard", "ultimate")
-CAPS = ("cap2", "cap3", "home", "switch", "full")
+CAPS = ("cap2", "cap3", "full_ps5", "home", "switch", "full")
 
 product, _ = Product.objects.get_or_create(
     slug="gta6",

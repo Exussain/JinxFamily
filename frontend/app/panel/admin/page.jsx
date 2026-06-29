@@ -1145,6 +1145,9 @@ export default function AdminPanelPage() {
   const [loading, setLoading] = useState(true);
   const [savingStatusId, setSavingStatusId] = useState(null);
   const [accountingSettlingId, setAccountingSettlingId] = useState(null);
+  const [accountingSettlingAll, setAccountingSettlingAll] = useState(false);
+  const [accountingExpandedOrder, setAccountingExpandedOrder] = useState([]);
+  const [accountingUnitSettlingId, setAccountingUnitSettlingId] = useState(null);
   const [activeTab, setActiveTab] = useState("orders");
   const [orderFilter, setOrderFilter] = useState("active");
   const [orderSearch, setOrderSearch] = useState("");
@@ -1280,7 +1283,22 @@ export default function AdminPanelPage() {
   const [accountingToDate, setAccountingToDate] = useState(() => {
     return new Date().toISOString().slice(0, 16);
   });
-  const [accountingStatus, setAccountingStatus] = useState("completed");
+  const [accountingStatus, setAccountingStatus] = useState("unsettled");
+  const [accountingOldestDate, setAccountingOldestDate] = useState(null);
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/admin/accounting/oldest-unsettled`, { credentials: "include" })
+      .then(r => r.json())
+      .then(data => {
+        if (data.date) {
+          const d = new Date(data.date);
+          const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+          setAccountingFromDate(local);
+          setAccountingOldestDate(local);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleTemplateSelect = (key) => {
     setEmailModal((m) => ({
@@ -1709,7 +1727,7 @@ export default function AdminPanelPage() {
       const params = new URLSearchParams({
         from_date: accountingFromDate,
         to_date: accountingToDate,
-        status: accountingStatus,
+        status: accountingStatus === "unsettled" ? "all" : accountingStatus,
       });
       const res = await fetch(`${apiBase}/api/admin/accounting?${params}`, {
         cache: "no-store",
@@ -1718,12 +1736,13 @@ export default function AdminPanelPage() {
       if (res.ok) {
         const data = await res.json();
         setAccountingData(data);
+        setAccountingExpandedOrder(data.orders.filter(o => o.has_units).map(o => o.id));
       } else {
-        const err = await res.json();
-        setReport({ type: "error", message: err.detail || "خطا در دریافت گزارش" });
+        const err = await res.json().catch(() => ({}));
+        setReport({ kind: "error", title: err.detail || "خطا در دریافت گزارش" });
       }
     } catch (e) {
-      setReport({ type: "error", message: "خطا در اتصال به سرور" });
+      setReport({ kind: "error", title: "خطا در اتصال به سرور" });
     } finally {
       setAccountingLoading(false);
     }
@@ -1980,6 +1999,38 @@ export default function AdminPanelPage() {
     }
   };
 
+  const settleAllAccounting = async () => {
+    if (!accountingData) return;
+    const unsettledOrders = accountingData.orders.filter(o => !o.settled);
+    if (unsettledOrders.length === 0) {
+      setReport({ kind: "success", title: "همه سفارشات قبلاً تسویه شده‌اند" });
+      return;
+    }
+    const trackingCodes = unsettledOrders.map(o => o.tracking_code);
+    try {
+      setAccountingSettlingAll(true);
+      const res = await fetch(`${apiBase}/api/admin/orders/settle-bulk`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tracking_codes: trackingCodes, settled: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.detail || "خطا در تسویه گروهی");
+      setAccountingData((prev) => ({
+        ...prev,
+        orders: prev.orders.map((o) =>
+          o.settled ? o : { ...o, settled: true, settled_at: new Date().toISOString() }
+        ),
+      }));
+      setReport({ kind: "success", title: data.message || `${data.count} سفارش تسویه شد` });
+    } catch (err) {
+      setReport({ kind: "error", title: err.message || "خطا در تسویه گروهی" });
+    } finally {
+      setAccountingSettlingAll(false);
+    }
+  };
+
   const toggleAccountingSettle = async (order) => {
     try {
       setAccountingSettlingId(order.id);
@@ -2007,6 +2058,40 @@ export default function AdminPanelPage() {
       setReport({ kind: "error", title: err.message || "خطا در تسویه" });
     } finally {
       setAccountingSettlingId(null);
+    }
+  };
+
+  const toggleUnitSettle = async (unit) => {
+    try {
+      setAccountingUnitSettlingId(unit.id);
+      const newSettled = !unit.settled;
+      const res = await fetch(`${apiBase}/api/admin/orders/unit-settle`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unit_tracking: unit.unit_tracking, settled: newSettled }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.detail || "خطا در تسویه واحد");
+      }
+      setAccountingData((prev) => ({
+        ...prev,
+        orders: prev.orders.map((o) => {
+          if (!o.units) return o;
+          return {
+            ...o,
+            units: o.units.map((u) =>
+              u.id === unit.id ? { ...u, settled: newSettled, settled_at: newSettled ? new Date().toISOString() : null } : u
+            ),
+          };
+        }),
+      }));
+      setReport({ kind: "success", title: data.message });
+    } catch (err) {
+      setReport({ kind: "error", title: err.message || "خطا در تسویه واحد" });
+    } finally {
+      setAccountingUnitSettlingId(null);
     }
   };
 
@@ -2642,7 +2727,7 @@ export default function AdminPanelPage() {
   };
 
   const handleStatusChange = async (order, nextStatus, listType, xboxCredentials = null) => {
-    // If changing to "completed", show Xbox modal to allow staff to input credentials
+    // Show Xbox credentials modal for every order when completing
     if (nextStatus === "completed" && !order.created_xbox_email && !xboxCredentials) {
       setXboxModal({
         open: true,
@@ -3077,11 +3162,11 @@ export default function AdminPanelPage() {
       disable_2fa_text: (product.disable_2fa_text || "").trim(),
       disable_2fa_color: product.disable_2fa_color || "amber",
       ordering_disabled: !!product.ordering_disabled,
-      daily_order_limit: Number(product.daily_order_limit) || 0,
+      daily_order_limit: product.daily_order_limit !== undefined ? Number(product.daily_order_limit) : -1,
       reseller_ordering_disabled: !!product.reseller_ordering_disabled,
       customer_ordering_disabled: !!product.customer_ordering_disabled,
-      reseller_daily_order_limit: Number(product.reseller_daily_order_limit) || 0,
-      customer_daily_order_limit: Number(product.customer_daily_order_limit) || 0,
+      reseller_daily_order_limit: product.reseller_daily_order_limit !== undefined ? Number(product.reseller_daily_order_limit) : -1,
+      customer_daily_order_limit: product.customer_daily_order_limit !== undefined ? Number(product.customer_daily_order_limit) : -1,
       variants: allVariants
         .filter((v) => v.id > 0)
         .map((v) => ({
@@ -6904,9 +6989,12 @@ export default function AdminPanelPage() {
                         value={accountingStatus}
                         onChange={(e) => setAccountingStatus(e.target.value)}
                       >
+                        <option value="unsettled">فعال (بدون تسویه و مسترد)</option>
                         <option value="completed">تکمیل شده</option>
-                        <option value="refunded">مسترد شده</option>
                         <option value="paid">پرداخت شده</option>
+                        <option value="registered">ثبت شده</option>
+                        <option value="paid_completed">پرداخت + تکمیل + ثبت شده</option>
+                        <option value="refunded">مسترد شده</option>
                         <option value="all">همه (بجز لغو و منتظر پرداخت)</option>
                       </select>
                     </div>
@@ -6947,6 +7035,9 @@ export default function AdminPanelPage() {
                   const totalUnsettledAmount = accountingData.orders.filter(o => !o.settled).reduce((s, o) => s + o.amount, 0);
                   const totalSettledLira = accountingData.orders.filter(o => o.settled).reduce((s, o) => s + (o.total_lira || 0), 0);
                   const totalUnsettledLira = accountingData.orders.filter(o => !o.settled).reduce((s, o) => s + (o.total_lira || 0), 0);
+                  const displayOrders = accountingStatus === "unsettled"
+                    ? accountingData.orders.filter(o => !o.settled && o.status !== 'refunded')
+                    : accountingData.orders;
 
                   return (
                   <div className="accounting-results">
@@ -7009,10 +7100,22 @@ export default function AdminPanelPage() {
                         <span>تسویه نشده: {unsettledCount.toLocaleString("fa-IR")}</span>
                       </div>
                     </div>
+                    {unsettledCount > 0 && (
+                      <div className="accounting-settle-all" style={{ marginTop: "8px", textAlign: "left" }}>
+                        <button
+                          className="btn primary"
+                          onClick={settleAllAccounting}
+                          disabled={accountingSettlingAll}
+                          style={{ fontSize: "13px", padding: "8px 18px", background: "linear-gradient(135deg, #10b981, #059669)" }}
+                        >
+                          {accountingSettlingAll ? "در حال تسویه..." : `تسویه همه (${unsettledCount.toLocaleString("fa-IR")})`}
+                        </button>
+                      </div>
+                    )}
 
                     <div className="accounting-orders">
-                      <h4>لیست سفارشات ({accountingData.orders.length})</h4>
-                      {accountingData.orders.length === 0 ? (
+                      <h4>لیست سفارشات ({displayOrders.length})</h4>
+                      {displayOrders.length === 0 ? (
                         <div className="empty-state">سفارشی در این بازه یافت نشد</div>
                       ) : (
                         <div className="accounting-table-wrapper">
@@ -7033,20 +7136,49 @@ export default function AdminPanelPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {accountingData.orders.map((order) => (
-                                <tr key={order.id} className={order.settled ? "row-settled" : ""}>
-                                  <td className="tracking-cell">{order.tracking_code}</td>
+                              {displayOrders.map((order) => (
+                                <div key={order.id} style={{ display: "contents" }}>
+                                <tr className={`${order.settled ? "row-settled" : ""} ${accountingExpandedOrder.includes(order.id) ? "row-expanded" : ""}`}>
+                                  <td className="tracking-cell">
+                                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                      {order.has_units && (
+                                        <button
+                                          onClick={() => setAccountingExpandedOrder(prev => prev.includes(order.id) ? prev.filter(id => id !== order.id) : [...prev, order.id])}
+                                          style={{
+                                            background: "none", border: "none", cursor: "pointer",
+                                            color: "var(--accent)", fontSize: "12px", padding: "2px 4px",
+                                            transform: accountingExpandedOrder.includes(order.id) ? "rotate(90deg)" : "rotate(0deg)",
+                                            transition: "transform 0.2s",
+                                          }}
+                                          title="مشاهده جزئیات واحدها"
+                                        >
+                                          ▶
+                                        </button>
+                                      )}
+                                      {order.tracking_code}
+                                    </div>
+                                  </td>
                                   <td>
                                     <span className={`tag ${order.status === "completed" ? "success" : order.status === "refunded" ? "danger-tag" : "muted-tag"}`}>
                                       {order.status_fa}
                                     </span>
                                   </td>
                                   <td className="product-cell">
-                                    {order.first_item_name || "—"}
-                                    {order.item_count > 1 && (
-                                      <span className="muted-small" style={{ fontSize: "11px", color: "var(--muted)", marginRight: "4px" }}>
-                                        (+{order.item_count - 1} مورد دیگر)
-                                      </span>
+                                    {order.items_names && order.items_names.length > 0 ? (
+                                      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                        {order.items_names.map((item, idx) => (
+                                          <span key={idx}>
+                                            {item.name || "—"}
+                                            {item.quantity > 1 && (
+                                              <span className="muted-small" style={{ fontSize: "10px", color: "var(--muted)", marginRight: "3px" }}>
+                                                ×{item.quantity}
+                                              </span>
+                                            )}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      order.first_item_name || "—"
                                     )}
                                   </td>
                                   <td className="num-cell" style={{ color: "#34d399", fontWeight: "bold" }}>
@@ -7086,6 +7218,65 @@ export default function AdminPanelPage() {
                                     </button>
                                   </td>
                                 </tr>
+                                {accountingExpandedOrder.includes(order.id) && order.has_units && (
+                                  <tr className="unit-detail-row">
+                                    <td colSpan="11" style={{ padding: "0" }}>
+                                      <div className="unit-detail-modal">
+                                        <div className="unit-detail-header">
+                                          <span>جزئیات واحدهای سفارش {order.tracking_code}</span>
+                                          <button
+                                            onClick={() => setAccountingExpandedOrder(prev => prev.filter(id => id !== order.id))}
+                                            style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: "16px" }}
+                                          >
+                                            ✕
+                                          </button>
+                                        </div>
+                                        <table className="unit-detail-table">
+                                          <thead>
+                                            <tr>
+                                              <th>ردیف</th>
+                                              <th>کد واحد</th>
+                                              <th>محصول</th>
+                                              <th>نوع اکانت</th>
+                                              <th>ایمیل</th>
+                                              <th>وضعیت</th>
+                                              <th>تسویه</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {order.units.map((unit) => (
+                                              <tr key={unit.id} className={unit.settled ? "row-settled" : ""}>
+                                                <td>{unit.index}</td>
+                                                <td className="tracking-cell" style={{ fontSize: "11px" }}>{unit.unit_tracking}</td>
+                                                <td style={{ fontSize: "12px" }}>{unit.name || "—"}</td>
+                                                <td style={{ fontSize: "12px" }}>{unit.account_type || "—"}</td>
+                                                <td style={{ fontSize: "11px", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", direction: "ltr" }}>
+                                                  {unit.account_email || "—"}
+                                                </td>
+                                                <td>
+                                                  <span className={`tag ${unit.status === "filled" ? "success" : "muted-tag"}`} style={{ fontSize: "11px" }}>
+                                                    {unit.status_fa}
+                                                  </span>
+                                                </td>
+                                                <td>
+                                                  <button
+                                                    className={`settle-btn ${unit.settled ? "settled" : ""}`}
+                                                    onClick={() => toggleUnitSettle(unit)}
+                                                    disabled={accountingUnitSettlingId === unit.id}
+                                                    style={{ fontSize: "11px", padding: "3px 8px" }}
+                                                  >
+                                                    {accountingUnitSettlingId === unit.id ? "..." : unit.settled ? "✓ تسویه" : "تسویه"}
+                                                  </button>
+                                                </td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                                </div>
                               ))}
                             </tbody>
                             <tfoot>
@@ -7115,12 +7306,12 @@ export default function AdminPanelPage() {
                               </tr>
                             </tfoot>
                           </table>
-                        </div>
-                      )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  );
-                })()}
+                    );
+                  })()}
               </div>
             </div>
           )}
@@ -7545,15 +7736,15 @@ export default function AdminPanelPage() {
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <div>
-                  <div className="modal-title">اطلاعات اکانت Xbox ساخته شده</div>
-                  <div className="muted-small">سفارش {xboxModal.order?.tracking_code} - درخواست ساخت اکانت Xbox</div>
+                  <div className="modal-title">ثبت اطلاعات اکانت Xbox (اختیاری)</div>
+                  <div className="muted-small">سفارش {xboxModal.order?.tracking_code}</div>
                 </div>
                 <button className="close-btn" onClick={() => setXboxModal({ open: false, order: null, listType: "", createdEmail: "", createdPass: "" })}>✕</button>
               </div>
               <div className="modal-body">
                 <div className="form-field" style={{ marginBottom: 16 }}>
                   <div className="info-banner" style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.3)", borderRadius: 8, padding: "12px 16px", marginBottom: 16 }}>
-                    <span style={{ color: "#3b82f6" }}>اگر برای این سفارش اکانت Xbox ساخته‌اید، اطلاعات آن را وارد کنید تا به کاربر نمایش داده شود. در غیر این صورت روی «رد شدن» کلیک کنید.</span>
+                    <span style={{ color: "#3b82f6" }}>اگر برای این سفارش اکانت Xbox ساخته‌اید، اطلاعات آن را وارد کنید. اگر این سفارش مربوط به Xbox نیست، گزینه «ایکس‌باکس نیست» را بزنید.</span>
                   </div>
                   <label className="field-label">ایمیل اکانت Xbox</label>
                   <input
@@ -7577,11 +7768,9 @@ export default function AdminPanelPage() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button className="btn ghost-btn" onClick={() => setXboxModal({ open: false, order: null, listType: "", createdEmail: "", createdPass: "" })}>
-                  انصراف
-                </button>
                 <button
                   className="btn ghost-btn"
+                  style={{ borderColor: "#ef4444", color: "#ef4444" }}
                   onClick={async () => {
                     await handleStatusChange(xboxModal.order, "completed", xboxModal.listType, {
                       createdEmail: "",
@@ -7591,7 +7780,7 @@ export default function AdminPanelPage() {
                   }}
                   disabled={savingStatusId === xboxModal.order?.id}
                 >
-                  رد شدن (بدون اکانت Xbox)
+                  {savingStatusId === xboxModal.order?.id ? "در حال ذخیره..." : "این فعال‌سازی ایکس‌باکس نیست"}
                 </button>
                 <button
                   className="btn primary-btn"
@@ -7601,7 +7790,6 @@ export default function AdminPanelPage() {
                       setReport({ title: "خطا", emailStatus: "لطفاً ایمیل و رمز اکانت Xbox را وارد کنید", smsStatus: "", kind: "error" });
                       return;
                     }
-                    // Call handleStatusChange with Xbox credentials
                     await handleStatusChange(xboxModal.order, "completed", xboxModal.listType, {
                       createdEmail: xboxModal.createdEmail.trim(),
                       createdPass: xboxModal.createdPass.trim(),
@@ -10867,6 +11055,11 @@ export default function AdminPanelPage() {
             border-color: #334155;
           }
 
+          :global(:root[data-theme="dark"]) .status-select option {
+            background: #1e293b;
+            color: #e2e8f0;
+          }
+
           :global(:root[data-theme="dark"]) .notifications-row {
             background: linear-gradient(165deg, #1e293b 0%, #162032 100%);
             border-color: #334155;
@@ -11510,6 +11703,54 @@ export default function AdminPanelPage() {
           }
           .row-settled {
             background: rgba(139, 92, 246, 0.03);
+          }
+          .row-expanded {
+            background: rgba(139, 92, 246, 0.06);
+          }
+          .unit-detail-row td {
+            padding: 0 !important;
+            border-bottom: none !important;
+          }
+          .unit-detail-modal {
+            background: var(--surface);
+            border-top: 2px solid var(--line);
+            padding: 16px 24px;
+            margin: 0;
+          }
+          .unit-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text);
+          }
+          .unit-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+          }
+          .unit-detail-table th,
+          .unit-detail-table td {
+            padding: 8px 12px;
+            text-align: right;
+            border-bottom: 1px solid var(--line);
+          }
+          .unit-detail-table th {
+            background: rgba(139, 92, 246, 0.08);
+            font-weight: 700;
+            color: var(--muted);
+            font-size: 11px;
+          }
+          .unit-detail-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+          }
+          .unit-detail-table tbody tr:last-child td {
+            border-bottom: none;
           }
 
           /* ===== Vitrine / Showcase modal (product display-order) ===== */

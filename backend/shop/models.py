@@ -240,6 +240,9 @@ class OrderItemAccount(models.Model):
     xbox_password = models.CharField(max_length=150, blank=True, default="", help_text="رمز اکانت ایکس‌باکس (در صورت وجود)")
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="pending")
     updated_at = models.DateTimeField(auto_now=True)
+    unit_tracking = models.CharField(max_length=20, unique=True, null=True, blank=True, help_text="کد رهگیری واحد (مثلا 7153-1)")
+    settled = models.BooleanField(default=False, help_text="تسویه شده")
+    settled_at = models.DateTimeField(null=True, blank=True, help_text="تاریخ تسویه واحد")
 
     class Meta:
         ordering = ["item", "index"]

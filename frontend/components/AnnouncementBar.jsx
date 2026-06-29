@@ -37,7 +37,7 @@ export default function AnnouncementBar() {
   if (!bar || !bar.enabled || !bar.text) return null;
 
   const speedSeconds = Math.max(10, Number(bar.speed) || 52);
-  const closable = bar.closable !== false;
+  const closable = false;
   const textColor = bar.text_color || "#f8fafc";
   const bg = bar.bg_color || "linear-gradient(90deg, #0b1224, #111827)";
 

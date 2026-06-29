@@ -25,15 +25,21 @@ export default function Navbar() {
     setShowAuthMenu(false);
     setShowUserMenu(false);
     setShowMobileMenu(false);
+    setShowSearchMobileOverlay(false);
   }, [pathname]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
+  const [mobileQ, setMobileQ] = useState('');
+  const [mobileSearchResults, setMobileSearchResults] = useState([]);
+  const [mobileSearchLoading, setMobileSearchLoading] = useState(false);
+  const [showSearchMobileOverlay, setShowSearchMobileOverlay] = useState(false);
   const cartRef = useRef(null);
   const hasLoadedUserRef = useRef(false);
   const userMenuRef = useRef(null);
   const authMenuRef = useRef(null);
+  const searchListRef = useRef(null);
   const router = useRouter();
   const params = useSearchParams();
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || '';
@@ -67,11 +73,79 @@ export default function Navbar() {
     }
   }, [apiBase]);
 
+  // Live search preview for mobile bottom nav
+  useEffect(() => {
+    const term = mobileQ.trim();
+    if (!term) {
+      setMobileSearchResults([]);
+      return;
+    }
+    let active = true;
+    setMobileSearchLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(async () => {
+      const lowered = term.toLowerCase();
+      const staticMatches = placeholderFeatured.filter((p) => {
+        const name = (p.name_fa || '').toLowerCase();
+        const subtitle = (p.subtitle || '').toLowerCase();
+        const catTitle = (p.category_title || '').toLowerCase();
+        return (
+          name.includes(lowered) ||
+          subtitle.includes(lowered) ||
+          catTitle.includes(lowered)
+        );
+      });
+
+      try {
+        const res = await fetch(
+          `${apiBase}/api/products?search=${encodeURIComponent(term)}`,
+          { cache: 'no-store', signal: controller.signal }
+        );
+        let apiMatches = [];
+        if (res.ok) {
+          const data = await res.json();
+          apiMatches = (data?.results || data || []);
+        }
+        if (!active) return;
+
+        const activeSlugSet = new Set(
+          apiMatches
+            .map((product) => (product?.slug || "").trim())
+            .filter(Boolean)
+        );
+        const filteredStaticMatches = activeSlugSet.size
+          ? staticMatches.filter((item) => activeSlugSet.has((item.slug || "").trim()))
+          : staticMatches;
+        const merged = dedupeProducts([...apiMatches, ...filteredStaticMatches]);
+        const finalResults = merged.length ? merged : staticMatches;
+        setMobileSearchResults(finalResults.slice(0, 5));
+      } catch {
+        if (!active) return;
+        setMobileSearchResults(staticMatches.slice(0, 5));
+      } finally {
+        if (active) setMobileSearchLoading(false);
+      }
+    }, 150);
+
+    return () => {
+      active = false;
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [mobileQ, apiBase]);
+
   const doSearch = () => {
     const term = q.trim();
     if (!term) return;
-    router.push(`/?q=${encodeURIComponent(term)}`);
+    router.push(`/?q=${encodeURIComponent(term)}#popular`);
     setShowSearchResults(false);
+  };
+
+  const scrollSearchList = (direction) => {
+    if (searchListRef.current) {
+      const scrollAmount = direction === 'up' ? -220 : 220;
+      searchListRef.current.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+    }
   };
 
   // Live search preview
@@ -244,390 +318,446 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="navbar fortnite-nav">
-        <div className="container nav-inner">
-        {/* Left: Controls */}
-        <div className="nav-actions">
-          {user?.is_admin && (
-            <a href={adminCacheBustHref()} className="admin-pill" aria-label="پنل مدیریت">
-              <span className="admin-dot" />
-              پنل مدیریت
-            </a>
-          )}
-          <button
-            type="button"
-            className="icon-btn theme-toggle"
-            aria-label={theme === 'dark' ? 'حالت روشن' : 'حالت تاریک'}
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'حالت روشن' : 'حالت تاریک'}
-          >
-            {theme === 'dark' ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5" />
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-              </svg>
-            )}
-          </button>
-          <div ref={cartRef} className="nav-cart">
-            <button
-              type="button"
-              className={`icon-btn ${cartBounce ? 'cart-bounce' : ''}`}
-              aria-label="سبد خرید"
-              onClick={() => {
-                setShowCartPreview((v) => !v);
-              }}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2m10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2M7.17 14l-.94-2h11.53c.79 0 1.48-.46 1.82-1.17L22 6.25a1 1 0 0 0-.9-1.45H6.21l-.94-2H2v2h2l3.6 7.59-.95 1.72C6.17 14.77 6 15.37 6 16a2 2 0 0 0 2 2h12v-2H8.42c-.14 0-.25-.11-.25-.25 0-.04.01-.07.02-.1l.98-1.8z"/></svg>
-              {totalItemsCount > 0 && (
-                <span key={totalItemsCount} className="cart-count-badge">
-                  {totalItemsCount}
-                </span>
+      <header className="site-header">
+        <nav className="navbar fortnite-nav">
+          <div className="container nav-inner">
+            {/* Left: Controls */}
+            <div className="nav-actions">
+              {user?.is_admin && (
+                <a href={adminCacheBustHref()} className="admin-pill" aria-label="پنل مدیریت">
+                  <span className="admin-dot" />
+                  پنل مدیریت
+                </a>
               )}
-            </button>
-            {showCartPreview && (
-              <div className="cart-preview">
-              <div className="cart-preview-header">
-                <span>سبد خرید</span>
-                <span className="muted" style={{ fontSize: 12 }}>
-                  {items.length} آیتم
-                </span>
-              </div>
-              <div className="cart-preview-list">
-                {items.length === 0 && (
-                  <div className="muted">سبد شما خالی است.</div>
+              <button
+                type="button"
+                className="icon-btn theme-toggle"
+                aria-label={theme === 'dark' ? 'حالت روشن' : 'حالت تاریک'}
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'حالت روشن' : 'حالت تاریک'}
+              >
+                {theme === 'dark' ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="5" />
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+                  </svg>
                 )}
-                {items.map((it) => {
-                  const quantity = it.quantity || 0;
-                  return (
-                    <div
-                      key={it.product_id}
-                      className="cart-preview-item"
-                    >
-                      <div className="cart-preview-image">
-                        {it.image ? (
-                          <SmartImage src={it.image} alt={it.name} fit="contain" />
-                        ) : (
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                          </svg>
-                        )}
-                      </div>
-                      <div className="cart-preview-item-main">
-                        <div className="cart-preview-name">{it.name}</div>
-                        <div className="cart-preview-meta">
-                          {quantity} × {it.price.toLocaleString('fa-IR')} = {(it.price * quantity).toLocaleString('fa-IR')} تومان
-                        </div>
-                      </div>
-                      <div className="cart-preview-actions">
-                        <div className="qty-control">
-                          <button
-                            type="button"
-                            className="qty-btn"
-                            onClick={() => {
-                              if (quantity <= 1) {
-                                removeItem(it.product_id);
-                              } else {
-                                setQty(it.product_id, quantity - 1);
-                              }
-                            }}
-                            aria-label="کاهش تعداد"
-                          >
-                            −
-                          </button>
-                          <div className="qty-value">
-                            {quantity}
-                          </div>
-                          <button
-                            type="button"
-                            className="qty-btn"
-                            onClick={() => setQty(it.product_id, quantity + 1)}
-                            aria-label="افزایش تعداد"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <button
-                          type="button"
-                          className="ghost-btn cart-preview-remove"
-                          onClick={() => removeItem(it.product_id)}
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="cart-preview-footer">
-                <div className="cart-preview-total">
-                  <span>جمع کل</span>
-                  <span className="price">
-                    {total().toLocaleString('fa-IR')} تومان
-                  </span>
-                </div>
+              </button>
+              <div ref={cartRef} className="nav-cart">
                 <button
                   type="button"
-                  className="btn primary block"
+                  className={`icon-btn nav-cart-btn ${cartBounce ? 'cart-bounce' : ''}`}
+                  aria-label="سبد خرید"
                   onClick={() => {
-                    setShowCartPreview(false);
-                    router.push('/checkout');
+                    setShowCartPreview((v) => !v);
                   }}
-                  disabled={items.length === 0}
                 >
-                  ثبت سفارش
+                  <svg width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2m10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2M7.17 14l-.94-2h11.53c.79 0 1.48-.46 1.82-1.17L22 6.25a1 1 0 0 0-.9-1.45H6.21l-.94-2H2v2h2l3.6 7.59-.95 1.72C6.17 14.77 6 15.37 6 16a2 2 0 0 0 2 2h12v-2H8.42c-.14 0-.25-.11-.25-.25 0-.04.01-.07.02-.1l.98-1.8z"/></svg>
+                  {totalItemsCount > 0 && (
+                    <span key={totalItemsCount} className="cart-count-badge">
+                      {totalItemsCount}
+                    </span>
+                  )}
                 </button>
+                {showCartPreview && (
+                  <div className="cart-preview">
+                    <div className="cart-preview-header">
+                      <span>سبد خرید</span>
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        {items.length} آیتم
+                      </span>
+                    </div>
+                    <div className="cart-preview-list">
+                      {items.length === 0 && (
+                        <div className="muted">سبد شما خالی است.</div>
+                      )}
+                      {items.map((it) => {
+                        const quantity = it.quantity || 0;
+                        return (
+                          <div key={it.product_id} className="cart-preview-item">
+                            <div className="cart-preview-image">
+                              {it.image ? (
+                                <SmartImage src={it.image} alt={it.name} fit="contain" />
+                              ) : (
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                </svg>
+                              )}
+                            </div>
+                            <div className="cart-preview-item-main">
+                              <div className="cart-preview-name">{it.name}</div>
+                              <div className="cart-preview-meta">
+                                {quantity} × {it.price.toLocaleString('fa-IR')} = {(it.price * quantity).toLocaleString('fa-IR')} تومان
+                              </div>
+                            </div>
+                            <div className="cart-preview-actions">
+                              <div className="qty-control">
+                                <button
+                                  type="button"
+                                  className="qty-btn"
+                                  onClick={() => {
+                                    if (quantity <= 1) {
+                                      removeItem(it.product_id);
+                                    } else {
+                                      setQty(it.product_id, quantity - 1);
+                                    }
+                                  }}
+                                  aria-label="کاهش تعداد"
+                                >
+                                  −
+                                </button>
+                                <div className="qty-value">{quantity}</div>
+                                <button
+                                  type="button"
+                                  className="qty-btn"
+                                  onClick={() => setQty(it.product_id, quantity + 1)}
+                                  aria-label="افزایش تعداد"
+                                >
+                                  +
+                                </button>
+                              </div>
+                              <button
+                                type="button"
+                                className="ghost-btn cart-preview-remove"
+                                onClick={() => removeItem(it.product_id)}
+                              >
+                                حذف
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="cart-preview-footer">
+                      <div className="cart-preview-total">
+                        <span>جمع کل</span>
+                        <span className="price">
+                          {total().toLocaleString('fa-IR')} تومان
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn primary block"
+                        onClick={() => {
+                          setShowCartPreview(false);
+                          router.push('/checkout');
+                        }}
+                        disabled={items.length === 0}
+                      >
+                        ثبت سفارش
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              </div>
-            )}
-          </div>
-          <div className="nav-user">
-            {user ? (
-              <div className="nav-user-menu" ref={userMenuRef}>
-                <button
-                  type="button"
-                  className="nav-user-avatar-btn"
-                  onClick={() => setShowUserMenu((v) => !v)}
-                  aria-label="پروفایل"
-                >
-                  <span className="user-avatar">
-                    {user.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={user.avatar_url} alt={user.name || 'پروفایل'} width="40" height="40" loading="lazy" decoding="async" />
-                    ) : (
-                      userInitial || 'شما'
-                    )}
-                  </span>
-                </button>
-                {showUserMenu && (
-                  <div className="user-menu">
-                    {user.is_admin ? (
-                      <a href={adminCacheBustHref()} className="ghost-btn user-menu-item">
-                        پنل کاربری
-                      </a>
-                    ) : (
-                      <Link href="/panel/user" className="ghost-btn user-menu-item">
-                        پنل کاربری
-                      </Link>
-                    )}
+              <div className="nav-user">
+                {user ? (
+                  <div className="nav-user-menu" ref={userMenuRef}>
                     <button
                       type="button"
-                      className="ghost-btn user-menu-item"
-                      onClick={async () => {
-                        try {
-                          await fetch(`${apiBase}/api/auth/logout`, {
-                            method: 'POST',
-                            credentials: 'include',
-                          });
-                        } catch {
-                          // ignore
-                        }
-                        setUser(null);
-                        setShowUserMenu(false);
-                        // Redirect to home page with full page reload
-                        window.location.href = '/';
-                      }}
+                      className="nav-user-btn-pill"
+                      onClick={() => setShowUserMenu((v) => !v)}
+                      aria-label="پروفایل"
                     >
-                      خروج
+                      <span className="user-avatar">
+                        {user.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={user.avatar_url} alt={user.name || 'پروفایل'} width="32" height="32" loading="lazy" decoding="async" />
+                        ) : (
+                          userInitial || 'شما'
+                        )}
+                      </span>
+                      <span className="user-btn-text">{user.name || 'پنل کاربری'}</span>
                     </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="nav-user-menu nav-auth-menu" ref={authMenuRef}>
-                <Link href="/login" className="ghost-btn nav-user-login-btn">
-                  ورود
-                </Link>
-                <Link href="/signup" className="ghost-btn nav-user-signup-btn">
-                  ثبت‌نام
-                </Link>
-                <button
-                  type="button"
-                  className="icon-btn nav-auth-toggle"
-                  aria-label="ورود یا ثبت‌نام"
-                  aria-expanded={showAuthMenu}
-                  onClick={() => setShowAuthMenu((v) => !v)}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                </button>
-                {showAuthMenu && (
-                  <div className="user-menu auth-menu">
-                    <Link href="/login" className="ghost-btn user-menu-item">
-                      ورود
-                    </Link>
-                    <Link href="/signup" className="ghost-btn user-menu-item">
-                      ثبت‌نام
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Center: Search */}
-        <div className="search fortnite-search search-with-preview">
-          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#9aa3b2" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5m-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
-          <input
-            placeholder="جستجو در محصولات…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && doSearch()}
-          />
-          <button className="ghost-btn" onClick={doSearch} aria-label="جستجو">جستجو</button>
-          {showSearchResults && (
-            <div className="search-preview">
-              {searchLoading && (
-                <div className="search-preview-empty muted">
-                  در حال جستجو…
-                </div>
-              )}
-              {!searchLoading && searchResults.length === 0 && (
-                <div className="search-preview-empty muted">
-                  محصولی یافت نشد.
-                </div>
-              )}
-              {!searchLoading && searchResults.length > 0 && (
-                <div className="search-preview-list">
-                  {searchResults.map((p) => {
-                    const price = Number(p.price) > 0 ? Number(p.price) : (Number(p.min_price) > 0 ? Number(p.min_price) : 0);
-                    const hasPrice = price > 0;
-                    const cartItem = items.find(
-                      (it) => it.product_id === p.id
-                    );
-                    const quantity = cartItem?.quantity || 0;
-                    const { imageBase, imageSrc } = resolveProductImage(p);
-                    const finalImage = imageSrc || (imageBase ? `${imageBase}.webp` : null);
-                    return (
-                      <div
-                        key={p.id}
-                        className="search-preview-item"
-                      >
+                    {showUserMenu && (
+                      <div className="user-menu">
+                        {user.is_admin ? (
+                          <a href={adminCacheBustHref()} className="ghost-btn user-menu-item">
+                            پنل کاربری
+                          </a>
+                        ) : (
+                          <Link href="/panel/user" className="ghost-btn user-menu-item">
+                            پنل کاربری
+                          </Link>
+                        )}
                         <button
                           type="button"
-                          className="search-preview-main"
-                          disabled={!hasPrice}
-                          onClick={() => {
-                            if (hasPrice) handleProductClick(p.slug);
+                          className="ghost-btn user-menu-item"
+                          onClick={async () => {
+                            try {
+                              await fetch(`${apiBase}/api/auth/logout`, {
+                                method: 'POST',
+                                credentials: 'include',
+                              });
+                            } catch {
+                              // ignore
+                            }
+                            setUser(null);
+                            setShowUserMenu(false);
+                            window.location.href = '/';
                           }}
                         >
-                          <div className="search-preview-image">
-                            <div className="search-preview-thumb">
-                              <SmartImage
-                                src={imageSrc}
-                                base={imageBase}
-                                alt={p.name_fa}
-                              />
-                            </div>
-                          </div>
-                          <div className="search-preview-text">
-                            <div className="search-preview-name">
-                              {p.name_fa}
-                            </div>
-                            {hasPrice ? (
-                              <div className="price search-preview-price">
-                                {price.toLocaleString('fa-IR')} تومان
-                              </div>
-                            ) : (
-                              <div className="search-preview-price muted" style={{ fontWeight: 800 }}>
-                                ناموجود
-                              </div>
-                            )}
-                          </div>
+                          خروج
                         </button>
-                        {!hasPrice ? (
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="nav-user-menu nav-auth-menu" ref={authMenuRef}>
+                    <button
+                      type="button"
+                      className="nav-user-btn-pill guest-btn"
+                      onClick={() => {
+                        if (typeof window !== "undefined" && window.innerWidth <= 768) {
+                          router.push("/login");
+                        } else {
+                          setShowAuthMenu((v) => !v);
+                        }
+                      }}
+                      aria-label="ورود یا ثبت‌نام"
+                    >
+                      <span className="user-avatar guest-avatar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </span>
+                      <span className="user-btn-text">ورود / عضویت</span>
+                    </button>
+                    {showAuthMenu && (
+                      <div className="user-menu auth-menu">
+                        <Link href="/login" className="ghost-btn user-menu-item">
+                          ورود
+                        </Link>
+                        <Link href="/signup" className="ghost-btn user-menu-item">
+                          ثبت‌نام
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Center: Search */}
+            <div className="search fortnite-search search-with-preview">
+              <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5m-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
+              <input
+                placeholder="دنبال چی میگردی؟ جستجو در محصولات…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && doSearch()}
+              />
+              {q && (
+                <button
+                  type="button"
+                  className="search-clear-btn"
+                  onClick={() => {
+                    setQ('');
+                    setSearchResults([]);
+                    setShowSearchResults(false);
+                  }}
+                  aria-label="پاک کردن"
+                >
+                  ×
+                </button>
+              )}
+              <button className="search-submit-btn" onClick={doSearch} aria-label="جستجو">جستجو</button>
+              {showSearchResults && (
+                <div className="search-preview">
+                  {searchLoading && (
+                    <div className="search-preview-loading">
+                      <div className="search-loader-spinner"></div>
+                      <div className="search-loader-text">در حال جستجو…</div>
+                    </div>
+                  )}
+                  {!searchLoading && searchResults.length === 0 && (
+                    <div className="search-preview-empty muted">محصولی یافت نشد.</div>
+                  )}
+                  {!searchLoading && searchResults.length > 0 && (
+                    <>
+                      <div className="search-preview-header-row">
+                        <span className="search-results-count">{searchResults.length} نتایج</span>
+                        <div className="search-preview-arrows" dir="ltr" style={{ display: 'flex', gap: '8px' }}>
                           <button
                             type="button"
-                            className="btn search-preview-add"
-                            disabled
-                            style={{ opacity: 0.6, cursor: "not-allowed" }}
+                            className="preview-arrow-btn"
+                            onClick={() => scrollSearchList('down')}
+                            aria-label="بعدی"
+                            title="بعدی"
                           >
-                            ناموجود
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
                           </button>
-                        ) : quantity === 0 ? (
                           <button
                             type="button"
-                            className="btn search-preview-add"
-                            onClick={() => {
-                              addItem({
-                                product_id: p.id,
-                                name: p.name_fa,
-                                price,
-                                quantity: 1,
-                                slug: p.slug,
-                                image: finalImage,
-                              });
-                              setShowCartPreview(true);
-                            }}
+                            className="preview-arrow-btn"
+                            onClick={() => scrollSearchList('up')}
+                            aria-label="قبلی"
+                            title="قبلی"
                           >
-                            خرید
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
                           </button>
-                        ) : (
-                          <div className="qty-control search-preview-qty">
+                        </div>
+                      </div>
+                      <div className="search-preview-list-new" ref={searchListRef}>
+                        {searchResults.map((p) => {
+                          const price = Number(p.price) > 0 ? Number(p.price) : (Number(p.min_price) > 0 ? Number(p.min_price) : 0);
+                          const hasPrice = price > 0;
+                          const { imageBase, imageSrc } = resolveProductImage(p);
+                          return (
                             <button
+                              key={p.id}
                               type="button"
-                              className="qty-btn"
+                              className="search-preview-item-new"
+                              disabled={!hasPrice}
                               onClick={() => {
-                                if (quantity <= 1) {
-                                  removeItem(p.id);
-                                } else {
-                                  setQty(p.id, quantity - 1);
-                                }
+                                if (hasPrice) handleProductClick(p.slug);
                               }}
                             >
-                              -
+                              <div className="search-preview-image-new">
+                                <SmartImage src={imageSrc} base={imageBase} alt={p.name_fa} fit="contain" />
+                              </div>
+                              <div className="search-preview-info-new">
+                                <div className="search-preview-name-new">{p.name_fa}</div>
+                                {hasPrice ? (
+                                  <div className="search-preview-price-new">
+                                    {price.toLocaleString('fa-IR')} تومان
+                                  </div>
+                                ) : (
+                                  <div className="search-preview-price-new muted">ناموجود</div>
+                                )}
+                              </div>
                             </button>
-                            <div className="qty-value">
-                              {quantity}
-                            </div>
-                            <button
-                              type="button"
-                              className="qty-btn"
-                              onClick={() =>
-                                setQty(p.id, quantity + 1)
-                              }
-                            >
-                              +
-                            </button>
-                          </div>
-                        )}
+                          );
+                        })}
                       </div>
-                    );
-                  })}
+                      <button
+                        type="button"
+                        className="search-view-all-btn"
+                        onClick={doSearch}
+                      >
+                        مشاهده همه نتایج
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* Right: Logo */}
-        <Link className="brand logo" href="/" aria-label="نوبیکس">
-          <picture>
-            <source srcSet="/web_logo.webp" media="(min-width: 1024px)" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/web_logo.webp"
-              alt="Nubix Logo"
-              className="nav-logo-img"
-              width="48"
-              height="48"
-              loading="eager"
-            />
-          </picture>
-          <span className="nav-logo-text">فروشگاه نوبیکس</span>
-        </Link>
+            {/* Right: Logo */}
+            <Link className="brand logo" href="/" aria-label="نوبیکس">
+              <picture>
+                <source srcSet="/web_logo.webp" media="(min-width: 1024px)" />
+                <img
+                  src="/web_logo.webp"
+                  alt="Nubix Logo"
+                  className="nav-logo-img"
+                  width="52"
+                  height="52"
+                  loading="eager"
+                />
+              </picture>
+              <span className="nav-logo-text">فروشگاه نوبیکس</span>
+            </Link>
+
+            {/* Mobile Bento Menu Button */}
+            <div className="nav-hamburger">
+              <button
+                type="button"
+                className="nav-hamburger-btn"
+                onClick={() => setShowMobileMenu(true)}
+                aria-label="نمایش منوی دسته‌بندی"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+                <span className="menu-pulse"></span>
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Mobile Menu Overlay */}
+        <div className={`mobile-menu-overlay ${showMobileMenu ? 'show' : ''}`} onClick={() => setShowMobileMenu(false)}></div>
+
+        {/* Sub-Navbar */}
+        <div className={`sub-navbar ${showMobileMenu ? 'mobile-open' : ''}`}>
+          <div className="container sub-navbar-inner">
+            <div className="mobile-menu-header">
+              <div className="mobile-menu-brand">
+                <picture>
+                  <img src="/web_logo.webp" alt="Nubix Logo" width="32" height="32" className="mobile-menu-logo-img" />
+                </picture>
+                <span className="mobile-menu-brand-text">نوبیکس شاپ</span>
+              </div>
+              <button className="mobile-menu-close" onClick={() => setShowMobileMenu(false)} aria-label="بستن منو">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            {/* Right side: navigation links (RTL) */}
+            <ul className="sub-nav-links">
+              <li>
+                <Link href="/" onClick={() => setShowMobileMenu(false)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                  <span>صفحه اصلی</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/?cat=فورتنایت" onClick={() => setShowMobileMenu(false)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M12 12h.01"></path><path d="M17 12h.01"></path><path d="M7 12h2"></path><path d="M8 11v2"></path></svg>
+                  <span>محصولات فورتنایت</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/?cat=هوش مصنوعی" onClick={() => setShowMobileMenu(false)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
+                  <span>اشتراک هوش مصنوعی</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/reseller" onClick={() => setShowMobileMenu(false)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  <span>همکاری در فروش</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" onClick={() => setShowMobileMenu(false)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  <span>سوالات متداول</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" onClick={() => setShowMobileMenu(false)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                  <span>تماس با ما</span>
+                </Link>
+              </li>
+            </ul>
+
+            {/* Left side: store status & date (RTL) */}
+            <div className="sub-nav-status">
+              <div className="status-indicator">
+                <span className="status-dot"></span>
+                <span className="status-text">فروشگاه آماده خدمت‌رسانی</span>
+              </div>
+              <span className="status-date">{todayFa}</span>
+            </div>
+          </div>
         </div>
-      </nav>
-      <div className="top-strip">
-        فروشگاه آماده خدمت‌رسانی <span className="today-dot-start">امروز</span>
-        <span className="today-dot-end">{todayFa}</span>
-      </div>
+      </header>
       {showPromo && (
         <div className="promo-overlay" onClick={() => setShowPromo(false)}>
           <div className="promo-modal" onClick={(e) => e.stopPropagation()}>
@@ -648,6 +778,105 @@ export default function Navbar() {
         </div>
       )}
       {/* PriorityNoticeModal temporarily disabled */}
+      <div className="mobile-bottom-nav">
+        <div className="mobile-bottom-nav-inner">
+          <Link href="/" className={`bottom-nav-item ${pathname === '/' && !showSearchMobileOverlay ? 'active' : ''}`} onClick={() => setShowSearchMobileOverlay(false)}>
+            <div className="bottom-nav-icon-container">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path><circle cx="9" cy="12" r="1.2" fill="currentColor"></circle><circle cx="13" cy="12" r="1.2" fill="currentColor"></circle><circle cx="17" cy="12" r="1.2" fill="currentColor"></circle></svg>
+            </div>
+            <span>صفحه اصلی</span>
+          </Link>
+          
+          <button type="button" className={`bottom-nav-item ${pathname.includes('cat') || showMobileMenu ? 'active' : ''}`} onClick={() => { setShowSearchMobileOverlay(false); setShowMobileMenu(true); }}>
+            <div className="bottom-nav-icon-container">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+            </div>
+            <span>محصولات</span>
+          </button>
+          
+          <Link href="/vbucks" className={`bottom-nav-item ${pathname === '/vbucks' ? 'active' : ''}`} onClick={() => setShowSearchMobileOverlay(false)}>
+            <div className="bottom-nav-icon-container">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M12 12h.01"></path><path d="M17 12h.01"></path><path d="M7 12h2"></path><path d="M8 11v2"></path></svg>
+            </div>
+            <span>پرفروش‌ها</span>
+          </Link>
+          
+          <button type="button" className={`bottom-nav-item ${showSearchMobileOverlay ? 'active' : ''}`} onClick={() => setShowSearchMobileOverlay(v => !v)}>
+            <div className="bottom-nav-icon-container">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <span>جستجو</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Mobile Search Box (Slides up when Search tab is active) */}
+      {showSearchMobileOverlay && (
+        <div className="mobile-search-overlay-card">
+          <div className="mobile-search-input-wrapper">
+            <svg className="mobile-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input
+              type="text"
+              placeholder="جستجو در محصولات نوبیکس شاپ..."
+              value={mobileQ}
+              onChange={(e) => setMobileQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const term = mobileQ.trim();
+                  if (term) {
+                    router.push(`/?q=${encodeURIComponent(term)}#popular`);
+                    setShowSearchMobileOverlay(false);
+                  }
+                }
+              }}
+              autoFocus
+            />
+            {mobileQ && (
+              <button
+                type="button"
+                className="mobile-search-clear-btn"
+                onClick={() => {
+                  setMobileQ('');
+                  setMobileSearchResults([]);
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+          
+          {/* Live search results inside mobile search overlay card */}
+          {mobileSearchLoading && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '8px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--muted)' }}>در حال جستجو...</span>
+            </div>
+          )}
+          {!mobileSearchLoading && mobileSearchResults.length > 0 && (
+            <div className="mobile-search-results-list">
+              {mobileSearchResults.map((p) => {
+                const hasPrice = typeof p.price === 'number' || (p.variants && p.variants.length > 0);
+                const price = p.variants && p.variants.length > 0 ? Math.min(...p.variants.map(v => v.price)) : p.price;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className="mobile-search-result-item"
+                    onClick={() => {
+                      router.push(`/product/${p.slug}`);
+                      setShowSearchMobileOverlay(false);
+                    }}
+                  >
+                    <span className="mobile-search-result-name">{p.name_fa}</span>
+                    <span className="mobile-search-result-price">
+                      {hasPrice ? `${price.toLocaleString('fa-IR')} تومان` : 'ناموجود'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }

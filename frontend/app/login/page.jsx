@@ -18,6 +18,10 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [authedUser, setAuthedUser] = useState(null);
   const [showAuthedModal, setShowAuthedModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [activeTab, setActiveTab] = useState("phone"); // "phone" or "email"
+
   const backdropStyle = {
     position: "fixed",
     inset: 0,
@@ -36,6 +40,16 @@ export default function LoginPage() {
     boxShadow: "0 20px 60px rgba(0,0,0,0.22)",
     color: "#0f172a",
   };
+
+  useEffect(() => {
+    setMounted(true);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -80,14 +94,43 @@ export default function LoginPage() {
     checkAuth();
   }, [apiBase, router]);
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setEmail("");
+    setError("");
+  };
+
+  const handlePhoneChange = (e) => {
+    const val = e.target.value.replace(/[^0-9\s]/g, "");
+    setEmail(val);
+  };
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+  };
+
+  const handleClose = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-    const trimmedEmail = email.trim();
+    let finalEmail = email.trim();
+    if (isMobile && activeTab === "phone") {
+      finalEmail = finalEmail.replace(/\s+/g, "");
+      if (/^\d{10}$/.test(finalEmail) && finalEmail.startsWith("9")) {
+        finalEmail = "0" + finalEmail;
+      }
+    }
     const trimmedPassword = password.trim();
-    const isPhone = /^09\d{9}$/.test(trimmedEmail);
-    if (!trimmedEmail || !trimmedPassword) {
-      setError("شماره تلفن یا ایمیل و رمز عبور را وارد کنید");
+    const isPhone = /^09\d{9}$/.test(finalEmail);
+    if (!finalEmail || !trimmedPassword) {
+      setError(activeTab === "phone" && isMobile ? "شماره تلفن و رمز عبور را وارد کنید" : "شماره تلفن یا ایمیل و رمز عبور را وارد کنید");
       return;
     }
     setLoading(true);
@@ -97,7 +140,7 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          email: trimmedEmail,
+          email: finalEmail,
           password: trimmedPassword,
           remember,
         }),
@@ -121,7 +164,7 @@ export default function LoginPage() {
         router.push("/panel/user");
       }
     } catch (err) {
-      const fallback = /^09\d{9}$/.test(email.trim())
+      const fallback = /^09\d{9}$/.test(finalEmail)
         ? "شماره یا رمز عبور نادرست است"
         : "ایمیل یا رمز عبور نادرست است";
       setError(err.message || fallback);
@@ -129,6 +172,253 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (!mounted) {
+    return <div style={{ minHeight: "100vh", background: "#0c0617" }} />;
+  }
+
+  if (isMobile) {
+    return (
+      <div className="mobile-login-container">
+        {/* Close Button */}
+        <button type="button" className="login-mobile-close" onClick={handleClose} aria-label="بستن">
+          ✕
+        </button>
+
+        {/* Form Content */}
+        <div className="login-mobile-content">
+          <h1 className="login-mobile-title">ورود</h1>
+          <p className="login-mobile-subtitle">با شماره تلفن یا ایمیل و رمز عبور خود وارد شوید</p>
+
+          {/* Navigation Tabs */}
+          <div className="login-mobile-tabs">
+            <button
+              type="button"
+              className="login-mobile-tab-item"
+              style={{
+                borderBottomColor: activeTab === "phone" ? "#bf5af2" : "transparent",
+                color: activeTab === "phone" ? "#ffffff" : "#988bb0",
+                background: "none",
+                borderTop: "none",
+                borderLeft: "none",
+                borderRight: "none",
+                padding: "0 0 12px 0",
+                fontSize: "16px",
+                fontWeight: "800",
+                cursor: "pointer",
+                marginLeft: "24px"
+              }}
+              onClick={() => handleTabChange("phone")}
+            >
+              استفاده از شماره تلفن
+            </button>
+            <button
+              type="button"
+              className="login-mobile-tab-item"
+              style={{
+                borderBottomColor: activeTab === "email" ? "#bf5af2" : "transparent",
+                color: activeTab === "email" ? "#ffffff" : "#988bb0",
+                background: "none",
+                borderTop: "none",
+                borderLeft: "none",
+                borderRight: "none",
+                padding: "0 0 12px 0",
+                fontSize: "16px",
+                fontWeight: "800",
+                cursor: "pointer"
+              }}
+              onClick={() => handleTabChange("email")}
+            >
+              ورود با ایمیل
+            </button>
+          </div>
+
+          {error && <div className="login-mobile-error">{error}</div>}
+
+          <form onSubmit={handleLogin} className="login-mobile-form">
+            <div>
+              <label className="login-mobile-field-label">
+                {activeTab === "phone" ? "شماره تلفن همراه" : "نشانی ایمیل"}
+              </label>
+              {activeTab === "phone" ? (
+                <div className="login-mobile-input-wrapper" style={{ direction: "ltr" }}>
+                  <div className="login-mobile-country">
+                    <span className="login-mobile-flag">🇮🇷</span>
+                    <span className="login-mobile-code">+98</span>
+                  </div>
+                  <span className="login-mobile-divider" />
+                  <input
+                    type="tel"
+                    className="login-mobile-input login-mobile-input-ltr"
+                    placeholder="912 345 6789"
+                    value={email}
+                    onChange={handlePhoneChange}
+                    inputMode="numeric"
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <div className="login-mobile-input-wrapper" style={{ direction: "ltr" }}>
+                  <input
+                    type="email"
+                    className="login-mobile-input login-mobile-input-ltr"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={handleEmailChange}
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="login-mobile-field-label">رمز عبور</label>
+              <div className="login-mobile-input-wrapper" style={{ direction: "ltr" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="login-mobile-input login-mobile-input-ltr"
+                  placeholder="******"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{ letterSpacing: showPassword ? "1px" : "4px" }}
+                />
+                <button
+                  type="button"
+                  className="login-mobile-eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "پنهان کردن رمز" : "نمایش رمز"}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    {showPassword ? (
+                      <>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </>
+                    ) : (
+                      <>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </>
+                    )}
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Checkbox and Forgot Password Link */}
+            <div className="login-mobile-checkbox-row">
+              <label className="login-mobile-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="login-mobile-checkbox"
+                />
+                <span>مرا به خاطر بسپار</span>
+              </label>
+              <a href="/forgot-password" className="login-mobile-forgot-link">
+                فراموشی رمز عبور؟
+              </a>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="login-mobile-submit-btn"
+              disabled={loading}
+            >
+              {loading ? "در حال ورود..." : "ادامه"}
+              {!loading && (
+                <span className="login-mobile-arrow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </span>
+              )}
+            </button>
+          </form>
+
+          {/* Signup Link */}
+          <div className="login-mobile-signup-row">
+            <span>آیا هنوز عضو نشده اید؟</span>
+            <a href="/signup" className="login-mobile-signup-link">
+              ثبت نام کنید
+            </a>
+          </div>
+        </div>
+
+        {/* Brand/Logo Section */}
+        <div className="login-mobile-logo-section">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/web_logo.webp" alt="Nubix Logo" className="login-mobile-logo-img" />
+          <span className="login-mobile-logo-text">فروشگاه نوبیکس</span>
+        </div>
+
+        {/* Authed Modal */}
+        {showAuthedModal && (
+          <div className="report-modal-backdrop" style={backdropStyle}>
+            <div className="report-modal warning" style={modalStyle}>
+              <div className="report-head" style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                <div>
+                  <div className="report-title" style={{ fontWeight: 800, fontSize: 18 }}>حساب فعال</div>
+                  <div className="report-subtitle" style={{ fontSize: 14, color: "#475569" }}>
+                    شما با حساب {authedUser?.name || authedUser?.email || authedUser?.username || "کاربر"} وارد هستید.
+                  </div>
+                </div>
+                <button
+                  className="report-close"
+                  onClick={() => setShowAuthedModal(false)}
+                  style={{ border: "none", background: "transparent", fontSize: 18, cursor: "pointer" }}
+                >
+                  ✕
+                </button>
+              </div>
+              <p style={{ margin: "12px 0", color: "#0f172a" }}>
+                می‌توانید وارد پنل شوید یا برای ورود با حساب دیگر ابتدا خارج شوید.
+              </p>
+              <div className="report-actions" style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                <button
+                  className="btn"
+                  style={{ background: "#e2e8f0", color: "#334155" }}
+                  onClick={async () => {
+                    try {
+                      await fetch(`${apiBase}/api/auth/logout`, {
+                        method: "POST",
+                        credentials: "include",
+                      });
+                    } catch {
+                      // ignore
+                    } finally {
+                      setShowAuthedModal(false);
+                      if (typeof router.refresh === "function") {
+                        router.refresh();
+                      }
+                    }
+                  }}
+                >
+                  خروج از حساب
+                </button>
+                <button
+                  className="btn primary-btn-sm"
+                  onClick={() => {
+                    setShowAuthedModal(false);
+                    if (authedUser?.is_admin) {
+                      window.location.href = adminCacheBustHref();
+                    } else {
+                      window.location.href = "/panel/user";
+                    }
+                  }}
+                >
+                  ورود به پنل
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -303,3 +593,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

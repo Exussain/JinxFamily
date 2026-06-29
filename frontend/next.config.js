@@ -71,8 +71,8 @@ const nextConfig = {
       { source: '/gemini', headers: noStore },
       { source: '/login', headers: forceCacheBust },
       { source: '/product/:slug*', headers: noStore },
-      { source: '/panel/admin', headers: forceCacheBust },
-      { source: '/panel/admin/:path*', headers: forceCacheBust },
+      { source: '/panel/admin', headers: noStore },
+      { source: '/panel/admin/:path*', headers: noStore },
       { source: '/reseller', headers: noStore },
       { source: '/reseller/:path*', headers: noStore },
     ];

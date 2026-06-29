@@ -6,7 +6,8 @@
     "dev": "next dev -p 3002 -H 0.0.0.0 --webpack",
     "dev:https": "sh -c 'CERT_DIR=$(cd .. && pwd)/.certs; NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_EXTRA_CA_CERTS=\"$CERT_DIR/nubixshop-local.crt\" exec next dev -p 3002 -H 0.0.0.0 --experimental-https --experimental-https-key \"$CERT_DIR/nubixshop-local.key\" --experimental-https-cert \"$CERT_DIR/nubixshop-local.crt\" \"$@\"' --",
     "build": "next build",
-    "start": "next start -p 3002"
+    "start": "next start -p 3002",
+    "deploy": "npm run build && pm2 restart nubix-frontend"
   },
   "dependencies": {
     "@hcaptcha/react-hcaptcha": "^1.16.0",

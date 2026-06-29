@@ -2449,6 +2449,17 @@ def _clean_product_int(value, field_label):
     return parsed
 
 
+def _clean_daily_limit(value, field_label):
+    """Accepts -1 (unlimited) or any non-negative integer."""
+    try:
+        parsed = int(value) if value is not None and value != "" else -1
+    except Exception:
+        raise ValueError(f"{field_label} نامعتبر است")
+    if parsed < -1:
+        raise ValueError(f"{field_label} نمی‌تواند منفی باشد")
+    return parsed
+
+
 def _clean_product_category(value):
     category = str(value or "").strip().upper()
     allowed = {choice[0] for choice in Product.CATEGORY_CHOICES}
@@ -2488,15 +2499,15 @@ def _build_product_updates(payload, require_name=False):
     if "ordering_disabled" in payload:
         updates["ordering_disabled"] = bool(payload.get("ordering_disabled"))
     if "daily_order_limit" in payload:
-        updates["daily_order_limit"] = _clean_product_int(payload.get("daily_order_limit"), "محدودیت سفارش روزانه")
+        updates["daily_order_limit"] = _clean_daily_limit(payload.get("daily_order_limit"), "محدودیت سفارش روزانه")
     if "reseller_ordering_disabled" in payload:
         updates["reseller_ordering_disabled"] = bool(payload.get("reseller_ordering_disabled"))
     if "customer_ordering_disabled" in payload:
         updates["customer_ordering_disabled"] = bool(payload.get("customer_ordering_disabled"))
     if "reseller_daily_order_limit" in payload:
-        updates["reseller_daily_order_limit"] = _clean_product_int(payload.get("reseller_daily_order_limit"), "محدودیت سفارش روزانه همکاران")
+        updates["reseller_daily_order_limit"] = _clean_daily_limit(payload.get("reseller_daily_order_limit"), "محدودیت سفارش روزانه همکاران")
     if "customer_daily_order_limit" in payload:
-        updates["customer_daily_order_limit"] = _clean_product_int(payload.get("customer_daily_order_limit"), "محدودیت سفارش روزانه مشتریان")
+        updates["customer_daily_order_limit"] = _clean_daily_limit(payload.get("customer_daily_order_limit"), "محدودیت سفارش روزانه مشتریان")
     if "description" in payload:
         updates["description"] = _clean_product_text(payload.get("description"), 8000)
     if "delivery_text" in payload:
@@ -3134,14 +3145,14 @@ def public_settings(request):
 GTA6_CONFIG_KEY = "gta6_config"
 GTA6_PRODUCT_SLUG = "gta6"
 GTA6_EDITIONS = ("standard", "ultimate")
-# Capacity keys are unique across platforms: cap2/cap3 are PS5, home/switch/full are Xbox.
-GTA6_CAPACITIES = ("cap2", "cap3", "home", "switch", "full")
+# Capacity keys are unique across platforms: cap2/cap3/full_ps5 are PS5, home/switch/full are Xbox.
+GTA6_CAPACITIES = ("cap2", "cap3", "full_ps5", "home", "switch", "full")
 
 
 def _gta6_default_config():
     pricing = {
         edition: {
-            cap: {"toman": 0, "originalToman": 0, "variant_id": None}
+            cap: {"toman": 0, "originalToman": 0, "lira": 0, "variant_id": None}
             for cap in GTA6_CAPACITIES
         }
         for edition in GTA6_EDITIONS
@@ -3189,9 +3200,14 @@ def _gta6_load_config():
                         original = max(0, int(cell.get("originalToman", 0) or 0))
                     except Exception:
                         original = 0
+                    try:
+                        lira = max(0, int(cell.get("lira", 0) or 0))
+                    except Exception:
+                        lira = 0
                     config["pricing"][edition][cap] = {
                         "toman": toman,
                         "originalToman": original,
+                        "lira": lira,
                         "variant_id": cell.get("variant_id"),
                     }
     return config, obj
@@ -3269,8 +3285,13 @@ def gta6_config(request):
                     original = max(0, int(cell.get("originalToman", 0) or 0))
                 except Exception:
                     original = 0
+                try:
+                    lira = max(0, int(cell.get("lira", 0) or 0))
+                except Exception:
+                    lira = 0
                 config["pricing"][edition][cap]["toman"] = toman
                 config["pricing"][edition][cap]["originalToman"] = original
+                config["pricing"][edition][cap]["lira"] = lira
 
         _gta6_sync_variant_prices(config)
         obj.value_text = json.dumps(config, ensure_ascii=False)
@@ -4486,7 +4507,7 @@ def admin_update_order_status(request, tracking):
         order.created_xbox_pass = created_xbox_pass
         update_fields.extend(['created_xbox_email', 'created_xbox_pass'])
 
-    if xbox_order and status == "completed":
+    if order.xbox_create_account and status == "completed":
         effective_xbox_email = created_xbox_email or order.created_xbox_email
         effective_xbox_pass = created_xbox_pass or order.created_xbox_pass
         if not send_email and not getattr(order, "is_reseller_order", False):
@@ -6618,6 +6639,13 @@ def admin_accounting(request):
             created_at__lte=to_date,
             is_test_order=False
         ).exclude(status__in=['pending', 'canceled'])
+    elif status_filter == "paid_completed":
+        orders_qs = Order.objects.filter(
+            status__in=['paid', 'completed', 'registered'],
+            created_at__gte=from_date,
+            created_at__lte=to_date,
+            is_test_order=False
+        )
     else:
         orders_qs = Order.objects.filter(
             status=status_filter,
@@ -6627,7 +6655,7 @@ def admin_accounting(request):
         )
     orders_qs = orders_qs.exclude(note__icontains="شارژ کیف پول").exclude(status="wallet_topup")
 
-    orders_qs = orders_qs.select_related('user').prefetch_related('payments', 'items', 'items__product').order_by('-created_at')
+    orders_qs = orders_qs.select_related('user').prefetch_related('payments', 'items', 'items__product', 'items__accounts').order_by('-created_at')
 
     # Calculate totals
     from django.db.models import Sum, Count
@@ -6671,7 +6699,34 @@ def admin_accounting(request):
             for it in items_list
         )
 
+        items_names = [
+            {
+                "name": it.name,
+                "quantity": it.quantity or 1,
+            }
+            for it in items_list
+        ]
+
         latest_payment = o.payments.order_by("-created_at").first()
+
+        # Unit breakdown for reseller orders
+        units = []
+        for item in items_list:
+            for acc in item.accounts.all():
+                units.append({
+                    "id": acc.id,
+                    "index": acc.index,
+                    "unit_tracking": acc.unit_tracking,
+                    "account_type": acc.account_type,
+                    "account_email": acc.account_email or "",
+                    "mode": acc.mode,
+                    "mode_fa": dict(OrderItemAccount.MODE_CHOICES).get(acc.mode, acc.mode),
+                    "status": acc.status,
+                    "status_fa": dict(OrderItemAccount.STATUS_CHOICES).get(acc.status, acc.status) if acc.status in ("pending", "filled") else acc.status,
+                    "settled": acc.settled,
+                    "settled_at": acc.settled_at.isoformat() if acc.settled_at else None,
+                    "name": item.name,
+                })
 
         orders_data.append({
             "id": o.id,
@@ -6690,11 +6745,14 @@ def admin_accounting(request):
             "first_item_quantity": qty_val,
             "total_lira": total_lira,
             "item_count": item_count,
+            "items_names": items_names,
             "user_email": o.user.email if o.user else "",
             "payment_amount": latest_payment.amount if latest_payment else 0,
             "payment_ref_id": latest_payment.ref_id if latest_payment else "",
             "settled": o.settled,
             "settled_at": o.settled_at.isoformat() if o.settled_at else None,
+            "has_units": len(units) > 0,
+            "units": units,
         })
 
     return JsonResponse({
@@ -6789,4 +6847,68 @@ def admin_settle_bulk(request):
         "success": True,
         "message": f"{count} سفارش تسویه شد" if settled else f"{count} سفارش از تسویه خارج شد",
         "count": count,
+    })
+
+
+@csrf_exempt
+def admin_unit_settle(request):
+    """تسویه کردن واحدهای یک سفارش (تک تک)"""
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    try:
+        payload = json.loads(request.body) if request.body else {}
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+
+    unit_tracking = payload.get("unit_tracking")
+    tracking_code = payload.get("tracking_code")
+    settled = payload.get("settled", True)
+
+    if unit_tracking:
+        accounts = OrderItemAccount.objects.filter(unit_tracking=unit_tracking)
+    elif tracking_code:
+        # Settle all units of an order
+        accounts = OrderItemAccount.objects.filter(item__order__tracking_code=tracking_code)
+    else:
+        return JsonResponse({"detail": "unit_tracking یا tracking_code الزامی است"}, status=400)
+
+    now = timezone.now()
+    if settled:
+        count = accounts.update(settled=True, settled_at=now)
+    else:
+        count = accounts.update(settled=False, settled_at=None)
+
+    return JsonResponse({
+        "success": True,
+        "message": f"{count} واحد تسویه شد" if settled else f"{count} واحد از تسویه خارج شد",
+        "count": count,
+    })
+
+
+def admin_oldest_unsettled(request):
+    """قدیمی‌ترین تاریخ سفارش تسویه نشده"""
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+
+    oldest = Order.objects.filter(
+        settled=False,
+        is_test_order=False,
+    ).exclude(
+        status__in=['pending', 'canceled', 'wallet_topup']
+    ).exclude(
+        note__icontains="شارژ کیف پول"
+    ).order_by('created_at').first()
+
+    return JsonResponse({
+        "date": oldest.created_at.isoformat() if oldest else None,
+        "tracking_code": oldest.tracking_code if oldest else None,
     })

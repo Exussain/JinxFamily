@@ -328,13 +328,6 @@ export default function CrewPackClient({ initialProduct }) {
       <Suspense fallback={null}>
         <Navbar />
       </Suspense>
-      {isAdminUser && (
-        <div className="admin-fab">
-          <button onClick={() => { window.location.href = adminCacheBustHref(); }} aria-label="پنل مدیریت">
-            <span>مدیریت</span>
-          </button>
-        </div>
-      )}
       <main className="container" style={{ padding: "24px 0 40px" }}>
         <section className="card section product-hero">
           <div className="image-stack">

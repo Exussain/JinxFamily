@@ -381,14 +381,6 @@ export default function ProductPage() {
   return (
     <div>
       <Navbar />
-      {isAdminUser && (
-        <div className="admin-fab">
-          <button onClick={() => { window.location.href = adminCacheBustHref(); }} aria-label="پنل مدیریت">
-            ⭐
-            <span>مدیریت</span>
-          </button>
-        </div>
-      )}
       <main className="container" style={{ padding: "24px 0 40px" }}>
         {loading && <div className="muted">در حال بارگذاری محصول…</div>}
         {!loading && error && (

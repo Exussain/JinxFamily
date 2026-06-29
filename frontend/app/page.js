@@ -359,7 +359,7 @@ export default async function Page(props) {
       <TrustOnboardingModal />
       <main className="container home-shell home-index">
         <h1 className="sr-only">
-          نوبیکس شاپ — فعال‌سازی قانونی محصولات آنلاین: اشتراک ChatGPT و Gemini، وی‌باکس و کروپک فورتنایت، گیفت کارت و اشتراک‌های دیجیتال
+          نوبیکس | سریعترین و ارزان ترین تحویل :) 💜
         </h1>
         <section className="hero-grid">
             <HeroSlider
