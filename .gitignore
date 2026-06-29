@@ -72,3 +72,6 @@ backend/staticfiles/
 Thumbs.db
 .idea/
 .vscode/
+
+# feedback screenshots (not source)
+*.jpg
