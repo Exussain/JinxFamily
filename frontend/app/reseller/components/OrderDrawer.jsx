@@ -1,5 +1,5 @@
 "use client";
-import { fmtToman, formatDateTime, statusLabel, copyText } from "../lib";
+import { fmtToman, formatDateTime, statusLabel, copyText, isRefundableOrder } from "../lib";
 
 export default function OrderDrawer({ order, onClose, onReorder, onFill, onReturnUnit }) {
   if (!order) return null;
@@ -47,7 +47,7 @@ export default function OrderDrawer({ order, onClose, onReorder, onFill, onRetur
                     <span style={{ fontSize: 11, color: (a.status === "filled" || a.status === "completed") ? "#22c55e" : "#fb923c", fontWeight: 700 }}>
                       {a.mode_fa} · {a.status_fa || a.status}
                     </span>
-                    {a.status !== "completed" && order.status !== "canceled" && order.status !== "refunded" && onReturnUnit && (
+                    {a.status !== "completed" && isRefundableOrder(order) && onReturnUnit && (
                       <button
                         className="reseller-btn danger text-xs"
                         style={{

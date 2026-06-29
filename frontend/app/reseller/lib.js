@@ -35,6 +35,18 @@ export function statusLabel(status) {
   return STATUS_TAG[status]?.[0] || status;
 }
 
+// سفارش فقط وقتی قابل مرجوع کردن به کیف پول است که واقعاً پرداخت شده باشد.
+// باید با PAID_STATUSES در بک‌اند (reseller_order_return_unit) هماهنگ بماند.
+// به‌ویژه "pending" (در انتظار پرداخت) قابل مرجوع نیست، چون پولی دریافت نشده.
+const REFUNDABLE_STATUSES = new Set([
+  "paid", "registered", "processing", "completed",
+  "needs_2fa", "needs_tr_region", "invalid_info",
+]);
+
+export function isRefundableOrder(order) {
+  return !!order && REFUNDABLE_STATUSES.has(order.status);
+}
+
 export function priceForQuantity(tiers, qty) {
   if (!tiers || tiers.length === 0) return 0;
   const active = tiers.filter((t) => t.active).sort((a, b) => b.min_quantity - a.min_quantity);

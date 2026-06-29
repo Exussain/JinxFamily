@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api, fmtToman } from "../lib";
+import { api, fmtToman, isRefundableOrder } from "../lib";
 
 const EpicLogo = () => (
   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#000", color: "#fff", padding: "2px 6px", borderRadius: 4, fontSize: 10, fontWeight: 700, direction: "ltr", userSelect: "none" }}>
@@ -262,7 +262,7 @@ export default function FillAccountsModal({ order, onClose }) {
                     <div className="acc-row-head" style={{ display: "flex", alignItems: "center", width: "100%", gap: 8 }}>
                       <span className="acc-row-num">{a.index}</span>
                       <span style={{ fontSize: 13, fontWeight: 700 }}>واحد {a.index}</span>
-                      {a.status !== "completed" && (
+                      {a.status !== "completed" && isRefundableOrder(order) && (
                         <button
                           type="button"
                           className="reseller-btn danger text-xs"
@@ -287,7 +287,7 @@ export default function FillAccountsModal({ order, onClose }) {
                         </button>
                       )}
                       {!isFilled && a.account_type !== "xbox" && (
-                        <div className="acc-row-mode" style={{ marginInlineStart: a.status !== "completed" ? 0 : "auto" }}>
+                        <div className="acc-row-mode" style={{ marginInlineStart: (a.status !== "completed" && isRefundableOrder(order)) ? 0 : "auto" }}>
                           <label className="reseller-checkbox-label">
                             <input
                               type="checkbox"

@@ -1529,6 +1529,19 @@ def reseller_order_return_unit(request, tracking):
     if order.status in ("canceled", "refunded", "wallet_topup"):
         return JsonResponse({"message": "این سفارش قبلاً لغو یا مرجوع شده است."}, status=400)
 
+    # حفاظت مالی: فقط سفارش‌هایی که واقعاً پرداخت شده‌اند قابل مرجوع کردن هستند.
+    # وضعیت "pending" یعنی پرداخت هنوز تأیید نشده (مثلاً کاربر در درگاه انصراف داده) —
+    # مرجوع کردن چنین سفارشی، کیف پول را بابت مبلغی که هرگز دریافت نشده شارژ می‌کند.
+    PAID_STATUSES = {
+        "paid", "registered", "processing", "completed",
+        "needs_2fa", "needs_tr_region", "invalid_info",
+    }
+    if order.status not in PAID_STATUSES:
+        return JsonResponse(
+            {"message": "تنها سفارش‌های پرداخت‌شده قابل مرجوع کردن هستند."},
+            status=400,
+        )
+
     item = order.items.first()
     if not item:
         return JsonResponse({"message": "آیتمی برای این سفارش یافت نشد."}, status=400)
