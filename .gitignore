@@ -73,5 +73,6 @@ Thumbs.db
 .idea/
 .vscode/
 
-# feedback screenshots (not source)
-*.jpg
+# Miscellaneous feedback screenshots dropped in the repo root (not source).
+# Scoped to the root so real website image assets in subfolders are unaffected.
+/*.jpg
