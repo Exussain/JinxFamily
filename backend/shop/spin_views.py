@@ -17,16 +17,19 @@ from .models import SiteSetting, SpinResult, UserProfile
 from .rewards import _setting_int, anonymize_name, award_points, generate_discount_code
 
 # Canonical wheel — 8 slices, each a distinct outcome. Uniform selection gives
-# the agreed launch-week odds: empty 25%, wallet 25%, 5%-off 37.5%, 20%-off 12.5%.
+# the agreed launch-week odds: empty 25%, diamonds 25%, 5%-off 37.5%, 20%-off 12.5%.
+# The "wallet" segment type name is kept as-is (frontend color/icon lookup is
+# keyed by it) even though it now awards diamonds, not wallet_balance — the
+# customer wallet/cash-back system has been retired in favour of diamonds.
 SPIN_SEGMENTS = [
-    {"index": 0, "type": "blank",      "label": "پوچ",                  "percent": 0,  "wallet": 0},
-    {"index": 1, "type": "discount5",  "label": "کد تخفیف ۵٪",          "percent": 5,  "wallet": 0},
-    {"index": 2, "type": "wallet",     "label": "۱۵,۰۰۰ تومان اعتبار",  "percent": 0,  "wallet": 15000},
-    {"index": 3, "type": "discount5",  "label": "کد تخفیف ۵٪",          "percent": 5,  "wallet": 0},
-    {"index": 4, "type": "blank",      "label": "پوچ",                  "percent": 0,  "wallet": 0},
-    {"index": 5, "type": "discount20", "label": "کد تخفیف ۲۰٪",         "percent": 20, "wallet": 0},
-    {"index": 6, "type": "wallet",     "label": "۱۵,۰۰۰ تومان اعتبار",  "percent": 0,  "wallet": 15000},
-    {"index": 7, "type": "discount5",  "label": "کد تخفیف ۵٪",          "percent": 5,  "wallet": 0},
+    {"index": 0, "type": "blank",      "label": "پوچ",                  "percent": 0,  "diamonds": 0},
+    {"index": 1, "type": "discount5",  "label": "کد تخفیف ۵٪",          "percent": 5,  "diamonds": 0},
+    {"index": 2, "type": "wallet",     "label": "۵۰ الماس",             "percent": 0,  "diamonds": 50},
+    {"index": 3, "type": "discount5",  "label": "کد تخفیف ۵٪",          "percent": 5,  "diamonds": 0},
+    {"index": 4, "type": "blank",      "label": "پوچ",                  "percent": 0,  "diamonds": 0},
+    {"index": 5, "type": "discount20", "label": "کد تخفیف ۲۰٪",         "percent": 20, "diamonds": 0},
+    {"index": 6, "type": "wallet",     "label": "۵۰ الماس",             "percent": 0,  "diamonds": 50},
+    {"index": 7, "type": "discount5",  "label": "کد تخفیف ۵٪",          "percent": 5,  "diamonds": 0},
 ]
 
 
@@ -86,7 +89,7 @@ def spin_status(request):
             "type": last.segment_type,
             "label": last.prize_label,
             "code": last.discount_code.code if last.discount_code_id else None,
-            "wallet_credit": last.wallet_credit,
+            "diamonds_credit": last.wallet_credit,
         }
     return JsonResponse({
         "signed_in": True,
@@ -136,14 +139,14 @@ def spin(request):
 
     profile, _ = UserProfile.objects.get_or_create(user=user)
     code_obj = None
-    wallet_credit = 0
+    diamond_credit = 0
     prize_label = segment["label"]
 
     if segment["type"] == "wallet":
-        wallet_credit = _setting_int("spin_wallet_credit", segment["wallet"])
-        if wallet_credit > 0:
-            profile.wallet_balance = int(profile.wallet_balance or 0) + wallet_credit
-            profile.save(update_fields=["wallet_balance"])
+        diamond_credit = _setting_int("spin_diamond_credit", segment["diamonds"])
+        if diamond_credit > 0:
+            award_points(user, diamond_credit, "spin_win", note="جایزه گردونه")
+            profile.refresh_from_db(fields=["points_balance"])
     elif segment["type"] in ("discount5", "discount20"):
         code_obj = generate_discount_code(
             percent=segment["percent"],
@@ -164,7 +167,7 @@ def spin(request):
         segment_type=segment["type"],
         prize_label=prize_label,
         discount_code=code_obj,
-        wallet_credit=wallet_credit,
+        wallet_credit=diamond_credit,  # field name is legacy; now stores diamonds, not toman
         public_name=anonymize_name(user),
     )
 
@@ -184,9 +187,9 @@ def spin(request):
     if code_obj is not None:
         payload["code"] = code_obj.code
         payload["percent"] = segment["percent"]
-    if wallet_credit > 0:
-        payload["wallet_credit"] = wallet_credit
-        payload["wallet_balance"] = profile.wallet_balance
+    if diamond_credit > 0:
+        payload["diamonds_credit"] = diamond_credit
+        payload["points_balance"] = profile.points_balance
     return JsonResponse(payload)
 
 

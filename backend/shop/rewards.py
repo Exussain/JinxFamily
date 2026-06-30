@@ -27,6 +27,22 @@ REFERRAL_POINTS_MAX = 50
 REFERRAL_MILESTONE_COUNT = 10
 REFERRAL_MILESTONE_AMOUNT = 150000
 
+# Diamond (الماس) <-> Toman conversion for checkout redemption. 350 diamonds
+# = 110,000 toman; below MIN_DIAMONDS_TO_REDEEM a redeem attempt is ignored.
+DIAMOND_TO_TOMAN_NUMERATOR = 110000
+DIAMOND_TO_TOMAN_DENOMINATOR = 350
+MIN_DIAMONDS_TO_REDEEM = 10
+
+
+def diamonds_to_toman(diamonds: int) -> int:
+    return (int(diamonds) * DIAMOND_TO_TOMAN_NUMERATOR) // DIAMOND_TO_TOMAN_DENOMINATOR
+
+
+def toman_to_diamonds_ceil(toman: int) -> int:
+    """Diamonds needed to cover `toman`, rounded up so a capped discount is never under-charged."""
+    t = max(0, int(toman))
+    return -(-t * DIAMOND_TO_TOMAN_DENOMINATOR // DIAMOND_TO_TOMAN_NUMERATOR)
+
 # Characters used for generated codes — ambiguous glyphs removed so codes are
 # easy to read/dictate over the phone.
 _CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"

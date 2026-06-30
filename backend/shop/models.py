@@ -124,8 +124,9 @@ class Order(models.Model):
         help_text="درخواست ساخت اکانت Xbox",
     )
     amount = models.PositiveIntegerField(default=0)
-    wallet_used = models.PositiveIntegerField(default=0)
-    wallet_rewarded = models.BooleanField(default=False)
+    wallet_used = models.PositiveIntegerField(default=0, help_text="[منسوخ] فقط برای سفارش‌های قدیمی قبل از حذف کیف پول")
+    wallet_rewarded = models.BooleanField(default=False, help_text="[منسوخ] کش‌بک کیف پول حذف شده؛ این فیلد فقط تاریخی است")
+    diamonds_used = models.PositiveIntegerField(default=0, help_text="تعداد الماس مصرف‌شده برای تخفیف این سفارش")
     discount_code = models.CharField(max_length=50, blank=True, default="")
     discount_percent = models.PositiveSmallIntegerField(default=0)
     discount_amount = models.PositiveIntegerField(default=0)
@@ -316,7 +317,9 @@ class PointsTransaction(models.Model):
         ("purchase", "خرید"),
         ("referral", "معرفی"),
         ("spin_cost", "هزینه گردونه"),
+        ("spin_win", "جایزه گردونه"),
         ("milestone", "جایزه پلکانی"),
+        ("redeem", "تبدیل به تخفیف خرید"),
         ("adjust", "تعدیل دستی"),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="points_txns")

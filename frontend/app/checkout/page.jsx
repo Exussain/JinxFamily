@@ -14,6 +14,13 @@ const CREWPACK_SLUG = 'fortnite-crew-pack';
 const ACK_STORAGE_KEY = 'checkout_ack_timestamp';
 const ACK_EXPIRY_DAYS = 7; // یادآوری هر 7 روز
 
+// Diamond (الماس) <-> Toman conversion, mirrors backend/shop/rewards.py
+const DIAMOND_TO_TOMAN_NUMERATOR = 110000;
+const DIAMOND_TO_TOMAN_DENOMINATOR = 350;
+const MIN_DIAMONDS_TO_REDEEM = 10;
+const diamondsToToman = (d) => Math.floor((d * DIAMOND_TO_TOMAN_NUMERATOR) / DIAMOND_TO_TOMAN_DENOMINATOR);
+const tomanToDiamondsCeil = (t) => Math.ceil((Math.max(0, t) * DIAMOND_TO_TOMAN_DENOMINATOR) / DIAMOND_TO_TOMAN_NUMERATOR);
+
 export default function CheckoutPage() {
   const { items, total, setQty, removeItem, clear } = useCart();
   const [form, setForm] = useState({
@@ -31,7 +38,7 @@ export default function CheckoutPage() {
   });
   const [me, setMe] = useState(null);
   const [meLoaded, setMeLoaded] = useState(false);
-  const [walletUse, setWalletUse] = useState(0);
+  const [diamondsUse, setDiamondsUse] = useState(0);
   const [discountCode, setDiscountCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState(0);
   const [discountFlat, setDiscountFlat] = useState(0);
@@ -132,8 +139,12 @@ export default function CheckoutPage() {
     ? Math.min(discountFlat, baseTotal + rushFee)
     : (discountPercent > 0 ? Math.floor((baseTotal + rushFee) * discountPercent / 100) : 0);
   const subtotalAfterDiscount = Math.max(0, baseTotal + rushFee - discountAmount);
-  const walletCap = Math.min(me?.wallet_balance || 0, subtotalAfterDiscount);
-  const finalTotal = Math.max(0, subtotalAfterDiscount - walletUse);
+  const diamondsBalance = me?.points_balance || 0;
+  const diamondsCap = Math.min(diamondsBalance, tomanToDiamondsCeil(subtotalAfterDiscount));
+  const diamondDiscount = diamondsUse >= MIN_DIAMONDS_TO_REDEEM
+    ? Math.min(diamondsToToman(diamondsUse), subtotalAfterDiscount)
+    : 0;
+  const finalTotal = Math.max(0, subtotalAfterDiscount - diamondDiscount);
 
   // Check if name is required but not provided
   const nameRequired = needsName && !fullName.trim();
@@ -151,10 +162,10 @@ export default function CheckoutPage() {
         : "زمان تقریبی انجام: ۱۵ دقیقه تا ۸ ساعت کاری");
 
   useEffect(() => {
-    if (walletUse > walletCap) {
-      setWalletUse(walletCap);
+    if (diamondsUse > diamondsCap) {
+      setDiamondsUse(diamondsCap);
     }
-  }, [walletCap, walletUse]);
+  }, [diamondsCap, diamondsUse]);
 
   useEffect(() => {
     if (discountCode && !discountOpen) {
@@ -297,7 +308,7 @@ export default function CheckoutPage() {
       if (raw) {
         const draft = JSON.parse(raw);
         if (draft.form) setForm((prev) => ({ ...prev, ...draft.form }));
-        if (typeof draft.walletUse === "number") setWalletUse(draft.walletUse);
+        if (typeof draft.diamondsUse === "number") setDiamondsUse(draft.diamondsUse);
         if (typeof draft.rushOrder === "boolean") setRushOrder(draft.rushOrder);
         if (typeof draft.contactEmail === "string") setContactEmail(draft.contactEmail);
         if (typeof draft.discountCode === "string") setDiscountCode(draft.discountCode);
@@ -315,7 +326,7 @@ export default function CheckoutPage() {
         "checkout_form_draft",
         JSON.stringify({
           form,
-          walletUse,
+          diamondsUse,
           rushOrder,
           contactEmail,
           discountCode,
@@ -614,8 +625,8 @@ export default function CheckoutPage() {
         credentials: 'include',
         body: JSON.stringify({ 
           items: orderItems,
-          contact: contactPayload, 
-          wallet_use: walletUse,
+          contact: contactPayload,
+          diamonds_use: diamondsUse,
           rush_order: rushOrder,
           rush_fee: rushFee,
           discount_code: discountCode.trim() || undefined,
@@ -1015,18 +1026,30 @@ export default function CheckoutPage() {
               )}
             </div>
 
-              {/* Wallet */}
-              {me && (
+              {/* Diamonds (الماس) */}
+              {me && diamondsBalance > 0 && (
                 <div className="wallet-section">
                   <div className="wallet-balance">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                    <span className="wallet-amount">{me.wallet_balance.toLocaleString('fa-IR')}</span>
-                    <span className="wallet-currency">تومان</span>
+                    <span aria-hidden style={{ fontSize: 16 }}>💎</span>
+                    <span className="wallet-amount">{diamondsBalance.toLocaleString('fa-IR')}</span>
+                    <span className="wallet-currency">الماس</span>
                   </div>
                   <div className="wallet-input-wrap">
-                    <input type="number" min={0} max={walletCap} value={walletUse} onChange={(e) => setWalletUse(Math.min(walletCap, Math.max(0, Number(e.target.value) || 0)))} placeholder="استفاده" />
-                    <span className="wallet-input-unit">T</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={diamondsCap}
+                      value={diamondsUse}
+                      onChange={(e) => setDiamondsUse(Math.min(diamondsCap, Math.max(0, Number(e.target.value) || 0)))}
+                      placeholder="استفاده"
+                    />
+                    <span className="wallet-input-unit">💎</span>
                   </div>
+                  {diamondsUse > 0 && diamondsUse < MIN_DIAMONDS_TO_REDEEM && (
+                    <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                      حداقل {MIN_DIAMONDS_TO_REDEEM} الماس برای تبدیل به تخفیف لازم است.
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1077,10 +1100,10 @@ export default function CheckoutPage() {
                     <span>-{discountAmount.toLocaleString('fa-IR')} تومان</span>
                   </div>
                 )}
-                {walletUse > 0 && (
+                {diamondDiscount > 0 && (
                   <div className="price-row wallet-discount">
-                    <span>کسر از کیف پول</span>
-                    <span>-{walletUse.toLocaleString('fa-IR')} تومان</span>
+                    <span>تخفیف الماس ({diamondsUse.toLocaleString('fa-IR')} 💎)</span>
+                    <span>-{diamondDiscount.toLocaleString('fa-IR')} تومان</span>
                   </div>
                 )}
                 <div className="price-row total">

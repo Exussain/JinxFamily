@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import Navbar from "../../components/Navbar";
 import { SpinWheelSvg, FALLBACK_TYPES, SLICE } from "../../components/spinWheel";
 
-const TYPE_EMOJI = { blank: "🙁", discount5: "🎁", discount20: "🎉", wallet: "💰" };
+const TYPE_EMOJI = { blank: "🙁", discount5: "🎁", discount20: "🎉", wallet: "💎" };
 
 export default function SpinPage() {
   return (
@@ -81,7 +81,7 @@ function SpinPageInner() {
           type: data.segment.type,
           label: data.segment.label,
           code: data.code || null,
-          wallet_credit: data.wallet_credit || 0,
+          diamonds_credit: data.diamonds_credit || 0,
         });
         loadWinners();
       }, 5200);
@@ -97,7 +97,7 @@ function SpinPageInner() {
       <main className="spinpage" dir="rtl">
         <header className="sp-head">
           <h1>گردونه شانس نوبیکس 🎡</h1>
-          <p>وارد حساب شو، گردونه رو بچرخون و جایزه‌ی واقعی بگیر: از اعتبار کیف پول تا کد تخفیف ۲۰٪. هر حساب یک چرخش رایگان دارد.</p>
+          <p>وارد حساب شو، گردونه رو بچرخون و جایزه‌ی واقعی بگیر: از الماس تا کد تخفیف ۲۰٪. هر حساب یک چرخش رایگان دارد.</p>
         </header>
 
         <div className="sp-grid">
@@ -121,8 +121,8 @@ function SpinPageInner() {
                 {result.code && (
                   <div className="sp-code"><span>کد تخفیف (مخصوص حساب تو):</span><code>{result.code}</code></div>
                 )}
-                {result.wallet_credit > 0 && (
-                  <p className="sp-muted">{Number(result.wallet_credit).toLocaleString("fa-IR")} تومان به کیف پول تو اضافه شد.</p>
+                {result.diamonds_credit > 0 && (
+                  <p className="sp-muted">{Number(result.diamonds_credit).toLocaleString("fa-IR")} الماس به حساب تو اضافه شد.</p>
                 )}
               </div>
             ) : !signedIn ? (
