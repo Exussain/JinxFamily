@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 from . import views_categories
 from . import reseller_views
+from . import spin_views
+from . import blog_views
 from .chat_views import chat_user_api, chat_admin_api, chat_upload_api
 from .ai_playground import ai_playground_api
 
@@ -23,6 +25,7 @@ urlpatterns = [
     path('auth/login', views.login_view),
     path('auth/logout', views.logout_view),
     path('auth/me', views.me),
+    path('user/exchange-points', views.exchange_points),
     path('auth/send-otp', views.send_otp_view),
     path('auth/verify-otp', views.verify_otp_view),
     path('auth/reset-password/request', views.reset_password_request),
@@ -65,6 +68,16 @@ urlpatterns = [
     path('admin/orders/unit-settle', views.admin_unit_settle),
     path('admin/accounting/oldest-unsettled', views.admin_oldest_unsettled),
     path('discounts/validate', views.discount_validate),
+    path('me/spin/claim', spin_views.claim_spin_reward),
+    # Blog / Articles
+    path('blog/articles', blog_views.article_list),
+    path('blog/articles/<slug:slug>', blog_views.article_detail),
+    path('blog/categories', blog_views.category_list),
+    path('spin/status', spin_views.spin_status),
+    path('spin', spin_views.spin),
+    path('spin/recent-winners', spin_views.spin_recent_winners),
+    path('me/referral', views.my_referral),
+    path('me/redeem/crewpack', views.redeem_crewpack),
     path('stats', views.public_stats),
     path('testimonials', views.public_testimonials),
     path('currency-rates', views.currency_rates),

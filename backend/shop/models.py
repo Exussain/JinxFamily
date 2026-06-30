@@ -185,6 +185,24 @@ class DiscountCode(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True, help_text="تاریخ انقضای کد. در صورت خالی بدون انقضا.")
+    # Reward-engine fields. Defaults preserve the behaviour of existing manual codes.
+    assigned_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, blank=True, related_name="discount_codes",
+        help_text="اگر تنظیم شود، فقط همین کاربر می‌تواند کد را استفاده کند."
+    )
+    single_use = models.BooleanField(default=False, help_text="فقط یک‌بار قابل استفاده")
+    max_uses = models.PositiveIntegerField(null=True, blank=True, help_text="حداکثر دفعات استفاده. خالی = نامحدود")
+    used_count = models.PositiveIntegerField(default=0)
+    source = models.CharField(
+        max_length=20, default="manual",
+        help_text="manual | spin | referral | milestone"
+    )
+
+    def remaining_uses(self):
+        cap = 1 if self.single_use else self.max_uses
+        if cap is None:
+            return None  # unlimited
+        return max(0, cap - self.used_count)
 
     def save(self, *args, **kwargs):
         if self.code:
@@ -276,9 +294,81 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True)
     signup_ip = models.GenericIPAddressField(null=True, blank=True, help_text="IP used during signup")
     signup_device = models.CharField(max_length=128, blank=True, default="", help_text="Hashed device fingerprint at signup")
+    # Rewards engine
+    points_balance = models.PositiveIntegerField(default=0, help_text="امتیاز قابل مصرف کاربر")
+    referral_code = models.CharField(
+        max_length=16, unique=True, null=True, blank=True, db_index=True,
+        help_text="کد معرف یکتای کاربر (مثلاً NX-AB12CD)"
+    )
+    referred_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="referred_profiles",
+        help_text="کاربری که این کاربر را معرفی کرده است."
+    )
+    spin_used = models.BooleanField(default=False, help_text="آیا کاربر از چرخش رایگان هفته‌ی لانچ استفاده کرده است؟")
 
     def __str__(self):
         return f"Profile for {self.user.username}"
+
+
+class PointsTransaction(models.Model):
+    """دفتر کل امتیازات کاربر. مثبت = کسب، منفی = مصرف."""
+    REASON_CHOICES = [
+        ("purchase", "خرید"),
+        ("referral", "معرفی"),
+        ("spin_cost", "هزینه گردونه"),
+        ("milestone", "جایزه پلکانی"),
+        ("adjust", "تعدیل دستی"),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="points_txns")
+    amount = models.IntegerField(help_text="مثبت = کسب، منفی = مصرف")
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    balance_after = models.PositiveIntegerField(default=0)
+    related_order = models.ForeignKey("Order", on_delete=models.SET_NULL, null=True, blank=True)
+    note = models.CharField(max_length=240, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["user", "-created_at"], name="shop_points_user_idx")]
+
+    def __str__(self):
+        return f"{self.user_id} {self.reason} {self.amount:+d}"
+
+
+class SpinResult(models.Model):
+    """نتیجه‌ی هر چرخش گردونه. مبنای قانون «یک چرخش به ازای هر حساب» و فید برندگان اخیر."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="spin_results")
+    segment_index = models.PositiveSmallIntegerField(default=0)
+    segment_type = models.CharField(max_length=20, help_text="blank | wallet | discount5 | discount20")
+    prize_label = models.CharField(max_length=120, blank=True, default="")
+    discount_code = models.ForeignKey(
+        DiscountCode, on_delete=models.SET_NULL, null=True, blank=True, related_name="spin_results"
+    )
+    wallet_credit = models.PositiveIntegerField(default=0)
+    public_name = models.CharField(max_length=60, blank=True, default="", help_text="نام ناشناس‌شده برای نمایش عمومی")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["-created_at"], name="shop_spin_recent_idx")]
+
+    def __str__(self):
+        return f"{self.user_id} {self.segment_type}"
+
+
+class Referral(models.Model):
+    """یک ردیف به ازای هر دعوت موفق (ثبت‌نام کامل کاربر دعوت‌شده)."""
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="referrals_made")
+    referee = models.OneToOneField(User, on_delete=models.CASCADE, related_name="referral_source")
+    points_awarded = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["referrer", "-created_at"], name="shop_referral_referrer_idx")]
+
+    def __str__(self):
+        return f"{self.referrer_id} -> {self.referee_id}"
 
 
 class Payment(models.Model):
@@ -821,4 +911,40 @@ class SubCategory(models.Model):
 
     def __str__(self):
         return f"{self.label} ({self.key}) — {self.get_category_display()}"
+
+
+# ==============================================================================
+# Blog / Articles Models
+# ==============================================================================
+class BlogCategory(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100, unique=True, allow_unicode=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "دسته بندی مقاله"
+        verbose_name_plural = "دسته بندی مقالات"
+
+    def __str__(self):
+        return self.name
+
+class Article(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, allow_unicode=True)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='articles')
+    category = models.ForeignKey(BlogCategory, on_delete=models.SET_NULL, null=True, related_name='articles')
+    cover_image = models.ImageField(upload_to='blog/covers/', null=True, blank=True)
+    summary = models.TextField(help_text="خلاصه مقاله برای نمایش در لیست")
+    content = models.TextField(help_text="محتوای اصلی مقاله (HTML یا Markdown)")
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "مقاله"
+        verbose_name_plural = "مقالات"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
 

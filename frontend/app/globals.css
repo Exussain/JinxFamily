@@ -29,6 +29,27 @@ html {
   --accent: #ffb025;
   --line: #e5e8f2;
   --shadow: 0 15px 40px rgba(15, 26, 60, 0.12);
+
+  /* Mobile Login Variables - Light Theme (matches Desktop Light) */
+  --mobile-login-bg: var(--bg);
+  --mobile-login-grad1: rgba(44, 75, 255, 0.14);
+  --mobile-login-grad2: rgba(56, 189, 248, 0.14);
+  --mobile-login-grad3: rgba(251, 191, 36, 0.12);
+  --mobile-login-text: var(--text);
+  --mobile-login-subtitle: var(--muted);
+  --mobile-login-input-bg: var(--card);
+  --mobile-login-input-border: var(--line);
+  --mobile-login-input-text: var(--text);
+  --mobile-login-input-placeholder: rgba(15, 26, 60, 0.35);
+  --mobile-login-btn-bg: var(--primary);
+  --mobile-login-btn-text: #ffffff;
+  --mobile-login-btn-shadow: rgba(44, 75, 255, 0.12);
+  --mobile-login-checkbox-bg: var(--card);
+  --mobile-login-divider: var(--line);
+  --mobile-login-tab-border: var(--line);
+  --mobile-login-tab-inactive: var(--muted);
+  --mobile-login-tab-active: var(--primary);
+  --mobile-login-logo-filter: none;
 }
 :root[data-theme="dark"] {
   --bg: #0b1224;
@@ -40,6 +61,27 @@ html {
   --accent: #fbbf24;
   --line: #1f2937;
   --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+
+  /* Mobile Login Variables - Dark Theme (matches Desktop Dark) */
+  --mobile-login-bg: var(--bg);
+  --mobile-login-grad1: rgba(96, 165, 250, 0.16);
+  --mobile-login-grad2: rgba(34, 211, 238, 0.14);
+  --mobile-login-grad3: rgba(234, 179, 8, 0.12);
+  --mobile-login-text: var(--text);
+  --mobile-login-subtitle: var(--muted);
+  --mobile-login-input-bg: var(--card);
+  --mobile-login-input-border: var(--line);
+  --mobile-login-input-text: var(--text);
+  --mobile-login-input-placeholder: rgba(226, 232, 240, 0.3);
+  --mobile-login-btn-bg: var(--primary);
+  --mobile-login-btn-text: #0f172a;
+  --mobile-login-btn-shadow: rgba(0, 0, 0, 0.3);
+  --mobile-login-checkbox-bg: var(--card);
+  --mobile-login-divider: var(--line);
+  --mobile-login-tab-border: var(--line);
+  --mobile-login-tab-inactive: var(--muted);
+  --mobile-login-tab-active: var(--primary);
+  --mobile-login-logo-filter: brightness(0) invert(1);
 }
 
 :root[data-theme="dark"] select option {
@@ -2917,7 +2959,7 @@ input, button, select, textarea { font: inherit; }
   animation: progress-spin 9s linear infinite;
 }
 
-.hero-side { display: grid; gap: 16px; }
+.hero-side { display: grid; gap: 16px; min-width: 0; max-width: 100%; }
 
 /* Desktop: the three aside cards together match the slider height exactly */
 @media (min-width: 1025px) {
@@ -6666,11 +6708,12 @@ input, button, select, textarea { font: inherit; }
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #0c0617; /* Dark purple/violet background */
+  background-color: var(--mobile-login-bg);
   background-image: 
-    radial-gradient(circle at 50% 10%, rgba(191, 90, 242, 0.15), transparent 40%),
-    radial-gradient(circle at 10% 90%, rgba(255, 51, 102, 0.05), transparent 30%);
-  color: #ffffff;
+    radial-gradient(circle at 20% 20%, var(--mobile-login-grad1), transparent 38%),
+    radial-gradient(circle at 80% 30%, var(--mobile-login-grad2), transparent 40%),
+    radial-gradient(circle at 50% 90%, var(--mobile-login-grad3), transparent 35%);
+  color: var(--mobile-login-text);
   padding: 24px;
   position: relative;
   font-family: "Vazirmatn", system-ui, -apple-system, sans-serif;
@@ -6730,14 +6773,14 @@ input, button, select, textarea { font: inherit; }
 
 .login-mobile-subtitle {
   font-size: 13.5px;
-  color: #988bb0;
+  color: var(--mobile-login-subtitle);
   text-align: right;
   margin: 0 0 32px 0;
   line-height: 1.5;
 }
 
 .login-mobile-tabs {
-  border-bottom: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1.5px solid var(--mobile-login-tab-border);
   margin-bottom: 32px;
   display: flex;
   justify-content: flex-start;
@@ -6745,7 +6788,6 @@ input, button, select, textarea { font: inherit; }
 }
 
 .login-mobile-tab-item {
-  color: #ffffff;
   font-size: 16px;
   font-weight: 800;
   padding-bottom: 12px;
@@ -6765,7 +6807,7 @@ input, button, select, textarea { font: inherit; }
 .login-mobile-field-label {
   font-size: 13.5px;
   font-weight: 700;
-  color: #988bb0;
+  color: var(--mobile-login-subtitle);
   margin-bottom: 8px;
   display: block;
   text-align: right;
@@ -6774,8 +6816,8 @@ input, button, select, textarea { font: inherit; }
 .login-mobile-input-wrapper {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1.5px solid #5e3a9c; /* Deep purple border */
+  background: var(--mobile-login-input-bg);
+  border: 1.5px solid var(--mobile-login-input-border);
   border-radius: 14px;
   padding: 0 16px;
   height: 56px;
@@ -6794,7 +6836,7 @@ input, button, select, textarea { font: inherit; }
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #ffffff;
+  color: var(--mobile-login-input-text);
   font-weight: 800;
   font-size: 15px;
   flex-shrink: 0;
@@ -6814,7 +6856,7 @@ input, button, select, textarea { font: inherit; }
 .login-mobile-divider {
   width: 1px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--mobile-login-divider);
   margin: 0 12px;
   flex-shrink: 0;
 }
@@ -6823,7 +6865,7 @@ input, button, select, textarea { font: inherit; }
   background: transparent !important;
   border: none !important;
   outline: none !important;
-  color: #ffffff !important;
+  color: var(--mobile-login-input-text) !important;
   width: 100% !important;
   font-size: 16px !important;
   font-weight: 700 !important;
@@ -6835,8 +6877,18 @@ input, button, select, textarea { font: inherit; }
 }
 
 .login-mobile-input::placeholder {
-  color: rgba(255, 255, 255, 0.25) !important;
+  color: var(--mobile-login-input-placeholder) !important;
   letter-spacing: 1.5px;
+}
+
+/* Webkit Autocomplete Autofill Styles to prevent yellow/white overrides */
+.login-mobile-input:-webkit-autofill,
+.login-mobile-input:-webkit-autofill:hover, 
+.login-mobile-input:-webkit-autofill:focus, 
+.login-mobile-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--mobile-login-bg) inset !important;
+  -webkit-text-fill-color: var(--mobile-login-input-text) !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .login-mobile-input-ltr {
@@ -6847,7 +6899,7 @@ input, button, select, textarea { font: inherit; }
 .login-mobile-eye-btn {
   background: transparent !important;
   border: none !important;
-  color: #988bb0 !important;
+  color: var(--mobile-login-subtitle) !important;
   cursor: pointer;
   padding: 4px !important;
   display: flex;
@@ -6870,7 +6922,7 @@ input, button, select, textarea { font: inherit; }
   align-items: center;
   gap: 10px;
   font-size: 13.5px;
-  color: #988bb0;
+  color: var(--mobile-login-subtitle);
   font-weight: 700;
   cursor: pointer;
   user-select: none;
@@ -6882,7 +6934,7 @@ input, button, select, textarea { font: inherit; }
   height: 20px;
   border: 1.5px solid #5e3a9c;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--mobile-login-checkbox-bg);
   cursor: pointer;
   position: relative;
   transition: all 0.2s ease;
@@ -6918,8 +6970,8 @@ input, button, select, textarea { font: inherit; }
 }
 
 .login-mobile-submit-btn {
-  background: #ffffff !important;
-  color: #0c0617 !important;
+  background: var(--mobile-login-btn-bg) !important;
+  color: var(--mobile-login-btn-text) !important;
   border: none !important;
   border-radius: 14px !important;
   height: 56px !important;
@@ -6933,12 +6985,12 @@ input, button, select, textarea { font: inherit; }
   transition: all 0.2s ease;
   margin-top: 12px;
   width: 100% !important;
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 12px var(--mobile-login-btn-shadow);
 }
 
 .login-mobile-submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 24px var(--mobile-login-btn-shadow) !important;
 }
 
 .login-mobile-submit-btn:active {
@@ -6967,7 +7019,7 @@ input, button, select, textarea { font: inherit; }
   margin-top: 28px;
   text-align: center;
   font-size: 14px;
-  color: #988bb0;
+  color: var(--mobile-login-subtitle);
   font-weight: 700;
   direction: rtl;
 }
@@ -6997,13 +7049,14 @@ input, button, select, textarea { font: inherit; }
   height: 28px;
   width: auto;
   opacity: 0.95;
-  filter: brightness(0) invert(1); /* pure white logo for premium look */
+  filter: var(--mobile-login-logo-filter);
 }
 
 .login-mobile-logo-text {
   font-size: 11px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--mobile-login-subtitle);
+  opacity: 0.4;
   letter-spacing: 2px;
   text-transform: uppercase;
 }
@@ -7127,5 +7180,584 @@ input, button, select, textarea { font: inherit; }
     transform: none !important;
   }
 }
+
+/* --- Telegram-Style Fortnite Floating Action Button --- */
+.fortnite-scroll-fab {
+  position: fixed;
+  bottom: 86px; /* Positioned above the live chat widget (which is at bottom: 16px) */
+  right: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(236, 72, 153, 0.95));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 99;
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+  transition: opacity 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              box-shadow 0.3s ease, 
+              border-color 0.3s ease;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35), 0 0 15px rgba(236, 72, 153, 0.25);
+  pointer-events: none; /* Ignore clicks when hidden */
+}
+
+.fortnite-scroll-fab.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto; /* Enable clicks when visible */
+}
+
+.fortnite-scroll-fab:hover {
+  transform: scale(1.08) translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 12px 30px rgba(139, 92, 246, 0.5), 0 0 25px rgba(236, 72, 153, 0.45);
+}
+
+.fortnite-scroll-fab:active {
+  transform: scale(0.95) translateY(0);
+}
+
+.fab-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.fab-chevron-down {
+  animation: fab-bounce 2s infinite ease-in-out;
+}
+
+.fab-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  background: #ff453a;
+  border: 1.5px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(255, 69, 58, 0.4);
+  animation: badge-pulse 1.5s infinite alternate ease-in-out;
+  direction: ltr;
+}
+
+@keyframes fab-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+@keyframes badge-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(255, 69, 58, 0.4);
+  }
+  100% {
+    transform: scale(1.15);
+    box-shadow: 0 2px 12px rgba(255, 69, 58, 0.7);
+  }
+}
+
+/* --- Mobile Grid View for Fortnite (Removing Horizontal Scroll) --- */
+@media (max-width: 900px) {
+  .nav-cart {
+    display: none !important;
+  }
+
+  .cards.fortnite-vertical-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    overflow-x: visible !important;
+    scroll-snap-type: none !important;
+    gap: 12px !important;
+    padding: 8px 12px 24px !important;
+    scrollbar-width: none !important; /* Hide scrollbar if any browser tries to show it */
+  }
+
+  .cards.fortnite-vertical-grid::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .cards.fortnite-vertical-grid .card {
+    flex: none !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    scroll-snap-align: unset !important;
+    height: 100% !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+
+  .cards.fortnite-vertical-grid .card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* --- Floating Mini-Cart & Overlay Modal --- */
+.floating-cart-btn {
+  position: fixed;
+  left: 0;
+  top: 40vh;
+  transform: translateY(-50%) scale(0) translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 0 25px 25px 0;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 98;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: none;
+  box-shadow: 4px 4px 16px rgba(139, 92, 246, 0.35);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              opacity 0.4s ease,
+              background 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.floating-cart-btn.visible {
+  transform: translateY(-50%) scale(1) translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.floating-cart-btn.visible:active {
+  transform: translateY(-50%) scale(0.9) translateX(0);
+}
+
+.floating-cart-btn.bump {
+  animation: button-bump 0.5s ease;
+}
+
+.cart-btn-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px; /* offset for circular portion */
+}
+
+.cart-btn-badge {
+  position: absolute;
+  top: -6px;
+  right: 2px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ff453a;
+  color: #ffffff;
+  border: 1.5px solid #ffffff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 2px 8px rgba(255, 69, 58, 0.4);
+}
+
+.cart-btn-badge.pop {
+  animation: badge-pop 0.5s ease;
+}
+
+/* Modal screen overlay */
+.mini-cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 26, 60, 0.7);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1099;
+  padding: 16px;
+}
+
+/* Modal Dialog */
+.mini-cart-modal {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(22, 18, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  animation: modal-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mini-cart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mini-cart-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-cart-header-title h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.item-count-indicator {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.mini-cart-close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: #a8a0c0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mini-cart-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.mini-cart-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+  max-height: 40vh;
+}
+
+.mini-cart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.mini-cart-empty .empty-icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #a8a0c0;
+}
+
+.mini-cart-empty p {
+  font-size: 15px;
+  color: #a8a0c0;
+  font-weight: 700;
+  margin: 0;
+}
+
+.mini-cart-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mini-cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mini-cart-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.mini-cart-item-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-cart-item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mini-cart-item-placeholder {
+  color: #a8a0c0;
+}
+
+.mini-cart-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.mini-cart-item-name {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-cart-item-price {
+  font-size: 13px;
+  color: #bf5af2;
+  font-weight: 700;
+}
+
+.mini-cart-item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.mini-cart-qty-control {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  height: 28px;
+}
+
+.mini-cart-qty-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  width: 24px;
+  height: 100%;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.mini-cart-qty-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mini-cart-qty-val {
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  min-width: 20px;
+  text-align: center;
+  direction: ltr;
+}
+
+.mini-cart-delete-btn {
+  background: transparent;
+  border: none;
+  color: #ff453a;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 2px;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-cart-delete-btn:hover {
+  opacity: 1;
+}
+
+.mini-cart-footer {
+  padding: 20px 24px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+}
+
+.mini-cart-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.total-price-value {
+  color: #00d1ff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.mini-cart-footer-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-cart-checkout-btn {
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  color: #ffffff !important;
+  text-align: center;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 15px;
+  text-decoration: none;
+  display: block;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.25);
+  transition: all 0.2s ease;
+}
+
+.mini-cart-checkout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+}
+
+.mini-cart-checkout-btn:active {
+  transform: translateY(0);
+}
+
+.mini-cart-continue-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a8a0c0;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mini-cart-continue-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Animations */
+@keyframes button-bump {
+  0% { transform: translateY(-50%) scale(1) translateX(0); }
+  50% { transform: translateY(-50%) scale(1.15) translateX(0); }
+  100% { transform: translateY(-50%) scale(1) translateX(0); }
+}
+
+@keyframes badge-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Webkit Autocomplete Autofill Styles for all fields */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover, 
+.field input:-webkit-autofill:focus, 
+.field input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #f6f7fb inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+:root[data-theme="dark"] .field input:-webkit-autofill,
+:root[data-theme="dark"] .field input:-webkit-autofill:hover, 
+:root[data-theme="dark"] .field input:-webkit-autofill:focus, 
+:root[data-theme="dark"] .field input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+
+/* Blog Article Styles */
+.article-content h2, .article-content h3 {
+  color: #fff;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+.article-content p {
+  margin-bottom: 24px;
+}
+.article-content a {
+  color: var(--primary-2);
+  text-decoration: none;
+}
+.article-content a:hover {
+  text-decoration: underline;
+}
+.article-content img {
+  max-width: 100%;
+  border-radius: 12px;
+  margin: 24px 0;
+}
+.article-content ul, .article-content ol {
+  margin-bottom: 24px;
+  padding-right: 24px;
+}
+.article-content li {
+  margin-bottom: 8px;
+}
+
+
 
 

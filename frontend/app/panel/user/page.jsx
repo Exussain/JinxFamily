@@ -23,6 +23,12 @@ export default function UserPanelPage() {
   const [profilePassword, setProfilePassword] = useState("");
   const [profilePassword2, setProfilePassword2] = useState("");
   const [cancellingOrder, setCancellingOrder] = useState(null);
+  
+  // Exchange diamonds state
+  const [exchanging, setExchanging] = useState(false);
+  const [exchangeSuccess, setExchangeSuccess] = useState("");
+  const [exchangeError, setExchangeError] = useState("");
+  const [exchangeCode, setExchangeCode] = useState("");
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
@@ -78,7 +84,8 @@ export default function UserPanelPage() {
   const phoneNumber = user?.phone_number || user?.phone || "";
   const displayPhone = loading ? "" : phoneNumber || "ثبت نشده";
   const walletBalance = typeof user?.wallet_balance === "number" ? user.wallet_balance : 0;
-  const ordersCount = Array.isArray(orders) ? orders.length : 0;
+  const successfulOrders = orders.filter(o => o.status_fa === "انجام شده");
+  const ordersCount = Array.isArray(successfulOrders) ? successfulOrders.length : 0;
   const cartCount = Array.isArray(items) ? items.length : 0;
   const completedOrderItems = celebrationOrder?.items || [];
 
@@ -138,6 +145,32 @@ export default function UserPanelPage() {
     setCelebrationOrder(completed);
     setShowCelebration(true);
   }, [loading, orders]);
+
+  const handleExchange = async (rewardType) => {
+    setExchanging(true);
+    setExchangeError("");
+    setExchangeSuccess("");
+    setExchangeCode("");
+    try {
+      const res = await fetch(`${apiBase}/api/user/exchange-points`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reward_type: rewardType }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || "خطا در دریافت جایزه");
+      }
+      setExchangeSuccess(data.message);
+      setExchangeCode(data.code);
+      setUser(prev => ({ ...prev, points_balance: data.points_balance }));
+    } catch (err) {
+      setExchangeError(err.message);
+    } finally {
+      setExchanging(false);
+    }
+  };
 
   // Show loading skeleton during initial load
   if (loading) {
@@ -222,6 +255,27 @@ export default function UserPanelPage() {
               <div className="user-pill-row">
                 {displayPhone && <span className="pill">{displayPhone}</span>}
                 {user?.email && <span className="pill subtle">{user.email}</span>}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await fetch(`${apiBase}/api/auth/logout`, {
+                        method: "POST",
+                        credentials: "include",
+                      });
+                    } catch {
+                      // ignore
+                    }
+                    window.location.href = "/";
+                  }}
+                  className="pill danger"
+                  style={{
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  خروج از حساب
+                </button>
               </div>
             </div>
           </div>
@@ -237,6 +291,76 @@ export default function UserPanelPage() {
             <div className="stat">
               <span className="stat-label">سبد خرید</span>
               <span className="stat-value">{cartCount.toLocaleString("fa-IR")} آیتم</span>
+            </div>
+            <Link href="/panel/user/referrals" className="stat" style={{ textDecoration: "none", cursor: "pointer" }}>
+              <span className="stat-label">امتیاز و دعوت دوستان</span>
+              <span className="stat-value">{(user?.points_balance || 0).toLocaleString("fa-IR")} امتیاز 💜</span>
+            </Link>
+          </div>
+        </section>
+
+        <section className="card section" style={{ marginBottom: "24px" }}>
+          <div className="section-head">
+            <div>
+              <p className="kicker">کلوپ مشتریان</p>
+              <h3>تبدیل الماس به جایزه 💎</h3>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ color: "var(--muted)", margin: 0, fontSize: "14px", lineHeight: "1.8" }}>
+              شما می‌توانید با جمع‌آوری حداقل ۳۵۰ الماس از طریق خریدهایتان، آنها را به کدهای تخفیف ارزشمند تبدیل کنید.
+            </p>
+            
+            {exchangeError && (
+              <div className="alert danger">
+                <span className="icon">✖</span> {exchangeError}
+              </div>
+            )}
+            
+            {exchangeSuccess && (
+              <div className="alert success" style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", padding: "16px", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#10b981", fontWeight: "bold" }}>
+                  <span className="icon">✓</span> {exchangeSuccess}
+                </div>
+                <div style={{ background: "rgba(0,0,0,0.2)", padding: "12px", borderRadius: "8px", textAlign: "center", fontSize: "20px", fontWeight: "900", letterSpacing: "2px", color: "#fff" }}>
+                  {exchangeCode}
+                </div>
+                <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)" }}>این کد را کپی کرده و در سبد خرید اعمال کنید.</p>
+              </div>
+            )}
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px" }}>
+              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", textAlign: "center" }}>
+                <div style={{ fontSize: "32px" }}>💸</div>
+                <div>
+                  <div style={{ fontWeight: "800", fontSize: "16px", color: "#fff" }}>کد تخفیف ۱۵۰ هزار تومانی</div>
+                  <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "4px" }}>بدون حداقل خرید</div>
+                </div>
+                <button 
+                  className="btn primary" 
+                  onClick={() => handleExchange("cash_150")} 
+                  disabled={exchanging || (user?.points_balance || 0) < 350}
+                  style={{ width: "100%", background: "linear-gradient(135deg, #f59e0b, #d97706)", border: "none", color: "#fff" }}
+                >
+                  دریافت با ۳۵۰ الماس
+                </button>
+              </div>
+              
+              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", textAlign: "center" }}>
+                <div style={{ fontSize: "32px" }}>🏷️</div>
+                <div>
+                  <div style={{ fontWeight: "800", fontSize: "16px", color: "#fff" }}>کد تخفیف ۲۰٪</div>
+                  <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "4px" }}>حداکثر تخفیف: ۲۰۰ هزار تومان</div>
+                </div>
+                <button 
+                  className="btn primary" 
+                  onClick={() => handleExchange("percent_20")} 
+                  disabled={exchanging || (user?.points_balance || 0) < 350}
+                  style={{ width: "100%", background: "linear-gradient(135deg, #10b981, #059669)", border: "none", color: "#fff" }}
+                >
+                  دریافت با ۳۵۰ الماس
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -381,12 +505,12 @@ export default function UserPanelPage() {
               </div>
             </div>
             {loading && <div className="muted">در حال بارگذاری…</div>}
-            {!loading && orders.length === 0 && (
-              <div className="muted">هنوز سفارشی ثبت نکرده‌اید.</div>
+            {!loading && successfulOrders.length === 0 && (
+              <div className="muted">هنوز سفارش موفقی ثبت نکرده‌اید.</div>
             )}
-            {!loading && orders.length > 0 && (
+            {!loading && successfulOrders.length > 0 && (
               <div className="orders-list">
-                {orders.map((o) => (
+                {successfulOrders.map((o) => (
                   <div key={o.id} className="order-card">
                     <div className="order-card__top">
                       <div className="order-chip">{o.tracking_code}</div>
@@ -609,6 +733,18 @@ export default function UserPanelPage() {
           color: rgba(255,255,255,0.55);
           border-color: rgba(255,255,255,0.1);
         }
+        .pill.danger {
+          background: rgba(239, 68, 68, 0.15);
+          color: #fca5a5;
+          border-color: rgba(239, 68, 68, 0.35);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .pill.danger:hover {
+          background: rgba(239, 68, 68, 0.25);
+          color: #fff;
+          border-color: rgba(239, 68, 68, 0.5);
+        }
         .user-hero__stats {
           display: flex;
           flex-direction: column;
@@ -818,8 +954,20 @@ export default function UserPanelPage() {
         }
         @media (max-width: 960px) {
           .user-hero { grid-template-columns: 1fr; }
-          .user-hero__stats { flex-direction: row; flex-wrap: wrap; min-width: 0; }
-          .stat { flex: 1 1 140px; }
+          .user-hero__stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            min-width: 0;
+          }
+          .stat {
+            width: 100%;
+          }
+          .user-hero__stats .stat:nth-child(1),
+          .user-hero__stats .stat:nth-child(4) {
+            grid-column: span 2;
+          }
           .order-card__body { grid-template-columns: 1fr; gap: 6px; }
           .order-amount { text-align: right; }
         }

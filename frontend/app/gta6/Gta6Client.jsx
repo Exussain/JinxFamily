@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import TelegramContact from "../../components/TelegramContact";
@@ -159,6 +159,33 @@ export default function Gta6Client() {
     setTimeout(() => router.push("/checkout"), 350);
   };
 
+  // Target date for GTA VI release: 2026-11-19T00:00:00Z (around 142 days from 2026-06-30)
+  const targetDate = useMemo(() => new Date("2026-11-19T00:00:00Z").getTime(), []);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance < 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000),
+      });
+    };
+
+    updateTimer();
+    const intervalId = setInterval(updateTimer, 1000);
+    return () => clearInterval(intervalId);
+  }, [targetDate]);
+
   return (
     <div className="gta-root">
       <Navbar />
@@ -295,6 +322,35 @@ export default function Gta6Client() {
                 <span>🛟 پشتیبانی و گارانتی فروشگاه</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ───────────────────────── COUNTDOWN ───────────────────────── */}
+        <section className="gta-countdown-section card">
+          <div className="gta-countdown-inner">
+            <h2 className="gta-countdown-title">زمان باقی‌مانده تا انتشار جهانی</h2>
+            <div className="gta-countdown-grid">
+              <div className="gta-countdown-box">
+                <span className="gta-countdown-num">{timeLeft.days}</span>
+                <span className="gta-countdown-label">روز</span>
+              </div>
+              <div className="gta-countdown-sep">:</div>
+              <div className="gta-countdown-box">
+                <span className="gta-countdown-num">{String(timeLeft.hours).padStart(2, '0')}</span>
+                <span className="gta-countdown-label">ساعت</span>
+              </div>
+              <div className="gta-countdown-sep">:</div>
+              <div className="gta-countdown-box">
+                <span className="gta-countdown-num">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                <span className="gta-countdown-label">دقیقه</span>
+              </div>
+              <div className="gta-countdown-sep">:</div>
+              <div className="gta-countdown-box">
+                <span className="gta-countdown-num">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                <span className="gta-countdown-label">ثانیه</span>
+              </div>
+            </div>
+            <p className="gta-countdown-desc">پیش‌خرید کنید تا به محض انتشار بازی، اکانت تحویل شما گردد.</p>
           </div>
         </section>
 
@@ -600,6 +656,22 @@ export default function Gta6Client() {
 
         /* SECTIONS */
         .gta-section { padding: 22px; }
+        
+        .gta-countdown-section {
+          background: linear-gradient(135deg, rgba(255,45,155,0.1), rgba(124,77,255,0.1));
+          border: 1px solid rgba(255,45,155,0.3);
+          text-align: center;
+          padding: 30px;
+        }
+        .gta-countdown-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .gta-countdown-title { font-size: 20px; font-weight: 900; color: #fff; margin: 0; }
+        .gta-countdown-grid { display: flex; align-items: center; justify-content: center; gap: 12px; direction: ltr; }
+        .gta-countdown-box { display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.4); padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); min-width: 70px; }
+        .gta-countdown-num { font-size: 28px; font-weight: 900; color: var(--pink); font-family: monospace; }
+        .gta-countdown-label { font-size: 12px; color: #cbd5e1; margin-top: 4px; }
+        .gta-countdown-sep { font-size: 28px; font-weight: 900; color: #fff; padding-bottom: 20px; }
+        .gta-countdown-desc { font-size: 14px; color: #a5b4cf; margin: 0; }
+        
         .gta-sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
         .gta-sec-num {
           font-size: 13px; font-weight: 900; color: var(--pink); background: rgba(255,45,155,0.12);

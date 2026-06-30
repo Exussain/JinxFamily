@@ -2153,6 +2153,85 @@ body::after {
 
 @media (max-width: 1024px) {
   .reseller-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Mobile responsiveness & bug fixes */
+.reseller-shell {
+  overflow-x: hidden !important;
+}
+
+body {
+  overflow-x: hidden !important;
+}
+
+.reseller-sidebar-profile {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .reseller-sidebar-profile {
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    gap: 8px;
+    direction: rtl;
+  }
+  .reseller-sidebar-profile .profile-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+  .reseller-sidebar-profile .profile-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .reseller-sidebar-profile .profile-code {
+    font-family: "Vazirmatn", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    background: var(--line);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .reseller-sidebar-profile .status-pill {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hide user info items in topbar to prevent horizontal overflow */
+  .reseller-topbar .user-info .name,
+  .reseller-topbar .user-info .seller-code,
+  .reseller-topbar .user-info .status-pill {
+    display: none !important;
+  }
+  .reseller-topbar .user-info {
+    gap: 6px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Force single column for KPIs on small mobile screens */
+  .reseller-kpi-grid {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Global status pills colors to ensure they work in both sidebar and topbar */
+.status-pill.status-draft, .status-draft { background: rgba(156, 163, 175, 0.2) !important; color: #9ca3af !important; }
+.status-pill.status-pending_review, .status-pending_review { background: rgba(251, 191, 36, 0.2) !important; color: #fbbf24 !important; }
+.status-pill.status-verified, .status-verified { background: rgba(34, 197, 94, 0.2) !important; color: #22c55e !important; }
+.status-pill.status-rejected, .status-rejected { background: rgba(239, 68, 68, 0.2) !important; color: #ef4444 !important; }
+.status-pill.status-suspended, .status-suspended { background: rgba(239, 68, 68, 0.2) !important; color: #ef4444 !important; }

@@ -1340,6 +1340,7 @@ export default function VBucksClient({ initialProductData }) {
           .info-card { order: 4; }
           .product-highlights { order: 5; }
           .product-tabs { order: 6; }
+          .guides-card { order: 7; }
           .features-grid {
             grid-template-columns: 1fr;
           }

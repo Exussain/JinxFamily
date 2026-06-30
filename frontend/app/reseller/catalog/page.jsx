@@ -476,7 +476,13 @@ function CatalogInner() {
                     {p.lira_priced && <span className="cat-lira-tag">💱 لیر-محور</span>}
                   </div>
                   <div className="cat-name">{p.name_fa}</div>
-                  <div className="cat-price">از {fmtToman(p.base_price)} تومان</div>
+                  <div className="cat-price">
+                    از {fmtToman(
+                      p.tiers && p.tiers.length > 0
+                        ? Math.min(...p.tiers.map(t => t.price))
+                        : p.base_price
+                    )} تومان
+                  </div>
                 </div>
               );
             })}

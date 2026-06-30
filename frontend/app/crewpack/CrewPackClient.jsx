@@ -1847,6 +1847,7 @@ export default function CrewPackClient({ initialProduct }) {
           .info-card { order: 4; margin-top: 0 !important; }
           .product-highlights { order: 5; margin-top: 0 !important; }
           .product-tabs { order: 6; margin-top: 0 !important; }
+          .guides-card { order: 7; }
           .product-highlights {
             grid-template-columns: repeat(3, 1fr);
             gap: 6px;

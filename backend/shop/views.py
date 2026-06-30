@@ -44,6 +44,9 @@ from .models import (
     ResellerWalletTxn,
     ResellerPriceTier,
     SubCategory,
+    Referral,
+    PointsTransaction,
+    SpinResult,
 )
 from .zarinpal_service import ZarinPalService
 from .email_service import (
@@ -101,7 +104,7 @@ def _safe_internal_redirect_target(request, target: str, fallback: str) -> str:
 
 
 # Utility for discount code validation
-def _get_discount_code_status(code: str):
+def _get_discount_code_status(code: str, user=None):
     candidate = (code or "").strip().upper()
     if not candidate:
         return None, "کد تخفیف را وارد کنید."
@@ -114,6 +117,15 @@ def _get_discount_code_status(code: str):
         return None, "کد تخفیف غیرفعال است."
     if dc.expires_at and dc.expires_at <= timezone.now():
         return None, "کد تخفیف منقضی شده است."
+    # Single-user codes (spin / referral / milestone rewards) belong to one account.
+    if dc.assigned_user_id:
+        uid = getattr(user, "id", None) if user is not None else None
+        if uid is None or dc.assigned_user_id != uid:
+            return None, "این کد متعلق به حساب دیگری است."
+    # Usage cap (single_use => 1, otherwise max_uses; null = unlimited).
+    remaining = dc.remaining_uses()
+    if remaining is not None and remaining <= 0:
+        return None, "این کد قبلاً استفاده شده است."
     return dc, None
 
 # Canonical identifiers for Fortnite Crew pack (used across capacity / limits)
@@ -439,37 +451,9 @@ def _enforce_captcha(payload, phone_number, ip_address):
 
 def _apply_wallet_reward(order: Order) -> int:
     """
-    Credit the user's wallet with the configured reward once payment is confirmed.
+    Direct wallet cash back is now disabled. Loyalty program uses points instead.
     """
-    if order.user is None:
-        return 0
-    # Skip wallet reward for test users
-    if _is_test_user(order.user):
-        logger.info("Skipping wallet reward for test user: %s", order.user.username)
-        return 0
-    if getattr(order, "wallet_rewarded", False):
-        return 0
-    if order.wallet_used > 0 or order.discount_amount > 0:
-        return 0
-    payable = order.amount or 0
-    if payable <= 0:
-        return 0
-
-    # پایه محاسبه پاداش (بدون مالیات اضافه برای کروپک)
-    base_for_reward = max(payable, 0)
-    if base_for_reward <= 0:
-        return 0
-
-    profile, _ = UserProfile.objects.get_or_create(user=order.user)
-    reward = int(base_for_reward * WALLET_REWARD_RATE)
-    if reward <= 0:
-        return 0
-
-    profile.wallet_balance += reward
-    profile.save(update_fields=["wallet_balance"])
-    order.wallet_rewarded = True
-    order.save(update_fields=["wallet_rewarded"])
-    return reward
+    return 0
 
 
 def _normalize_login_identifier(value: str) -> str:
@@ -1296,7 +1280,7 @@ def create_order(request):
 
     # Apply discount code (percent) on subtotal
     if discount_code_raw:
-        dc, discount_error = _get_discount_code_status(discount_code_raw)
+        dc, discount_error = _get_discount_code_status(discount_code_raw, user)
         if discount_error:
             order.delete()
             return JsonResponse({"message": discount_error}, status=400)
@@ -1307,10 +1291,26 @@ def create_order(request):
         elif discount_percent > 0:
             discount_amount = int(amount * discount_percent / 100)
 
+        # Profit guardrail: never let a discount push net profit below the floor.
+        # Loyalty/referral milestone rewards are deliberate giveaways and are exempt.
+        if dc.source != "milestone":
+            try:
+                from .rewards import cap_discount_for_profit
+                cost_lines = [
+                    (it.product, it.variant, it.quantity)
+                    for it in order.items.select_related("product", "variant").all()
+                ]
+                discount_amount, _cost, _allowed = cap_discount_for_profit(cost_lines, amount, discount_amount)
+            except Exception:
+                logger.exception("profit guardrail failed; applying discount uncapped")
+
         amount = max(amount - discount_amount, 0)
         order.discount_code = dc.code
         order.discount_percent = discount_percent
         order.discount_amount = discount_amount
+        # Consume one use of the code.
+        dc.used_count = (dc.used_count or 0) + 1
+        dc.save(update_fields=["used_count"])
     
     # Apply wallet usage if user has profile and balance
     wallet_applied = 0
@@ -1579,6 +1579,13 @@ def signup(request):
         profile = UserProfile.objects.filter(user=user).order_by('id').first()
     # Default tier is "user"; admins can be configured via Django admin.
 
+    # Credit the referrer if this signup came through a referral link.
+    try:
+        from .rewards import process_referral
+        process_referral(user, payload.get('ref') or payload.get('referral_code'))
+    except Exception:
+        logger.exception("referral processing failed for signup user %s", user.id)
+
     login(request, user)
 
     avatar_url = ""
@@ -1701,8 +1708,70 @@ def me(request):
         "phone": phone_num,
         "is_admin": _is_admin_user(user),
         "wallet_balance": profile.wallet_balance,
+        "points_balance": profile.points_balance,
         "avatar_url": avatar_url,
     })
+
+
+@csrf_exempt
+def my_referral(request):
+    """GET /api/me/referral — the signed-in user's referral code, link and stats."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    user = request.user
+    from .rewards import (
+        ensure_referral_code,
+        REFERRAL_MILESTONE_AMOUNT,
+        REFERRAL_MILESTONE_COUNT,
+    )
+    code = ensure_referral_code(user)
+    invites = Referral.objects.filter(referrer=user).count()
+    points_earned = (
+        PointsTransaction.objects.filter(user=user, reason="referral")
+        .aggregate(s=Sum("amount"))["s"] or 0
+    )
+    base = (os.environ.get("PUBLIC_SITE_URL") or "https://nubixshop.ir").rstrip("/")
+    link = f"{base}/?ref={code}" if code else ""
+    return JsonResponse({
+        "referral_code": code,
+        "link": link,
+        "invites_count": invites,
+        "points_earned": points_earned,
+        "milestone": {
+            "target": REFERRAL_MILESTONE_COUNT,
+            "reached": invites >= REFERRAL_MILESTONE_COUNT,
+            "reward_amount": REFERRAL_MILESTONE_AMOUNT,
+        },
+    })
+
+
+@csrf_exempt
+def redeem_crewpack(request):
+    """POST /api/me/redeem/crewpack — spend points for a free Crew Pack code."""
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "ابتدا وارد شوید."}, status=401)
+    user = request.user
+    from .rewards import _setting_int, generate_discount_code
+    cost = _setting_int("crewpack_redeem_points", 800)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    if int(profile.points_balance or 0) < cost:
+        return JsonResponse({"message": f"برای دریافت کروپک رایگان به {cost} امتیاز نیاز دارید."}, status=400)
+
+    crew = Product.objects.filter(slug=CREW_SLUG).first()
+    crew_value = int(getattr(crew, "price", 0) or 0) or _setting_int("crewpack_value", 0)
+    if crew_value <= 0:
+        return JsonResponse({"message": "بازخرید کروپک موقتاً در دسترس نیست."}, status=400)
+
+    # Floor-exempt (source="milestone") single-use code worth a Crew Pack.
+    code = generate_discount_code(
+        amount=crew_value, assigned_user=user, single_use=True,
+        source="milestone", prefix="CREW", expires_at=timezone.now() + timedelta(days=60),
+    )
+    from .rewards import award_points
+    award_points(user, -cost, "milestone", note="بازخرید کروپک رایگان")
+    return JsonResponse({"success": True, "code": code.code, "amount": crew_value, "points_left": profile.points_balance})
 
 
 @csrf_exempt
@@ -3152,7 +3221,7 @@ GTA6_CAPACITIES = ("cap2", "cap3", "full_ps5", "home", "switch", "full")
 def _gta6_default_config():
     pricing = {
         edition: {
-            cap: {"toman": 0, "originalToman": 0, "lira": 0, "variant_id": None}
+            cap: {"toman": 0, "originalToman": 0, "lira": 0, "cost_toman": 0, "variant_id": None}
             for cap in GTA6_CAPACITIES
         }
         for edition in GTA6_EDITIONS
@@ -3204,10 +3273,15 @@ def _gta6_load_config():
                         lira = max(0, int(cell.get("lira", 0) or 0))
                     except Exception:
                         lira = 0
+                    try:
+                        cost_toman = max(0, int(cell.get("cost_toman", 0) or 0))
+                    except Exception:
+                        cost_toman = 0
                     config["pricing"][edition][cap] = {
                         "toman": toman,
                         "originalToman": original,
                         "lira": lira,
+                        "cost_toman": cost_toman,
                         "variant_id": cell.get("variant_id"),
                     }
     return config, obj
@@ -3289,9 +3363,14 @@ def gta6_config(request):
                     lira = max(0, int(cell.get("lira", 0) or 0))
                 except Exception:
                     lira = 0
+                try:
+                    cost_toman = max(0, int(cell.get("cost_toman", 0) or 0))
+                except Exception:
+                    cost_toman = 0
                 config["pricing"][edition][cap]["toman"] = toman
                 config["pricing"][edition][cap]["originalToman"] = original
                 config["pricing"][edition][cap]["lira"] = lira
+                config["pricing"][edition][cap]["cost_toman"] = cost_toman
 
         _gta6_sync_variant_prices(config)
         obj.value_text = json.dumps(config, ensure_ascii=False)
@@ -5113,7 +5192,8 @@ def discount_validate(request):
     except Exception:
         return JsonResponse({"message": "JSON نامعتبر"}, status=400)
     code = (payload.get("code") or "").strip()
-    dc, error = _get_discount_code_status(code)
+    req_user = request.user if request.user.is_authenticated else None
+    dc, error = _get_discount_code_status(code, req_user)
     if error:
         status_code = 400
         if error == "کد تخفیف نامعتبر است.":
@@ -5150,6 +5230,11 @@ def payment_request(request, tracking):
             _apply_wallet_reward(order)
         except Exception as reward_err:
             logger.error("Wallet reward (zero-amount order) failed: %s", reward_err)
+        try:
+            from .rewards import award_purchase_points
+            award_purchase_points(order)
+        except Exception:
+            logger.exception("purchase points (zero-amount order) failed for %s", order.tracking_code)
         _notify_customer_payment_success(order, ref_id="")
         return JsonResponse({
             "message": "سفارش بدون پرداخت ثبت شد (مبلغ صفر)",
@@ -5306,6 +5391,11 @@ def payment_verify(request, tracking):
                 order.tracking_code,
                 reward_err,
             )
+        try:
+            from .rewards import award_purchase_points
+            award_purchase_points(order)
+        except Exception:
+            logger.exception("purchase points failed for %s", order.tracking_code)
 
         # ایمیل اطلاع‌رسانی پرداخت موفق
         try:
@@ -5993,6 +6083,13 @@ def verify_otp_view(request):
         if device_fingerprint:
             profile.signup_device = device_fingerprint
         profile.save()
+
+        # Credit the referrer if this signup came through a referral link.
+        try:
+            from .rewards import process_referral
+            process_referral(user, payload.get('ref') or payload.get('referral_code'))
+        except Exception:
+            logger.exception("referral processing failed for otp signup user %s", user.id)
 
         login(request, user)
         request.session.set_expiry(60 * 60 * 24 * 31)  # 31 days to reduce SMS costs
@@ -6682,6 +6779,16 @@ def admin_accounting(request):
     # محاسبه مبلغ اصلی (قبل از تخفیف)
     original_amount = total_amount + total_wallet_used + total_discount_amount
 
+    # Build GTA6 variant_id → cost_toman lookup for accurate profit calculation
+    gta6_config_data, _ = _gta6_load_config()
+    gta6_variant_cost = {}
+    for ed_cells in gta6_config_data.get("pricing", {}).values():
+        for cell in ed_cells.values():
+            vid = cell.get("variant_id")
+            ct = int(cell.get("cost_toman", 0) or 0)
+            if vid and ct > 0:
+                gta6_variant_cost[str(vid)] = ct
+
     # Build order list
     orders_data = []
     for o in orders_qs:
@@ -6698,6 +6805,13 @@ def admin_accounting(request):
             (it.price_lira or (it.product.price_lira if it.product else 0) or 0) * (it.quantity or 1)
             for it in items_list
         )
+
+        # اگر آیتم‌های سفارش از واریانت‌های GTA6 با cost_toman مشخص باشن، هزینه خرید به تومن محاسبه می‌شه
+        total_cost_toman = 0
+        for it in items_list:
+            vid = str(it.variant_id) if it.variant_id else None
+            if vid and vid in gta6_variant_cost:
+                total_cost_toman += gta6_variant_cost[vid] * (it.quantity or 1)
 
         items_names = [
             {
@@ -6744,6 +6858,7 @@ def admin_accounting(request):
             "first_item_lira": lira_val,
             "first_item_quantity": qty_val,
             "total_lira": total_lira,
+            "total_cost_toman": total_cost_toman,
             "item_count": item_count,
             "items_names": items_names,
             "user_email": o.user.email if o.user else "",
@@ -6912,3 +7027,50 @@ def admin_oldest_unsettled(request):
         "date": oldest.created_at.isoformat() if oldest else None,
         "tracking_code": oldest.tracking_code if oldest else None,
     })
+
+
+@csrf_exempt
+def exchange_points(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        reward_type = data.get("reward_type")
+        
+        if reward_type not in ["cash_150", "percent_20"]:
+            return JsonResponse({"error": "نوع جایزه نامعتبر است."}, status=400)
+            
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        cost = 350
+        
+        if profile.points_balance < cost:
+            return JsonResponse({"error": "الماس کافی برای این جایزه ندارید."}, status=400)
+            
+        # Deduct points
+        from .rewards import award_points, generate_discount_code
+        award_points(request.user, -cost, "exchange", note=f"تبدیل الماس")
+        
+        # Reload profile to get accurate balance after award_points
+        profile.refresh_from_db()
+        
+        # Generate discount code
+        code_obj = None
+        if reward_type == "cash_150":
+            code_obj = generate_discount_code(amount=150000, assigned_user=request.user, source="points_exchange")
+        elif reward_type == "percent_20":
+            code_obj = generate_discount_code(percent=20, assigned_user=request.user, source="points_exchange")
+            
+        return JsonResponse({
+            "success": True,
+            "message": "جایزه با موفقیت دریافت شد.",
+            "code": code_obj.code if code_obj else "",
+            "points_balance": profile.points_balance
+        })
+        
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error exchanging points: {e}")
+        return JsonResponse({"error": "خطای داخلی رخ داد."}, status=500)

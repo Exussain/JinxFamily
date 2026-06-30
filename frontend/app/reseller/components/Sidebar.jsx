@@ -13,7 +13,7 @@ const NAV = [
   { href: "/reseller/support", label: "پشتیبانی", icon: "M12 2a9 9 0 00-9 9v5a3 3 0 003 3h2v-7H6v-1a6 6 0 0112 0v1h-2v7h2a3 3 0 003-3v-5a9 9 0 00-9-9z" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ me }) {
   const pathname = usePathname() || "";
   const [open, setOpen] = useState(false);
   const isActive = (href) => pathname === href || pathname.startsWith(href + "/");
@@ -27,6 +27,15 @@ export default function Sidebar() {
       </button>
       {open && <div className="reseller-nav-backdrop" onClick={() => setOpen(false)} />}
       <nav className={`reseller-sidebar ${open ? "open" : ""}`}>
+        {me && (
+          <div className="reseller-sidebar-profile">
+            <div className="profile-name">{me.support_name || "بدون نام"}</div>
+            <div className="profile-meta">
+              <span className="profile-code">{me.seller_code}</span>
+              <span className={`status-pill status-${me.status}`}>{me.status_fa}</span>
+            </div>
+          </div>
+        )}
         {NAV.map((item) => (
           <Link
             key={item.href}

@@ -481,3 +481,22 @@ class XboxAccountAdmin(admin.ModelAdmin):
             return obj.order.epic_username or "-"
         return "-"
     epic_username.short_description = "اپیک گیمز"
+
+
+# ==============================================================================
+# Blog Admin
+# ==============================================================================
+from .models import BlogCategory, Article
+
+@admin.register(BlogCategory)
+class BlogCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'created_at')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name',)
+
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    list_display = ('title', 'category', 'is_published', 'created_at')
+    list_filter = ('is_published', 'category')
+    prepopulated_fields = {'slug': ('title',)}
+    search_fields = ('title', 'summary')

@@ -62,7 +62,7 @@ export default function OTPLoginPage() {
         {/* Bottom Logo */}
         <div className="login-mobile-logo-section">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/web_logo.webp" alt="Nubix Logo" className="login-mobile-logo-img" />
+          <img src="/web_logo.webp" alt="Nubix Logo" className="login-mobile-logo-img" width="112" height="28" />
           <span className="login-mobile-logo-text">فروشگاه نوبیکس</span>
         </div>
       </div>

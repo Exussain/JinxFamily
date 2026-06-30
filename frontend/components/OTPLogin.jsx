@@ -362,6 +362,7 @@ export default function OTPLogin({ mode = "login" }) {
               first_name: normalizedFirstName,
               last_name: normalizedLastName,
               intent: mode,
+              ref: (typeof window !== "undefined" && window.localStorage.getItem("nubix_ref")) || undefined,
               ...passwordPayload,
             };
 

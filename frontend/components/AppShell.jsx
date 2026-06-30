@@ -3,6 +3,9 @@ import { usePathname } from "next/navigation";
 import AnnouncementBar from "./AnnouncementBar";
 import Footer from "./Footer";
 import DeferredWidgets from "./DeferredWidgets";
+import FloatingCart from "./FloatingCart";
+import SpinWheelModal from "./SpinWheelModal";
+import ReferralCapture from "./ReferralCapture";
 
 const MINIMAL_PREFIXES = ["/reseller"];
 
@@ -14,9 +17,12 @@ export default function AppShell({ children }) {
   }
   return (
     <>
+      <ReferralCapture />
       <AnnouncementBar />
       {children}
       <Footer />
+      <FloatingCart />
+      <SpinWheelModal />
       <DeferredWidgets />
     </>
   );

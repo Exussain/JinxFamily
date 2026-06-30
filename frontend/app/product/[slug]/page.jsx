@@ -1783,6 +1783,7 @@ export default function ProductPage() {
                 .product-highlights { order: 7; }
                 .mobile-description { order: 8; }
                 .product-tabs { order: 9; }
+                .guides-card { order: 10; }
                 .details-stack h1 {
                   font-size: 20px;
                 }

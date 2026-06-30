@@ -197,7 +197,7 @@ export default function LoginPage() {
               className="login-mobile-tab-item"
               style={{
                 borderBottomColor: activeTab === "phone" ? "#bf5af2" : "transparent",
-                color: activeTab === "phone" ? "#ffffff" : "#988bb0",
+                color: activeTab === "phone" ? "var(--mobile-login-tab-active)" : "var(--mobile-login-tab-inactive)",
                 background: "none",
                 borderTop: "none",
                 borderLeft: "none",
@@ -217,7 +217,7 @@ export default function LoginPage() {
               className="login-mobile-tab-item"
               style={{
                 borderBottomColor: activeTab === "email" ? "#bf5af2" : "transparent",
-                color: activeTab === "email" ? "#ffffff" : "#988bb0",
+                color: activeTab === "email" ? "var(--mobile-login-tab-active)" : "var(--mobile-login-tab-inactive)",
                 background: "none",
                 borderTop: "none",
                 borderLeft: "none",
@@ -351,7 +351,7 @@ export default function LoginPage() {
         {/* Brand/Logo Section */}
         <div className="login-mobile-logo-section">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/web_logo.webp" alt="Nubix Logo" className="login-mobile-logo-img" />
+          <img src="/web_logo.webp" alt="Nubix Logo" className="login-mobile-logo-img" width="112" height="28" />
           <span className="login-mobile-logo-text">فروشگاه نوبیکس</span>
         </div>
 

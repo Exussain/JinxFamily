@@ -7018,6 +7018,7 @@ export default function AdminPanelPage() {
 
                   const getOrderCost = (o) => {
                     if (o.status === 'refunded' || o.status === 'canceled') return 0;
+                    if (o.total_cost_toman > 0) return o.total_cost_toman;
                     return (o.total_lira || 0) * liraRateNumber;
                   };
                   const getOrderProfit = (o) => {

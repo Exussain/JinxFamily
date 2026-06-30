@@ -231,7 +231,16 @@ export default function Gta6AdminPage() {
                         />
                       </label>
                       <label>
-                        <span>قیمت لیر</span>
+                        <span>قیمت خرید (تومان)</span>
+                        <input
+                          inputMode="numeric"
+                          value={grp(cell.cost_toman)}
+                          onChange={(e) => setCell(ed.key, cap.key, "cost_toman", e.target.value)}
+                          placeholder="هزینه خرید از منبع"
+                        />
+                      </label>
+                      <label>
+                        <span>قیمت لیر (اطلاعاتی)</span>
                         <input
                           inputMode="numeric"
                           value={grp(cell.lira)}
@@ -240,10 +249,21 @@ export default function Gta6AdminPage() {
                         />
                       </label>
                       <div className="g6-profit">
-                        <span>قیمت نهایی: </span>
-                        <span className="g6-profit-pos">
-                          {tomanSell.toLocaleString("fa-IR")} تومان
-                        </span>
+                        {Number(cell.cost_toman) > 0 ? (
+                          <>
+                            <span>سود تخمینی: </span>
+                            <span className={tomanSell - Number(cell.cost_toman) >= 0 ? "g6-profit-pos" : "g6-profit-neg"}>
+                              {(tomanSell - Number(cell.cost_toman)).toLocaleString("fa-IR")} تومان
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span>قیمت نهایی: </span>
+                            <span className="g6-profit-pos">
+                              {tomanSell.toLocaleString("fa-IR")} تومان
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   );

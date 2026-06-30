@@ -460,7 +460,9 @@ export default function Navbar() {
                     <button
                       type="button"
                       className="nav-user-btn-pill"
-                      onClick={() => setShowUserMenu((v) => !v)}
+                      onClick={() => {
+                        router.push('/panel/user');
+                      }}
                       aria-label="پروفایل"
                     >
                       <span className="user-avatar">
@@ -473,38 +475,6 @@ export default function Navbar() {
                       </span>
                       <span className="user-btn-text">{user.name || 'پنل کاربری'}</span>
                     </button>
-                    {showUserMenu && (
-                      <div className="user-menu">
-                        {user.is_admin ? (
-                          <a href={adminCacheBustHref()} className="ghost-btn user-menu-item">
-                            پنل کاربری
-                          </a>
-                        ) : (
-                          <Link href="/panel/user" className="ghost-btn user-menu-item">
-                            پنل کاربری
-                          </Link>
-                        )}
-                        <button
-                          type="button"
-                          className="ghost-btn user-menu-item"
-                          onClick={async () => {
-                            try {
-                              await fetch(`${apiBase}/api/auth/logout`, {
-                                method: 'POST',
-                                credentials: 'include',
-                              });
-                            } catch {
-                              // ignore
-                            }
-                            setUser(null);
-                            setShowUserMenu(false);
-                            window.location.href = '/';
-                          }}
-                        >
-                          خروج
-                        </button>
-                      </div>
-                    )}
                   </div>
                 ) : (
                   <div className="nav-user-menu nav-auth-menu" ref={authMenuRef}>
@@ -731,6 +701,12 @@ export default function Navbar() {
                 <Link href="/reseller" onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                   <span>همکاری در فروش</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" onClick={() => setShowMobileMenu(false)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                  <span>وبلاگ و مقالات</span>
                 </Link>
               </li>
               <li>

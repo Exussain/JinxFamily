@@ -292,7 +292,7 @@ export default function ResellerLayout({ children }) {
       )}
       {showSidebar ? (
         <div className="reseller-layout">
-          <Sidebar />
+          <Sidebar me={me} />
           <main className="reseller-content">{children}</main>
         </div>
       ) : (

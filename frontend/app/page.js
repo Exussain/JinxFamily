@@ -12,10 +12,10 @@ import GiftcardsMenu from "../components/GiftcardsMenu";
 import SubcategoryNav from "../components/SubcategoryNav";
 import TestimonialsSlider from "../components/TestimonialsSlider";
 import SocialLinksCard from "../components/SocialLinksCard";
-import GtaHotBanner from "../components/GtaHotBanner";
+import HotProductsSection from "../components/HotProductsSection";
 import { placeholderFeatured } from "../lib/placeholderFeatured";
 import { dedupeProducts } from "../lib/dedupeProducts";
-import TrustOnboardingModal from "../components/TrustOnboardingModal";
+import FortniteScrollButton from "../components/FortniteScrollButton";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Disable all caching, fetch fresh data on every request
@@ -356,7 +356,6 @@ export default async function Page(props) {
   return (
     <>
       <Navbar />
-      <TrustOnboardingModal />
       <main className="container home-shell home-index">
         <h1 className="sr-only">
           نوبیکس | سریعترین و ارزان ترین تحویل :) 💜
@@ -375,7 +374,7 @@ export default async function Page(props) {
           <CategoriesSection categories={categories} />
         </section>
 
-        <GtaHotBanner />
+        <HotProductsSection />
 
         <section className="product-section" id="popular">
           <div className="section-head">
@@ -427,6 +426,7 @@ export default async function Page(props) {
           <SocialLinksCard />
         </section>
       </main>
+      <FortniteScrollButton />
     </>
   );
 }
