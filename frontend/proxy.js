@@ -9,7 +9,7 @@ const INTERNAL_API_BASE =
 // Temporary site-wide gate: only admins see the live site while a large
 // batch of changes is in progress. Flip back to false (and HardReload) to
 // restore normal public access — nothing else in this file depends on it.
-const MAINTENANCE_MODE = true;
+const MAINTENANCE_MODE = false;
 
 async function fetchAuthStatus(cookie, baseUrl) {
   if (!baseUrl) {
