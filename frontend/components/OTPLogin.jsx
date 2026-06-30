@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import ReCaptcha from "./ReCaptcha";
 import { adminCacheBustHref } from "../lib/adminUrl.mjs";
+import { PRESET_AVATARS, compressImageFile, renderPresetAvatarBlob } from "../lib/avatarImage.mjs";
 
 export default function OTPLogin({ mode = "login" }) {
   const router = useRouter();
@@ -18,6 +19,63 @@ export default function OTPLogin({ mode = "login" }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Optional avatar picker (signup step 3 only) — preset emoji avatars you
+  // can cycle with arrows, or upload your own photo. Nothing is uploaded
+  // unless the user actually interacts with it (avatarTouched).
+  const [avatarTouched, setAvatarTouched] = useState(false);
+  const [avatarMode, setAvatarMode] = useState("preset"); // "preset" | "upload"
+  const [avatarPresetIdx, setAvatarPresetIdx] = useState(0);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(null);
+  const avatarFileInputRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+    };
+  }, [avatarPreviewUrl]);
+
+  const cyclePresetAvatar = (delta) => {
+    setAvatarTouched(true);
+    setAvatarMode("preset");
+    setAvatarPresetIdx((i) => (i + delta + PRESET_AVATARS.length) % PRESET_AVATARS.length);
+  };
+
+  const handleAvatarFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("فقط فایل تصویری مجاز است.");
+      return;
+    }
+    if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+    setAvatarFile(file);
+    setAvatarPreviewUrl(URL.createObjectURL(file));
+    setAvatarMode("upload");
+    setAvatarTouched(true);
+  };
+
+  // Best-effort: upload the chosen avatar after signup succeeds and the
+  // session cookie exists. Never blocks the signup flow on failure.
+  const uploadChosenAvatar = async () => {
+    if (!avatarTouched) return;
+    try {
+      const blob =
+        avatarMode === "upload" && avatarFile
+          ? await compressImageFile(avatarFile)
+          : await renderPresetAvatarBlob(PRESET_AVATARS[avatarPresetIdx]);
+      const form = new FormData();
+      form.append("avatar", blob, "avatar.jpg");
+      await fetch(`${apiBase}/api/me/avatar`, {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      });
+    } catch (e) {
+      // Avatar is optional — a failed upload shouldn't disrupt signup.
+    }
+  };
 
   const EyeToggleButton = () => (
     <button
@@ -390,6 +448,9 @@ export default function OTPLogin({ mode = "login" }) {
 
       // Successful login/signup/reset - show success animation
       setSuccess(true);
+      if (isSignupFlow) {
+        uploadChosenAvatar();
+      }
       setTimeout(() => {
         const returnTo = typeof window !== "undefined" ? sessionStorage.getItem("return_to_checkout") : null;
         if (returnTo) {
@@ -1247,6 +1308,79 @@ export default function OTPLogin({ mode = "login" }) {
                 placeholder="مثلاً: علی محمدی"
                 dir="rtl"
               />
+            </div>
+
+            <div className="field" style={{ marginTop: 12 }}>
+              <label>آواتار (اختیاری)</label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => cyclePresetAvatar(1)}
+                  aria-label="آواتار بعدی"
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 6 }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+
+                {avatarMode === "upload" && avatarPreviewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarPreviewUrl}
+                    alt="آواتار انتخابی"
+                    width={72}
+                    height={72}
+                    style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--line)" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 32,
+                      background: `linear-gradient(135deg, ${PRESET_AVATARS[avatarPresetIdx].gradient[0]}, ${PRESET_AVATARS[avatarPresetIdx].gradient[1]})`,
+                    }}
+                  >
+                    {PRESET_AVATARS[avatarPresetIdx].emoji}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => cyclePresetAvatar(-1)}
+                  aria-label="آواتار قبلی"
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 6 }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              </div>
+
+              <div style={{ textAlign: "center", marginTop: 8 }}>
+                <input
+                  ref={avatarFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarFileChange}
+                  style={{ display: "none" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => avatarFileInputRef.current?.click()}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--primary)",
+                    fontSize: 12.5,
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                >
+                  آپلود عکس دلخواه
+                </button>
+              </div>
             </div>
 
             <div className="field" style={{ marginTop: 12 }}>
