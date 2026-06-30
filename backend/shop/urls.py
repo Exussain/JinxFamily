@@ -68,7 +68,6 @@ urlpatterns = [
     path('admin/orders/unit-settle', views.admin_unit_settle),
     path('admin/accounting/oldest-unsettled', views.admin_oldest_unsettled),
     path('discounts/validate', views.discount_validate),
-    path('me/spin/claim', spin_views.claim_spin_reward),
     # Blog / Articles
     path('blog/articles', blog_views.article_list),
     path('blog/articles/<slug:slug>', blog_views.article_detail),
@@ -97,6 +96,7 @@ urlpatterns = [
     path('discord/channels/<int:channel_id>/send', views.discord_admin_send),
 
     # ---- Reseller (همکار) endpoints ----
+    path('reseller/signup', reseller_views.reseller_signup),
     path('reseller/auth/token', reseller_views.reseller_auth_token),
     path('reseller/logout', reseller_views.reseller_logout),
     path('reseller/me', reseller_views.reseller_me),
