@@ -83,7 +83,6 @@ export default function UserPanelPage() {
   const displayName = (profileName || user?.name || user?.first_name || "").trim();
   const phoneNumber = user?.phone_number || user?.phone || "";
   const displayPhone = loading ? "" : phoneNumber || "ثبت نشده";
-  const walletBalance = typeof user?.wallet_balance === "number" ? user.wallet_balance : 0;
   const successfulOrders = orders.filter(o => o.status_fa === "انجام شده");
   const ordersCount = Array.isArray(successfulOrders) ? successfulOrders.length : 0;
   const cartCount = Array.isArray(items) ? items.length : 0;
@@ -191,16 +190,16 @@ export default function UserPanelPage() {
             </div>
             <div className="user-hero__stats">
               <div className="stat">
-                <span className="stat-label">کیف پول</span>
-                <div className="skeleton-text" style={{ width: '100px', height: '24px' }}></div>
-              </div>
-              <div className="stat">
                 <span className="stat-label">سفارش‌ها</span>
                 <div className="skeleton-text" style={{ width: '60px', height: '24px' }}></div>
               </div>
               <div className="stat">
                 <span className="stat-label">سبد خرید</span>
                 <div className="skeleton-text" style={{ width: '80px', height: '24px' }}></div>
+              </div>
+              <div className="stat">
+                <span className="stat-label">امتیاز و دعوت دوستان</span>
+                <div className="skeleton-text" style={{ width: '100px', height: '24px' }}></div>
               </div>
             </div>
           </section>
@@ -280,10 +279,6 @@ export default function UserPanelPage() {
             </div>
           </div>
           <div className="user-hero__stats">
-            <div className="stat">
-              <span className="stat-label">کیف پول</span>
-              <span className="stat-value">{walletBalance.toLocaleString("fa-IR")} تومان</span>
-            </div>
             <div className="stat">
               <span className="stat-label">سفارش‌ها</span>
               <span className="stat-value">{ordersCount.toLocaleString("fa-IR")}</span>
@@ -535,9 +530,9 @@ export default function UserPanelPage() {
                       </div>
                       <div className="order-amount">
                         <div className="price">{o.amount.toLocaleString("fa-IR")} تومان</div>
-                        {o.wallet_used > 0 && (
+                        {o.diamonds_used > 0 && (
                           <div className="muted" style={{ fontSize: 11 }}>
-                            از کیف پول: {o.wallet_used.toLocaleString("fa-IR")} تومان
+                            تخفیف الماس: {o.diamonds_used.toLocaleString("fa-IR")} 💎
                           </div>
                         )}
                       </div>

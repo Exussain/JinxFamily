@@ -454,6 +454,16 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
+              <a
+                href="https://t.me/NubixShopIR"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="icon-btn nav-telegram-btn"
+                aria-label="کانال تلگرام نوبیکس شاپ"
+                title="عضویت در کانال تلگرام"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.2a1.5 1.5 0 0 0-1.55-.2L3.4 10.6a1.4 1.4 0 0 0 .1 2.63l4.43 1.42 1.7 5.36a1.2 1.2 0 0 0 2 .5l2.5-2.42 4.4 3.23a1.4 1.4 0 0 0 2.22-.83l2.2-13.6a1.5 1.5 0 0 0-.41-1.69zM9.5 14.4l-3.3-1.06 11.2-6.93-7.9 8zm.9 4.5-.1-2.9 1.5 1.1zm7.9-1.1-5.5-4.03 6.8-7.1z"/></svg>
+              </a>
               <div className="nav-user">
                 {user ? (
                   <div className="nav-user-menu" ref={userMenuRef}>
@@ -700,13 +710,19 @@ export default function Navbar() {
               <li>
                 <Link href="/reseller" onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                  <span>همکاری در فروش</span>
+                  <span>همکاری با ما</span>
                 </Link>
               </li>
               <li>
                 <Link href="/blog" onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                   <span>وبلاگ و مقالات</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" onClick={() => setShowMobileMenu(false)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  <span>قوانین و مقررات</span>
                 </Link>
               </li>
               <li>

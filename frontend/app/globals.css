@@ -3287,16 +3287,26 @@ input, button, select, textarea { font: inherit; }
   .menu-btn-text strong { font-size: 12px; }
   .menu-btn-text small { display: none; }
   .menu-btn-arrow { display: none; }
+  /* Wrapped icon grid instead of a horizontal drag-to-scroll row — easier
+     to scan and use one-handed than dragging through a long chip strip. */
   .chip-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow-x: visible;
+    scroll-snap-type: none;
     padding-top: 10px;
-    padding-bottom: 12px;
-    margin: 0 -14px;
-    padding-inline: 14px;
-    gap: 9px;
+    padding-bottom: 4px;
+    margin: 0;
+    padding-inline: 0;
+    gap: 10px;
   }
-  .modern-chip { min-width: 86px; padding: 9px 8px; gap: 6px; border-radius: 14px; }
-  .chip-icon-wrapper { width: 44px; height: 44px; border-radius: 12px; }
-  .chip-label { font-size: 12px; }
+  .chip-row.draggable-scroll,
+  .categories.draggable-scroll {
+    cursor: default;
+  }
+  .modern-chip { min-width: 0; width: 100%; padding: 10px 6px; gap: 6px; border-radius: 14px; }
+  .chip-icon-wrapper { width: 40px; height: 40px; border-radius: 12px; }
+  .chip-label { font-size: 11px; }
 }
 
 /* Mobile categories sheet */
@@ -3559,53 +3569,30 @@ input, button, select, textarea { font: inherit; }
 .social-row img { display:block }
 
 @media (max-width: 900px) {
+  /* Wrapped grid (≥3 per row, multiple rows) instead of a single
+     horizontally-scrolling row — phones were showing ~1.5 cards in one
+     long scrolling strip, which read as cramped/confusing. */
   .cards {
-    display: flex;
-    overflow-x: auto;
-    gap: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
     padding: 4px 12px 14px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(36, 83, 255, 0.3) transparent;
   }
-  .cards::-webkit-scrollbar { height: 8px; }
-  .cards::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.03);
-    border-radius: 10px;
-  }
-  .cards::-webkit-scrollbar-thumb {
-    background: rgba(36, 83, 255, 0.2);
-    border-radius: 10px;
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
-  .cards::-webkit-scrollbar-thumb:hover {
-    background: rgba(36, 83, 255, 0.5);
-    border: 1px solid transparent;
-    background-clip: content-box;
-  }
-  .cards { align-items: stretch; }
   .cards .card {
-    /* ~1.5 cards visible per viewport width */
-    flex: 0 0 63vw;
-    min-width: 63vw;
-    max-width: 63vw;
     height: auto;
-    scroll-snap-align: start;
-    border-radius: 18px;
+    border-radius: 14px;
     box-shadow: 0 8px 20px rgba(15,26,60,0.1);
   }
   .product-card-media {
-    border-radius: 14px;
+    border-radius: 10px;
     /* covers are 1:1 — keep them square */
     aspect-ratio: 1 / 1;
   }
-  .cards .card-body { padding: 17px; gap: 10px; font-size: 14px; }
-  .cards .card-body .muted { min-height: 0 !important; font-size: 13px; }
-  .cards .card-body .price { font-size: 14px; }
-  .cards .card-body .price-old { font-size: 13px; }
-  .cards .card .btn { padding: 14px; font-size: 14px; border-radius: 10px; }
+  .cards .card-body { padding: 10px; gap: 6px; font-size: 12px; }
+  .cards .card-body .muted { min-height: 0 !important; font-size: 11px; }
+  .cards .card-body .price { font-size: 12px; }
+  .cards .card-body .price-old { font-size: 11px; }
+  .cards .card .btn { padding: 8px; font-size: 12px; border-radius: 8px; }
 }
 
 /* Enamad + ZarinPal badges */
@@ -3670,10 +3657,15 @@ input, button, select, textarea { font: inherit; }
 
 @media (max-width: 640px) {
   .cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
     width: 100%;
     max-width: 100%;
   }
+  .cards .card-body { padding: 8px; gap: 4px; }
+  .cards .card-body .price { font-size: 11px; }
+  .cards .card-body .price-old { font-size: 10px; }
+  .cards .card-body .muted { font-size: 10px; }
   .container {
     padding: 0 12px;
     max-width: 100%;
@@ -3718,6 +3710,7 @@ input, button, select, textarea { font: inherit; }
   }
   .nav-user-btn-pill,
   .nav-cart-btn,
+  .nav-telegram-btn,
   .nav-hamburger-btn {
     position: relative !important;
     width: 44px !important;
@@ -3735,6 +3728,7 @@ input, button, select, textarea { font: inherit; }
   }
   .nav-user-btn-pill:hover,
   .nav-cart-btn:hover,
+  .nav-telegram-btn:hover,
   .nav-hamburger-btn:hover {
     background: rgba(255, 255, 255, 0.05) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
@@ -3743,6 +3737,7 @@ input, button, select, textarea { font: inherit; }
   }
   :root[data-theme="light"] .nav-user-btn-pill,
   :root[data-theme="light"] .nav-cart-btn,
+  :root[data-theme="light"] .nav-telegram-btn,
   :root[data-theme="light"] .nav-hamburger-btn {
     background: transparent !important;
     color: #1e293b !important;
@@ -3750,6 +3745,7 @@ input, button, select, textarea { font: inherit; }
   }
   :root[data-theme="light"] .nav-user-btn-pill:hover,
   :root[data-theme="light"] .nav-cart-btn:hover,
+  :root[data-theme="light"] .nav-telegram-btn:hover,
   :root[data-theme="light"] .nav-hamburger-btn:hover {
     background: rgba(0, 0, 0, 0.03) !important;
     border-color: rgba(0, 0, 0, 0.2) !important;
@@ -3757,6 +3753,7 @@ input, button, select, textarea { font: inherit; }
   }
   :root[data-theme="dark"] .nav-user-btn-pill,
   :root[data-theme="dark"] .nav-cart-btn,
+  :root[data-theme="dark"] .nav-telegram-btn,
   :root[data-theme="dark"] .nav-hamburger-btn {
     background: transparent !important;
     color: #f1f5f9 !important;
@@ -3764,6 +3761,7 @@ input, button, select, textarea { font: inherit; }
   }
   :root[data-theme="dark"] .nav-user-btn-pill:hover,
   :root[data-theme="dark"] .nav-cart-btn:hover,
+  :root[data-theme="dark"] .nav-telegram-btn:hover,
   :root[data-theme="dark"] .nav-hamburger-btn:hover {
     background: rgba(255, 255, 255, 0.05) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;

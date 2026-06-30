@@ -18,6 +18,7 @@ from .models import (
     ProductComment,
     OrderBotUpdate,
     XboxAccount,
+    PointsTransaction,
 )
 from .kavenegar_service import KavenegarService
 from .email_service import send_xbox_account_email
@@ -383,8 +384,16 @@ class PaymentAdmin(admin.ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "tier", "wallet_balance")
+    list_display = ("user", "tier", "points_balance", "wallet_balance")
     list_filter = ("tier",)
+
+
+@admin.register(PointsTransaction)
+class PointsTransactionAdmin(admin.ModelAdmin):
+    list_display = ("user", "amount", "reason", "balance_after", "related_order", "created_at")
+    list_filter = ("reason",)
+    search_fields = ("user__username", "user__email", "note")
+    readonly_fields = ("created_at",)
     search_fields = ("user__username", "user__email")
 
 

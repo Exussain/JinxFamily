@@ -198,8 +198,6 @@ ADMIN_PANEL_CACHE_BUST_PATH = f"/panel/admin?cb={ADMIN_PANEL_CACHE_BUSTER}"
 # محدودیت ایجاد حساب از یک IP یا دستگاه (غیرفعال)
 MAX_PANELS_PER_IDENTITY = None
 
-# نرخ بازگشت به کیف پول (روی مبلغ پرداخت‌شده، فقط وقتی تخفیف و کیف پول استفاده نشده باشد)
-WALLET_REWARD_RATE = 0.02
 RECAPTCHA_SECRET = getattr(settings, "RECAPTCHA_SECRET", "")
 RECAPTCHA_SITEKEY = getattr(settings, "RECAPTCHA_SITEKEY", "6LdlQyEtAAAAAPmc8sJ-C_FxwUc2tgTJMvju1aTN")
 HCAPTCHA_SECRET = getattr(settings, "HCAPTCHA_SECRET", "0x0000000000000000000000000000000000000000")
@@ -447,13 +445,6 @@ def _enforce_captcha(payload, phone_number, ip_address):
             status=400,
         )
     return None
-
-
-def _apply_wallet_reward(order: Order) -> int:
-    """
-    Direct wallet cash back is now disabled. Loyalty program uses points instead.
-    """
-    return 0
 
 
 def _normalize_login_identifier(value: str) -> str:
@@ -785,6 +776,8 @@ def _notify_customer_payment_success(order, ref_id="", include_sms=True, items_f
 
 @csrf_exempt
 def create_order(request):
+    from .rewards import MIN_DIAMONDS_TO_REDEEM, diamonds_to_toman, toman_to_diamonds_ceil
+
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
     try:
@@ -803,10 +796,13 @@ def create_order(request):
     items = payload.get('items') or []
     contact = payload.get('contact') or {}
     try:
-        wallet_use = int(payload.get('wallet_use') or 0)
+        diamonds_use = int(payload.get('diamonds_use') or 0)
     except (TypeError, ValueError):
-        return JsonResponse({"message": "مبلغ کیف پول نامعتبر است."}, status=400)
-    wallet_use = max(wallet_use, 0)
+        return JsonResponse({"message": "مقدار الماس نامعتبر است."}, status=400)
+    diamonds_use = max(diamonds_use, 0)
+    if 0 < diamonds_use < MIN_DIAMONDS_TO_REDEEM:
+        # Below the redeem threshold — silently ignore rather than failing the order.
+        diamonds_use = 0
     rush_order = bool(payload.get('rush_order', False))
     rush_fee = 0  # server-enforced when applicable (do not trust client)
     user_note_raw = (contact.get('note', '') or '').strip()
@@ -1312,23 +1308,32 @@ def create_order(request):
         dc.used_count = (dc.used_count or 0) + 1
         dc.save(update_fields=["used_count"])
     
-    # Apply wallet usage if user has profile and balance
-    wallet_applied = 0
+    # Apply diamond (الماس) redemption — replaces the old wallet-cashback system.
+    diamonds_applied = 0
+    diamond_discount = 0
     if user is not None:
         profile, _ = UserProfile.objects.get_or_create(user=user)
-        wallet_applied = min(wallet_use, profile.wallet_balance, amount)
-        if wallet_applied > 0:
-            profile.wallet_balance -= wallet_applied
-            profile.save()
-    payable = amount - wallet_applied
+        if diamonds_use > 0:
+            usable_diamonds = min(diamonds_use, profile.points_balance)
+            diamond_discount = min(diamonds_to_toman(usable_diamonds), amount)
+            full_value = diamonds_to_toman(usable_diamonds)
+            # Never charge more diamonds than the (possibly amount-capped) discount needs.
+            diamonds_applied = (
+                usable_diamonds if diamond_discount >= full_value
+                else toman_to_diamonds_ceil(diamond_discount)
+            )
+            if diamonds_applied > 0:
+                from .rewards import award_points
+                award_points(user, -diamonds_applied, "redeem", related_order=order, note="تبدیل الماس به تخفیف خرید")
+    payable = amount - diamond_discount
 
     order.amount = payable
-    order.wallet_used = wallet_applied
+    order.diamonds_used = diamonds_applied
     order.save()
 
     logger.info(
-        "Order saved: tracking=%s, amount=%s, rush_order=%s, rush_fee=%s, wallet_applied=%s",
-        order.tracking_code, order.amount, order.rush_order, order.rush_fee, wallet_applied
+        "Order saved: tracking=%s, amount=%s, rush_order=%s, rush_fee=%s, diamonds_applied=%s",
+        order.tracking_code, order.amount, order.rush_order, order.rush_fee, diamonds_applied
     )
 
     # Send new order notification to contact@nubixshop
@@ -1428,6 +1433,7 @@ def create_order(request):
         "discount_percent": order.discount_percent,
         "discount_amount": order.discount_amount,
         "wallet_used": order.wallet_used,
+        "diamonds_used": order.diamonds_used,
         "rush_order": order.rush_order,
         "rush_fee": order.rush_fee,
         "message": success_message
@@ -1526,6 +1532,7 @@ def order_status(request, tracking):
         "status_fa": dict(Order.STATUS_CHOICES)[order.status],
         "amount": order.amount,
         "wallet_used": order.wallet_used,
+        "diamonds_used": order.diamonds_used,
         "rush_order": order.rush_order,
         "rush_fee": order.rush_fee,
         "created_at": order.created_at.isoformat(),
@@ -2284,12 +2291,15 @@ def _build_cart_data(order):
         "items": items
     }
 
-    # اضافه کردن تخفیفات (کد تخفیف + کیف پول)
+    # اضافه کردن تخفیفات (کد تخفیف + کیف پول/الماس)
     total_deductions = 0
     if order.discount_amount > 0:
         total_deductions += order.discount_amount
     if order.wallet_used > 0:
         total_deductions += order.wallet_used
+    if order.diamonds_used > 0:
+        from .rewards import diamonds_to_toman
+        total_deductions += diamonds_to_toman(order.diamonds_used)
 
     if total_deductions > 0:
         cart_data["deductions"] = {
@@ -2335,6 +2345,7 @@ def my_orders(request):
             "can_cancel": o.status in cancelable_statuses,
             "amount": o.amount,
             "wallet_used": o.wallet_used,
+            "diamonds_used": o.diamonds_used,
             "created_at": o.created_at.isoformat(),
             "first_item_name": first_item.name if first_item else "",
             "first_item_image": image_url,
@@ -2368,11 +2379,19 @@ def cancel_order(request, tracking):
     if order.status not in cancelable_statuses:
         return JsonResponse({"message": "این سفارش قابل لغو نیست."}, status=400)
 
-    # Refund wallet if used (before deleting the order)
+    # Refund wallet if used (legacy orders only — wallet redemption is retired)
     if order.wallet_used > 0 and order.user:
         profile, _ = UserProfile.objects.get_or_create(user=order.user)
         profile.wallet_balance += order.wallet_used
         profile.save(update_fields=["wallet_balance"])
+
+    # Refund diamonds if used (current redemption path)
+    if order.diamonds_used > 0 and order.user:
+        from .rewards import award_points
+        award_points(
+            order.user, order.diamonds_used, "redeem",
+            related_order=order, note=f"بازگشت الماس سفارش لغوشده {order.tracking_code}",
+        )
 
     # Permanently delete the canceled order (cascades to OrderItem + Payment)
     order.delete()
@@ -2432,6 +2451,7 @@ def _admin_order_dict(o: Order):
         "is_done": o.status == "completed",
         "amount": o.amount,
         "wallet_used": o.wallet_used,
+        "diamonds_used": o.diamonds_used,
         "discount_code": o.discount_code,
         "discount_percent": o.discount_percent,
         "discount_amount": o.discount_amount,
@@ -3622,13 +3642,15 @@ def admin_refund_notify(request, tracking):
             latest_payment.status = "refunded"
             latest_payment.save(update_fields=["status"])
             
-        # 2. Refund the amount to the user's wallet
+        # 2. Refund the amount to the user as diamonds (wallet cash-back is retired)
         total_paid = (order.amount or 0)
         if total_paid > 0 and order.user:
-            profile, _ = UserProfile.objects.get_or_create(user=order.user)
-            profile.wallet_balance += total_paid
-            profile.save(update_fields=["wallet_balance"])
-            
+            from .rewards import award_points, toman_to_diamonds_ceil
+            award_points(
+                order.user, toman_to_diamonds_ceil(total_paid), "adjust",
+                related_order=order, note=f"استرداد سفارش {order.tracking_code} به الماس",
+            )
+
         # 3. Maintain global completed orders counter
         if previous_status == "completed":
             _increment_setting_int("completed_orders_count", delta=-1, default=907)
@@ -4633,7 +4655,7 @@ def admin_update_order_status(request, tracking):
 
     # اگر وضعیت به مسترد شده تغییر کرد:
     # ۱) آخرین پرداخت را refunded می‌کنیم
-    # ۲) مبلغ سفارش به کیف پول کاربر برمی‌گردد
+    # ۲) مبلغ سفارش به‌صورت الماس به کاربر برمی‌گردد (کش‌بک کیف پول حذف شده)
     if status == "refunded":
         latest_payment = order.payments.order_by("-created_at").first()
         if latest_payment and latest_payment.status != "refunded":
@@ -4641,9 +4663,11 @@ def admin_update_order_status(request, tracking):
             latest_payment.save(update_fields=["status"])
         total_paid = (order.amount or 0)
         if total_paid > 0 and order.user:
-            profile, _ = UserProfile.objects.get_or_create(user=order.user)
-            profile.wallet_balance += total_paid
-            profile.save(update_fields=["wallet_balance"])
+            from .rewards import award_points, toman_to_diamonds_ceil
+            award_points(
+                order.user, toman_to_diamonds_ceil(total_paid), "adjust",
+                related_order=order, note=f"استرداد سفارش {order.tracking_code} به الماس",
+            )
 
     paid_transitioned = previous_status != "paid" and status == "paid"
     email_sent = False
@@ -5227,10 +5251,6 @@ def payment_request(request, tracking):
         order.status = 'paid'
         order.save()
         try:
-            _apply_wallet_reward(order)
-        except Exception as reward_err:
-            logger.error("Wallet reward (zero-amount order) failed: %s", reward_err)
-        try:
             from .rewards import award_purchase_points
             award_purchase_points(order)
         except Exception:
@@ -5383,14 +5403,6 @@ def payment_verify(request, tracking):
         # تغییر وضعیت سفارش به پرداخت شده
         order.status = 'paid'
         order.save()
-        try:
-            _apply_wallet_reward(order)
-        except Exception as reward_err:
-            logger.error(
-                "Wallet reward (payment success) failed for %s: %s",
-                order.tracking_code,
-                reward_err,
-            )
         try:
             from .rewards import award_purchase_points
             award_purchase_points(order)
@@ -6849,6 +6861,7 @@ def admin_accounting(request):
             "status_fa": dict(Order.STATUS_CHOICES).get(o.status, o.status),
             "amount": o.amount,
             "wallet_used": o.wallet_used,
+            "diamonds_used": o.diamonds_used,
             "discount_amount": o.discount_amount,
             "rush_fee": o.rush_fee,
             "refund_amount": o.refund_amount,

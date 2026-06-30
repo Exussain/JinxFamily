@@ -388,6 +388,87 @@ def _parse_telegram_channel_username(channel_link: str) -> str | None:
 # AUTH endpoints
 # -----------------------------------------------------------------------
 @csrf_exempt
+def reseller_signup(request):
+    """POST /api/reseller/signup — ثبت‌نام عمومی همکار پس از پذیرش قوانین.
+
+    برخلاف admin_reseller_create (که فقط ادمین می‌تواند صدا بزند)، این
+    endpoint عمومی است و خودِ متقاضی آن را با نام و شماره تماس و تیک
+    «پذیرش قوانین» صدا می‌زند. حساب با status=draft ساخته می‌شود — دقیقاً
+    همان مسیر حساب‌های ادمین‌ساز را طی می‌کند (ورود با توکن -> ویزارد
+    onboarding -> در پایان به‌صورت خودکار pending_review می‌شود -> تایید
+    نهایی با ادمین).
+    """
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    ip = _client_ip(request)
+    if not _reseller_rate_limit(ip, "signup", max_attempts=8, window_sec=3600):
+        return JsonResponse(
+            {"message": "تعداد درخواست‌های ثبت‌نام زیاد است. کمی بعد دوباره تلاش کنید."},
+            status=429,
+        )
+
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        return JsonResponse({"message": "JSON نامعتبر"}, status=400)
+
+    support_name = (payload.get("support_name") or "").strip()
+    if not support_name or len(support_name) < 2:
+        return JsonResponse({"message": "نام یا نام فروشگاه الزامی است."}, status=400)
+
+    phone = _normalize_phone(re.sub(r"\D", "", str(payload.get("phone") or "")))
+    if phone and not PHONE_RE_FULL.match(phone):
+        return JsonResponse({"message": "شماره موبایل نامعتبر است."}, status=400)
+
+    if not payload.get("rules_accepted"):
+        return JsonResponse({"message": "برای ثبت‌نام باید شرایط همکاری را بپذیرید."}, status=400)
+
+    with transaction.atomic():
+        for _ in range(5):
+            seller_code = _generate_seller_code()
+            try:
+                username = f"reseller_{seller_code.replace('-', '')}"
+                if User.objects.filter(username=username).exists():
+                    continue
+                user = User(
+                    username=username,
+                    email=f"{seller_code.lower().replace('-', '')}@reseller.nubixshop.ir",
+                )
+                user.set_unusable_password()
+                user.save()
+                UserProfile.objects.create(user=user, tier="reseller")
+
+                raw_token = _generate_raw_token()
+                profile = ResellerProfile.objects.create(
+                    user=user,
+                    seller_code=seller_code,
+                    token_hash=_hash_token(raw_token),
+                    token_prefix=raw_token[:4],
+                    status="draft",
+                    support_name=support_name,
+                    contact_phone=phone,
+                    rules_accepted_at=timezone.now(),
+                )
+                break
+            except Exception:
+                logger.exception("Reseller signup error")
+                return JsonResponse({"message": "خطا در ثبت‌نام. دوباره تلاش کنید."}, status=500)
+        else:
+            return JsonResponse({"message": "خطا در تولید کد سلر یکتا."}, status=500)
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "token": raw_token,
+            "seller_code": seller_code,
+            "warning": "این توکن فقط همین یک‌بار نمایش داده می‌شود. آن را ذخیره کنید — برای ورود به پنل همکاری لازم دارید.",
+        },
+        status=201,
+    )
+
+
+@csrf_exempt
 def reseller_auth_token(request):
     """POST /api/reseller/auth/token — ورود با توکن ۱۶ رقمی."""
     if request.method != "POST":
@@ -427,12 +508,17 @@ def reseller_auth_token(request):
     profile.last_login_at = timezone.now()
     profile.save(update_fields=["last_login_at"])
 
+    if profile.status == "draft":
+        redirect_to = "onboarding"
+    elif profile.status == "pending_review":
+        redirect_to = "pending"
+    else:
+        redirect_to = "dashboard"
+
     return JsonResponse(
         {
             "ok": True,
-            "redirect": (
-                "onboarding" if profile.status == "draft" else "dashboard"
-            ),
+            "redirect": redirect_to,
             "reseller": _reseller_dict(profile),
         }
     )

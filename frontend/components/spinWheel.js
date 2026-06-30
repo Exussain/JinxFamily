@@ -7,7 +7,7 @@ export const STYLE_BY_TYPE = {
   blank:      { color: "#3f3f5e", text_color: "#cbd5e1", emoji: "🙁", short: "پوچ" },
   discount5:  { color: "#db2777", text_color: "#ffffff", emoji: "🎁", short: "۵٪" },
   discount20: { color: "#0d9488", text_color: "#ffffff", emoji: "🎉", short: "۲۰٪" },
-  wallet:     { color: "#5b21b6", text_color: "#ffffff", emoji: "💰", short: "۱۵هزار" },
+  wallet:     { color: "#5b21b6", text_color: "#ffffff", emoji: "💎", short: "۵۰ الماس" },
 };
 export const FALLBACK_TYPES = ["blank", "discount5", "wallet", "discount5", "blank", "discount20", "wallet", "discount5"];
 export const SLICE = 45;

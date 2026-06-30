@@ -100,7 +100,7 @@ export default function SpinWheelModal() {
           type: data.segment.type,
           label: data.segment.label,
           code: data.code || null,
-          wallet_credit: data.wallet_credit || 0,
+          diamonds_credit: data.diamonds_credit || 0,
         });
       }, 5200);
     } catch {
@@ -131,7 +131,7 @@ export default function SpinWheelModal() {
             <button type="button" className="spin-close" onClick={handleClose} aria-label="بستن">×</button>
 
             <h2 className="spin-title">گردونه شانس نوبیکس</h2>
-            <p className="spin-subtitle">شانست رو امتحان کن! از اعتبار کیف پول تا کد تخفیف ۲۰٪.</p>
+            <p className="spin-subtitle">شانست رو امتحان کن! از الماس تا کد تخفیف ۲۰٪.</p>
 
             <div className="spin-wheel-wrap">
               <div className="spin-pointer" aria-hidden>
@@ -158,9 +158,9 @@ export default function SpinWheelModal() {
                     <code>{result.code}</code>
                   </div>
                 )}
-                {result.wallet_credit > 0 && (
+                {result.diamonds_credit > 0 && (
                   <p className="spin-result-desc">
-                    {Number(result.wallet_credit).toLocaleString("fa-IR")} تومان به کیف پول تو اضافه شد.
+                    {Number(result.diamonds_credit).toLocaleString("fa-IR")} الماس به حساب تو اضافه شد.
                   </p>
                 )}
                 <button type="button" className="spin-btn ghost" onClick={handleClose}>بستن</button>

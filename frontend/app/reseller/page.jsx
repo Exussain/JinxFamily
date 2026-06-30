@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import "./reseller.css";
 
@@ -11,6 +12,7 @@ export default function ResellerLoginPage() {
   const [raw, setRaw] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [showTokenForm, setShowTokenForm] = useState(false);
 
   const handleChange = (e) => {
     // فقط ارقام + اتو-فرمت هر ۴ رقم
@@ -39,7 +41,12 @@ export default function ResellerLoginPage() {
         setError(data?.message || "خطا در ورود.");
         return;
       }
-      const target = data.redirect === "onboarding" ? "/reseller/onboarding" : "/reseller/dashboard";
+      const target =
+        data.redirect === "onboarding"
+          ? "/reseller/onboarding"
+          : data.redirect === "pending"
+          ? "/reseller/pending"
+          : "/reseller/dashboard";
       router.push(target);
     } catch (e) {
       setError("خطای شبکه. دوباره تلاش کنید.");
@@ -62,37 +69,64 @@ export default function ResellerLoginPage() {
           priority
         />
         <h1>پنل همکاران NubixShop</h1>
-        <p className="sub">لطفاً توکن ۱۶ رقمی خود را وارد نمایید</p>
+        <p className="sub">با نوبیکس شاپ همکار شوید و از فروش محصولات کسب درآمد کنید</p>
 
-        <input
-          type="text"
-          inputMode="numeric"
-          autoComplete="off"
-          autoFocus
-          className="reseller-token-input"
-          value={formatted}
-          onChange={handleChange}
-          placeholder="XXXX XXXX XXXX XXXX"
-          maxLength={19}
-          dir="ltr"
-          aria-label="توکن ۱۶ رقمی"
-        />
+        {!showTokenForm ? (
+          <>
+            <div style={{ marginTop: 18 }}>
+              <Link href="/reseller/apply" className="reseller-btn full lg" style={{ display: "block", textAlign: "center" }}>
+                مشاهده شرایط همکاری با ما
+              </Link>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowTokenForm(true)}
+              style={{
+                marginTop: 16,
+                background: "none",
+                border: "none",
+                color: "var(--muted)",
+                fontSize: 13,
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              توکن دارید؟ ورود به پنل
+            </button>
+          </>
+        ) : (
+          <>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              autoFocus
+              className="reseller-token-input"
+              value={formatted}
+              onChange={handleChange}
+              placeholder="XXXX XXXX XXXX XXXX"
+              maxLength={19}
+              dir="ltr"
+              aria-label="توکن ۱۶ رقمی"
+            />
 
-        <div style={{ marginTop: 18 }}>
-          <button
-            type="submit"
-            className="reseller-btn full lg"
-            disabled={busy || raw.length !== 16}
-          >
-            {busy ? "در حال ورود..." : "ورود به پنل"}
-          </button>
-        </div>
+            <div style={{ marginTop: 18 }}>
+              <button
+                type="submit"
+                className="reseller-btn full lg"
+                disabled={busy || raw.length !== 16}
+              >
+                {busy ? "در حال ورود..." : "ورود به پنل"}
+              </button>
+            </div>
 
-        {error && <div className="reseller-error">{error}</div>}
+            {error && <div className="reseller-error">{error}</div>}
 
-        <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>
-          توکن خود را از ادمین NubixShop دریافت کرده‌اید.
-        </p>
+            <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>
+              توکن خود را هنگام ثبت‌نام یا از ادمین NubixShop دریافت کرده‌اید.
+            </p>
+          </>
+        )}
       </form>
     </div>
   );
