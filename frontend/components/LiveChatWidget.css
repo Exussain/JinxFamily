@@ -1230,22 +1230,30 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+@media (max-width: 768px) {
+  .live-chat-wrapper {
+    bottom: 104px !important;
+    right: 20px !important;
+  }
+}
+
 @media (max-width: 480px) {
   .live-chat-wrapper {
-    bottom: 16px;
-    right: 16px;
+    bottom: 104px !important;
+    right: 16px !important;
   }
   .live-chat-window {
     width: calc(100vw - 32px) !important;
-    height: 75vh;
+    height: 68vh !important;
+    max-height: calc(100vh - 210px) !important;
   }
   .live-chat-fab {
     width: 56px;
     height: 56px;
   }
   .chat-greeting-tooltip {
-    bottom: 74px;
-    width: calc(100vw - 32px);
+    bottom: 74px !important;
+    width: calc(100vw - 32px) !important;
   }
 }
 

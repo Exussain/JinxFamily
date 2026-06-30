@@ -1,0 +1,201 @@
+/* ===== CounterStat Combined Sidebar Card ===== */
+.combined-stat-testimonials {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px !important;
+  background: linear-gradient(135deg, #0d1224 0%, #151f3c 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.3s ease;
+  align-self: start; /* Prevent stretching and shrink-to-fit height */
+}
+
+/* Hide the large background avatar from globals.css */
+.combined-stat-testimonials::after {
+  display: none !important;
+}
+
+.combined-stat-testimonials:hover {
+  border-color: rgba(0, 196, 140, 0.15) !important;
+}
+
+/* Header Section */
+.stat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.stat-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-count-title {
+  font-size: 23px !important;
+  margin: 0 !important;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #00c48c;
+}
+
+.stat-growth-text {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Bigger Avatar on the left/top corner */
+.stat-avatar-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-avatar-image {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 196, 140, 0.25));
+}
+
+/* Testimonial Section - Minimal slideshow */
+.compact-tm-wrapper {
+  width: 100%;
+}
+
+.compact-tm-carousel-body {
+  display: grid;
+  width: 100%;
+  position: relative;
+}
+
+.compact-tm-slide {
+  grid-area: 1 / 1 / 2 / 2;
+  opacity: 0;
+  transform: scale(0.98);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+  width: 100%;
+}
+
+.compact-tm-slide.active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.compact-tm-card-inner {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+}
+
+.compact-tm-card-inner:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(0, 196, 140, 0.15);
+}
+
+.compact-tm-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.compact-tm-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compact-tm-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #00c48c, #059669);
+  color: #fff;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+}
+
+.compact-tm-user-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.compact-tm-username {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.compact-tm-product {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 1px;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-tm-rating {
+  color: #fbbf24;
+  font-size: 10.5px;
+  letter-spacing: 0.5px;
+}
+
+.compact-tm-review {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-tm-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 5px;
+  margin-top: 2px;
+}
+
+.compact-tm-verified {
+  color: #00c48c;
+  font-weight: 700;
+}
+
+.compact-tm-date {
+  color: rgba(255, 255, 255, 0.35);
+}

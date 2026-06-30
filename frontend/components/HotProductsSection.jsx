@@ -9,7 +9,7 @@ const HOT_PRODUCTS = [
     id: "fortnite-crew",
     title: "کرو پک فورتنایت",
     desc: "بتل پس + ۱۰۰۰ ویباکس + اسکین",
-    image: "/products/fortnite-crew-pack.webp",
+    image: "/media/products/fortnite-crew-pack-20260603004614.webp",
     link: "/product/fortnite-crew-pack",
     color: "#e81cff",
     fomo: "تا پایان کروپک این ماه"
@@ -27,7 +27,7 @@ const HOT_PRODUCTS = [
     id: "spotify",
     title: "اشتراک اسپاتیفای",
     desc: "پریمیوم بدون قطعی",
-    image: "/products/spotify-subscription.webp",
+    image: "/media/products/spotify-subscription-20260611210226.jpg",
     link: "/product/spotify-subscription",
     color: "#1ed760",
     fomo: "تا پایان تخفیف ویژهٔ این ماه"
@@ -36,7 +36,7 @@ const HOT_PRODUCTS = [
     id: "gemini",
     title: "اشتراک جمینای",
     desc: "Gemini Advanced",
-    image: "/products/gemini-subscription.webp",
+    image: "/products/gemini.webp",
     link: "/product/gemini-subscription",
     color: "#4285f4",
     fomo: "تا پایان آفر این ماه"

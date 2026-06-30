@@ -1,52 +1,61 @@
 "use client";
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import CountUp from "./CountUp";
 
 const FALLBACK_TESTIMONIALS = [
   {
     id: 1,
-    date: { day: '24', month: 'آبان' },
-    username: 'محمدرضا',
-    product: 'کرو پک فورتنایت',
-    productSlug: 'fortnite-crew-pack',
-    review: 'دومین خریدم بود و این بار هم کمتر از ۱۰ دقیقه فعال شد؛ مثل همیشه بی‌دردسر.',
+    date: { day: "24", month: "آبان" },
+    username: "محمدرضا",
+    product: "کرو پک فورتنایت",
+    productSlug: "fortnite-crew-pack",
+    review: "دومین خریدم بود و این بار هم کمتر از ۱۰ دقیقه فعال شد؛ مثل همیشه بی‌دردسر.",
     rating: 5,
   },
   {
     id: 2,
-    date: { day: '22', month: 'آبان' },
-    username: 'رادین',
-    product: 'V-Bucks 2400',
+    date: { day: "22", month: "آبان" },
+    username: "رادین",
+    product: "V-Bucks 2400",
     productSlug: null,
-    review: 'کد خیلی سریع تحویل شد و پشتیبانی تلگرام هم محترمانه همراهی کرد؛ عالی بود.',
+    review: "کد خیلی سریع تحویل شد و پشتیبانی تلگرام هم محترمانه همراهی کرد؛ عالی بود.",
     rating: 5,
   },
   {
     id: 3,
-    date: { day: '21', month: 'آبان' },
-    username: 'الهه',
-    product: 'اشتراک Spotify',
-    productSlug: 'spotify-subscription',
-    review: 'اول شک داشتم ولی همه چیز فوری و شفاف انجام شد؛ حس اعتماد کامل گرفتم.',
+    date: { day: "21", month: "آبان" },
+    username: "الهه",
+    product: "اشتراک Spotify",
+    productSlug: "spotify-subscription",
+    review: "اول شک داشتم ولی همه چیز فوری و شفاف انجام شد؛ حس اعتماد کامل گرفتم.",
     rating: 5,
   },
   {
     id: 4,
-    date: { day: '18', month: 'آبان' },
-    username: 'مهدی',
-    product: 'GTA VI - Ultimate',
-    productSlug: 'gta6',
-    review: 'پیش خرید رو انجام دادم، پشتیبانی بسیار عالی و سریع جواب دادن.',
+    date: { day: "18", month: "آبان" },
+    username: "مهدی",
+    product: "GTA VI - Ultimate",
+    productSlug: "gta6",
+    review: "پیش خرید رو انجام دادم، پشتیبانی بسیار عالی و سریع جواب دادن.",
     rating: 5,
   }
 ];
 
 export default function TestimonialsSlider() {
   const [testimonials, setTestimonials] = useState(FALLBACK_TESTIMONIALS);
+  const [completedCount, setCompletedCount] = useState(1417);
+  const trackRef = useRef(null);
+
+  // Persian digit conversion
+  const toFa = (s) => String(s).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
 
   useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-    fetch(`${apiBase}/api/testimonials`, { cache: 'no-store' })
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+    
+    // Fetch testimonials
+    fetch(`${apiBase}/api/testimonials`, { cache: "no-store" })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
         if (data && Array.isArray(data.testimonials) && data.testimonials.length > 0) {
@@ -64,7 +73,76 @@ export default function TestimonialsSlider() {
         }
       })
       .catch(() => {});
+
+    // Fetch stats
+    fetch(`${apiBase}/api/stats`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data && typeof data.completed_orders !== "undefined") {
+          setCompletedCount(data.completed_orders);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  // Auto horizontal scrolling with pause on hover/touch
+  useEffect(() => {
+    const container = trackRef.current;
+    if (!container) return;
+
+    let intervalId;
+    const startAutoScroll = () => {
+      intervalId = setInterval(() => {
+        const { scrollLeft, clientWidth, scrollWidth } = container;
+        const cardWidth = 296; // 280px width + 16px gap
+        
+        const isRtl = getComputedStyle(container).direction === "rtl";
+        let nextScrollLeft;
+        
+        if (isRtl) {
+          const maxScrollLeft = -(scrollWidth - clientWidth);
+          if (scrollLeft <= maxScrollLeft + 15) {
+            nextScrollLeft = 0; // wrap back
+          } else {
+            nextScrollLeft = scrollLeft - cardWidth;
+          }
+        } else {
+          const maxScrollLeft = scrollWidth - clientWidth;
+          if (scrollLeft >= maxScrollLeft - 15) {
+            nextScrollLeft = 0; // wrap back
+          } else {
+            nextScrollLeft = scrollLeft + cardWidth;
+          }
+        }
+        
+        container.scrollTo({
+          left: nextScrollLeft,
+          behavior: "smooth"
+        });
+      }, 3500);
+    };
+
+    startAutoScroll();
+
+    const pause = () => clearInterval(intervalId);
+    const resume = () => {
+      clearInterval(intervalId);
+      startAutoScroll();
+    };
+
+    container.addEventListener("mouseenter", pause);
+    container.addEventListener("mouseleave", resume);
+    container.addEventListener("touchstart", pause, { passive: true });
+    container.addEventListener("touchend", resume, { passive: true });
+
+    return () => {
+      clearInterval(intervalId);
+      container.removeEventListener("mouseenter", pause);
+      container.removeEventListener("mouseleave", resume);
+      container.removeEventListener("touchstart", pause);
+      container.removeEventListener("touchend", resume);
+    };
+  }, [testimonials]);
 
   return (
     <div className="tm-slider-wrapper">
@@ -72,9 +150,10 @@ export default function TestimonialsSlider() {
         <h3 className="tm-title">نظرات خریداران</h3>
         <p className="tm-subtitle">نظرات واقعی کاربرانی که به ما اعتماد کردند</p>
       </div>
-      
-      <div className="tm-track-container">
+
+      <div className="tm-track-container" ref={trackRef}>
         <div className="tm-track">
+          {/* Testimonial Cards */}
           {testimonials.map((t, idx) => {
             const href = t.productSlug ? `/product/${t.productSlug}#comment-${t.id}` : null;
             const Card = (
@@ -96,7 +175,7 @@ export default function TestimonialsSlider() {
               </div>
             );
             return href ? (
-              <Link href={href} key={idx} style={{ textDecoration: 'none' }}>
+              <Link href={href} key={idx} style={{ textDecoration: "none" }}>
                 {Card}
               </Link>
             ) : Card;
@@ -162,6 +241,11 @@ export default function TestimonialsSlider() {
           transform: translateY(-2px);
           background: rgba(255,255,255,0.05);
           border-color: rgba(255,255,255,0.15);
+        }
+        .tm-stat-card {
+          justify-content: center;
+          background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+          border-color: rgba(255,255,255,0.12);
         }
         .tm-card-header {
           display: flex;

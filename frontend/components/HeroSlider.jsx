@@ -1,112 +1,78 @@
 "use client";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { buildGamingHeroItems, buildSubscriptionHeroItems } from "../lib/heroSliderItems";
 import "./HeroSlider.css";
 
 const slidesData = [
   {
-    id: "gaming",
-    type: "fortnite-cycle",
-    badge: "نوبیکس شاپ",
-    badgeClass: "",
-    title: "فعال‌سازی تمامی محصولات",
-    desc: "از گیم پس تا گیفت کارت و کوین بازی‌های محبوب — با تحویل سریع",
-    cta: "مشاهده محصولات",
-    link: "#popular",
-    tone: "blue",
-  },
-  {
-    id: "subs",
-    type: "fortnite-cycle",
-    badge: "اشتراک‌ها",
-    badgeClass: "purple",
-    title: "اشتراک هوش مصنوعی و اسپاتیفای",
-    desc: "اشتراک Gemini، Spotify و سایر سرویس‌ها — با تحویل سریع",
-    cta: "مشاهده محصولات",
-    link: "#popular",
+    id: "fortnite-crew",
+    type: "hot-product",
+    badge: "🔥 داغ‌ترین محصولات شاپ (پرفروش‌ترین‌ها)",
+    title: "کرو پک فورتنایت",
+    desc: "بتل پس + ۱۰۰۰ ویباکس + اسکین",
+    image: "/media/products/fortnite-crew-pack-20260603004614.webp",
+    link: "/product/fortnite-crew-pack",
+    color: "#e81cff",
     tone: "purple",
+    fomo: "تا پایان کروپک این ماه"
   },
   {
-    id: "vouches",
-    type: "vouches",
-    title: "اعتماد بیش از ۵۰۰۰ مشتری",
-    desc: "نظرات واقعی در کانال تلگرام",
-    cta: "مشاهده همه نظرات",
-    link: "https://t.me/NubixTrust",
-    tone: "green",
-    vouchImages: [
-      "photo_2025-11-22_23-06-49.webp",
-      "photo_2025-11-22_23-06-51.webp",
-      "photo_2025-11-22_23-06-55.webp",
-      "photo_2025-11-22_23-06-57.webp",
-      "photo_2025-11-22_23-07-02.webp",
-      "photo_2025-11-22_23-07-08.webp",
-      "photo_2025-11-22_23-07-10.webp",
-      "photo_2025-11-22_23-07-16.webp",
-      "photo_2025-11-22_23-07-21.webp",
-      "photo_2025-11-22_23-07-23.webp",
-      "photo_2025-11-22_23-07-24.webp",
-      "photo_2025-11-22_23-07-26.webp",
-      "photo_2025-11-22_23-07-28.webp",
-      "photo_2025-11-22_23-07-30.webp",
-      "photo_2025-11-22_23-07-31.webp",
-      "photo_2025-11-22_23-07-32.webp",
-      "photo_2025-11-22_23-07-36.webp",
-      "photo_2025-11-22_23-07-40.webp",
-      "photo_2025-11-22_23-07-41.webp",
-      "photo_2025-11-22_23-07-42.webp",
-      "photo_2025-11-22_23-07-43.webp",
-      "photo_2025-11-22_23-07-44.webp",
-      "photo_2025-11-22_23-07-45.webp",
-      "photo_2025-11-22_23-07-46.webp",
-      "photo_2025-11-22_23-07-48.webp",
-      "photo_2025-11-22_23-07-49.webp",
-      "photo_2025-11-22_23-07-52.webp",
-      "photo_2025-11-22_23-07-53.webp",
-      "photo_2025-11-22_23-07-55.webp",
-      "photo_2025-11-22_23-07-56.webp",
-      "photo_2025-11-22_23-07-57.webp",
-      "photo_2025-11-22_23-07-58.webp",
-      "photo_2025-11-22_23-08-00.webp",
-      "photo_2025-11-22_23-08-01.webp",
-      "photo_2025-11-22_23-08-02.webp",
-      "photo_2025-11-22_23-08-03.webp",
-      "photo_2025-11-22_23-08-04.webp",
-      "photo_2025-11-22_23-08-05.webp",
-    ]
+    id: "gta6",
+    type: "hot-product",
+    badge: "🔥 داغ‌ترین محصولات شاپ (پرفروش‌ترین‌ها)",
+    title: "پیشخرید GTA VI",
+    desc: "نسخه آلتیمیت - تحویل فوری پس از انتشار",
+    image: "/products/gta6/ps5-ultimate.jpg",
+    link: "/gta6",
+    color: "#ff2d9b",
+    tone: "blue",
+    fomo: "تا پایان آفر پیشخرید این ماه",
+    targetDate: "2026-07-31T20:30:08Z"
   },
+  {
+    id: "spotify",
+    type: "hot-product",
+    badge: "🔥 داغ‌ترین محصولات شاپ (پرفروش‌ترین‌ها)",
+    title: "اشتراک اسپاتیفای",
+    desc: "پریمیوم بدون قطعی",
+    image: "/media/products/spotify-subscription-20260611210226.jpg",
+    link: "/product/spotify-subscription",
+    color: "#1ed760",
+    tone: "green",
+    fomo: "تا پایان تخفیف ویژهٔ این ماه"
+  },
+  {
+    id: "gemini",
+    type: "hot-product",
+    badge: "🔥 داغ‌ترین محصولات شاپ (پرفروش‌ترین‌ها)",
+    title: "اشتراک جمینای",
+    desc: "Gemini Advanced",
+    image: "/products/gemini.webp",
+    link: "/product/gemini-subscription",
+    color: "#4285f4",
+    tone: "blue",
+    fomo: "تا پایان آفر این ماه"
+  }
 ];
+
+const toFa = (s) => String(s).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
+
+function formatRemaining(ms) {
+  const totalSec = Math.floor(Math.max(0, ms) / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  const clock = `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+  return toFa(days > 0 ? `${days} روز و ${clock}` : clock);
+}
 
 export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1 }) {
   const router = useRouter();
-  const formattedTrustCount = Number.isFinite(trustCount)
-    ? new Intl.NumberFormat("fa-IR").format(Math.max(0, Math.floor(trustCount)))
-    : "";
-  const cycleItemsBySlideId = useMemo(
-    () => ({
-      gaming: buildGamingHeroItems(heroProducts, heroSeed),
-      subs: buildSubscriptionHeroItems(heroProducts),
-    }),
-    [heroProducts, heroSeed]
-  );
-  const slides = useMemo(() => {
-    const trustTitle = formattedTrustCount
-      ? `اعتماد بیش از ${formattedTrustCount} مشتری`
-      : slidesData.find((slide) => slide.type === "vouches")?.title;
-    return slidesData
-      .map((slide) =>
-        slide.type === "vouches" && trustTitle
-          ? { ...slide, title: trustTitle }
-          : slide.type === "fortnite-cycle"
-            ? { ...slide, items: cycleItemsBySlideId[slide.id] || [] }
-            : slide
-      )
-      .filter((slide) => slide.type !== "fortnite-cycle" || slide.items.length > 0);
-  }, [formattedTrustCount, cycleItemsBySlideId]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [cycleIndexes, setCycleIndexes] = useState({});
   const [isPaused, setIsPaused] = useState(false);
+  const [remainingTimes, setRemainingTimes] = useState({});
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -119,8 +85,32 @@ export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1
   const autoplayTimeoutRef = useRef(null);
   
   const AUTOPLAY_DURATION = 8000;
-  const FORTNITE_CYCLE_DURATION = 3500;
   const MIN_SWIPE_DISTANCE = 50;
+
+  const slides = useMemo(() => slidesData, []);
+
+  // Countdown timer
+  useEffect(() => {
+    const calculateRemaining = () => {
+      const now = new Date();
+      const times = {};
+      slides.forEach((slide) => {
+        if (slide.targetDate) {
+          const target = new Date(slide.targetDate);
+          times[slide.id] = Math.max(0, target.getTime() - now.getTime());
+        } else {
+          // Default to end of current month
+          const target = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+          times[slide.id] = Math.max(0, target.getTime() - now.getTime());
+        }
+      });
+      setRemainingTimes(times);
+    };
+
+    calculateRemaining();
+    const interval = setInterval(calculateRemaining, 1000);
+    return () => clearInterval(interval);
+  }, [slides]);
 
   // Navigation functions
   const goToSlide = useCallback((index) => {
@@ -149,24 +139,6 @@ export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1
       }
     };
   }, []);
-
-  // Product carousel items cycling (one shared timer for all cycle slides)
-  useEffect(() => {
-    const cycleSlides = slides.filter((s) => s.type === "fortnite-cycle" && s.items?.length);
-    if (!cycleSlides.length) return;
-
-    const interval = setInterval(() => {
-      setCycleIndexes((prev) => {
-        const next = { ...prev };
-        for (const slide of cycleSlides) {
-          next[slide.id] = ((prev[slide.id] || 0) + 1) % slide.items.length;
-        }
-        return next;
-      });
-    }, FORTNITE_CYCLE_DURATION);
-
-    return () => clearInterval(interval);
-  }, [slides]);
 
   // Drag handlers
   const handleDragStart = useCallback((clientX, clientY) => {
@@ -198,7 +170,6 @@ export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1
 
     dragOffsetRef.current = offset;
     
-    // Update DOM directly to avoid React re-renders on every pixel move
     if (slidesContainerRef.current) {
       slidesContainerRef.current.style.transform = `translateX(calc(${currentIndex * 100}% + ${-offset}px))`;
     }
@@ -215,7 +186,6 @@ export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1
     } else if (currentOffset > threshold && currentIndex > 0) {
       goToPrev();
     } else {
-      // Snap back if didn't swipe far enough
       if (slidesContainerRef.current) {
         slidesContainerRef.current.style.transform = `translateX(calc(${currentIndex * 100}%))`;
       }
@@ -269,146 +239,64 @@ export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1
     setIsPaused(false);
   };
 
-  // Click handler for fortnite items
-  const handleFortniteItemClick = (e, slug) => {
+  const handleProductClick = (e, link) => {
     if (hasMoved) {
       e.preventDefault();
       return;
     }
-    if (slug) {
-      router.push(`/product/${slug}`);
+    if (link) {
+      router.push(link);
     }
   };
 
-  // Render slide content based on type
+  // Render slide content
   const renderSlideContent = (slide) => {
-    switch (slide.type) {
-      case "fortnite-cycle": {
-        const itemIndex = (cycleIndexes[slide.id] || 0) % (slide.items?.length || 1);
-        return (
-          <div className="slide-content fortnite-content">
-            <div className="slide-text">
-              <span className={`slide-badge ${slide.badgeClass || ""}`.trim()}>{slide.badge}</span>
-              <h2 className="slide-title">{slide.title}</h2>
-              <p className="slide-desc">{slide.desc}</p>
-              <div className="slide-actions">
-                <a href={slide.link} className="btn-primary">
-                  {slide.cta}
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                  </svg>
-                </a>
-              </div>
-            </div>
-            <div className="slide-visual">
-              <div 
-                className="fortnite-carousel"
-                onClick={(e) => {
-                  const currentItem = slide.items?.[itemIndex];
-                  handleFortniteItemClick(e, currentItem?.slug);
-                }}
-              >
-                <div className="fortnite-glow" />
-                {slide.items?.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className={`fortnite-item ${idx === itemIndex ? "active" : ""}`}
-                  >
-                    <img
-                      src={item.img}
-                      alt={item.name}
-                      width={380}
-                      height={380}
-                      draggable="false"
-                      decoding="async"
-                      loading={idx === 0 ? "eager" : "lazy"}
-                    />
-                  </div>
-                ))}
-                <div className="fortnite-dots">
-                  {slide.items?.map((_, idx) => (
-                    <button
-                      key={idx}
-                      className={`fortnite-dot ${idx === itemIndex ? "active" : ""}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCycleIndexes((prev) => ({ ...prev, [slide.id]: idx }));
-                      }}
-                      aria-label={`محصول ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
+    const remaining = remainingTimes[slide.id] || 0;
+    const formattedTime = formatRemaining(remaining);
+
+    return (
+      <div className="slide-content hot-product-content">
+        <div className="slide-text">
+          <span className="slide-badge pink-badge">{slide.badge}</span>
+          <h2 className="slide-title">{slide.title}</h2>
+          <p className="slide-desc">{slide.desc}</p>
+          
+          <div className="slider-fomo-row">
+            <span className="slider-fomo-icon">⏳</span>
+            <div className="slider-fomo-details">
+              <span className="slider-fomo-label">{slide.fomo}</span>
+              <span className="slider-fomo-time">{formattedTime}</span>
             </div>
           </div>
-        );
-      }
-
-      case "vouches": {
-        const cols = 4;
-        const imagesPerCol = Math.ceil(slide.vouchImages.length / cols);
-        const columns = Array.from({ length: cols }, (_, i) =>
-          slide.vouchImages.slice(i * imagesPerCol, (i + 1) * imagesPerCol)
-        );
-
-        return (
-          <div className="slide-content vouches-content">
-            <div className="slide-text">
-              <span className="slide-badge green">نظرات مشتریان</span>
-              <h2 className="slide-title">{slide.title}</h2>
-              <p className="slide-desc">{slide.desc}</p>
-              <div className="slide-actions">
-                <a
-                  href={slide.link}
-                  className="btn-primary green"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.03-1.99 1.27-5.62 3.72-.53.36-1.01.54-1.44.53-.47-.01-1.38-.27-2.06-.49-.83-.27-1.49-.42-1.43-.88.03-.24.37-.49 1.02-.74 3.99-1.74 6.66-2.89 8-3.44 3.81-1.59 4.6-1.87 5.12-1.88.11 0 .37.03.53.17.14.12.18.28.2.45-.01.06.01.24 0 .38z"/>
-                  </svg>
-                  {slide.cta}
-                </a>
-              </div>
-            </div>
-            <div className="slide-visual vouches-visual">
-              <a
-                href={slide.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="vouches-strips-wrapper"
-              >
-                <div className="vouches-strips">
-                  {columns.map((colImages, colIdx) => (
-                    <div
-                      key={colIdx}
-                      className={`vouch-strip ${colIdx % 2 === 0 ? 'scroll-up' : 'scroll-down'}`}
-                    >
-                      <div className="vouch-strip-inner">
-                        {[...colImages, ...colImages].map((img, idx) => (
-                          <div key={idx} className="vouch-card">
-                            <img
-                              src={`/vouches/${img}`}
-                              alt={`نظر مشتری`}
-                              loading="lazy"
-                              decoding="async"
-                              draggable="false"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </a>
-            </div>
+          
+          <div className="slide-actions">
+            <button
+              className="btn-primary"
+              style={{ background: slide.color, boxShadow: `0 4px 20px ${slide.color}66` }}
+              onClick={(e) => handleProductClick(e, slide.link)}
+            >
+              {slide.id === "gta6" ? "مشاهده و پیش‌خرید" : "مشاهده و خرید"}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
           </div>
-        );
-      }
-
-      default:
-        return null;
-    }
+        </div>
+        
+        <div className="slide-visual">
+          <div className="hot-showcase" onClick={(e) => handleProductClick(e, slide.link)}>
+            <div className="hot-glow" style={{ background: `radial-gradient(circle, ${slide.color}55 0%, transparent 70%)` }} />
+            <img
+              src={slide.image}
+              alt={slide.title}
+              draggable="false"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const activeSlide = slides[currentIndex];
@@ -468,7 +356,7 @@ export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1
         {slides.map((slide, index) => (
           <article
             key={slide.id}
-            className={`hero-slide hero-slide-${slide.type} ${index === currentIndex ? 'active' : ''}`}
+            className={`hero-slide hero-slide-${slide.id} ${index === currentIndex ? 'active' : ''}`}
             aria-hidden={index !== currentIndex}
           >
             {renderSlideContent(slide)}

@@ -374,6 +374,28 @@ export default function ProductPage() {
     return () => clearTimeout(timer);
   }, [loading, product]);
 
+  useEffect(() => {
+    if (reviewsLoading || typeof window === "undefined") return;
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#comment-")) {
+      const id = hash.replace("#comment-", "");
+      const element = document.getElementById(`comment-${id}`);
+      if (element) {
+        const timer = setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.style.transition = "all 0.5s ease";
+          element.style.boxShadow = "0 0 25px rgba(139, 92, 246, 0.45)";
+          element.style.borderColor = "var(--primary)";
+          setTimeout(() => {
+            element.style.boxShadow = "";
+            element.style.borderColor = "";
+          }, 3500);
+        }, 400);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [reviewsLoading]);
+
   const scrollToReviews = useCallback(() => {
     reviewsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);

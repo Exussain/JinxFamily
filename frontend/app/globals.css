@@ -2965,7 +2965,7 @@ input, button, select, textarea { font: inherit; }
 @media (min-width: 1025px) {
   .hero-side {
     height: clamp(420px, 50vh, 560px);
-    grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-rows: 1fr auto;
     min-height: 0;
   }
   .hero-side .testimonials-slider {
@@ -7221,6 +7221,12 @@ input, button, select, textarea { font: inherit; }
 
 .fortnite-scroll-fab:active {
   transform: scale(0.95) translateY(0);
+}
+
+@media (max-width: 768px) {
+  .fortnite-scroll-fab {
+    bottom: 244px !important;
+  }
 }
 
 .fab-icon-wrapper {

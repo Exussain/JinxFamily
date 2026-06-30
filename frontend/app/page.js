@@ -10,7 +10,6 @@ import EnamadBadge from "../components/EnamadBadge";
 import ZarinpalBadge from "../components/ZarinpalBadge";
 import GiftcardsMenu from "../components/GiftcardsMenu";
 import SubcategoryNav from "../components/SubcategoryNav";
-import TestimonialsSlider from "../components/TestimonialsSlider";
 import SocialLinksCard from "../components/SocialLinksCard";
 import HotProductsSection from "../components/HotProductsSection";
 import { placeholderFeatured } from "../lib/placeholderFeatured";
@@ -367,7 +366,6 @@ export default async function Page(props) {
               heroSeed={Math.floor(Math.random() * 2147483647)}
             />
           <aside className="hero-side">
-            <TestimonialsSlider />
             <CounterStat to={completedCount} />
             <SocialLinksCard />
           </aside>
