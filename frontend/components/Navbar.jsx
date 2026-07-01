@@ -873,14 +873,16 @@ export default function Navbar() {
               </li>
             </ul>
 
-            {/* Left side: store status & date (RTL) */}
-            <div className="sub-nav-status">
-              <div className="status-indicator">
-                <span className="status-dot"></span>
-                <span className="status-text">فروشگاه آماده خدمت‌رسانی</span>
-              </div>
-              <span className="status-date">{todayFa}</span>
+          {/* Left side: store status & date (RTL) moved below */}
+          </div>
+          
+          <div className="sub-nav-status-bar">
+            <div className="status-indicator">
+              <span className="status-dot"></span>
+              <span className="status-text">فروشگاه آماده خدمت‌رسانی</span>
+              <span className="status-dot"></span>
             </div>
+            <span className="status-date">{todayFa}</span>
           </div>
         </div>
       </header>

@@ -8077,3 +8077,56 @@ input, button, select, textarea { font: inherit; }
   color: var(--primary);
   font-weight: 700;
 }
+
+/* Separate Sub-Nav Status Bar Layout */
+.sub-nav-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 36px;
+  background: rgba(0, 0, 0, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.9);
+}
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-dot {
+  width: 9px !important;
+  height: 9px !important;
+  border-radius: 50% !important;
+  background: #34d399 !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25), 0 0 8px rgba(52, 211, 153, 0.5) !important;
+  animation: pulseDot 2s infinite !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+}
+
+@media (max-width: 1024px) {
+  .sub-nav-status-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 20px !important;
+    background: rgba(0, 0, 0, 0.15) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    margin-top: auto !important;
+    width: 100% !important;
+    border-radius: 0 !important;
+  }
+  .status-dot {
+    width: 8px !important;
+    height: 8px !important;
+    background-color: #10b981 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 10px #10b981 !important;
+    animation: statusPulse 2s infinite !important;
+    flex-shrink: 0 !important;
+    display: inline-block !important;
+  }
+}
