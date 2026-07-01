@@ -495,7 +495,7 @@ class XboxAccountAdmin(admin.ModelAdmin):
 # ==============================================================================
 # Blog Admin
 # ==============================================================================
-from .models import BlogCategory, Article
+from .models import BlogCategory, Article, SiteNotification, SiteNotificationRead
 
 @admin.register(BlogCategory)
 class BlogCategoryAdmin(admin.ModelAdmin):
@@ -509,3 +509,16 @@ class ArticleAdmin(admin.ModelAdmin):
     list_filter = ('is_published', 'category')
     prepopulated_fields = {'slug': ('title',)}
     search_fields = ('title', 'summary')
+
+
+@admin.register(SiteNotification)
+class SiteNotificationAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'is_global', 'is_read', 'created_at')
+    list_filter = ('is_global', 'is_read', 'created_at')
+    search_fields = ('title', 'message')
+
+
+@admin.register(SiteNotificationRead)
+class SiteNotificationReadAdmin(admin.ModelAdmin):
+    list_display = ('user', 'notification', 'read_at')
+    list_filter = ('read_at',)

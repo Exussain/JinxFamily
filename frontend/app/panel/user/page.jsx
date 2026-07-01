@@ -29,6 +29,9 @@ export default function UserPanelPage() {
   const [exchangeSuccess, setExchangeSuccess] = useState("");
   const [exchangeError, setExchangeError] = useState("");
   const [exchangeCode, setExchangeCode] = useState("");
+  const [exchangeAmount, setExchangeAmount] = useState(350);
+  const [referralData, setReferralData] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
@@ -56,6 +59,15 @@ export default function UserPanelPage() {
         if (ordersRes.ok) {
           const data = await ordersRes.json();
           setOrders(data.results || []);
+        }
+
+        const refRes = await fetch(`${apiBase}/api/me/referral`, {
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (refRes.ok) {
+          const rData = await refRes.json();
+          setReferralData(rData);
         }
       } finally {
         setLoading(false);
@@ -145,7 +157,7 @@ export default function UserPanelPage() {
     setShowCelebration(true);
   }, [loading, orders]);
 
-  const handleExchange = async (rewardType) => {
+  const handleExchange = async (diamondsCount) => {
     setExchanging(true);
     setExchangeError("");
     setExchangeSuccess("");
@@ -155,7 +167,7 @@ export default function UserPanelPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ reward_type: rewardType }),
+        body: JSON.stringify({ diamonds_count: Number(diamondsCount) }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -163,7 +175,7 @@ export default function UserPanelPage() {
       }
       setExchangeSuccess(data.message);
       setExchangeCode(data.code);
-      setUser(prev => ({ ...prev, points_balance: data.points_balance }));
+      setUser(prev => prev ? { ...prev, points_balance: data.points_balance } : null);
     } catch (err) {
       setExchangeError(err.message);
     } finally {
@@ -238,6 +250,64 @@ export default function UserPanelPage() {
         <Navbar />
       </Suspense>
       <main className="container user-shell">
+        {/* Beautiful Points & Invites Banner above user account */}
+        <div style={{
+          background: "linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(219, 39, 119, 0.12) 100%)",
+          border: "1px solid rgba(167, 139, 250, 0.2)",
+          borderRadius: "20px",
+          padding: "20px 24px",
+          marginBottom: "20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "16px",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 8px 32px 0 rgba(124, 58, 237, 0.08)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{
+              fontSize: "26px",
+              background: "linear-gradient(135deg, #7c3aed, #db2777)",
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 15px rgba(124, 58, 237, 0.25)",
+              color: "#fff"
+            }}>
+              💜
+            </div>
+            <div>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "800", color: "#fff" }}>امتیاز و دعوت دوستان</h4>
+              <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--muted)" }}>
+                شما در حال حاضر دارای <strong style={{ color: "#a78bfa", fontSize: "15px" }}>{(user?.points_balance || 0).toLocaleString("fa-IR")}</strong> الماس/امتیاز هستید.
+              </p>
+            </div>
+          </div>
+          <Link href="/panel/user/referrals" style={{
+            background: "linear-gradient(90deg, #7c3aed, #db2777)",
+            border: "none",
+            borderRadius: "12px",
+            padding: "10px 20px",
+            color: "#fff",
+            fontWeight: "700",
+            fontSize: "13px",
+            textDecoration: "none",
+            boxShadow: "0 4px 12px rgba(124, 58, 237, 0.2)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+            transition: "all 0.2s ease"
+          }}>
+            <span>مدیریت دعوت‌ها و جوایز</span>
+            <span style={{ fontSize: "16px" }}>⚡</span>
+          </Link>
+        </div>
+
         <section className="user-hero">
           <div className="user-hero__left">
             <div className="user-avatar">
@@ -287,10 +357,6 @@ export default function UserPanelPage() {
               <span className="stat-label">سبد خرید</span>
               <span className="stat-value">{cartCount.toLocaleString("fa-IR")} آیتم</span>
             </div>
-            <Link href="/panel/user/referrals" className="stat" style={{ textDecoration: "none", cursor: "pointer" }}>
-              <span className="stat-label">امتیاز و دعوت دوستان</span>
-              <span className="stat-value">{(user?.points_balance || 0).toLocaleString("fa-IR")} امتیاز 💜</span>
-            </Link>
           </div>
         </section>
 
@@ -298,64 +364,206 @@ export default function UserPanelPage() {
           <div className="section-head">
             <div>
               <p className="kicker">کلوپ مشتریان</p>
-              <h3>تبدیل الماس به جایزه 💎</h3>
+              <h3>تبدیل الماس و کسب پورسانت 💎</h3>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <p style={{ color: "var(--muted)", margin: 0, fontSize: "14px", lineHeight: "1.8" }}>
-              شما می‌توانید با جمع‌آوری حداقل ۳۵۰ الماس از طریق خریدهایتان، آنها را به کدهای تخفیف ارزشمند تبدیل کنید.
-            </p>
-            
-            {exchangeError && (
-              <div className="alert danger">
-                <span className="icon">✖</span> {exchangeError}
+          
+          {exchangeError && (
+            <div className="alert danger" style={{ marginBottom: "16px" }}>
+              <span className="icon">✖</span> {exchangeError}
+            </div>
+          )}
+          
+          {exchangeSuccess && (
+            <div className="alert success" style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", padding: "16px", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#10b981", fontWeight: "bold" }}>
+                <span className="icon">✓</span> {exchangeSuccess}
               </div>
-            )}
-            
-            {exchangeSuccess && (
-              <div className="alert success" style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", padding: "16px", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#10b981", fontWeight: "bold" }}>
-                  <span className="icon">✓</span> {exchangeSuccess}
-                </div>
-                <div style={{ background: "rgba(0,0,0,0.2)", padding: "12px", borderRadius: "8px", textAlign: "center", fontSize: "20px", fontWeight: "900", letterSpacing: "2px", color: "#fff" }}>
-                  {exchangeCode}
-                </div>
-                <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)" }}>این کد را کپی کرده و در سبد خرید اعمال کنید.</p>
+              <div style={{ background: "rgba(0,0,0,0.2)", padding: "12px", borderRadius: "8px", textAlign: "center", fontSize: "20px", fontWeight: "900", letterSpacing: "2px", color: "#fff" }}>
+                {exchangeCode}
               </div>
-            )}
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)" }}>این کد را کپی کرده و در سبد خرید اعمال کنید.</p>
+            </div>
+          )}
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px" }}>
-              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", textAlign: "center" }}>
-                <div style={{ fontSize: "32px" }}>💸</div>
-                <div>
-                  <div style={{ fontWeight: "800", fontSize: "16px", color: "#fff" }}>کد تخفیف ۱۵۰ هزار تومانی</div>
-                  <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "4px" }}>بدون حداقل خرید</div>
-                </div>
-                <button 
-                  className="btn primary" 
-                  onClick={() => handleExchange("cash_150")} 
-                  disabled={exchanging || (user?.points_balance || 0) < 350}
-                  style={{ width: "100%", background: "linear-gradient(135deg, #f59e0b, #d97706)", border: "none", color: "#fff" }}
-                >
-                  دریافت با ۳۵۰ الماس
-                </button>
-              </div>
+          <div className="club-grid" dir="rtl">
+            {/* Exchange Section */}
+            <div className="club-col">
+              <h4 style={{ color: "#fff", display: "flex", alignItems: "center", gap: "8px", margin: "0 0 12px 0", fontSize: "15px", fontWeight: "800" }}>
+                <span>💸</span> تبدیل الماس به کد تخفیف
+              </h4>
+              <p style={{ color: "var(--muted)", fontSize: "12.5px", lineHeight: "1.6", margin: "0 0 16px 0" }}>
+                با تبدیل الماس‌های خود به کد تخفیف، از خریدهایتان تخفیف‌های شگفت‌انگیز بگیرید. نرخ تبدیل: هر ۳۵۰ الماس معادل ۱۱۰,۰۰۰ تومان تخفیف بدون حداقل خرید است.
+              </p>
               
-              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", textAlign: "center" }}>
-                <div style={{ fontSize: "32px" }}>🏷️</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
-                  <div style={{ fontWeight: "800", fontSize: "16px", color: "#fff" }}>کد تخفیف ۲۰٪</div>
-                  <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "4px" }}>حداکثر تخفیف: ۲۰۰ هزار تومان</div>
+                  <label style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>تعداد الماس برای تبدیل (حداقل ۳۵۰)</label>
+                  <div style={{ position: "relative" }}>
+                    <input 
+                      type="number"
+                      min={350}
+                      step={50}
+                      value={exchangeAmount}
+                      onChange={(e) => setExchangeAmount(Math.max(0, Number(e.target.value) || 0))}
+                      style={{
+                        width: "100%",
+                        background: "rgba(0,0,0,0.2)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "10px",
+                        padding: "10px 12px 10px 32px",
+                        color: "#fff",
+                        fontSize: "14px",
+                        outline: "none",
+                        textAlign: "left"
+                      }}
+                    />
+                    <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "14px" }}>💎</span>
+                  </div>
                 </div>
+
+                <div style={{ 
+                  background: "rgba(255,255,255,0.02)", 
+                  border: "1px dashed rgba(255,255,255,0.08)", 
+                  borderRadius: "10px", 
+                  padding: "12px",
+                  fontSize: "13px",
+                  color: "#fff",
+                  display: "flex",
+                  justifyContent: "space-between"
+                }}>
+                  <span style={{ color: "var(--muted)" }}>ارزش تخفیف دریافتی:</span>
+                  <span style={{ fontWeight: "700", color: "#fbbf24" }}>
+                    {Math.floor((exchangeAmount * 110000) / 350).toLocaleString("fa-IR")} تومان
+                  </span>
+                </div>
+
                 <button 
                   className="btn primary" 
-                  onClick={() => handleExchange("percent_20")} 
-                  disabled={exchanging || (user?.points_balance || 0) < 350}
-                  style={{ width: "100%", background: "linear-gradient(135deg, #10b981, #059669)", border: "none", color: "#fff" }}
+                  onClick={() => handleExchange(exchangeAmount)} 
+                  disabled={exchanging || exchangeAmount < 350 || (user?.points_balance || 0) < exchangeAmount}
+                  style={{ 
+                    width: "100%", 
+                    background: "linear-gradient(135deg, #f59e0b, #d97706)", 
+                    border: "none", 
+                    color: "#fff",
+                    height: "42px",
+                    borderRadius: "10px",
+                    fontWeight: "700",
+                    cursor: "pointer"
+                  }}
                 >
-                  دریافت با ۳۵۰ الماس
+                  {exchanging 
+                    ? "در حال تبدیل..." 
+                    : (user?.points_balance || 0) < exchangeAmount 
+                      ? `به ${(exchangeAmount - (user?.points_balance || 0)).toLocaleString("fa-IR")} الماس دیگر نیاز دارید` 
+                      : `تبدیل ${exchangeAmount.toLocaleString("fa-IR")} الماس`
+                  }
                 </button>
               </div>
+            </div>
+
+            {/* Referral / Commission Section */}
+            <div className="club-col">
+              <h4 style={{ color: "#fff", display: "flex", alignItems: "center", gap: "8px", margin: "0 0 12px 0", fontSize: "15px", fontWeight: "800" }}>
+                <span>🤝</span> کسب پورسانت و الماس رایگان
+              </h4>
+              <p style={{ color: "var(--muted)", fontSize: "12.5px", lineHeight: "1.6", margin: "0 0 16px 0" }}>
+                لینک یا کد دعوت اختصاصی خود را برای دوستانتان بفرستید. در صورتی که با کد شما در سایت ثبت‌نام کنند و <strong>خرید انجام دهند</strong>، پورسانت به صورت الماس به حساب شما اضافه می‌شود.
+              </p>
+              
+              <div style={{ 
+                background: "rgba(167, 139, 250, 0.05)",
+                border: "1px solid rgba(167, 139, 250, 0.1)",
+                borderRadius: "12px",
+                padding: "10px 12px",
+                marginBottom: "14px",
+                fontSize: "12px",
+                color: "#e2e8f0",
+                lineHeight: "1.7"
+              }}>
+                <span style={{ color: "#fbbf24", fontWeight: "700" }}>🎁 توضیحات پورسانت:</span>
+                <ul style={{ paddingRight: "16px", margin: "4px 0 0 0" }}>
+                  <li>دریافت <strong>۱۵ تا ۵۰ الماس رایگان</strong> به ازای اولین خرید موفق هر دوست دعوت‌شده.</li>
+                  <li>دریافت <strong>کد تخفیف ۱۵۰,۰۰۰ تومانی بدون حداقل خرید</strong> به محض رسیدن به ۱۰ دعوت موفق.</li>
+                </ul>
+              </div>
+
+              {referralData && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>کد معرف شما</label>
+                    <div style={{ 
+                      background: "rgba(0,0,0,0.3)", 
+                      border: "1px solid rgba(255,255,255,0.08)", 
+                      borderRadius: "10px", 
+                      padding: "8px 12px", 
+                      color: "#fff", 
+                      fontWeight: "700",
+                      textAlign: "center",
+                      letterSpacing: "1px",
+                      fontSize: "13px"
+                    }}>
+                      {referralData.referral_code}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>لینک دعوت اختصاصی</label>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <input 
+                        readOnly 
+                        value={referralData.link} 
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          height: "36px",
+                          borderRadius: "10px",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          background: "rgba(0,0,0,0.2)",
+                          color: "#a5b4cf",
+                          padding: "0 12px",
+                          fontSize: "12px",
+                          direction: "ltr",
+                          textAlign: "left"
+                        }}
+                      />
+                      <button 
+                        onClick={async () => {
+                          if (!referralData.link) return;
+                          try {
+                            await navigator.clipboard.writeText(referralData.link);
+                            setCopiedLink(true);
+                            setTimeout(() => setCopiedLink(false), 1800);
+                          } catch {}
+                        }}
+                        style={{
+                          border: "none",
+                          borderRadius: "10px",
+                          background: "linear-gradient(90deg, #7c3aed, #db2777)",
+                          color: "#fff",
+                          padding: "0 14px",
+                          fontSize: "12px",
+                          fontWeight: "700",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {copiedLink ? "کپی شد ✓" : "کپی لینک"}
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                    <div style={{ flex: 1, background: "rgba(0,0,0,0.15)", padding: "8px 10px", borderRadius: "10px", textAlign: "center", border: "1px solid rgba(255,255,255,0.04)" }}>
+                      <div style={{ fontSize: "15px", fontWeight: "800", color: "#fff" }}>{referralData.invites_count.toLocaleString("fa-IR")}</div>
+                      <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>دعوت‌های موفق</div>
+                    </div>
+                    <div style={{ flex: 1, background: "rgba(0,0,0,0.15)", padding: "8px 10px", borderRadius: "10px", textAlign: "center", border: "1px solid rgba(255,255,255,0.04)" }}>
+                      <div style={{ fontSize: "15px", fontWeight: "800", color: "#fff" }}>{referralData.points_earned.toLocaleString("fa-IR")} 💎</div>
+                      <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>الماس‌های دریافتی</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -763,6 +971,24 @@ export default function UserPanelPage() {
         .stat::after { display: none; }
         .stat-label { font-size: 12px; color: rgba(160,185,255,0.75); font-weight: 700; }
         .stat-value { font-size: 16px; font-weight: 900; color: #fff; }
+        .club-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin-top: 12px;
+        }
+        .club-col {
+          display: flex;
+          flex-direction: column;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 20px;
+        }
+        :global(:root[data-theme="dark"]) .club-col {
+          background: rgba(0, 0, 0, 0.25);
+          border-color: rgba(255, 255, 255, 0.03);
+        }
         .user-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -959,9 +1185,9 @@ export default function UserPanelPage() {
           .stat {
             width: 100%;
           }
-          .user-hero__stats .stat:nth-child(1),
-          .user-hero__stats .stat:nth-child(4) {
-            grid-column: span 2;
+          .club-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
           }
           .order-card__body { grid-template-columns: 1fr; gap: 6px; }
           .order-amount { text-align: right; }

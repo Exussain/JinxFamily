@@ -125,7 +125,7 @@ def award_points(user, amount: int, reason: str, related_order=None, note: str =
         new_balance = max(0, int(profile.points_balance) + int(amount))
         profile.points_balance = new_balance
         profile.save(update_fields=["points_balance"])
-        return PointsTransaction.objects.create(
+        txn = PointsTransaction.objects.create(
             user=user,
             amount=int(amount),
             reason=reason,
@@ -133,6 +133,34 @@ def award_points(user, amount: int, reason: str, related_order=None, note: str =
             related_order=related_order,
             note=note,
         )
+        try:
+            from .models import SiteNotification
+            title = "دریافت الماس جدید 💎" if amount > 0 else "مصرف الماس 💎"
+            desc_reason = note or reason
+            if desc_reason == "purchase":
+                desc_reason = "خرید محصول"
+            elif desc_reason == "referral":
+                desc_reason = "معرفی دوست"
+            elif desc_reason == "spin_win":
+                desc_reason = "برنده شدن در گردونه شانس"
+            elif desc_reason == "exchange":
+                desc_reason = "تبدیل الماس به کد تخفیف"
+            elif desc_reason == "milestone":
+                desc_reason = "جایزه دعوت دوستان (میلانستون)"
+            elif desc_reason == "redeem":
+                desc_reason = "تبدیل الماس به تخفیف خرید"
+
+            verb = "به حساب شما اضافه شد" if amount > 0 else "از حساب شما کسر شد"
+            msg = f"تعداد {abs(amount):,} الماس {verb}. بابت: {desc_reason}"
+            SiteNotification.objects.create(
+                user=user,
+                title=title,
+                message=msg,
+                is_global=False
+            )
+        except Exception:
+            pass
+        return txn
 
 
 # ---------------------------------------------------------------------------

@@ -951,3 +951,50 @@ class Article(models.Model):
     def __str__(self):
         return self.title
 
+
+class SettlementBatch(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True, help_text="تاریخ تسویه")
+    orders = models.ManyToManyField(Order, related_name='settlement_batches', help_text="سفارش‌های تسویه شده در این دوره")
+    total_amount = models.PositiveIntegerField(default=0, help_text="مبلغ کل تسویه شده")
+    total_lira = models.FloatField(default=0.0, help_text="لیر کل تسویه شده")
+    order_count = models.PositiveIntegerField(default=0, help_text="تعداد سفارش‌ها")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "تاریخچه تسویه"
+        verbose_name_plural = "تاریخچه‌های تسویه"
+
+    def __str__(self):
+        return f"Settlement Batch #{self.id} ({self.created_at.strftime('%Y-%m-%d %H:%M')})"
+
+
+class SiteNotification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_notifications', null=True, blank=True, help_text="Null for global announcements")
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    is_global = models.BooleanField(default=False, help_text="True if this is a general announcement for all users")
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False, help_text="Only used for per-user notifications")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "اعلان سایت"
+        verbose_name_plural = "اعلان‌های سایت"
+
+    def __str__(self):
+        return f"{self.title} - {self.user.username if self.user else 'GLOBAL'}"
+
+
+class SiteNotificationRead(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='read_notifications')
+    notification = models.ForeignKey(SiteNotification, on_delete=models.CASCADE, related_name='read_by')
+    read_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'notification')
+        verbose_name = "اعلان خوانده شده"
+        verbose_name_plural = "اعلان‌های خوانده شده"
+
+    def __str__(self):
+        return f"{self.user.username} read {self.notification.id}"
+

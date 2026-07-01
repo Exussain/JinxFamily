@@ -43,6 +43,7 @@ from .models import (
     ResellerProfile,
     ResellerWalletTxn,
     ResellerPriceTier,
+    SettlementBatch,
     SubCategory,
     Referral,
     PointsTransaction,
@@ -6961,10 +6962,27 @@ def admin_settle_bulk(request):
     now = timezone.now()
 
     if settled:
-        count = Order.objects.filter(tracking_code__in=tracking_codes).update(
-            settled=True,
-            settled_at=now
-        )
+        orders_to_settle = list(Order.objects.filter(tracking_code__in=tracking_codes, settled=False).prefetch_related('items', 'items__product'))
+        if orders_to_settle:
+            total_amount = sum(o.amount for o in orders_to_settle)
+            total_lira = 0.0
+            for o in orders_to_settle:
+                for it in o.items.all():
+                    total_lira += float((it.price_lira or (it.product.price_lira if it.product else 0) or 0) * (it.quantity or 1))
+            
+            batch = SettlementBatch.objects.create(
+                total_amount=total_amount,
+                total_lira=total_lira,
+                order_count=len(orders_to_settle)
+            )
+            batch.orders.set(orders_to_settle)
+            
+            count = Order.objects.filter(id__in=[o.id for o in orders_to_settle]).update(
+                settled=True,
+                settled_at=now
+            )
+        else:
+            count = 0
     else:
         count = Order.objects.filter(tracking_code__in=tracking_codes).update(
             settled=False,
@@ -7051,30 +7069,39 @@ def exchange_points(request):
         
     try:
         data = json.loads(request.body)
-        reward_type = data.get("reward_type")
+        diamonds_count = data.get("diamonds_count")
         
-        if reward_type not in ["cash_150", "percent_20"]:
-            return JsonResponse({"error": "نوع جایزه نامعتبر است."}, status=400)
+        if diamonds_count is not None:
+            try:
+                diamonds_count = int(diamonds_count)
+            except (TypeError, ValueError):
+                return JsonResponse({"error": "مقدار الماس نامعتبر است."}, status=400)
+            if diamonds_count < 350:
+                return JsonResponse({"error": "حداقل الماس برای تبدیل ۳۵۰ عدد است."}, status=400)
+        else:
+            reward_type = data.get("reward_type")
+            if reward_type == "cash_110":
+                diamonds_count = 350
+            else:
+                return JsonResponse({"error": "نوع جایزه نامعتبر است."}, status=400)
             
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        cost = 350
         
-        if profile.points_balance < cost:
-            return JsonResponse({"error": "الماس کافی برای این جایزه ندارید."}, status=400)
+        if profile.points_balance < diamonds_count:
+            return JsonResponse({"error": "الماس کافی برای این تبدیل ندارید."}, status=400)
             
         # Deduct points
         from .rewards import award_points, generate_discount_code
-        award_points(request.user, -cost, "exchange", note=f"تبدیل الماس")
+        award_points(request.user, -diamonds_count, "exchange", note=f"تبدیل {diamonds_count} الماس")
         
         # Reload profile to get accurate balance after award_points
         profile.refresh_from_db()
         
+        # Calculate amount: 350 diamonds = 110,000 Tomans
+        amount = (diamonds_count * 110000) // 350
+        
         # Generate discount code
-        code_obj = None
-        if reward_type == "cash_150":
-            code_obj = generate_discount_code(amount=150000, assigned_user=request.user, source="points_exchange")
-        elif reward_type == "percent_20":
-            code_obj = generate_discount_code(percent=20, assigned_user=request.user, source="points_exchange")
+        code_obj = generate_discount_code(amount=amount, assigned_user=request.user, source="points_exchange")
             
         return JsonResponse({
             "success": True,
@@ -7087,3 +7114,206 @@ def exchange_points(request):
         import logging
         logging.getLogger(__name__).error(f"Error exchanging points: {e}")
         return JsonResponse({"error": "خطای داخلی رخ داد."}, status=500)
+
+
+def admin_settlement_history(request):
+    """لیست تاریخچه تسویه‌ها"""
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+
+    batches = SettlementBatch.objects.prefetch_related('orders').order_by('-created_at')[:100]
+    
+    data = []
+    for b in batches:
+        data.append({
+            "id": b.id,
+            "created_at": b.created_at.isoformat(),
+            "total_amount": b.total_amount,
+            "total_lira": b.total_lira,
+            "order_count": b.order_count,
+            "orders": [
+                {
+                    "tracking_code": o.tracking_code,
+                    "amount": o.amount,
+                    "completed_at": o.completed_at.isoformat() if o.completed_at else None,
+                }
+                for o in b.orders.all()
+            ]
+        })
+        
+    return JsonResponse({"settlements": data})
+
+
+@csrf_exempt
+def admin_delete_settlement_batch(request, batch_id):
+    """حذف پرونده تسویه و بازگرداندن سفارش‌ها به حالت تسویه نشده"""
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != 'DELETE':
+        return HttpResponseNotAllowed(['DELETE'])
+
+    try:
+        batch = SettlementBatch.objects.get(id=batch_id)
+    except SettlementBatch.DoesNotExist:
+        return JsonResponse({"detail": "پرونده یافت نشد"}, status=404)
+
+    # Mark all orders in the batch as unsettled
+    batch.orders.all().update(settled=False, settled_at=None)
+    batch.delete()
+
+    return JsonResponse({
+        "success": True, 
+        "message": "پرونده تسویه حذف شد و سفارش‌ها به حالت تسویه نشده بازگشتند."
+    })
+
+
+@csrf_exempt
+def my_notifications(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+        
+    if request.method == 'GET':
+        from .models import SiteNotification, SiteNotificationRead
+        # Fetch global notifications and personal notifications
+        notifs = SiteNotification.objects.filter(
+            Q(is_global=True) | Q(user=request.user)
+        ).order_by('-created_at')[:50]
+        
+        # Get list of read global notification IDs for this user
+        read_global_ids = set(
+            SiteNotificationRead.objects.filter(user=request.user)
+            .values_list('notification_id', flat=True)
+        )
+        
+        data = []
+        for n in notifs:
+            read_status = n.is_read if not n.is_global else (n.id in read_global_ids)
+            data.append({
+                "id": n.id,
+                "title": n.title,
+                "message": n.message,
+                "is_global": n.is_global,
+                "is_read": read_status,
+                "created_at": n.created_at.isoformat()
+            })
+        return JsonResponse({"notifications": data})
+        
+    elif request.method == 'POST':
+        # Mark as read
+        try:
+            payload = json.loads(request.body)
+            notif_id = payload.get("notification_id")
+            mark_all = payload.get("all", False)
+            
+            from .models import SiteNotification, SiteNotificationRead
+            
+            if mark_all:
+                # Mark all personal as read
+                SiteNotification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+                
+                # Mark all unread global as read
+                unread_globals = SiteNotification.objects.filter(is_global=True).exclude(
+                    id__in=SiteNotificationRead.objects.filter(user=request.user).values_list('notification_id', flat=True)
+                )
+                reads = [
+                    SiteNotificationRead(user=request.user, notification=n)
+                    for n in unread_globals
+                ]
+                SiteNotificationRead.objects.bulk_create(reads, ignore_conflicts=True)
+                
+                return JsonResponse({"success": True, "message": "همه اعلانات خوانده شدند."})
+            
+            if notif_id:
+                try:
+                    n = SiteNotification.objects.get(id=notif_id)
+                except SiteNotification.DoesNotExist:
+                    return JsonResponse({"error": "اعلان یافت نشد."}, status=404)
+                    
+                if n.is_global:
+                    SiteNotificationRead.objects.get_or_create(user=request.user, notification=n)
+                else:
+                    if n.user_id == request.user.id:
+                        n.is_read = True
+                        n.save(update_fields=['is_read'])
+                    else:
+                        return JsonResponse({"error": "عدم دسترسی"}, status=403)
+                return JsonResponse({"success": True})
+            
+            return JsonResponse({"error": "پارامترهای نامعتبر"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+            
+    return HttpResponseNotAllowed(['GET', 'POST'])
+
+
+@csrf_exempt
+def admin_site_notifications(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+        
+    if request.method == 'GET':
+        from .models import SiteNotification
+        notifs = SiteNotification.objects.all().order_by('-created_at')[:100]
+        data = []
+        for n in notifs:
+            data.append({
+                "id": n.id,
+                "title": n.title,
+                "message": n.message,
+                "is_global": n.is_global,
+                "user_username": n.user.username if n.user else "همه کاربران",
+                "created_at": n.created_at.isoformat()
+            })
+        return JsonResponse({"notifications": data})
+        
+    elif request.method == 'POST':
+        try:
+            payload = json.loads(request.body)
+            title = payload.get("title")
+            message = payload.get("message")
+            is_global = payload.get("is_global", True)
+            target_username = payload.get("username")
+            
+            if not title or not message:
+                return JsonResponse({"error": "عنوان و متن الزامی است."}, status=400)
+                
+            target_user = None
+            if not is_global and target_username:
+                try:
+                    target_user = User.objects.get(username=target_username)
+                except User.DoesNotExist:
+                    return JsonResponse({"error": f"کاربر با نام کاربری {target_username} یافت نشد."}, status=404)
+            
+            from .models import SiteNotification
+            SiteNotification.objects.create(
+                user=target_user,
+                title=title,
+                message=message,
+                is_global=is_global
+            )
+            return JsonResponse({"success": True, "message": "اعلان با موفقیت ایجاد شد."})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+            
+    elif request.method == 'DELETE':
+        # Delete notification
+        try:
+            payload = json.loads(request.body)
+            notif_id = payload.get("notification_id")
+            if not notif_id:
+                return JsonResponse({"error": "شناسه اعلان الزامی است."}, status=400)
+            from .models import SiteNotification
+            SiteNotification.objects.filter(id=notif_id).delete()
+            return JsonResponse({"success": True, "message": "اعلان حذف شد."})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return HttpResponseNotAllowed(['GET', 'POST', 'DELETE'])

@@ -1125,6 +1125,14 @@ export default function AdminPanelPage() {
   const [newProductCoverFile, setNewProductCoverFile] = useState(null);
   const [productCoverFiles, setProductCoverFiles] = useState({});
   const [notifications, setNotifications] = useState([]);
+  
+  // Announcements states
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [newAnnouncement, setNewAnnouncement] = useState({ title: "", message: "", is_global: true, username: "" });
+  const [announcementSubmitting, setAnnouncementSubmitting] = useState(false);
+  const [announcementError, setAnnouncementError] = useState("");
+  const [announcementSuccess, setAnnouncementSuccess] = useState("");
   const [xboxAccounts, setXboxAccounts] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [newSubcategory, setNewSubcategory] = useState({ key: "", label: "", category: "GIFTCARDS", display_order: 0 });
@@ -1285,6 +1293,8 @@ export default function AdminPanelPage() {
   });
   const [accountingStatus, setAccountingStatus] = useState("unsettled");
   const [accountingOldestDate, setAccountingOldestDate] = useState(null);
+  const [settlementHistory, setSettlementHistory] = useState([]);
+  const [settlementHistoryLoading, setSettlementHistoryLoading] = useState(false);
 
   useEffect(() => {
     fetch(`${apiBase}/api/admin/accounting/oldest-unsettled`, { credentials: "include" })
@@ -1748,6 +1758,125 @@ export default function AdminPanelPage() {
     }
   };
 
+  const fetchSettlementHistory = async () => {
+    setSettlementHistoryLoading(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/accounting/settlements`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSettlementHistory(data.settlements || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch settlement history", e);
+    } finally {
+      setSettlementHistoryLoading(false);
+    }
+  };
+
+  const deleteSettlementBatch = async (batchId) => {
+    if (!confirm("آیا از حذف این پرونده تسویه و بازگرداندن سفارشات آن به وضعیت تسویه نشده مطمئن هستید؟")) return;
+    try {
+      const res = await fetch(`${apiBase}/api/admin/accounting/settlements/${batchId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReport({ kind: "success", title: data.message });
+        fetchSettlementHistory();
+        if (accountingData) {
+          fetchAccountingData();
+        }
+      } else {
+        setReport({ kind: "error", title: data.detail || "خطا در حذف پرونده" });
+      }
+    } catch (e) {
+      setReport({ kind: "error", title: "خطا در ارتباط با سرور" });
+    }
+  };
+
+  const loadAnnouncements = async () => {
+    setAnnouncementsLoading(true);
+    setAnnouncementError("");
+    setAnnouncementSuccess("");
+    try {
+      const res = await fetch(`${apiBase}/api/admin/site-notifications`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setAnnouncements(data.notifications || []);
+      } else {
+        setAnnouncementError("خطا در بارگذاری اعلانات");
+      }
+    } catch {
+      setAnnouncementError("خطا در ارتباط با سرور");
+    } finally {
+      setAnnouncementsLoading(false);
+    }
+  };
+
+  const handleAnnouncementSubmit = async (e) => {
+    e.preventDefault();
+    setAnnouncementSubmitting(true);
+    setAnnouncementError("");
+    setAnnouncementSuccess("");
+    try {
+      const res = await fetch(`${apiBase}/api/admin/site-notifications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(newAnnouncement),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAnnouncementSuccess(data.message || "اعلان با موفقیت ایجاد شد.");
+        setNewAnnouncement({ title: "", message: "", is_global: true, username: "" });
+        loadAnnouncements();
+      } else {
+        setAnnouncementError(data.error || "خطا در ثبت اعلان");
+      }
+    } catch {
+      setAnnouncementError("خطا در ارتباط با سرور");
+    } finally {
+      setAnnouncementSubmitting(false);
+    }
+  };
+
+  const handleDeleteAnnouncement = async (id) => {
+    if (!window.confirm("آیا از حذف این اعلان مطمئن هستید؟")) return;
+    try {
+      const res = await fetch(`${apiBase}/api/admin/site-notifications`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ notification_id: id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAnnouncementSuccess("اعلان با موفقیت حذف شد.");
+        loadAnnouncements();
+      } else {
+        setAnnouncementError(data.error || "خطا در حذف اعلان");
+      }
+    } catch {
+      setAnnouncementError("خطا در ارتباط با سرور");
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "announcements") {
+      loadAnnouncements();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "accounting") {
+      fetchSettlementHistory();
+    }
+  }, [activeTab]);
+
   useEffect(() => {
     loadOrders(true);
     const id = setInterval(() => {
@@ -2024,6 +2153,7 @@ export default function AdminPanelPage() {
         ),
       }));
       setReport({ kind: "success", title: data.message || `${data.count} سفارش تسویه شد` });
+      fetchSettlementHistory();
     } catch (err) {
       setReport({ kind: "error", title: err.message || "خطا در تسویه گروهی" });
     } finally {
@@ -3763,6 +3893,11 @@ export default function AdminPanelPage() {
               <span className="tab-ic">🔔</span>
               <span className="tab-text">لاگ ایمیل/پیامک</span>
             </button>
+            <button className={`tab ${activeTab === "announcements" ? "active" : ""}`} onClick={() => setActiveTab("announcements")}>
+              <span className="tab-ic">📣</span>
+              <span className="tab-text">اعلانات و اخبار سایت</span>
+              <span className="tab-count">{announcements.length}</span>
+            </button>
             <button className={`tab ${activeTab === "xbox" ? "active" : ""}`} onClick={() => setActiveTab("xbox")}>
               <span className="tab-ic">🎮</span>
               <span className="tab-text">آرشیو Xbox</span>
@@ -4981,6 +5116,140 @@ export default function AdminPanelPage() {
                     <div ref={notificationSentinelRef} className="notifications-sentinel">
                       {notificationLoadingMore ? "در حال بارگذاری موارد بیشتر..." : notificationHasMore ? "برای بارگذاری لاگ‌های قدیمی‌تر اسکرول کنید" : "همه لاگ‌ها بارگذاری شد"}
                     </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!loading && activeTab === "announcements" && (
+            <div className="orders-content" dir="rtl" style={{ textAlign: "right" }}>
+              <div className="section-card">
+                <div className="section-header" style={{ marginBottom: "20px" }}>
+                  <h3>📣 اعلانات و اخبار جدید سایت</h3>
+                  <div className="muted">
+                    ارسال پیام همگانی به همه کاربران یا ارسال پیام هدفمند/پورسانت الماس به یک کاربر خاص
+                  </div>
+                </div>
+
+                {announcementError && (
+                  <div className="alert danger" style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "8px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#fca5a5" }}>
+                    {announcementError}
+                  </div>
+                )}
+                
+                {announcementSuccess && (
+                  <div className="alert success" style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "8px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", color: "#a7f3d0" }}>
+                    {announcementSuccess}
+                  </div>
+                )}
+
+                {/* Form to Create Announcement */}
+                <form onSubmit={handleAnnouncementSubmit} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "20px", marginBottom: "28px" }}>
+                  <h4 style={{ margin: "0 0 16px 0", color: "#fff" }}>ارسال اعلان جدید</h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "12px", color: "#a5b4cf", marginBottom: "6px" }}>عنوان اعلان</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="مثال: خبر جدید، هدیه الماس..."
+                        value={newAnnouncement.title}
+                        onChange={(e) => setNewAnnouncement(prev => ({ ...prev, title: e.target.value }))}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.2)", color: "#fff" }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "12px", color: "#a5b4cf", marginBottom: "6px" }}>نوع ارسال</label>
+                      <select 
+                        value={newAnnouncement.is_global ? "true" : "false"}
+                        onChange={(e) => setNewAnnouncement(prev => ({ ...prev, is_global: e.target.value === "true", username: e.target.value === "true" ? "" : prev.username }))}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.2)", color: "#fff" }}
+                      >
+                        <option value="true">عمومی (برای همه کاربران سایت)</option>
+                        <option value="false">خصوصی (مخصوص یک کاربر خاص)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {!newAnnouncement.is_global && (
+                    <div style={{ marginBottom: "16px" }}>
+                      <label style={{ display: "block", fontSize: "12px", color: "#a5b4cf", marginBottom: "6px" }}>نام کاربری هدف (نام کاربری دقیق کاربر در سایت)</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="مثال: Mr.Alikhani"
+                        value={newAnnouncement.username}
+                        onChange={(e) => setNewAnnouncement(prev => ({ ...prev, username: e.target.value }))}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.2)", color: "#fff" }}
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ marginBottom: "20px" }}>
+                    <label style={{ display: "block", fontSize: "12px", color: "#a5b4cf", marginBottom: "6px" }}>متن اعلان</label>
+                    <textarea 
+                      required
+                      rows={3}
+                      placeholder="متن پیام خود را اینجا بنویسید..."
+                      value={newAnnouncement.message}
+                      onChange={(e) => setNewAnnouncement(prev => ({ ...prev, message: e.target.value }))}
+                      style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.2)", color: "#fff", resize: "vertical", fontFamily: "inherit" }}
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={announcementSubmitting}
+                    className="btn primary"
+                    style={{ background: "linear-gradient(135deg, #7c3aed, #db2777)", border: "none", padding: "10px 24px", color: "#fff", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
+                  >
+                    {announcementSubmitting ? "در حال ارسال..." : "ارسال و ثبت اعلان"}
+                  </button>
+                </form>
+
+                {/* List of Announcements */}
+                <h4 style={{ color: "#fff", marginBottom: "14px" }}>تاریخچه اعلانات ارسالی اخیر</h4>
+                {announcementsLoading && announcements.length === 0 ? (
+                  <div className="loading-state">
+                    <div className="spinner"></div>
+                    <p>در حال بارگذاری اعلانات...</p>
+                  </div>
+                ) : announcements.length === 0 ? (
+                  <div className="empty-state">هیچ اعلانی یافت نشد.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {announcements.map(a => (
+                      <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "12px", padding: "16px", gap: "16px" }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                            <span style={{ fontWeight: "800", color: "#fff", fontSize: "14px" }}>{a.title}</span>
+                            <span style={{ 
+                              fontSize: "10.5px", 
+                              padding: "2px 8px", 
+                              borderRadius: "999px", 
+                              background: a.is_global ? "rgba(59, 130, 246, 0.15)" : "rgba(167, 139, 250, 0.15)",
+                              color: a.is_global ? "#60a5fa" : "#c084fc",
+                              border: a.is_global ? "1px solid rgba(59, 130, 246, 0.25)" : "1px solid rgba(167, 139, 250, 0.25)"
+                            }}>
+                              {a.is_global ? "عمومی (همه)" : `خصوصی (${a.user_username})`}
+                            </span>
+                            <span style={{ fontSize: "11px", color: "var(--muted)" }}>
+                              {new Date(a.created_at).toLocaleString("fa-IR")}
+                            </span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)", lineHeight: "1.6" }}>{a.message}</p>
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteAnnouncement(a.id)}
+                          style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.25)", color: "#ef4444", padding: "6px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", cursor: "pointer", transition: "all 0.2s" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"; }}
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -7313,6 +7582,104 @@ export default function AdminPanelPage() {
                     </div>
                     );
                   })()}
+              </div>
+
+              {/* Settlement History Section */}
+              <div className="section-card" style={{ marginTop: "24px" }}>
+                <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <h3>تاریخچه تسویه‌ها (پرونده‌ها)</h3>
+                    <div className="muted">لیست پرونده‌های تسویه شده گروهی</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={fetchSettlementHistory}
+                    disabled={settlementHistoryLoading}
+                    style={{ padding: "6px 12px", fontSize: "12.5px" }}
+                  >
+                    {settlementHistoryLoading ? "در حال به‌روزرسانی..." : "به‌روزرسانی تاریخچه"}
+                  </button>
+                </div>
+
+                {settlementHistoryLoading && settlementHistory.length === 0 ? (
+                  <div className="empty-state">در حال بارگذاری تاریخچه تسویه‌ها...</div>
+                ) : settlementHistory.length === 0 ? (
+                  <div className="empty-state">هیچ پرونده تسویه‌ای ثبت نشده است.</div>
+                ) : (
+                  <div className="accounting-table-wrapper" style={{ marginTop: "16px" }}>
+                    <table className="accounting-table">
+                      <thead>
+                        <tr>
+                          <th>شناسه پرونده</th>
+                          <th>تاریخ تسویه</th>
+                          <th>تعداد سفارشات</th>
+                          <th>مبلغ کل تسویه شده</th>
+                          <th>لیر کل تسویه شده</th>
+                          <th>سفارشات پرونده</th>
+                          <th>عملیات</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {settlementHistory.map((batch) => (
+                          <tr key={batch.id}>
+                            <td style={{ fontWeight: "bold" }}>#{batch.id}</td>
+                            <td>{formatDateTime(batch.created_at)}</td>
+                            <td className="num-cell" style={{ fontWeight: "bold" }}>
+                              {batch.order_count.toLocaleString("fa-IR")}
+                            </td>
+                            <td className="num-cell" style={{ color: "#10b981", fontWeight: "bold" }}>
+                              {batch.total_amount.toLocaleString("fa-IR")} تومان
+                            </td>
+                            <td className="num-cell" style={{ color: "#34d399", fontWeight: "bold" }}>
+                              {batch.total_lira > 0 ? `${batch.total_lira.toLocaleString("fa-IR")} ₺` : "—"}
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", maxWidth: "350px" }}>
+                                {batch.orders.map(o => (
+                                  <span
+                                    key={o.tracking_code}
+                                    style={{
+                                      background: "rgba(139, 92, 246, 0.1)",
+                                      color: "#8b5cf6",
+                                      padding: "3px 7px",
+                                      borderRadius: "6px",
+                                      fontSize: "11px",
+                                      fontWeight: "600",
+                                      border: "1px solid rgba(139, 92, 246, 0.2)"
+                                    }}
+                                  >
+                                    {o.tracking_code}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                className="btn danger"
+                                onClick={() => deleteSettlementBatch(batch.id)}
+                                style={{
+                                  padding: "5px 10px",
+                                  fontSize: "11.5px",
+                                  background: "rgba(239, 68, 68, 0.1)",
+                                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                                  color: "#ef4444",
+                                  borderRadius: "6px",
+                                  cursor: "pointer",
+                                  fontWeight: "bold",
+                                  transition: "all 0.2s ease"
+                                }}
+                              >
+                                لغو تسویه پرونده
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}

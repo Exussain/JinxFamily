@@ -20,13 +20,6 @@ export default function Navbar() {
   const [cartBounce, setCartBounce] = useState(false);
   const pathname = usePathname();
 
-  // Close menus on route change
-  useEffect(() => {
-    setShowAuthMenu(false);
-    setShowUserMenu(false);
-    setShowMobileMenu(false);
-    setShowSearchMobileOverlay(false);
-  }, [pathname]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -35,6 +28,21 @@ export default function Navbar() {
   const [mobileSearchResults, setMobileSearchResults] = useState([]);
   const [mobileSearchLoading, setMobileSearchLoading] = useState(false);
   const [showSearchMobileOverlay, setShowSearchMobileOverlay] = useState(false);
+  
+  // Notification center states
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Close menus on route change
+  useEffect(() => {
+    setShowAuthMenu(false);
+    setShowUserMenu(false);
+    setShowMobileMenu(false);
+    setShowSearchMobileOverlay(false);
+    setShowNotifMenu(false);
+  }, [pathname]);
+
   const cartRef = useRef(null);
   const hasLoadedUserRef = useRef(false);
   const userMenuRef = useRef(null);
@@ -45,6 +53,54 @@ export default function Navbar() {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || '';
   const { items, total, addItem, setQty, removeItem } = useCart();
   const { theme, toggleTheme } = useTheme();
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch(`${apiBase}/api/me/notifications`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        const list = data.notifications || [];
+        setNotifications(list);
+        setUnreadCount(list.filter((n) => !n.is_read).length);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      const res = await fetch(`${apiBase}/api/me/notifications/read`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ notification_id: id })
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+        setUnreadCount(c => Math.max(0, c - 1));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const res = await fetch(`${apiBase}/api/me/notifications/read`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ all: true })
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        setUnreadCount(0);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     setQ(params?.get('q') || '');
@@ -62,7 +118,22 @@ export default function Navbar() {
           return;
         }
         const data = await res.json();
-        setUser(data.user || data);
+        const meData = data.user || data;
+        setUser(meData);
+        if (meData) {
+          // Fetch notifications initially
+          try {
+            const resNotif = await fetch(`${apiBase}/api/me/notifications`, { credentials: "include" });
+            if (resNotif.ok) {
+              const dNotif = await resNotif.json();
+              const list = dNotif.notifications || [];
+              setNotifications(list);
+              setUnreadCount(list.filter((n) => !n.is_read).length);
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
       } catch {
         setUser(null);
       }
@@ -324,9 +395,9 @@ export default function Navbar() {
             {/* Left: Controls */}
             <div className="nav-actions">
               {user?.is_admin && (
-                <a href={adminCacheBustHref()} className="admin-pill" aria-label="پنل مدیریت">
+                <a href={adminCacheBustHref()} className="admin-pill" aria-label="پنل">
                   <span className="admin-dot" />
-                  پنل مدیریت
+                  پنل
                 </a>
               )}
               <button
@@ -466,25 +537,82 @@ export default function Navbar() {
               </a>
               <div className="nav-user">
                 {user ? (
-                  <div className="nav-user-menu" ref={userMenuRef}>
+                  <div className="nav-user-menu" ref={userMenuRef} style={{ position: "relative" }}>
                     <button
                       type="button"
-                      className="nav-user-btn-pill"
+                      className="nav-bell-btn"
                       onClick={() => {
-                        router.push('/panel/user');
+                        setShowNotifMenu(v => !v);
+                        if (!showNotifMenu) fetchNotifications();
                       }}
-                      aria-label="پروفایل"
+                      aria-label="اعلانات"
                     >
-                      <span className="user-avatar">
-                        {user.avatar_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={user.avatar_url} alt={user.name || 'پروفایل'} width="32" height="32" loading="lazy" decoding="async" />
-                        ) : (
-                          userInitial || 'شما'
-                        )}
-                      </span>
-                      <span className="user-btn-text">{user.name || 'پنل کاربری'}</span>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                      </svg>
+                      {unreadCount > 0 && (
+                        <span className="bell-badge">
+                          {unreadCount.toLocaleString("fa-IR")}
+                        </span>
+                      )}
                     </button>
+                    
+                    {showNotifMenu && (
+                      <div className="notif-dropdown" dir="rtl">
+                        <div className="notif-dropdown__header">
+                          <span>اعلانات و اخبار</span>
+                          {unreadCount > 0 && (
+                            <button onClick={markAllAsRead} className="notif-clear-btn">
+                              خوانده شدن همه
+                            </button>
+                          )}
+                        </div>
+                        <div className="notif-dropdown__body">
+                          {notifications.length === 0 ? (
+                            <div className="notif-empty">هیچ اعلانی ندارید</div>
+                          ) : (
+                            notifications.map(n => (
+                              <div 
+                                key={n.id} 
+                                className={`notif-item ${!n.is_read ? 'unread' : ''}`}
+                                onClick={() => !n.is_read && markAsRead(n.id)}
+                              >
+                                <div className="notif-item__top">
+                                  <span className="notif-item__title">
+                                    {n.title}
+                                  </span>
+                                  {!n.is_read && <span className="notif-unread-dot"></span>}
+                                </div>
+                                <p className="notif-item__msg">{n.message}</p>
+                                <span className="notif-item__date">
+                                  {new Date(n.created_at).toLocaleDateString("fa-IR")}
+                                </span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <div className="notif-dropdown__footer">
+                          <Link href="/panel/user" onClick={() => setShowNotifMenu(false)} className="notif-link-btn">
+                            👤 ورود به پنل کاربری
+                          </Link>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await fetch(`${apiBase}/api/auth/logout`, {
+                                  method: "POST",
+                                  credentials: "include",
+                                });
+                              } catch {}
+                              window.location.href = "/";
+                            }}
+                            className="notif-logout-btn"
+                          >
+                            خروج از حساب
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="nav-user-menu nav-auth-menu" ref={authMenuRef}>
@@ -674,12 +802,28 @@ export default function Navbar() {
         <div className={`sub-navbar ${showMobileMenu ? 'mobile-open' : ''}`}>
           <div className="container sub-navbar-inner">
             <div className="mobile-menu-header">
-              <div className="mobile-menu-brand">
-                <picture>
-                  <img src="/web_logo.webp" alt="Nubix Logo" width="32" height="32" className="mobile-menu-logo-img" />
-                </picture>
-                <span className="mobile-menu-brand-text">نوبیکس شاپ</span>
-              </div>
+              {user ? (
+                <Link href="/panel/user" onClick={() => setShowMobileMenu(false)} className="mobile-menu-user-card" style={{ textDecoration: "none" }}>
+                  <span className="mobile-menu-user-avatar">
+                    {user.avatar_url ? (
+                      <img src={user.avatar_url} alt={user.name || 'پروفایل'} width="36" height="36" />
+                    ) : (
+                      (user.name || 'شما')?.[0] || '?'
+                    )}
+                  </span>
+                  <div className="mobile-menu-user-info">
+                    <span className="mobile-menu-user-name">{user.name || 'کاربر نوبیکس'}</span>
+                    <span className="mobile-menu-user-pill">مشاهده پنل کاربری</span>
+                  </div>
+                </Link>
+              ) : (
+                <div className="mobile-menu-brand">
+                  <picture>
+                    <img src="/web_logo.webp" alt="Nubix Logo" width="32" height="32" className="mobile-menu-logo-img" />
+                  </picture>
+                  <span className="mobile-menu-brand-text">نوبیکس شاپ</span>
+                </div>
+              )}
               <button className="mobile-menu-close" onClick={() => setShowMobileMenu(false)} aria-label="بستن منو">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -698,15 +842,10 @@ export default function Navbar() {
               <li>
                 <Link href="/?cat=فورتنایت" onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M12 12h.01"></path><path d="M17 12h.01"></path><path d="M7 12h2"></path><path d="M8 11v2"></path></svg>
-                  <span>محصولات فورتنایت</span>
+                  <span>محصولات</span>
                 </Link>
               </li>
-              <li>
-                <Link href="/?cat=هوش مصنوعی" onClick={() => setShowMobileMenu(false)}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
-                  <span>اشتراک هوش مصنوعی</span>
-                </Link>
-              </li>
+
               <li>
                 <Link href="/reseller" onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
@@ -719,12 +858,7 @@ export default function Navbar() {
                   <span>وبلاگ و مقالات</span>
                 </Link>
               </li>
-              <li>
-                <Link href="/terms" onClick={() => setShowMobileMenu(false)}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                  <span>قوانین و مقررات</span>
-                </Link>
-              </li>
+
               <li>
                 <Link href="/faq" onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -779,7 +913,7 @@ export default function Navbar() {
             <span>صفحه اصلی</span>
           </Link>
           
-          <button type="button" className={`bottom-nav-item ${pathname.includes('cat') || showMobileMenu ? 'active' : ''}`} onClick={() => { setShowSearchMobileOverlay(false); setShowMobileMenu(true); }}>
+          <button type="button" className={`bottom-nav-item ${pathname.includes('cat') ? 'active' : ''}`} onClick={() => { setShowSearchMobileOverlay(false); window.dispatchEvent(new CustomEvent('open-category-sidebar')); }}>
             <div className="bottom-nav-icon-container">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
             </div>
