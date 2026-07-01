@@ -21,8 +21,25 @@ const MIN_DIAMONDS_TO_REDEEM = 10;
 const diamondsToToman = (d) => Math.floor((d * DIAMOND_TO_TOMAN_NUMERATOR) / DIAMOND_TO_TOMAN_DENOMINATOR);
 const tomanToDiamondsCeil = (t) => Math.ceil((Math.max(0, t) * DIAMOND_TO_TOMAN_DENOMINATOR) / DIAMOND_TO_TOMAN_NUMERATOR);
 
+const productSupportsPlatforms = (it) => {
+  const name = (it.name || '').toLowerCase();
+  const slug = (it.slug || '').toLowerCase();
+  const category = (it.category || '').toLowerCase();
+  
+  if (category === 'fortnite' || name.includes('fortnite') || slug.includes('fortnite') || slug.includes('crew') || name.includes('ویباکس') || slug.includes('vbucks') || slug.includes('starterpack') || slug.includes('legends')) {
+    return ['epic', 'psn', 'xbox'];
+  }
+  if (category === 'gta6' || slug.includes('gta6') || name.includes('gta') || name.includes('جی تی ای')) {
+    return ['psn', 'xbox'];
+  }
+  if (it.account_type) {
+    return ['epic', 'psn', 'xbox'];
+  }
+  return null;
+};
+
 export default function CheckoutPage() {
-  const { items, total, setQty, removeItem, clear } = useCart();
+  const { items, total, setQty, removeItem, clear, setPlatform } = useCart();
   const [form, setForm] = useState({
     epic_email: '',
     epic_pass: '',
@@ -91,11 +108,7 @@ export default function CheckoutPage() {
   // Fortnite packs (starter pack, battle pass gifts, legend packs, …) are
   // delivered into the user's Epic account but have no account_type and no
   // custom_fields of their own — they rely on the Epic login fields below.
-  const hasFortniteLoginItem = items.some((it) => {
-    if ((it.account_type || '').trim()) return false; // already in platformSet
-    if (it.custom_fields && Object.keys(it.custom_fields).length > 0) return false;
-    return (it.category || '').toLowerCase() === 'fortnite';
-  });
+  const hasFortniteLoginItem = false;
 
   // For crewpack: if user selected Epic, also need Xbox; if selected Xbox, also need Epic
   const crewpackPlatforms = items
@@ -116,18 +129,13 @@ export default function CheckoutPage() {
       ) || hasFortniteLoginItem || crewpackNeedsEpic;
 
   const requiredMissing = [];
-  if (needsEpic) {
-    if (!form.epic_email.trim()) requiredMissing.push('ایمیل اپیک');
-    if (!form.epic_pass.trim()) requiredMissing.push('رمز اپیک');
-  }
-  if (needsXbox && !form.xbox_create_account) {
-    if (!form.xbox_email.trim()) requiredMissing.push('ایمیل ایکس‌باکس');
-    if (!form.xbox_pass.trim()) requiredMissing.push('رمز ایکس‌باکس');
-  }
-  if (needsPsn) {
-    if (!form.psn_email.trim()) requiredMissing.push('ایمیل PSN');
-    if (!form.psn_pass.trim()) requiredMissing.push('رمز PSN');
-  }
+  items.forEach(it => {
+    const supported = productSupportsPlatforms(it);
+    if (supported && it.account_type) {
+      if (!(it.account_email || '').trim()) requiredMissing.push(`ایمیل حساب ${it.name}`);
+      if (!(it.account_password || '').trim()) requiredMissing.push(`رمز عبور ${it.name}`);
+    }
+  });
   if (!form.telegram.trim()) {
     requiredMissing.push('آیدی تلگرام');
   }
@@ -365,7 +373,9 @@ export default function CheckoutPage() {
       };
 
       items.forEach((it) => {
-        const platform = (it.account_type || '').toLowerCase();
+        const platform = (it.account_type || '').toLowerCase().trim();
+        if (!platform) return; // Do not auto-fill credentials for unselected platforms
+
         const email = normalize(it.account_email);
         const pass = normalize(it.account_password);
         const passkey = normalize(it.xbox_passkey || it.passkey);
@@ -379,7 +389,7 @@ export default function CheckoutPage() {
         } else if (platform.includes('psn') || platform.includes('playstation')) {
           setIfEmpty('psn_email', email);
           setIfEmpty('psn_pass', pass);
-        } else {
+        } else if (platform.includes('epic')) {
           setIfEmpty('epic_email', email);
           setIfEmpty('epic_pass', pass);
         }
@@ -569,6 +579,18 @@ export default function CheckoutPage() {
     setSubmitAttempted(true);
     setError('');
 
+    // Check if any product is missing a platform choice
+    const missingPlatformItems = items.filter(it => {
+      const supported = productSupportsPlatforms(it);
+      return supported && !it.account_type;
+    });
+
+    if (missingPlatformItems.length > 0) {
+      const names = missingPlatformItems.map(it => it.name).join('، ');
+      setError(`لطفاً پلتفرم محصول(های) زیر را انتخاب کنید: ${names}`);
+      return;
+    }
+
     if (nameRequired) {
       setError('لطفاً نام و نام خانوادگی را وارد کنید.');
       return;
@@ -604,9 +626,61 @@ export default function CheckoutPage() {
         headers['X-CSRFToken'] = csrftoken;
       }
 
+      // Sync first item's credentials to the global form for backward compatibility
+      const firstItemWithCreds = items.find(it => productSupportsPlatforms(it) && it.account_type);
+      const updatedForm = { ...form };
+      if (firstItemWithCreds) {
+        const type = firstItemWithCreds.account_type;
+        const email = firstItemWithCreds.account_email || '';
+        const pass = firstItemWithCreds.account_password || '';
+        const passkey = firstItemWithCreds.xbox_passkey || '';
+        const gamertag = firstItemWithCreds.xbox_gamertag || '';
+        const create_xbox = firstItemWithCreds.xbox_create_account || false;
+
+        if (type === 'epic') {
+          updatedForm.epic_email = email;
+          updatedForm.epic_pass = pass;
+        } else if (type === 'xbox') {
+          updatedForm.xbox_email = email;
+          updatedForm.xbox_pass = pass;
+          updatedForm.xbox_passkey = passkey;
+          updatedForm.xbox_gamertag = gamertag;
+          updatedForm.xbox_create_account = create_xbox;
+        } else if (type === 'psn') {
+          updatedForm.psn_email = email;
+          updatedForm.psn_pass = pass;
+        }
+      }
+
+      // Build comprehensive note with all platform credentials
+      const noteParts = [];
+      if (form.note?.trim()) {
+        noteParts.push(`یادداشت کاربر: ${form.note.trim()}`);
+      }
+      
+      items.forEach((it, idx) => {
+        const supported = productSupportsPlatforms(it);
+        if (supported && it.account_type) {
+          const option = getPlatformOption(it.account_type);
+          noteParts.push(`--- مشخصات اکانت آیتم #${idx + 1} (${it.name}) ---`);
+          noteParts.push(`پلتفرم: ${option.shortLabel}`);
+          if (it.account_type === 'xbox' && it.xbox_create_account) {
+            noteParts.push(`درخواست ساخت اکانت Xbox توسط نوبیکس.`);
+          } else {
+            noteParts.push(`ایمیل: ${it.account_email || ''}`);
+            noteParts.push(`رمز عبور: ${it.account_password || ''}`);
+          }
+          if (it.account_type === 'xbox') {
+            if (it.xbox_passkey) noteParts.push(`پسکد: ${it.xbox_passkey}`);
+            if (it.xbox_gamertag) noteParts.push(`گیمرتگ: ${it.xbox_gamertag}`);
+          }
+        }
+      });
+
       const contactPayload = {
-        ...form,
-        epic_username: form.epic_email || undefined,
+        ...updatedForm,
+        note: noteParts.join('\n'),
+        epic_username: updatedForm.epic_email || undefined,
         phone: me?.phone || undefined,
         email: (me?.email || contactEmail || '').trim() || undefined,
         rush_order: rushOrder,
@@ -799,13 +873,7 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            <PlatformFields
-              form={form}
-              setForm={setForm}
-              items={items}
-              rushOrder={rushOrder}
-              showValidation={showValidation}
-            />
+
 
             <div className="optional-fields">
               <div className="field">
@@ -906,112 +974,148 @@ export default function CheckoutPage() {
             {/* Cart Items */}
             <div className="cart-summary-card">
               <div className="cart-summary-header">
-                <h3>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="9" cy="21" r="1"/>
-                    <circle cx="20" cy="21" r="1"/>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                  </svg>
-                  سبد خرید
-                </h3>
-                <span className="cart-count">{items.length} محصول</span>
-              </div>
-              
-              <div className="cart-items-list">
-                {items.length === 0 && (
-                  <div className="empty-cart">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <circle cx="9" cy="21" r="1"/>
-                      <circle cx="20" cy="21" r="1"/>
-                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                    </svg>
-                    <p>سبد شما خالی است</p>
-                  </div>
-                )}
-                {items.map((it) => {
+                              {items.map((it) => {
                   const platform = getPlatformLabel(it.account_type);
+                  const supportedPlatforms = productSupportsPlatforms(it);
                   return (
-                    <div key={`${it.product_id}-${it.variant_id ?? ""}`} className="cart-item">
-                      <div className="cart-item-image">
-                        {it.image ? (
-                          <SmartImage src={it.image} alt={it.name} />
-                        ) : (
-                          <div className="cart-item-placeholder">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                              <circle cx="8.5" cy="8.5" r="1.5"/>
-                              <polyline points="21,15 16,10 5,21"/>
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                      <div className="cart-item-details">
-                        <div className="cart-item-name">{it.name}</div>
-                        <div className="cart-item-meta">
-                          <span 
-                            className="platform-badge" 
-                            style={{ '--platform-color': platform.color }}
-                          >
-                            <span className="platform-badge-icon">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={platform.icon} alt={platform.iconAlt || platform.label} />
+                    <div key={`${it.product_id}-${it.variant_id ?? ""}`} className="cart-item-wrapper">
+                      <div className="cart-item">
+                        <div className="cart-item-image">
+                          {it.image ? (
+                            <SmartImage src={it.image} alt={it.name} />
+                          ) : (
+                            <div className="cart-item-placeholder">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21,15 16,10 5,21"/>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="cart-item-details">
+                          <div className="cart-item-name">{it.name}</div>
+                          <div className="cart-item-meta">
+                            {supportedPlatforms ? (
+                              <div className="item-platform-selector">
+                                <span className="selector-label">پلتفرم:</span>
+                                <div className="platform-icon-buttons">
+                                  {supportedPlatforms.map(key => {
+                                    const option = getPlatformOption(key);
+                                    const isActive = (it.account_type || '').toLowerCase() === key;
+                                    return (
+                                      <button
+                                        key={key}
+                                        type="button"
+                                        className={`platform-icon-btn ${isActive ? 'active' : ''} platform-${key}`}
+                                        onClick={() => setPlatform(it.product_id, it.variant_id ?? null, key)}
+                                        title={option.longLabel}
+                                      >
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={option.icon} alt={option.iconAlt || key} />
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                {!it.account_type && (
+                                  <span className="platform-missing-warn">⚠️ انتخاب کنید</span>
+                                )}
+                              </div>
+                            ) : (
+                              platform.label && (
+                                <span 
+                                  className="platform-badge" 
+                                  style={{ '--platform-color': platform.color }}
+                                >
+                                  <span className="platform-badge-icon">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={platform.icon} alt={platform.iconAlt || platform.label} />
+                                  </span>
+                                  {platform.label}
+                                </span>
+                              )
+                            )}
+                            <span className="cart-item-price">
+                              {(it.price * it.quantity).toLocaleString('fa-IR')} تومان
                             </span>
-                            {platform.label}
-                          </span>
-                          <span className="cart-item-price">
-                            {(it.price * it.quantity).toLocaleString('fa-IR')} تومان
-                          </span>
+                          </div>
+                        </div>
+                        <div className="cart-item-actions">
+                          <div className="qty-control">
+                            <button 
+                              className="qty-btn"
+                              onClick={() => setQty(it.product_id, Math.max(1, it.quantity - 1), it.variant_id ?? null)}
+                              disabled={it.quantity <= 1}
+                            >
+                              −
+                            </button>
+                            <span className="qty-value">{it.quantity}</span>
+                            <button 
+                              className="qty-btn"
+                              onClick={() => setQty(it.product_id, it.quantity + 1, it.variant_id ?? null)}
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button 
+                            className="remove-btn" 
+                            onClick={() => removeItem(it.product_id, it.variant_id ?? null)}
+                            title="حذف"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3,6 5,6 21,6"/>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                          </button>
                         </div>
                       </div>
-                      <div className="cart-item-actions">
-                        <div className="qty-control">
-                          <button 
-                            className="qty-btn"
-                            onClick={() => setQty(it.product_id, Math.max(1, it.quantity - 1), it.variant_id ?? null)}
-                            disabled={it.quantity <= 1}
-                          >
-                            −
-                          </button>
-                          <span className="qty-value">{it.quantity}</span>
-                          <button 
-                            className="qty-btn"
-                            onClick={() => setQty(it.product_id, it.quantity + 1, it.variant_id ?? null)}
-                          >
-                            +
-                          </button>
+
+                      {/* Per-Item Platform Credentials Section */}
+                      {supportedPlatforms && it.account_type && (
+                        <div className="item-credentials-section">
+                          <div className="credentials-fields-row">
+                            <div className="field compact-field">
+                              <label>ایمیل اکانت ({getPlatformOption(it.account_type).shortLabel})</label>
+                              <input
+                                type="email"
+                                value={it.account_email || ''}
+                                onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_email: e.target.value })}
+                                placeholder="Email"
+                                required
+                              />
+                            </div>
+                            <div className="field compact-field">
+                              <label>رمز عبور</label>
+                              <PasswordInput
+                                value={it.account_password || ''}
+                                onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_password: e.target.value })}
+                                placeholder="Password"
+                                required
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <button 
-                          className="remove-btn" 
-                          onClick={() => removeItem(it.product_id, it.variant_id ?? null)}
-                          title="حذف"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3,6 5,6 21,6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                          </svg>
-                        </button>
-                      </div>
-                  </div>
-                );
-              })}
+                      )}
+                    </div>
+                  );
+                })}
             </div>
 
             {/* Friendly order tips - single yellow info card */}
             <div className="order-tips-card">
               <div className="order-tips-header">
-                <span className="order-tips-emoji">💛</span>
-                <span>جهت تسریع فرایند سفارش شما</span>
+                <span className="order-tips-emoji">🔔</span>
+                <span>نکات مهم قبل از ثبت سفارش</span>
               </div>
               <ul className="order-tips-list">
                 <li>
-                  لطفاً پیش از ثبت سفارش، <strong>تایید دو مرحله‌ای (2FA)</strong> اکانت خود را خاموش کنید تا سفارشتان بدون معطلی انجام شود. 🙂
+                  <strong>غیرفعال‌سازی ۲ مرحله‌ای (2FA)</strong>: پیش از خرید تایید دو مرحله‌ای اکانت خود را خاموش کنید تا سفارش بدون معطلی انجام شود. 
                   <a href="/guides/disable-2fa" className="order-tips-link" target="_blank" rel="noopener noreferrer">
-                    راهنمای خاموش کردن 2FA ↗
+                    [راهنمای خاموش کردن 2FA ↗]
                   </a>
                 </li>
-                <li>اطلاعات اکانت (ایمیل/رمز) را دقیق و کامل وارد کنید. ✅</li>
-                <li>پس از ثبت سفارش، وضعیت هر مرحله از طریق ایمیل و پیامک به شما اطلاع داده می‌شود. 📩</li>
-                <li>سفارش‌ها به ترتیب و با دقت انجام می‌شوند؛ در صورت نیاز، پشتیبانی همراه شماست. 🤝</li>
+                <li><strong>دقت در اطلاعات ورود</strong>: لطفاً ایمیل و رمز اکانت را دقیق و صحیح وارد کنید.</li>
+                <li><strong>پشتیبانی و پیگیری</strong>: مراحل سفارش از طریق پیامک و ایمیل اطلاع‌رسانی می‌شود.</li>
               </ul>
               {showAckSection && (
                 <label className="ack-checkbox required">
@@ -2330,6 +2434,175 @@ export default function CheckoutPage() {
           display: block;
         }
 
+        /* Compact Platform Selector */
+        .item-platform-selector {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 4px;
+        }
+
+        .selector-label {
+          font-size: 11px;
+          color: var(--muted);
+          font-weight: 700;
+        }
+
+        .platform-icon-buttons {
+          display: flex;
+          gap: 4px;
+        }
+
+        .platform-icon-btn {
+          background: #f3f4f6;
+          border: 1.5px solid transparent;
+          border-radius: 6px;
+          width: 26px;
+          height: 26px;
+          padding: 3px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .platform-icon-btn img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          opacity: 0.55;
+          transition: opacity 0.2s ease;
+        }
+
+        .platform-icon-btn:hover {
+          background: #e5e7eb;
+        }
+
+        .platform-icon-btn.active {
+          background: #ffffff;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+          transform: scale(1.05);
+        }
+
+        .platform-icon-btn.active img {
+          opacity: 1;
+        }
+
+        .platform-icon-btn.active.platform-epic {
+          border-color: #1d4ed8;
+        }
+
+        .platform-icon-btn.active.platform-psn {
+          border-color: #0ea5e9;
+        }
+
+        .platform-icon-btn.active.platform-xbox {
+          border-color: #22c55e;
+        }
+
+        .platform-missing-warn {
+          font-size: 10px;
+          color: #ef4444;
+          font-weight: 700;
+          margin-right: 6px;
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        :global([data-theme="dark"]) .platform-icon-btn {
+          background: #1d1829;
+        }
+
+        :global([data-theme="dark"]) .platform-icon-btn:hover {
+          background: #272037;
+        }
+
+        :global([data-theme="dark"]) .platform-icon-btn.active {
+          background: #2e2642;
+        }
+
+        /* Per-Item Credentials Layout */
+        .cart-item-wrapper {
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 12px;
+          margin-bottom: 12px;
+        }
+
+        .cart-item-wrapper:last-child {
+          border-bottom: none;
+          padding-bottom: 0;
+          margin-bottom: 0;
+        }
+
+        .item-credentials-section {
+          margin-top: 10px;
+          background: rgba(243, 244, 246, 0.4);
+          padding: 10px;
+          border-radius: 10px;
+          border: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        :global([data-theme="dark"]) .item-credentials-section {
+          background: rgba(30, 25, 41, 0.3);
+        }
+
+        .credentials-fields-row {
+          display: flex;
+          gap: 10px;
+        }
+
+        .compact-field {
+          flex: 1;
+          margin-bottom: 0 !important;
+        }
+
+        .compact-field label {
+          font-size: 11px !important;
+          margin-bottom: 4px !important;
+          font-weight: 700;
+          color: var(--muted) !important;
+        }
+
+        .compact-field input {
+          height: 32px !important;
+          font-size: 12px !important;
+          padding: 4px 8px !important;
+          border-radius: 6px !important;
+          background: var(--bg-hover) !important;
+        }
+
+        .xbox-extra-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          border-top: 1px dashed var(--border);
+          padding-top: 8px;
+          margin-top: 4px;
+        }
+
+        .xbox-create-option {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--text);
+          cursor: pointer;
+        }
+
+        .xbox-create-option input {
+          width: 14px;
+          height: 14px;
+        }
+
         .cart-item-price {
           font-size: 12px;
           color: var(--muted);
@@ -2999,9 +3272,7 @@ function PlatformFields({ form, setForm, items, rushOrder, showValidation }) {
     <div className="platform-fields">
       {platformConfigs.filter(p => p.show).map((platform) => {
         const option = getPlatformOption(platform.key);
-        const isPrefilled = hasPrefilledCredentials(platform.key);
-        const isEditing = editMode[platform.key];
-        const showSavedMessage = isPrefilled && !isEditing && !(platform.key === 'xbox' && form.xbox_create_account);
+        const showSavedMessage = false;
         const emailError = platform.key === 'epic'
           ? epicEmailMissing
           : platform.key === 'xbox'

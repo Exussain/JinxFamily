@@ -313,7 +313,7 @@ def _site_info_context() -> str:
 تلفن پشتیبانی: ۰۲۱-۹۱۶۹۴۷۵۹
 ساعت پشتیبانی تلفنی: شنبه تا چهارشنبه ۱۱ تا ۱۶، یکشنبه ۱۳ تا ۱۶
 پشتیبانی تلگرام (۲۴ ساعته): @Nubixsupport
-کانال تلگرام: @Nubix_Shop
+کانال تلگرام: @NubixShopIR
 کانال تخفیف‌ها: @NubixShopIR
 اینستاگرام: @NubixShop.ir
 ایمیل: support@nubixshop.ir"""

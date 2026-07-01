@@ -53,6 +53,24 @@ export default function Navbar() {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || '';
   const { items, total, addItem, setQty, removeItem } = useCart();
   const { theme, toggleTheme } = useTheme();
+  const [showNightPrompt, setShowNightPrompt] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const now = new Date();
+      const hour = now.getHours();
+      const isNight = hour >= 19 || hour < 6;
+      const isLight = theme === "light";
+      const dismissed = localStorage.getItem("night-theme-prompt-dismissed");
+      
+      if (isNight && isLight && !dismissed) {
+        const timer = setTimeout(() => {
+          setShowNightPrompt(true);
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [theme]);
 
   const fetchNotifications = async () => {
     try {
@@ -400,24 +418,54 @@ export default function Navbar() {
                   پنل
                 </a>
               )}
-              <button
-                type="button"
-                className="icon-btn theme-toggle"
-                aria-label={theme === 'dark' ? 'حالت روشن' : 'حالت تاریک'}
-                onClick={toggleTheme}
-                title={theme === 'dark' ? 'حالت روشن' : 'حالت تاریک'}
-              >
-                {theme === 'dark' ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="5" />
-                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-                  </svg>
+              <div className="theme-toggle-wrapper" style={{ position: 'relative', display: 'inline-flex' }}>
+                <button
+                  type="button"
+                  className="icon-btn theme-toggle"
+                  aria-label={theme === 'dark' ? 'حالت روشن' : 'حالت تاریک'}
+                  onClick={() => {
+                    toggleTheme();
+                    setShowNightPrompt(false);
+                    localStorage.setItem("night-theme-prompt-dismissed", "true");
+                  }}
+                  title={theme === 'dark' ? 'حالت روشن' : 'حالت تاریک'}
+                >
+                  {theme === 'dark' ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="5" />
+                      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+                    </svg>
+                  )}
+                </button>
+
+                {showNightPrompt && (
+                  <div className="night-theme-prompt">
+                    <div className="prompt-arrow" />
+                    <div className="prompt-content">
+                      <span className="prompt-emoji">🌙</span>
+                      <div className="prompt-text">
+                        <strong>شب بخیر!</strong>
+                        <span>برای راحتی چشم‌هایتان می‌توانید حالت تاریک را فعال کنید.</span>
+                      </div>
+                      <button 
+                        className="prompt-close-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowNightPrompt(false);
+                          localStorage.setItem("night-theme-prompt-dismissed", "true");
+                        }}
+                        aria-label="بستن"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
               <div ref={cartRef} className="nav-cart">
                 <button
                   type="button"
@@ -525,16 +573,31 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
-              <a
-                href="https://t.me/NubixShopIR"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="icon-btn nav-telegram-btn"
-                aria-label="کانال تلگرام نوبیکس شاپ"
-                title="عضویت در کانال تلگرام"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.2a1.5 1.5 0 0 0-1.55-.2L3.4 10.6a1.4 1.4 0 0 0 .1 2.63l4.43 1.42 1.7 5.36a1.2 1.2 0 0 0 2 .5l2.5-2.42 4.4 3.23a1.4 1.4 0 0 0 2.22-.83l2.2-13.6a1.5 1.5 0 0 0-.41-1.69zM9.5 14.4l-3.3-1.06 11.2-6.93-7.9 8zm.9 4.5-.1-2.9 1.5 1.1zm7.9-1.1-5.5-4.03 6.8-7.1z"/></svg>
-              </a>
+              {user ? (
+                <Link
+                  href={user.is_admin ? "/panel/admin" : "/panel/user"}
+                  className="icon-btn nav-user-shortcut-btn"
+                  aria-label="داشبورد"
+                  title="داشبورد"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="icon-btn nav-user-shortcut-btn"
+                  aria-label="ورود به حساب"
+                  title="ورود به حساب"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </Link>
+              )}
               <div className="nav-user">
                 {user ? (
                   <div className="nav-user-menu" ref={userMenuRef} style={{ position: "relative" }}>
@@ -878,11 +941,11 @@ export default function Navbar() {
           
           <div className="sub-nav-status-bar">
             <div className="status-indicator">
-              <span className="status-dot"></span>
+              <span className="status-tick">✓</span>
               <span className="status-text">فروشگاه آماده خدمت‌رسانی</span>
-              <span className="status-dot"></span>
+              <span className="status-date-divider">•</span>
+              <span className="status-date">{todayFa}</span>
             </div>
-            <span className="status-date">{todayFa}</span>
           </div>
         </div>
       </header>
@@ -899,7 +962,7 @@ export default function Navbar() {
             <p className="promo-kicker">کد تخفیف و خبرهای روز</p>
             <h3>به کانال رسمی نوبیکس بپیوندید</h3>
             <p className="promo-text">آخرین کدهای تخفیف، خبرهای آیتم‌های ویژه و جشنواره‌ها را مستقیم در تلگرام دریافت کنید.</p>
-            <a className="btn primary promo-btn" href="https://t.me/Nubix_Shop" target="_blank" rel="noopener noreferrer">
+            <a className="btn primary promo-btn" href="https://t.me/NubixShopIR" target="_blank" rel="noopener noreferrer">
               ورود به کانال رسمی
             </a>
           </div>
@@ -908,14 +971,35 @@ export default function Navbar() {
       {/* PriorityNoticeModal temporarily disabled */}
       <div className="mobile-bottom-nav">
         <div className="mobile-bottom-nav-inner">
-          <Link href="/" className={`bottom-nav-item ${pathname === '/' && !showSearchMobileOverlay ? 'active' : ''}`} onClick={() => setShowSearchMobileOverlay(false)}>
+          <Link
+            href="/"
+            className={`bottom-nav-item ${pathname === '/' && !showSearchMobileOverlay ? 'active' : ''}`}
+            onClick={(e) => {
+              setShowSearchMobileOverlay(false);
+              if (pathname === '/' && !showSearchMobileOverlay) {
+                e.preventDefault();
+                window.dispatchEvent(new CustomEvent('open-category-sidebar'));
+              }
+            }}
+          >
             <div className="bottom-nav-icon-container">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
             <span>صفحه اصلی</span>
           </Link>
           
-          <button type="button" className={`bottom-nav-item ${pathname.includes('cat') ? 'active' : ''}`} onClick={() => { setShowSearchMobileOverlay(false); window.dispatchEvent(new CustomEvent('open-category-sidebar')); }}>
+          <button
+            type="button"
+            className={`bottom-nav-item ${pathname.includes('cat') ? 'active' : ''}`}
+            onClick={() => {
+              setShowSearchMobileOverlay(false);
+              if (pathname !== '/') {
+                router.push('/?openCatSidebar=true');
+              } else {
+                window.dispatchEvent(new CustomEvent('open-category-sidebar'));
+              }
+            }}
+          >
             <div className="bottom-nav-icon-container">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
             </div>

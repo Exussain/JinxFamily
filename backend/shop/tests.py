@@ -860,7 +860,7 @@ class ResellerPriceTierTests(TestCase):
             data=json.dumps({"token": "1234567890123456"}),
             content_type="application/json",
         )
-        # 5 تا = 5 × 479K = 2.395M (کروپک لیر-محور، نرخ ۳۳۶۰)
+        # 5 تا = 5 × 459K = 2.295M (کروپک لیر-محور، نرخ ۳۳۶۰)
         res = self.client.post(
             "/api/reseller/orders",
             data=json.dumps({"quantity": 5, "account_email": "a@x.com", "account_password": "p"}),
@@ -868,8 +868,8 @@ class ResellerPriceTierTests(TestCase):
         )
         self.assertEqual(res.status_code, 201)
         body = res.json()
-        self.assertEqual(body["order"]["amount"], 479000 * 5)
-        # 12 تا = 12 × 449K = 5.388M
+        self.assertEqual(body["order"]["amount"], 459000 * 5)
+        # 12 تا = 12 × 429K = 5.148M
         res = self.client.post(
             "/api/reseller/orders",
             data=json.dumps({"quantity": 12, "account_email": "b@x.com", "account_password": "p"}),
@@ -877,7 +877,7 @@ class ResellerPriceTierTests(TestCase):
         )
         self.assertEqual(res.status_code, 201)
         body = res.json()
-        self.assertEqual(body["order"]["amount"], 449000 * 12)
+        self.assertEqual(body["order"]["amount"], 429000 * 12)
 
     def test_insufficient_balance_returns_400(self):
         user = User.objects.create_user(username="r_low", email="rlow@x.com", password="x")

@@ -199,3 +199,57 @@
 .compact-tm-date {
   color: rgba(255, 255, 255, 0.35);
 }
+
+/* Light Theme Overrides */
+:root[data-theme="light"] .combined-stat-testimonials {
+  background: linear-gradient(135deg, #00c48c 0%, #00a877 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 25px rgba(0, 196, 140, 0.2) !important;
+}
+
+:root[data-theme="light"] .stat-count-title {
+  color: #ffffff !important;
+}
+
+:root[data-theme="light"] .stat-label {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+:root[data-theme="light"] .stat-growth-text {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+:root[data-theme="light"] .stat-avatar-circle {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+:root[data-theme="light"] .compact-tm-card-inner {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:root[data-theme="light"] .compact-tm-username {
+  color: #ffffff !important;
+}
+
+:root[data-theme="light"] .compact-tm-product {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+:root[data-theme="light"] .compact-tm-review {
+  color: #ffffff !important;
+}
+
+:root[data-theme="light"] .compact-tm-date {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme="light"] .compact-tm-footer {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+:root[data-theme="light"] .compact-tm-verified {
+  color: #ffffff !important;
+}
+

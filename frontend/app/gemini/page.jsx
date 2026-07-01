@@ -73,7 +73,7 @@ export default async function GeminiPage() {
                     <Link className="cta" href="#plans">
                       انتخاب مدت اشتراک
                     </Link>
-                    <Link className="ghost-btn" href="https://t.me/Nubix_Shop" target="_blank">
+                    <Link className="ghost-btn" href="https://t.me/NubixShopIR" target="_blank">
                       سوال قبل از خرید؟ تلگرام
                     </Link>
                   </div>

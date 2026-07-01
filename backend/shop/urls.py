@@ -79,6 +79,7 @@ urlpatterns = [
     path('spin/recent-winners', spin_views.spin_recent_winners),
     path('me/referral', views.my_referral),
     path('me/notifications', views.my_notifications),
+    path('me/notifications/read', views.my_notifications),
     path('admin/site-notifications', views.admin_site_notifications),
     path('me/redeem/crewpack', views.redeem_crewpack),
     path('stats', views.public_stats),

@@ -14,8 +14,9 @@ export default function ResellerLayout({ children }) {
   const [isSubmittingCart, setIsSubmittingCart] = useState(false);
   const [cartSubmitStatus, setCartSubmitStatus] = useState("");
 
-  // صفحه‌ی ورود و callback نباید guard بشن
+  // صفحه‌ی ورود، ثبت‌نام و callback نباید guard بشن
   const isLogin = pathname === "/reseller" || pathname === "/reseller/";
+  const isApply = pathname === "/reseller/apply" || pathname === "/reseller/apply/";
   const isCallback = pathname.startsWith("/reseller/wallet/callback");
   const isWelcome = pathname.startsWith("/reseller/welcome");
 
@@ -32,7 +33,7 @@ export default function ResellerLayout({ children }) {
           cache: "no-store",
         });
         if (res.status === 401) {
-          if (!isLogin) {
+          if (!isLogin && !isApply) {
             router.replace("/reseller");
           } else {
             setLoading(false);
@@ -42,14 +43,14 @@ export default function ResellerLayout({ children }) {
         const data = await res.json();
         if (cancelled) return;
         if (!data?.reseller) {
-          if (!isLogin) {
+          if (!isLogin && !isApply) {
             router.replace("/reseller");
           } else {
             setLoading(false);
           }
           return;
         }
-        if (isLogin) {
+        if (isLogin || isApply) {
           const target =
             data.reseller.status === "draft"
               ? "/reseller/onboarding"
@@ -78,7 +79,7 @@ export default function ResellerLayout({ children }) {
         }
         setMe(data.reseller);
       } catch (e) {
-        if (!isLogin) {
+        if (!isLogin && !isApply) {
           router.replace("/reseller");
         } else {
           setLoading(false);
@@ -90,7 +91,7 @@ export default function ResellerLayout({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [pathname, router, isLogin, isCallback, isWelcome]);
+  }, [pathname, router, isLogin, isApply, isCallback, isWelcome]);
 
   useEffect(() => {
     if (loading || !me) return;
@@ -200,7 +201,7 @@ export default function ResellerLayout({ children }) {
     router.replace("/reseller");
   };
 
-  if (isLogin || isCallback) {
+  if (isLogin || isApply || isCallback) {
     return <>{children}</>;
   }
 

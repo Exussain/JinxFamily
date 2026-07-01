@@ -1,6 +1,6 @@
 import FaqSectionLayout from "../../components/FaqSectionLayout";
 import { faqItems } from "./data.jsx";
-import FaqAccordion from "./FaqAccordion";
+import FaqCatalog from "./FaqCatalog";
 
 export const metadata = {
   title: "سوالات متداول | نوبیکس شاپ",
@@ -35,7 +35,7 @@ export default function FaqHomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-      <FaqAccordion items={faqItems} />
+      <FaqCatalog />
     </FaqSectionLayout>
   );
 }

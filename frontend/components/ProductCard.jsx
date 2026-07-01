@@ -20,6 +20,16 @@ export default function ProductCard({ p, imageFit = "contain" }) {
   const hasProductPage = Number.isInteger(p.id) && !!p.slug;
   
   const discountPercent = original && price < original ? Math.round(((original - price) / original) * 100) : 0;
+  const getFallbackSubtitle = (category) => {
+    const cat = (category || "").toUpperCase();
+    if (cat === "GIFTCARDS") return "تحویل فوری کد دیجیتال";
+    if (cat === "FORTNITE") return "فعال‌سازی قانونی روی اکانت";
+    if (cat === "SUBSCRIPTIONS") return "فعال‌سازی قانونی و تضمینی";
+    if (cat === "AI") return "دسترسی سریع و قانونی";
+    if (cat === "GAMES") return "پشتیبانی و فعال‌سازی سریع";
+    return "تحویل سریع و تضمینی";
+  };
+  const subtitleText = p.subtitle || getFallbackSubtitle(p.category);
   const targetUrl = p.link || (hasProductPage ? `/product/${p.slug}` : null);
 
   return (
@@ -123,11 +133,11 @@ export default function ProductCard({ p, imageFit = "contain" }) {
       
       <div className="product-card-body" style={{ position: 'relative', zIndex: 2, pointerEvents: 'none' }}>
         <div className="product-title-box">
-          {p.name_fa}
+          <span className="product-title-text">{p.name_fa}</span>
         </div>
         
         <div className="product-subtitle-text">
-          {p.subtitle || p.category_title || 'محصول فورتنایت'}
+          {subtitleText}
         </div>
 
         <div className="product-footer-row" style={{ justifyContent: 'center' }}>
@@ -140,12 +150,12 @@ export default function ProductCard({ p, imageFit = "contain" }) {
             
             {hasPrice ? (
               <div className="product-price-new">
-                <span className="product-price-currency">تومان</span>
+                {showPriceFrom && <span style={{fontSize:'12px', marginLeft:'4px'}}>از</span>}
                 {price.toLocaleString('fa-IR')}
-                {showPriceFrom && <span style={{fontSize:'12px', marginRight:'4px'}}>از</span>}
+                <span className="product-price-currency" style={{marginRight:'4px'}}>تومان</span>
               </div>
             ) : (
-              <div className="product-price-new" style={{ color: 'var(--muted)', fontSize: '15px' }}>
+              <div className="product-price-new out-of-stock" style={{ color: 'var(--muted)', fontSize: 'inherit' }}>
                 ناموجود
               </div>
             )}

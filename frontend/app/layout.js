@@ -1,7 +1,7 @@
 const SITE_NAME = 'نوبیکس شاپ';
-const SITE_TITLE = 'نوبیکس شاپ | فعال‌سازی محصولات آنلاین';
+const SITE_TITLE = 'نوبیکس شاپ | خرید وی‌باکس، کروپک فورتنایت، اشتراک ChatGPT و گیفت کارت';
 const SITE_DESCRIPTION =
-  'خرید و فعال‌سازی قانونی محصولات دیجیتال: اشتراک ChatGPT و Gemini، کروپک و وی‌باکس فورتنایت، گیفت کارت و اشتراک‌های آنلاین — تحویل سریع، پرداخت امن و پشتیبانی ۲۴/۷';
+  'خرید و فعال‌سازی قانونی محصولات دیجیتال: اشتراک ChatGPT و Gemini، کروپک و وی باکس فورتنایت، گیفت کارت و اشتراک‌های آنلاین — تحویل سریع، پرداخت امن و پشتیبانی ۲۴/۷';
 
 export const metadata = {
   metadataBase: new URL('https://nubixshop.ir'),
@@ -16,7 +16,9 @@ export const metadata = {
     'وی‌باکس', 'وی باکس', 'V-Bucks', 'کروپک', 'بتل پس', 'استارتر پک', 'Fortnite', 'فورتنایت',
     'گیفت کارت', 'گیفت کارت پلی‌استیشن', 'گیفت کارت استیم', 'اشتراک اسپاتیفای'
   ],
-  alternates: { canonical: '/' },
+  // NOTE: no root-level alternates.canonical here — App Router inherits it into
+  // every child route without its own, which made the whole blog/FAQ/reseller
+  // canonicalize to the homepage. Each page declares its own canonical instead.
   openGraph: {
     type: 'website',
     locale: 'fa_IR',
@@ -42,6 +44,9 @@ export const metadata = {
     { rel: 'apple-touch-icon', url: '/web_logo.webp' },
     { rel: 'shortcut icon', url: '/web_logo.webp' }
   ],
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && {
+    verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION },
+  }),
 };
 
 import './globals.css';
@@ -55,9 +60,15 @@ import AppShell from "../components/AppShell";
 const themeInitScript = `
 (() => {
   try {
-    document.documentElement.dataset.theme = 'dark';
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark' || stored === 'light') {
+      document.documentElement.dataset.theme = stored;
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = prefersDark ? 'dark' : 'light';
+    }
   } catch (e) {
-    document.documentElement.dataset.theme = 'dark';
+    document.documentElement.dataset.theme = 'light';
   }
 })();
 `;
@@ -67,12 +78,22 @@ const siteJsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
     {
-      '@type': 'Organization',
+      '@type': 'OnlineStore',
       '@id': 'https://nubixshop.ir/#organization',
       name: SITE_NAME,
-      alternateName: 'NubixShop',
+      alternateName: ['NubixShop', 'نوبیکس'],
       url: 'https://nubixshop.ir',
       logo: 'https://nubixshop.ir/web_logo.webp',
+      sameAs: [
+        'https://t.me/NubixShopIR',
+        'https://instagram.com/NubixShop.ir',
+      ],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        url: 'https://nubixshop.ir/faq/contact',
+        availableLanguage: 'fa',
+      },
     },
     {
       '@type': 'WebSite',
@@ -92,9 +113,11 @@ const siteJsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fa" dir="rtl" data-theme="dark" suppressHydrationWarning>
-      <body>
+    <html lang="fa" dir="rtl" data-theme="light" suppressHydrationWarning>
+      <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}

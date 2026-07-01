@@ -308,6 +308,21 @@ export default function ProductPage() {
 
   const isFieldRequired = (field) => field.required === true;
 
+  const parseDeliveryLine = (line) => {
+    const cleanLine = line.replace(/^[\d\u06F0-\u06F9]+[\.\-\s\u2022]*/, '').trim();
+    const parts = cleanLine.split(/[:：\-]/);
+    if (parts.length > 1) {
+      return {
+        title: parts[0].trim(),
+        desc: parts.slice(1).join(':').trim()
+      };
+    }
+    return {
+      title: '',
+      desc: cleanLine
+    };
+  };
+
   const isFieldValid = (field, value) => {
     const v = (value || "").trim();
     if (isFieldRequired(field) && !v) return false;
@@ -602,70 +617,78 @@ export default function ProductPage() {
                     </div>
                   </div>
                 )}
-                {/* Guides and Tutorials Card */}
-                <div className="guides-card">
-                  <div className="guides-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
-                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                    </svg>
-                    صفحات مرتبط
-                  </div>
-                  <div style={{ display: "grid", gap: 10 }}>
-                    <a
-                      href="/guides/disable-2fa"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="guide-link-item"
-                    >
-                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 14 }}>🛡️</span>
-                        آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
-                      </span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                {/* Guides and Tutorials Card (Mobile Only) */}
+                {productCategory === 'fortnite' && (
+                  <div className="guides-card show-mobile">
+                    <div className="guides-title">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                       </svg>
-                    </a>
+                      صفحات مرتبط
+                    </div>
+                    <div style={{ display: "grid", gap: 10 }}>
+                      <a
+                        href="/guides/disable-2fa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="guide-link-item"
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>🛡️</span>
+                          آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      </a>
 
-                    <a
-                      href="/guides/link-unlink"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="guide-link-item"
-                    >
-                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 14 }}>🔗</span>
-                        آموزش اتصال و لینک کردن اکانت
-                      </span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7" />
-                      </svg>
-                    </a>
+                      <a
+                        href="/guides/link-unlink"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="guide-link-item"
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>🔗</span>
+                          آموزش اتصال و لینک کردن اکانت
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      </a>
 
-                    <a
-                      href="/guides/remove-restriction"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="guide-link-item"
-                    >
-                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 14 }}>⚠️</span>
-                        آموزش رفع محدودیت و ریستریکت اکانت
-                      </span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7" />
-                      </svg>
-                    </a>
+                      <a
+                        href="/guides/remove-restriction"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="guide-link-item"
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>⚠️</span>
+                          آموزش رفع محدودیت و ریستریکت اکانت
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      </a>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
               <div className="details-stack" style={{ display: "grid", gap: 16 }}>
-                <div className="title-block">
+                <div className="title-block" style={{ display: "flex", flexDirection: "column" }}>
                   <h1 className="title-row" style={{ margin: 0, fontSize: 24, fontWeight: 900, marginBottom: 8 }}>
                     {product.name_fa}
                   </h1>
                   {product.subtitle && (
-                    <div className="muted subtitle-row" style={{ fontSize: 14 }}>{product.subtitle}</div>
+                    <div className="muted subtitle-row" style={{ fontSize: 14, marginBottom: 4 }}>{product.subtitle}</div>
+                  )}
+                  {product.slug === 'chatgpt-subscription' && (
+                    <div className="nubix-fomo-badge">
+                      <span className="pulse-dot"></span>
+                      <span>ارزان‌ترین قیمت روی زمین (تضمین نوبیکس) ⚡</span>
+                    </div>
                   )}
 
                   {/* Rating Summary */}
@@ -771,20 +794,26 @@ export default function ProductPage() {
                 )}
 
                 {/* Price Row - Moved Up */}
-                <div className="price-row" style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
+                <div className="price-row" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", margin: "4px 0" }}>
                   {originalPrice && hasPrice ? (
-                    <div className="price-old" style={{ fontSize: 16, lineHeight: 1.2 }}>
+                    <div className="price-old" style={{ fontSize: 16, textDecoration: "line-through", color: "var(--muted)" }}>
                       {originalPrice.toLocaleString("fa-IR")} تومان
                     </div>
                   ) : null}
                   {hasPrice ? (
-                    <div className="price" style={{ fontSize: 24, lineHeight: 1.2, fontWeight: 900 }}>
-                      {displayPrice.toLocaleString("fa-IR")} تومان
+                    <div className="price" style={{ fontSize: 28, fontWeight: 900, background: "linear-gradient(135deg, var(--text) 30%, var(--primary) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", display: "inline-flex", gap: 4, alignItems: "baseline" }}>
+                      <span>{displayPrice.toLocaleString("fa-IR")}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, WebkitTextFillColor: "var(--text)" }}>تومان</span>
                     </div>
                   ) : (
                     <div className="muted" style={{ fontSize: 16, fontWeight: 800 }}>
                       این محصول در حال حاضر در دسترس نیست
                     </div>
+                  )}
+                  {originalPrice && hasPrice && originalPrice > displayPrice && (
+                    <span className="price-discount-percent">
+                      {Math.round((1 - (displayPrice / originalPrice)) * 100).toLocaleString("fa-IR")}٪ تخفیف ویژه
+                    </span>
                   )}
                 </div>
 
@@ -909,33 +938,43 @@ export default function ProductPage() {
                     {effectiveTab === 'delivery' && (
                       <div className="delivery-info">
                         {deliveryLines.length > 0 ? (
-                          deliveryLines.map((line, i) => (
-                            <div key={i} className="delivery-step">
-                              <div className="step-number">{i + 1}</div>
-                              <div>
-                                <div className="step-desc">{line}</div>
+                          deliveryLines.map((line, i) => {
+                            const parsed = parseDeliveryLine(line);
+                            return (
+                              <div key={i} className="delivery-step">
+                                <div className="step-number">{(i + 1).toLocaleString("fa-IR")}</div>
+                                <div className="step-content-card">
+                                  {parsed.title ? (
+                                    <>
+                                      <div className="step-title">{parsed.title}</div>
+                                      <div className="step-desc">{parsed.desc}</div>
+                                    </>
+                                  ) : (
+                                    <div className="step-desc" style={{ color: "var(--text)", fontWeight: 700 }}>{parsed.desc}</div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))
+                            );
+                          })
                         ) : (
                           <>
                             <div className="delivery-step">
                               <div className="step-number">۱</div>
-                              <div>
+                              <div className="step-content-card">
                                 <div className="step-title">ثبت سفارش</div>
                                 <div className="step-desc">سفارش خود را ثبت کرده و اطلاعات حساب را وارد کنید</div>
                               </div>
                             </div>
                             <div className="delivery-step">
                               <div className="step-number">۲</div>
-                              <div>
+                              <div className="step-content-card">
                                 <div className="step-title">پرداخت امن</div>
                                 <div className="step-desc">از طریق درگاه امن بانکی پرداخت کنید</div>
                               </div>
                             </div>
                             <div className="delivery-step">
                               <div className="step-number">۳</div>
-                              <div>
+                              <div className="step-content-card">
                                 <div className="step-title">فعال‌سازی</div>
                                 <div className="step-desc">تیم ما طی ۱۵ دقیقه تا ۸ ساعت کاری اشتراک را فعال می‌کند</div>
                               </div>
@@ -947,12 +986,71 @@ export default function ProductPage() {
                   </div>
                 </div>
 
+                {/* Guides and Tutorials Card (Desktop Only - Fortnite Only) */}
+                {productCategory === 'fortnite' && (
+                  <div className="guides-card hide-mobile" style={{ marginTop: 16 }}>
+                    <div className="guides-title">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                      </svg>
+                      صفحات مرتبط
+                    </div>
+                    <div style={{ display: "grid", gap: 10 }}>
+                      <a
+                        href="/guides/disable-2fa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="guide-link-item"
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>🛡️</span>
+                          آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      </a>
+
+                      <a
+                        href="/guides/link-unlink"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="guide-link-item"
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>🔗</span>
+                          آموزش اتصال و لینک کردن اکانت
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      </a>
+
+                      <a
+                        href="/guides/remove-restriction"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="guide-link-item"
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>⚠️</span>
+                          آموزش رفع محدودیت و ریستریکت اکانت
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                )}
+
               </div>
             </section>
 
-            {/* FAQ Section - Desktop Only */}
+            {/* FAQ Section */}
             {faqItems.length > 0 && (
-              <section className="card section faq-section hide-mobile" style={{ marginTop: 16 }}>
+              <section className="card section faq-section" style={{ marginTop: 16 }}>
                 <h3 style={{ margin: 0, marginBottom: 16, fontSize: 18, fontWeight: 900 }}>سوالات متداول</h3>
                 <div className="faq-list">
                   {faqItems.map((item, i) => (
@@ -1329,6 +1427,70 @@ export default function ProductPage() {
               </div>
             </section>
             <style jsx>{`
+              .nubix-fomo-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08));
+                border: 1px solid rgba(239, 68, 68, 0.2);
+                color: #ef4444;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: 800;
+                margin-top: 4px;
+                margin-bottom: 8px;
+                align-self: flex-start;
+                box-shadow: 0 0 10px rgba(239, 68, 68, 0.05);
+              }
+              :root[data-theme="dark"] .nubix-fomo-badge {
+                color: #f87171;
+                border-color: rgba(248, 113, 113, 0.3);
+                background: linear-gradient(135deg, rgba(248, 113, 113, 0.12), rgba(245, 158, 11, 0.08));
+              }
+              .pulse-dot {
+                width: 8px;
+                height: 8px;
+                background-color: #ef4444;
+                border-radius: 50%;
+                display: inline-block;
+                position: relative;
+              }
+              :root[data-theme="dark"] .pulse-dot {
+                background-color: #f87171;
+              }
+              .pulse-dot::after {
+                content: '';
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background-color: inherit;
+                border-radius: inherit;
+                animation: dotPulse 1.5s infinite ease-in-out;
+                top: 0;
+                left: 0;
+              }
+              .price-discount-percent {
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+                color: #ffffff;
+                font-size: 12px;
+                font-weight: 800;
+                padding: 4px 10px;
+                border-radius: 8px;
+                box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+                animation: floatAnimation 3s ease-in-out infinite;
+                display: inline-flex;
+                align-items: center;
+              }
+              @keyframes dotPulse {
+                0% { transform: scale(1); opacity: 1; }
+                100% { transform: scale(3); opacity: 0; }
+              }
+              @keyframes floatAnimation {
+                0% { transform: translateY(0); }
+                50% { transform: translateY(-3px); }
+                100% { transform: translateY(0); }
+              }
               .product-hero {
                 display: grid;
                 grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
@@ -1349,7 +1511,7 @@ export default function ProductPage() {
                 border-radius: 14px;
                 border: none;
                 background: linear-gradient(135deg, #fbbf24, #f59e0b);
-                color: #0f172a;
+                color: #1d1a3f;
                 font-weight: 900;
                 box-shadow: 0 14px 30px rgba(0,0,0,0.18);
                 cursor: pointer;
@@ -1599,7 +1761,7 @@ export default function ProductPage() {
                 overflow: hidden;
               }
               :root[data-theme="dark"] .product-tabs {
-                border-color: #1f2937;
+                border-color: #373169;
               }
               .tab-buttons {
                 display: grid;
@@ -1608,7 +1770,7 @@ export default function ProductPage() {
                 border-bottom: 1px solid var(--line);
               }
               :root[data-theme="dark"] .tab-buttons {
-                background: #0f172a;
+                background: #1d1a3f;
               }
               .tab-btn {
                 padding: 14px 16px;
@@ -1670,13 +1832,31 @@ export default function ProductPage() {
                 gap: 6px;
               }
               :root[data-theme="dark"] .conversion-box {
-                background: #0b1224;
-                border-color: #1f2937;
+                background: #13112c;
+                border-color: #373169;
+              }
+              .delivery-info {
+                display: grid;
+                gap: 24px;
+                position: relative;
+                padding-right: 20px;
+              }
+              .delivery-info::before {
+                content: '';
+                position: absolute;
+                right: 39px;
+                top: 20px;
+                bottom: 20px;
+                width: 2px;
+                background: linear-gradient(180deg, var(--primary) 0%, rgba(99,102,241,0.1) 100%);
+                z-index: 1;
               }
               .delivery-step {
                 display: flex;
                 gap: 16px;
                 align-items: flex-start;
+                position: relative;
+                z-index: 2;
               }
               .step-number {
                 width: 40px;
@@ -1684,12 +1864,36 @@ export default function ProductPage() {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                background: linear-gradient(135deg, #0f2250, #1e3a8a);
+                background: linear-gradient(135deg, var(--primary), #4f46e5);
                 color: white;
                 border-radius: 50%;
                 font-weight: 900;
                 font-size: 18px;
                 flex-shrink: 0;
+                box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+                border: 4px solid var(--card);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+              }
+              .delivery-step:hover .step-number {
+                transform: scale(1.1);
+                box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+              }
+              .step-content-card {
+                background: var(--bg);
+                padding: 14px 18px;
+                border-radius: 14px;
+                border: 1px solid var(--line);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+                transition: all 0.2s ease;
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+              }
+              .delivery-step:hover .step-content-card {
+                border-color: var(--primary);
+                background: var(--card);
+                transform: translateX(-4px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
               }
               .step-title {
                 font-weight: 800;
@@ -1698,7 +1902,7 @@ export default function ProductPage() {
                 color: var(--text);
               }
               .step-desc {
-                font-size: 13px;
+                font-size: 13.5px;
                 color: var(--muted);
                 line-height: 1.6;
               }
@@ -1909,6 +2113,14 @@ export default function ProductPage() {
                   padding: 12px;
                   font-size: 13px;
                 }
+                .delivery-info {
+                  padding-right: 15px;
+                }
+                .delivery-info::before {
+                  right: 31px;
+                  top: 16px;
+                  bottom: 16px;
+                }
                 .delivery-step {
                   gap: 10px;
                 }
@@ -1916,12 +2128,17 @@ export default function ProductPage() {
                   width: 32px;
                   height: 32px;
                   font-size: 15px;
+                  border-width: 3px;
+                }
+                .step-content-card {
+                  padding: 10px 14px;
+                  border-radius: 10px;
                 }
                 .step-title {
                   font-size: 14px;
                 }
                 .step-desc {
-                  font-size: 12px;
+                  font-size: 12.5px;
                 }
                 .feature-card {
                   padding: 14px;
@@ -2061,7 +2278,7 @@ export default function ProductPage() {
                 position: relative;
               }
               :root[data-theme="dark"] .rating-bar-track {
-                background: #1f2937;
+                background: #373169;
               }
               .rating-bar-progress {
                 height: 100%;
@@ -2108,7 +2325,7 @@ export default function ProductPage() {
                 border-radius: 999px;
                 overflow: hidden;
                 border: 1px solid var(--line);
-                background: radial-gradient(circle at 30% 20%, #38bdf8, #0f172a);
+                background: radial-gradient(circle at 30% 20%, #38bdf8, #1d1a3f);
                 display: flex;
                 align-items: center;
                 justify-content: center;

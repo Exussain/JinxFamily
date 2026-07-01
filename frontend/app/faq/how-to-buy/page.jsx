@@ -1,148 +1,334 @@
 import Link from "next/link";
 import FaqSectionLayout from "../../../components/FaqSectionLayout";
+import HelpfulnessWidget from "../HelpfulnessWidget";
 import { purchaseSteps } from "../data.jsx";
 
 export const metadata = {
-  title: "راهنمای خرید",
-  description: "گام به گام خرید امن از فروشگاه نوبیکس با توضیحات روشن در هر مرحله.",
+  title: "راهنمای خرید | نوبیکس شاپ",
+  description: "راهنمای گام به گام و تصویری ثبت سفارش، پرداخت امن و تحویل محصولات در نوبیکس شاپ.",
 };
 
 export default function FaqHowToBuyPage() {
   return (
     <FaqSectionLayout
       title="راهنمای خرید"
-      subtitle="مراحل ثبت سفارش، پرداخت و دریافت آیتم به‌صورت گام به گام."
+      subtitle="مراحل گام به گام ثبت سفارش، پرداخت امن بانکی و فعال‌سازی سریع محصولات در نوبیکس."
       activeSection="how-to-buy"
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-          marginTop: 12,
-        }}
-      >
-        {purchaseSteps.map((step) => (
-          <article
-            key={`${step.step}-${step.title}`}
-            style={{
-              borderRadius: 18,
-              border: "1px solid var(--line)",
-              background: "var(--card)",
-              padding: "20px 24px",
-              display: "flex",
-              gap: 18,
-              alignItems: "flex-start",
-              flexWrap: "wrap",
-            }}
-          >
-            <div
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 20,
-                background: "linear-gradient(135deg, #8b5cf6, #3b82f6)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 18,
-                fontWeight: 700,
-                color: "var(--text)",
-              }}
-            >
-              <span style={{ fontSize: 12, opacity: 0.85 }}>مرحله</span>
-              <span>{step.step}</span>
+      <div className="how-article-container">
+        <style>{`
+          .how-article-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            width: 100%;
+          }
+          
+          .how-article-box {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+          }
+          
+          .how-article-banner {
+            height: 180px;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            position: relative;
+            padding: 40px;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+          }
+          
+          .how-article-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 60%);
+            pointer-events: none;
+          }
+          
+          .how-article-banner-icon {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 80px;
+            opacity: 0.15;
+            user-select: none;
+            color: #fff;
+          }
+          
+          .how-article-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1;
+          }
+          
+          .how-article-tag {
+            align-self: flex-start;
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 99px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+          }
+          
+          .how-article-banner h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          
+          .how-article-info-bar {
+            display: flex;
+            gap: 20px;
+            padding: 16px 40px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--line);
+            font-size: 13px;
+            color: var(--muted);
+          }
+          
+          .how-info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+          
+          .how-article-content {
+            padding: 40px;
+            color: var(--text);
+            font-size: 16px;
+            line-height: 1.9;
+          }
+          
+          .how-intro {
+            font-size: 16px;
+            color: var(--text);
+            opacity: 0.95;
+            margin-bottom: 32px;
+          }
+          
+          /* Roadmap Steps */
+          .how-steps-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 32px;
+          }
+          
+          .how-step-card {
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            transition: all 0.25s ease;
+          }
+          
+          .how-step-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+          }
+          
+          .how-step-badge {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);
+          }
+          
+          .how-step-badge span.step-txt {
+            font-size: 10px;
+            opacity: 0.8;
+            text-transform: uppercase;
+          }
+          
+          .how-step-badge span.step-num {
+            font-size: 20px;
+            margin-top: -2px;
+          }
+          
+          .how-step-details {
+            flex: 1;
+          }
+          
+          .how-step-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+          }
+          
+          .how-step-icon {
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+          }
+          
+          .how-step-details h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text);
+          }
+          
+          .how-step-details p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+          }
+          
+          .how-important-note {
+            background: rgba(16, 185, 129, 0.05);
+            border-right: 4px solid #10b981;
+            padding: 20px;
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 32px;
+          }
+          
+          .how-cta-section {
+            text-align: center;
+            padding-top: 10px;
+          }
+          
+          .how-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.25);
+          }
+          
+          .how-cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.35);
+          }
+          
+          @media (max-width: 768px) {
+            .how-article-banner {
+              height: 140px;
+              padding: 24px;
+            }
+            .how-article-banner h1 {
+              font-size: 22px;
+            }
+            .how-article-info-bar {
+              padding: 12px 24px;
+              flex-wrap: wrap;
+              gap: 12px;
+            }
+            .how-article-content {
+              padding: 24px;
+            }
+            .how-step-card {
+              flex-direction: column;
+              gap: 16px;
+              padding: 16px;
+            }
+            .how-step-badge {
+              width: 52px;
+              height: 52px;
+            }
+            .how-step-badge span.step-num {
+              font-size: 16px;
+            }
+          }
+        `}</style>
+
+        <div className="how-article-box">
+          <div className="how-article-banner">
+            <span className="how-article-banner-icon">🛒</span>
+            <div className="how-article-meta">
+              <span className="how-article-tag">راهنمای خریداران</span>
+              <h1>راهنمای گام به گام خرید از نوبیکس شاپ</h1>
             </div>
-            <div
-              style={{
-                flex: 1,
-                minWidth: 220,
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  fontSize: 20,
-                }}
-              >
-                <span>{step.icon}</span>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: 20,
-                    fontWeight: 600,
-                    color: "var(--text)",
-                  }}
-                >
-                  {step.title}
-                </h3>
-              </div>
-              <p
-                style={{
-                  margin: 0,
-                  color: "var(--muted)",
-                  lineHeight: 1.7,
-                  fontSize: 14,
-                }}
-              >
-                {step.description}
-              </p>
+          </div>
+          
+          <div className="how-article-info-bar">
+            <div className="how-info-item">
+              <span>✍️</span>
+              <span>تنظیم‌کننده: دپارتمان فروش نوبیکس</span>
             </div>
-          </article>
-        ))}
-      </div>
-      <div
-        style={{
-          marginTop: 28,
-          borderRadius: 18,
-          padding: "22px",
-          border: "1px solid var(--line)",
-          background: "rgba(16, 185, 129, 0.1)",
-        }}
-      >
-        <h3
-          style={{
-            marginTop: 0,
-            marginBottom: 10,
-            fontSize: 20,
-            fontWeight: 600,
-            color: "#0f172a",
-          }}
-        >
-          نکته مهم
-        </h3>
-        <p
-          style={{
-            margin: 0,
-            color: "#0f172a",
-            lineHeight: 1.7,
-            fontSize: 14,
-          }}
-        >
-          خرید در نوبیکس فقط از وب‌سایت رسمی Nubixshop.ir و از طریق درگاه زرین‌پال انجام می‌شود. فاکتور رسمی، احراز هویت قانونی و پشتیبانی ۲۴ ساعته همراه شما خواهد بود.
-        </p>
-      </div>
-      <div style={{ marginTop: 26, textAlign: "center" }}>
-        <Link
-          href="/"
-          style={{
-            padding: "14px 32px",
-            borderRadius: 14,
-            background: "linear-gradient(135deg, #8b5cf6, #3b82f6)",
-            color: "var(--text)",
-            fontWeight: 600,
-            textDecoration: "none",
-            boxShadow: "0 12px 30px rgba(59, 130, 246, 0.4)",
-          }}
-        >
-          شروع خرید از نوبیکس
-        </Link>
+            <div className="how-info-item">
+              <span>📅</span>
+              <span>بروزرسانی: ۱۱ تیر ۱۴۰۵</span>
+            </div>
+            <div className="how-info-item">
+              <span>⏱️</span>
+              <span>زمان مطالعه: ۴ دقیقه</span>
+            </div>
+          </div>
+
+          <div className="how-article-content">
+            <p className="how-intro">
+              خرید در فروشگاه نوبیکس شاپ بسیار ساده، سریع و در بستری کاملاً امن انجام می‌شود. برای ثبت سفارش بدون خطا و تحویل در کوتاه‌ترین زمان ممکن، مراحل گام به گام زیر را دنبال فرمایید.
+            </p>
+
+            <div className="how-steps-timeline">
+              {purchaseSteps.map((step) => (
+                <div key={step.step} className="how-step-card">
+                  <div className="how-step-badge">
+                    <span className="step-txt">گام</span>
+                    <span className="step-num">{step.step}</span>
+                  </div>
+                  <div className="how-step-details">
+                    <div className="how-step-title-row">
+                      <span className="how-step-icon">{step.icon}</span>
+                      <h3>{step.title}</h3>
+                    </div>
+                    <p>{step.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="how-important-note">
+              <strong>نکته مهم امنیتی:</strong> خرید در نوبیکس شاپ فقط از طریق وب‌سایت رسمی <strong style={{color: '#10b981'}}>Nubixshop.ir</strong> صورت پذیرفته و کلیه فاکتورها به صورت رسمی ثبت می‌شوند. پرداخت کارت‌به‌کارت فاقد اعتبار قانونی بوده و مورد تایید نوبیکس شاپ نمی‌باشد.
+            </div>
+
+            <div className="how-cta-section">
+              <Link href="/" className="how-cta-btn">
+                <span>شروع خرید محصولات از نوبیکس</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <HelpfulnessWidget />
       </div>
     </FaqSectionLayout>
   );

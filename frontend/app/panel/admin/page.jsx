@@ -1178,6 +1178,13 @@ export default function AdminPanelPage() {
   const [resellerAdjustAmount, setResellerAdjustAmount] = useState({});
   const [report, setReport] = useState(null);
   const [notificationTotalCount, setNotificationTotalCount] = useState(0);
+
+  // Articles state
+  const [articles, setArticles] = useState([]);
+  const [articlesLoading, setArticlesLoading] = useState(false);
+  const [articlesPage, setArticlesPage] = useState(1);
+  const [articlesTotalPages, setArticlesTotalPages] = useState(1);
+  const [selectedArticle, setSelectedArticle] = useState(null);
   const [notificationLoadingInitial, setNotificationLoadingInitial] = useState(false);
   const [notificationLoadingMore, setNotificationLoadingMore] = useState(false);
   const [notificationHasMore, setNotificationHasMore] = useState(true);
@@ -1606,6 +1613,14 @@ export default function AdminPanelPage() {
         const data = await subcatRes.json();
         setSubcategories(data.results || []);
       }
+      try {
+        const artRes = await fetch(`${apiBase}/api/blog/articles?page=1`, { cache: "no-store" });
+        if (artRes.ok) {
+          const artData = await artRes.json();
+          setArticles(artData.results || []);
+          setArticlesTotalPages(artData.pages || 1);
+        }
+      } catch (e) {}
       if (settingsRes.ok) {
         const data = await settingsRes.json();
         if (data?.announcement_bar) {
@@ -1862,6 +1877,23 @@ export default function AdminPanelPage() {
       }
     } catch {
       setAnnouncementError("خطا در ارتباط با سرور");
+    }
+  };
+
+  const loadArticles = async (page = 1) => {
+    setArticlesLoading(true);
+    try {
+      const res = await fetch(`${apiBase}/api/blog/articles?page=${page}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setArticles(data.results || []);
+        setArticlesPage(data.page || 1);
+        setArticlesTotalPages(data.pages || 1);
+      }
+    } catch (e) {
+      console.error("Failed to load articles in admin:", e);
+    } finally {
+      setArticlesLoading(false);
     }
   };
 
@@ -3924,6 +3956,11 @@ export default function AdminPanelPage() {
             <button className={`tab ${activeTab === "subcategories" ? "active" : ""}`} onClick={() => { setActiveTab("subcategories"); loadSubcategories(); }}>
               <span className="tab-ic">🏷️</span>
               <span className="tab-text">زیردسته‌ها</span>
+            </button>
+            <button className={`tab ${activeTab === "articles" ? "active" : ""}`} onClick={() => { setActiveTab("articles"); loadArticles(1); }}>
+              <span className="tab-ic">📝</span>
+              <span className="tab-text">مقالات و وبلاگ</span>
+              <span className="tab-count">{articles.length}</span>
             </button>
             <button className="tab" onClick={() => { window.location.href = "/panel/admin/gta6"; }}>
               <span className="tab-ic">🎮</span>
@@ -12826,6 +12863,225 @@ export default function AdminPanelPage() {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {!loading && activeTab === "articles" && (
+          <div className="articles-content">
+            <style>{`
+              .articles-grid-card {
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: 20px;
+                padding: 24px;
+                box-shadow: var(--shadow);
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+              }
+              .admin-article-table {
+                width: 100%;
+                border-collapse: collapse;
+                text-align: right;
+              }
+              .admin-article-table th {
+                padding: 12px 16px;
+                background: var(--bg);
+                color: var(--text);
+                font-weight: bold;
+                border-bottom: 1px solid var(--line);
+              }
+              .admin-article-table td {
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--line);
+                color: var(--text);
+                vertical-align: middle;
+              }
+              .admin-article-thumb {
+                width: 60px;
+                height: 40px;
+                object-fit: cover;
+                border-radius: 8px;
+                background: rgba(0,0,0,0.05);
+                border: 1px solid var(--line);
+              }
+              .admin-article-badge {
+                font-size: 11px;
+                font-weight: bold;
+                color: var(--primary);
+                background: rgba(124, 58, 237, 0.08);
+                padding: 4px 10px;
+                border-radius: 99px;
+              }
+              .admin-preview-modal {
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.5);
+                backdrop-filter: blur(4px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 99999;
+                padding: 20px;
+              }
+              .admin-preview-card {
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: 24px;
+                width: 100%;
+                max-width: 800px;
+                max-height: 90vh;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+              }
+              .admin-preview-header {
+                padding: 20px 24px;
+                border-bottom: 1px solid var(--line);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
+              .admin-preview-body {
+                padding: 24px;
+                font-size: 15px;
+                line-height: 1.8;
+                color: var(--text);
+              }
+              .admin-preview-close {
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                color: var(--muted);
+              }
+              .admin-preview-close:hover {
+                color: var(--text);
+              }
+            `}</style>
+            <div className="articles-grid-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>مشاهده مقالات وبلاگ و راهنماها</h3>
+                  <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "var(--muted)" }}>نمایش کلیه مقالات آموزشی و سوالات متداول ثبت شده در پایگاه داده وبلاگ نوبیکس</p>
+                </div>
+                <button 
+                  className="btn secondary small" 
+                  onClick={() => loadArticles(1)}
+                  disabled={articlesLoading}
+                  style={{ padding: "8px 16px", borderRadius: 10 }}
+                >
+                  🔄 بروزرسانی لیست
+                </button>
+              </div>
+
+              {articlesLoading ? (
+                <div style={{ textAlign: "center", padding: "40px", color: "var(--muted)" }}>در حال بارگذاری مقالات...</div>
+              ) : articles.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px", color: "var(--muted)" }}>هیچ مقاله‌ای یافت نشد.</div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="admin-article-table">
+                    <thead>
+                      <tr>
+                        <th>کاور</th>
+                        <th>عنوان مقاله</th>
+                        <th>دسته بندی</th>
+                        <th>نویسنده</th>
+                        <th>تاریخ ایجاد</th>
+                        <th>عملیات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {articles.map((art) => (
+                        <tr key={art.id}>
+                          <td>
+                            {art.cover_image ? (
+                              <img src={art.cover_image} alt={art.title} className="admin-article-thumb" />
+                            ) : (
+                              <div className="admin-article-thumb" style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "var(--muted)" }}>بدون عکس</div>
+                            )}
+                          </td>
+                          <td style={{ fontWeight: "bold" }}>{art.title}</td>
+                          <td>
+                            <span className="admin-article-badge">{art.category || "متفرقه"}</span>
+                          </td>
+                          <td>{art.author}</td>
+                          <td>
+                            {new Date(art.created_at).toLocaleDateString("fa-IR", { year: "numeric", month: "long", day: "numeric" })}
+                          </td>
+                          <td>
+                            <button 
+                              className="btn secondary small"
+                              onClick={() => setSelectedArticle(art)}
+                              style={{ padding: "6px 12px", borderRadius: 8 }}
+                            >
+                              👁️ پیش‌نمایش محتوا
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  {/* Pagination */}
+                  {articlesTotalPages > 1 && (
+                    <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 24, alignItems: "center" }}>
+                      <button 
+                        className="btn secondary small" 
+                        disabled={articlesPage <= 1}
+                        onClick={() => loadArticles(articlesPage - 1)}
+                      >
+                        قبلی
+                      </button>
+                      <span style={{ fontSize: 13, color: "var(--muted)" }}>
+                        صفحه {articlesPage.toLocaleString("fa-IR")} از {articlesTotalPages.toLocaleString("fa-IR")}
+                      </span>
+                      <button 
+                        className="btn secondary small" 
+                        disabled={articlesPage >= articlesTotalPages}
+                        onClick={() => loadArticles(articlesPage + 1)}
+                      >
+                        بعدی
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Preview Modal */}
+            {selectedArticle && (
+              <div className="admin-preview-modal" onClick={() => setSelectedArticle(null)}>
+                <div className="admin-preview-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="admin-preview-header">
+                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>{selectedArticle.title}</h3>
+                    <button className="admin-preview-close" onClick={() => setSelectedArticle(null)}>✕</button>
+                  </div>
+                  <div className="admin-preview-body">
+                    {selectedArticle.cover_image && (
+                      <img 
+                        src={selectedArticle.cover_image} 
+                        alt={selectedArticle.title} 
+                        style={{ width: "100%", maxHeight: 300, objectFit: "cover", borderRadius: 16, marginBottom: 20 }}
+                      />
+                    )}
+                    <div style={{ display: "flex", gap: 16, marginBottom: 20, fontSize: 13, color: "var(--muted)", borderBottom: "1px solid var(--line)", paddingBottom: 12 }}>
+                      <span>👤 نویسنده: {selectedArticle.author}</span>
+                      <span>🏷️ دسته‌بندی: {selectedArticle.category || "متفرقه"}</span>
+                      <span>📅 تاریخ: {new Date(selectedArticle.created_at).toLocaleDateString("fa-IR")}</span>
+                    </div>
+                    <div style={{ fontWeight: "bold", marginBottom: 20, color: "var(--text)" }}>
+                      {selectedArticle.summary}
+                    </div>
+                    <div 
+                      dangerouslySetInnerHTML={{ __html: selectedArticle.content }} 
+                      style={{ color: "var(--text)" }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

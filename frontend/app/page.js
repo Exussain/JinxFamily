@@ -14,7 +14,7 @@ import SocialLinksCard from "../components/SocialLinksCard";
 import HotProductsSection from "../components/HotProductsSection";
 import { placeholderFeatured } from "../lib/placeholderFeatured";
 import { dedupeProducts } from "../lib/dedupeProducts";
-import FortniteScrollButton from "../components/FortniteScrollButton";
+
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Disable all caching, fetch fresh data on every request
@@ -126,7 +126,7 @@ export default async function Page(props) {
       desc: "سرویس‌ها مستقیم روی اکانت شما فعال می‌شوند.",
       icon: "/icons/fortnite/warranty.svg",
       badge: {
-        img: "/images/enamad-infoparse.webp",
+        img: "https://trustseal.enamad.ir/logo.aspx?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2",
         label: "نماد اعتماد الکترونیکی",
         href: "https://trustseal.enamad.ir/?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2"
       }
@@ -397,18 +397,40 @@ export default async function Page(props) {
               </div>
               <p>{perk.desc}</p>
               {perk.badge && (
-                <a
-                  href={perk.badge.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  referrerPolicy="origin"
-                  className="perk-badge"
-                  aria-label={perk.badge.label}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={perk.badge.img} alt={perk.badge.label} loading="lazy" decoding="async" />
-                  <span>{perk.badge.label}</span>
-                </a>
+                perk.badge.href.includes("enamad.ir") ? (
+                  <a
+                    href={perk.badge.href}
+                    target="_blank"
+                    referrerPolicy="origin"
+                    className="perk-badge"
+                    aria-label={perk.badge.label}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={perk.badge.img} 
+                      alt={perk.badge.label} 
+                      loading="lazy" 
+                      decoding="async"
+                      style={{ cursor: "pointer" }}
+                      code="BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2"
+                      referrerPolicy="origin"
+                    />
+                    <span>{perk.badge.label}</span>
+                  </a>
+                ) : (
+                  <a
+                    href={perk.badge.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    referrerPolicy="origin"
+                    className="perk-badge"
+                    aria-label={perk.badge.label}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={perk.badge.img} alt={perk.badge.label} loading="lazy" decoding="async" />
+                    <span>{perk.badge.label}</span>
+                  </a>
+                )
               )}
             </article>
           ))}
@@ -424,7 +446,7 @@ export default async function Page(props) {
           <SocialLinksCard />
         </section>
       </main>
-      <FortniteScrollButton />
+
     </>
   );
 }

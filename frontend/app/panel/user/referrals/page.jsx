@@ -63,15 +63,15 @@ function UserReferralsInner() {
     <>
       <Navbar />
       <main className="rf" dir="rtl">
-        <h1>دعوت دوستان و امتیازات 💜</h1>
+        <h1>دعوت دوستان و امتیازات 💎</h1>
         {loading ? (
           <p className="rf-muted">در حال بارگذاری...</p>
         ) : (
           <div className="rf-grid">
             {/* Referral card */}
             <section className="rf-card">
-              <h2>لینک دعوت اختصاصی تو</h2>
-              <p className="rf-muted">با هر دوستی که از این لینک ثبت‌نام کند، ۱۵ تا ۵۰ امتیاز می‌گیری. با ۱۰ دعوت موفق، یک کد تخفیف ۱۵۰,۰۰۰ تومانی هدیه می‌گیری!</p>
+              <h2>لینک دعوت اختصاصی شما</h2>
+              <p className="rf-muted">با هر دوستی که از این لینک ثبت‌نام کند، ۱۵ تا ۵۰ امتیاز می‌گیرید. با ۱۰ دعوت موفق، یک کد تخفیف ۱۵۰,۰۰۰ تومانی هدیه می‌گیرید!</p>
               <div className="rf-link">
                 <input readOnly value={ref?.link || ""} />
                 <button onClick={copy}>{copied ? "کپی شد ✓" : "کپی"}</button>
@@ -87,19 +87,19 @@ function UserReferralsInner() {
                 <span>{invites}/{target}</span>
               </div>
               <div className="rf-bar"><div style={{ width: `${pct}%` }} /></div>
-              {ref?.milestone?.reached && <p className="rf-ok">🎉 جایزه‌ی پلکانی برای تو صادر شد!</p>}
+              {ref?.milestone?.reached && <p className="rf-ok">🎉 جایزه‌ی پلکانی برای شما صادر شد!</p>}
             </section>
 
             {/* Points + redeem card */}
             <aside className="rf-card">
               <h2>امتیازات من</h2>
               <div className="rf-points">{points.toLocaleString("fa-IR")}<span> امتیاز</span></div>
-              <p className="rf-muted">با خرید محصولات امتیاز جمع کن: کروپک ۷۵، استارترپک ۶۵، وی‌باکس و بمبر برایت ۴۵ امتیاز.</p>
+              <p className="rf-muted">با خرید محصولات امتیاز جمع کنید: کروپک ۷۵، استارترپک ۶۵، وی‌باکس و بمبر برایت ۴۵ امتیاز.</p>
               <div className="rf-redeem">
                 <strong>کروپک رایگان</strong>
-                <span className="rf-muted">با ۸۰۰ امتیاز یک کروپک فورتنایت رایگان بگیر.</span>
+                <span className="rf-muted">با ۸۰۰ امتیاز یک کروپک فورتنایت رایگان دریافت کنید.</span>
                 <button onClick={redeem} disabled={redeeming || points < 800}>
-                  {redeeming ? "در حال بازخرید..." : points < 800 ? `به ${(800 - points).toLocaleString("fa-IR")} امتیاز دیگر نیاز داری` : "بازخرید کروپک رایگان"}
+                  {redeeming ? "در حال بازخرید..." : points < 800 ? `به ${(800 - points).toLocaleString("fa-IR")} امتیاز دیگر نیاز دارید` : "بازخرید کروپک رایگان"}
                 </button>
                 {redeemMsg && <p className={redeemCode ? "rf-ok" : "rf-err"}>{redeemMsg}</p>}
                 {redeemCode && <code className="rf-code">{redeemCode}</code>}

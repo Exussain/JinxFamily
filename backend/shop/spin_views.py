@@ -117,20 +117,34 @@ def spin(request):
     if not can_spin:
         return JsonResponse({"success": False, "message": reason}, status=400)
 
-    # Calculate odds based on 200 users pool:
-    # Pooh (Nothing): ~50% (100) -> blank
-    # Wallet Credit (15,000 Tomans): ~30% (60) -> wallet
-    # 5% Discount Code: 18% (36) -> discount5
-    # 20% Discount Code: 2% (4) -> discount20
-    roll = secrets.randbelow(200)
-    if roll < 100:
+    # New odds:
+    # blank: 50%
+    # wallet (diamonds): 10%
+    # discount20: 10% (limited to max 1 winner per week starting Wednesday)
+    # discount5: 30%
+    roll = secrets.randbelow(100)
+    if roll < 50:
         win_type = "blank"
-    elif roll < 160:
+    elif roll < 60:
         win_type = "wallet"
-    elif roll < 196:
-        win_type = "discount5"
-    else:
+    elif roll < 70:
         win_type = "discount20"
+    else:
+        win_type = "discount5"
+
+    if win_type == "discount20":
+        # Check if anyone has already won a 20% discount code this week (since Wednesday)
+        now = timezone.now()
+        days_since_wed = (now.weekday() - 2) % 7 # Wednesday is 2
+        week_start = (now - timedelta(days=days_since_wed)).replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        already_won_this_week = SpinResult.objects.filter(
+            segment_type="discount20",
+            created_at__gte=week_start
+        ).exists()
+        if already_won_this_week:
+            # Fallback to 5% code (discount5)
+            win_type = "discount5"
 
     # Map win_type to a valid UI segment index
     valid_indices = [i for i, s in enumerate(SPIN_SEGMENTS) if s["type"] == win_type]

@@ -77,3 +77,20 @@
 .social-link-btn.instagram {
   background: linear-gradient(135deg, #f58529, #dd2a7b 60%, #8134af);
 }
+
+/* Light Theme Overrides */
+:root[data-theme="light"] .mini-hero.social-links-card {
+  background: #ffffff !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+  color: var(--text) !important;
+}
+
+:root[data-theme="light"] .mini-hero.social-links-card h3 {
+  color: var(--text) !important;
+}
+
+:root[data-theme="light"] .mini-hero.social-links-card p {
+  color: var(--muted) !important;
+}
+

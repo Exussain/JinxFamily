@@ -210,7 +210,6 @@ export default function TestimonialsSlider() {
         }
         .tm-track-container {
           overflow-x: auto;
-          scroll-snap-type: x mandatory;
           scrollbar-width: none; /* Firefox */
           -webkit-overflow-scrolling: touch;
           padding-bottom: 8px;
@@ -234,7 +233,6 @@ export default function TestimonialsSlider() {
           display: flex;
           flex-direction: column;
           gap: 12px;
-          scroll-snap-align: start;
           transition: transform 0.2s, background 0.2s;
         }
         .tm-card:hover {

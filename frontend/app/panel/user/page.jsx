@@ -267,23 +267,27 @@ export default function UserPanelPage() {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <div style={{
-              fontSize: "26px",
-              background: "linear-gradient(135deg, #7c3aed, #db2777)",
               width: "48px",
               height: "48px",
               borderRadius: "14px",
+              overflow: "hidden",
+              boxShadow: "0 4px 15px rgba(124, 58, 237, 0.25)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 4px 15px rgba(124, 58, 237, 0.25)",
-              color: "#fff"
+              background: "#1d1a3f"
             }}>
-              💜
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src="/images/diamond_logo.jpg" 
+                alt="الماس" 
+                style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+              />
             </div>
             <div>
-              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "800", color: "#fff" }}>امتیاز و دعوت دوستان</h4>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "800", color: "var(--text)" }}>امتیاز و دعوت دوستان</h4>
               <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--muted)" }}>
-                شما در حال حاضر دارای <strong style={{ color: "#a78bfa", fontSize: "15px" }}>{(user?.points_balance || 0).toLocaleString("fa-IR")}</strong> الماس/امتیاز هستید.
+                شما در حال حاضر دارای <strong style={{ color: "var(--primary)", fontSize: "15px" }}>{(user?.points_balance || 0).toLocaleString("fa-IR")}</strong> الماس/امتیاز هستید.
               </p>
             </div>
           </div>

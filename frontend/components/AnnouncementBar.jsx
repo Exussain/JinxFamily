@@ -39,7 +39,7 @@ export default function AnnouncementBar() {
   const speedSeconds = Math.max(10, Number(bar.speed) || 52);
   const closable = false;
   const textColor = bar.text_color || "#f8fafc";
-  const bg = bar.bg_color || "linear-gradient(90deg, #0b1224, #111827)";
+  const bg = bar.bg_color || "linear-gradient(90deg, #13112c, #181534)";
 
   const handleDismiss = () => {
     setHidden(true);

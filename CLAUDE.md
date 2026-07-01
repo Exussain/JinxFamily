@@ -52,9 +52,11 @@ Treat changes as deploying to production, not a sandbox.
   `.venv/bin/python manage.py test shop.tests.<TestClass>.<test_method>` for a single test.
   `shop/tests.py` mocks external services (Kavenegar SMS, etc.) — follow that pattern for new
   tests touching SMS/email/payment.
-- After backend changes, restart the live process: `pm2 restart nubix-backend` (mirrors the
+- After backend and frontend changes, restart the live process: `pm2 restart nubix-backend` (mirrors the
   frontend's HardReload flow; there's no separate script for it).
 - Migrations: `.venv/bin/python manage.py makemigrations shop` / `migrate`.
+- One-off Scripts: Run helper or one-off scripts in the virtualenv from the `backend/` directory, e.g., `.venv/bin/python scripts/send_reseller_congrats.py` or `.venv/bin/python scripts/send_test_notifications.py`.
+
 
 ## Architecture
 

@@ -96,8 +96,8 @@ function SpinPageInner() {
       <Navbar />
       <main className="spinpage" dir="rtl">
         <header className="sp-head">
-          <h1>گردونه شانس نوبیکس 🎡</h1>
-          <p>وارد حساب شو، گردونه رو بچرخون و جایزه‌ی واقعی بگیر: از الماس تا کد تخفیف ۲۰٪. هر حساب یک چرخش رایگان دارد.</p>
+          <h1>چهارشنبه‌های خوش‌شانس نوبیکس 🎡</h1>
+          <p>هر چهارشنبه وارد حساب خود شوید، گردونه را بچرخانید و جایزه واقعی بگیرید: از الماس تا کد تخفیف ۲۰٪.</p>
         </header>
 
         <div className="sp-grid">
@@ -119,20 +119,20 @@ function SpinPageInner() {
                 <span className="sp-result-emoji">{result.type !== "blank" ? "🎉" : "🙁"}</span>
                 <strong>{result.label}</strong>
                 {result.code && (
-                  <div className="sp-code"><span>کد تخفیف (مخصوص حساب تو):</span><code>{result.code}</code></div>
+                  <div className="sp-code"><span>کد تخفیف (مخصوص حساب شما):</span><code>{result.code}</code></div>
                 )}
                 {result.diamonds_credit > 0 && (
-                  <p className="sp-muted">{Number(result.diamonds_credit).toLocaleString("fa-IR")} الماس به حساب تو اضافه شد.</p>
+                  <p className="sp-muted">{Number(result.diamonds_credit).toLocaleString("fa-IR")} الماس به حساب شما اضافه شد.</p>
                 )}
               </div>
             ) : !signedIn ? (
               <>
-                <p className="sp-muted">برای چرخاندن گردونه باید وارد حساب شوی.</p>
+                <p className="sp-muted">برای چرخاندن گردونه باید وارد حساب خود شوید.</p>
                 <a href="/login" className="sp-btn">ورود / ثبت‌نام</a>
               </>
             ) : (
               <button type="button" className="sp-btn" onClick={handleSpin} disabled={!canSpin || isSpinning}>
-                {isSpinning ? "در حال چرخش..." : status?.cost ? `چرخش (${Number(status.cost).toLocaleString("fa-IR")} امتیاز)` : "بچرخون و جایزه بگیر!"}
+                {isSpinning ? "در حال چرخش..." : status?.cost ? `چرخش (${Number(status.cost).toLocaleString("fa-IR")} امتیاز)` : "بچرخانید و جایزه بگیرید!"}
               </button>
             )}
             {signedIn && !alreadyWon && status?.reason && !canSpin && <p className="sp-muted">{status.reason}</p>}

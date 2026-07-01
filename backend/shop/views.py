@@ -494,11 +494,37 @@ def _product_to_dict(p: Product):
         slug = p.slug or slugify(p.name_fa or "")
 
     raw_variants = list(p.variants.all())
-    variants_payload = [
-        {"id": v.id, "title": v.title, "group_fa": v.group_fa, "price": v.price, "original_price": getattr(v, "original_price", 0)}
-        for v in raw_variants
-    ]
-    min_price = min((v.price for v in raw_variants), default=p.price)
+    variants_payload = []
+    for v in raw_variants:
+        v_price = v.price
+        v_orig = getattr(v, "original_price", 0)
+        
+        # Check if this is the dynamic ChatGPT top-up variant
+        if p.slug == 'chatgpt-subscription' and "شارژ" in v.title:
+            try:
+                rates = cache.get("currency_rates:last_good")
+                usd_rate_rials = float(rates.get("usd", 650000)) if rates else 650000.0
+            except Exception:
+                usd_rate_rials = 650000.0
+            
+            usd_rate_tomans = usd_rate_rials / 10.0
+            # Calculate final price: (Dollar * 20) + 20%
+            v_price = int((usd_rate_tomans * 20) * 1.20)
+            # Round to the nearest 1,000 Tomans
+            v_price = int(round(v_price / 1000.0) * 1000)
+            
+            # Show a corresponding original price for discount display
+            v_orig = int(round((v_price * 1.25) / 1000.0) * 1000)
+            
+        variants_payload.append({
+            "id": v.id,
+            "title": v.title,
+            "group_fa": v.group_fa,
+            "price": v_price,
+            "original_price": v_orig
+        })
+        
+    min_price = min((item["price"] for item in variants_payload), default=p.price)
     base_price = min_price if raw_variants else p.price
     return {
         "id": p.id,
@@ -866,7 +892,7 @@ def create_order(request):
         if crew_disabled_setting.value_text.lower() == "true":
             user_name = user.username if user else "کاربر"
             return JsonResponse({
-                "message": f"{user_name} عزیز، امکان ثبت سفارش این محصول برای حساب کاربری شما وجود ندارد، لطفا بعدا تلاش بفرمایید. برای راهنمایی بیشتر، <a href='https://t.me/Nubix_Shop/24' target='_blank' style='color: #3b82f6; text-decoration: underline;'>اینجا</a> را کلیک کنید.",
+                "message": f"{user_name} عزیز، امکان ثبت سفارش این محصول برای حساب کاربری شما وجود ندارد، لطفا بعدا تلاش بفرمایید. برای راهنمایی بیشتر، <a href='https://t.me/NubixShopIR/24' target='_blank' style='color: #3b82f6; text-decoration: underline;'>اینجا</a> را کلیک کنید.",
                 "message_html": True,
                 "crew_disabled": True
             }, status=400)
@@ -921,7 +947,7 @@ def create_order(request):
         if consecutive_days >= 6 and random.randint(0, 99) >= 55:
             user_name = user.username if user else "کاربر"
             return JsonResponse({
-                "message": f"{user_name} عزیز، امکان ثبت سفارش این محصول برای حساب کاربری شما وجود ندارد، لطفا بعدا تلاش بفرمایید. برای راهنمایی بیشتر، <a href='https://t.me/Nubix_Shop/24' target='_blank' style='color: #3b82f6; text-decoration: underline;'>اینجا</a> را کلیک کنید.",
+                "message": f"{user_name} عزیز، امکان ثبت سفارش این محصول برای حساب کاربری شما وجود ندارد، لطفا بعدا تلاش بفرمایید. برای راهنمایی بیشتر، <a href='https://t.me/NubixShopIR/24' target='_blank' style='color: #3b82f6; text-decoration: underline;'>اینجا</a> را کلیک کنید.",
                 "message_html": True,
                 "smart_limit": True
             }, status=400)

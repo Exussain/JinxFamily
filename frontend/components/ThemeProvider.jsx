@@ -3,25 +3,23 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const ThemeContext = createContext({ theme: "light", toggleTheme: () => {}, setTheme: () => {} });
-const FORCE_DARK = true;
+const FORCE_DARK = false;
 
 const getInitialTheme = () => {
   if (FORCE_DARK) return "dark";
   if (typeof window === "undefined") return "light";
   const stored = localStorage.getItem("theme");
-  // If user has manually set a theme, respect it
   if (stored === "dark" || stored === "light") return stored;
-  // Otherwise, follow system preference
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   return prefersDark ? "dark" : "light";
 };
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState("light");
+  const [theme, setThemeState] = useState("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setTheme(getInitialTheme());
+    setThemeState(getInitialTheme());
     setMounted(true);
   }, []);
 
@@ -34,8 +32,8 @@ export function ThemeProvider({ children }) {
     const handleSystemThemeChange = (e) => {
       // Only auto-switch if user hasn't manually set a preference
       const stored = localStorage.getItem("theme");
-      if (!stored) {
-        setTheme(e.matches ? "dark" : "light");
+      if (stored !== "dark" && stored !== "light") {
+        setThemeState(e.matches ? "dark" : "light");
       }
     };
 
@@ -56,23 +54,31 @@ export function ThemeProvider({ children }) {
     };
   }, []);
 
+  // Apply theme to HTML tag when it changes (but do NOT write to localStorage automatically here)
   useEffect(() => {
     if (!mounted) return;
     if (typeof document !== "undefined") {
       document.documentElement.dataset.theme = FORCE_DARK ? "dark" : theme;
     }
-    if (typeof window !== "undefined") {
-      if (FORCE_DARK) {
-        localStorage.setItem("theme", "dark");
-      } else {
-        localStorage.setItem("theme", theme);
-      }
-    }
   }, [theme, mounted]);
 
   const toggleTheme = () => {
     if (FORCE_DARK) return;
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setThemeState(newTheme);
+    localStorage.setItem("theme", newTheme);
+  };
+
+  const setTheme = (newTheme) => {
+    if (FORCE_DARK) return;
+    if (newTheme === "dark" || newTheme === "light") {
+      setThemeState(newTheme);
+      localStorage.setItem("theme", newTheme);
+    } else if (newTheme === "system") {
+      localStorage.removeItem("theme");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setThemeState(prefersDark ? "dark" : "light");
+    }
   };
 
   const value = useMemo(() => ({ theme, toggleTheme, setTheme }), [theme]);

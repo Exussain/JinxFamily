@@ -130,8 +130,8 @@ export default function SpinWheelModal() {
           <div className="spin-modal" dir="rtl" role="dialog" aria-modal="true">
             <button type="button" className="spin-close" onClick={handleClose} aria-label="بستن">×</button>
 
-            <h2 className="spin-title">گردونه شانس نوبیکس</h2>
-            <p className="spin-subtitle">شانست رو امتحان کن! از الماس تا کد تخفیف ۲۰٪.</p>
+            <h2 className="spin-title">چهارشنبه‌های خوش‌شانس نوبیکس 🎡</h2>
+            <p className="spin-subtitle">هر چهارشنبه شانس خود را امتحان کنید! از الماس تا کد تخفیف ۲۰٪.</p>
 
             <div className="spin-wheel-wrap">
               <div className="spin-pointer" aria-hidden>
@@ -148,33 +148,33 @@ export default function SpinWheelModal() {
             {alreadyWon ? (
               <div className="spin-result">
                 <span className="spin-result-emoji" aria-hidden>{result.type !== "blank" ? "🎉" : "🙁"}</span>
-                <span className="spin-result-label">{result.type !== "blank" ? "جایزه‌ی تو:" : "این بار شانس نیاوردی:"}</span>
+                <span className="spin-result-label">{result.type !== "blank" ? "جایزه شما:" : "این بار شانس با شما یار نبود:"}</span>
                 <strong className="spin-result-name">{result.label}</strong>
                 {result.code && (
                   <div className="spin-code" onClick={handleCopyCode} title="برای کپی کلیک کنید">
                     <span className="spin-code-label">
-                      {copied ? "کپی شد! ✅" : "کد تخفیف (مخصوص حساب تو):"}
+                      {copied ? "کپی شد! ✅" : "کد تخفیف (مخصوص حساب شما):"}
                     </span>
                     <code>{result.code}</code>
                   </div>
                 )}
                 {result.diamonds_credit > 0 && (
                   <p className="spin-result-desc">
-                    {Number(result.diamonds_credit).toLocaleString("fa-IR")} الماس به حساب تو اضافه شد.
+                    {Number(result.diamonds_credit).toLocaleString("fa-IR")} الماس به حساب شما اضافه شد.
                   </p>
                 )}
                 <button type="button" className="spin-btn ghost" onClick={handleClose}>بستن</button>
               </div>
             ) : !signedIn ? (
               <>
-                <p className="spin-subtitle" style={{ marginBottom: 12 }}>برای چرخاندن گردونه باید وارد حساب شوی.</p>
+                <p className="spin-subtitle" style={{ marginBottom: 12 }}>برای چرخاندن گردونه باید وارد حساب خود شوید.</p>
                 <a href="/login" className="spin-btn" style={{ display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
                   ورود / ثبت‌نام
                 </a>
               </>
             ) : (
               <button type="button" className="spin-btn" onClick={handleSpin} disabled={!canSpin || isSpinning}>
-                {isSpinning ? "در حال چرخش..." : "بچرخون و جایزه بگیر!"}
+                {isSpinning ? "در حال چرخش..." : "بچرخانید و جایزه بگیرید!"}
               </button>
             )}
           </div>

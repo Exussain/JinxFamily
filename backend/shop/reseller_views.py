@@ -88,8 +88,8 @@ TELEGRAM_CHANNEL_HANDLE_RE = re.compile(r"@?([A-Za-z0-9_]{4,})")
 # -----------------------------------------------------------------------
 CREW_SLUG = "fortnite-crew-pack"
 DEFAULT_LIRA_REF_RATE = 3360        # نرخ لیر مرجع (تومان) که قیمت‌های پایه روی آن تعریف شده‌اند
-DEFAULT_CREW_SINGLE_BASE = 479000   # قیمت پایه‌ی تک‌عددی در نرخ مرجع
-DEFAULT_CREW_TEN_BASE = 449000      # قیمت پایه‌ی ۱۰+ در نرخ مرجع
+DEFAULT_CREW_SINGLE_BASE = 459000   # قیمت پایه‌ی تک‌عددی در نرخ مرجع
+DEFAULT_CREW_TEN_BASE = 429000      # قیمت پایه‌ی ۱۰+ در نرخ مرجع
 DEFAULT_FLUCT_THRESHOLD = 5         # درصد مجاز نوسان لیر قبل از محاسبه ما‌به‌التفاوت
 
 
@@ -185,8 +185,11 @@ def _crew_pricing_config() -> dict:
 
 
 def _round_toman(n: int) -> int:
-    """گرد کردن به نزدیک‌ترین ۱,۰۰۰ تومان."""
-    return int(round(n / 1000.0) * 1000)
+    """گرد کردن به نزدیک‌ترین ۱,۰۰۰ تومان و کسر ۵,۰۰۰ تومان در صورت رند بودن روی مضرب ۱۰۰,۰۰۰."""
+    val = int(round(n / 1000.0) * 1000)
+    if val > 0 and val % 100000 == 0:
+        val -= 5000
+    return val
 
 
 def _crew_tiers_for_rate(rate: int, cfg: dict | None = None) -> list:
@@ -1420,7 +1423,8 @@ def _reservation_diff(order: Order) -> dict:
         locked_unit = _round_toman(base_price * locked / ref)
         current_unit = _round_toman(base_price * current / ref)
     diff_unit = current_unit - locked_unit
-    diff_total = diff_unit * qty
+    # کاهش تاثیر مابه‌التفاوت لیر همکار به ۸۰٪
+    diff_total = _round_toman(diff_unit * qty * 0.80)
     return {
         "applicable": True,
         "locked_rate": locked,

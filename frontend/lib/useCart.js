@@ -97,6 +97,18 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.filter((x) => !matches(x)));
   }, []);
 
+  const setPlatform = useCallback((productId, variantId, accountType, extraFields = {}) => {
+    const product_id = Number(productId);
+    const vId = variantId ?? null;
+    setItems((prev) =>
+      prev.map((x) =>
+        Number(x.product_id) === product_id && (x.variant_id ?? null) === vId
+          ? { ...x, account_type: accountType, ...extraFields }
+          : x
+      )
+    );
+  }, []);
+
   const clear = useCallback(() => {
     setItems([]);
   }, []);
@@ -110,8 +122,8 @@ export function CartProvider({ children }) {
   const total = useCallback(() => totalValue, [totalValue]);
 
   const value = useMemo(
-    () => ({ items, total, addItem, setQty, removeItem, clear }),
-    [items, total, addItem, setQty, removeItem, clear]
+    () => ({ items, total, addItem, setQty, removeItem, clear, setPlatform }),
+    [items, total, addItem, setQty, removeItem, clear, setPlatform]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -127,6 +139,7 @@ export function useCart() {
       setQty: () => {},
       removeItem: () => {},
       clear: () => {},
+      setPlatform: () => {},
     };
   }
   return ctx;

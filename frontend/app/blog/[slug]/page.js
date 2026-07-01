@@ -3,9 +3,10 @@ import Navbar from '../../../components/Navbar';
 import Link from 'next/link';
 
 export async function generateMetadata({ params }) {
+  const resolvedParams = await params;
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
   try {
-    const res = await fetch(`${apiBase}/api/blog/articles/${params.slug}`);
+    const res = await fetch(`${apiBase}/api/blog/articles/${resolvedParams.slug}`);
     if (res.ok) {
       const article = await res.json();
       return {
@@ -20,11 +21,12 @@ export async function generateMetadata({ params }) {
 export const dynamic = 'force-dynamic';
 
 export default async function ArticlePage({ params }) {
+  const resolvedParams = await params;
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
   let article = null;
   
   try {
-    const res = await fetch(`${apiBase}/api/blog/articles/${params.slug}`, { cache: 'no-store' });
+    const res = await fetch(`${apiBase}/api/blog/articles/${resolvedParams.slug}`, { cache: 'no-store' });
     if (res.ok) {
       article = await res.json();
     }
@@ -43,8 +45,8 @@ export default async function ArticlePage({ params }) {
         <article style={{
           maxWidth: '800px',
           margin: '0 auto',
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px solid rgba(255,255,255,0.05)',
+          background: 'var(--card)',
+          border: '1px solid var(--line)',
           borderRadius: '24px',
           overflow: 'hidden'
         }}>
@@ -63,8 +65,8 @@ export default async function ArticlePage({ params }) {
               <Link href={`/blog?category=${article.category_slug}`} style={{
                 display: 'inline-block',
                 padding: '6px 12px',
-                background: 'rgba(44, 75, 255, 0.1)',
-                color: 'var(--primary-2)',
+                background: 'rgba(124, 58, 237, 0.1)',
+                color: 'var(--primary)',
                 borderRadius: '8px',
                 fontSize: '14px',
                 fontWeight: 'bold',
@@ -75,11 +77,11 @@ export default async function ArticlePage({ params }) {
               </Link>
             )}
             
-            <h1 style={{ fontSize: '36px', fontWeight: '900', color: '#fff', marginBottom: '24px', lineHeight: '1.4' }}>
+            <h1 style={{ fontSize: '36px', fontWeight: '900', color: 'var(--text)', marginBottom: '24px', lineHeight: '1.4' }}>
               {article.title}
             </h1>
             
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', marginBottom: '40px', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', marginBottom: '40px', paddingBottom: '24px', borderBottom: '1px solid var(--line)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '14px' }}>
                 <span className="icon" style={{ fontSize: '18px' }}>✍️</span> {article.author}
               </div>
@@ -92,7 +94,7 @@ export default async function ArticlePage({ params }) {
             <div 
               className="article-content"
               style={{
-                color: '#cbd5e1',
+                color: 'var(--text)',
                 fontSize: '16px',
                 lineHeight: '1.9',
               }}

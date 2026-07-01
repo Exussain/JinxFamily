@@ -101,7 +101,7 @@ export default async function LegoStarterPackPage() {
                     </Link>
                     <Link
                       className="ghost-btn"
-                      href="https://t.me/Nubix_Shop"
+                      href="https://t.me/NubixShopIR"
                       target="_blank"
                     >
                       پرسش قبل از خرید؟ تلگرام

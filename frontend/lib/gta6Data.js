@@ -10,7 +10,7 @@
 // Legacy exports kept for backwards-compat; no longer referenced by the page.
 export const PRICES_LIVE = true;
 
-export const TELEGRAM_ORDER = "https://t.me/Nubix_Shop";
+export const TELEGRAM_ORDER = "https://t.me/NubixShopIR";
 
 // USD reference prices from Rockstar (shown as a secondary hint, never charged).
 export const USD_REFERENCE = { standard: 80, ultimate: 100 };

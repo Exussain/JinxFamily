@@ -70,6 +70,25 @@ export default function CategoriesSection({ categories = [] }) {
     };
   }, [open]);
 
+  // Listen for custom event from bottom nav to open the sidebar
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener('open-category-sidebar', handler);
+    return () => window.removeEventListener('open-category-sidebar', handler);
+  }, []);
+
+  // Open sidebar if redirected with openCatSidebar=true
+  useEffect(() => {
+    if (sp.get('openCatSidebar') === 'true') {
+      setOpen(true);
+      // Clean up the URL query param without refreshing
+      const params = new URLSearchParams(window.location.search);
+      params.delete('openCatSidebar');
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [sp]);
+
   // Improved drag handlers
   const handleMouseDown = (e) => {
     if (!chipRowRef.current) return;
@@ -151,11 +170,15 @@ export default function CategoriesSection({ categories = [] }) {
     };
 
     section.addEventListener('wheel', handleWheel, { passive: false });
-    return () => section.removeEventListener('wheel', handleWheel);
+    return () => section.removeObserver ? section.removeObserver() : section.removeEventListener('wheel', handleWheel);
   }, []);
 
   const scrollToProducts = () => {
-    if (sectionRef.current) {
+    const popularSection = document.getElementById('popular');
+    if (popularSection) {
+      const y = popularSection.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: y - 80, behavior: 'smooth' });
+    } else if (sectionRef.current) {
       const y = sectionRef.current.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({ top: y - 80, behavior: 'smooth' });
     }
@@ -174,10 +197,10 @@ export default function CategoriesSection({ categories = [] }) {
 
   return (
     <>
-
+      {/* Desktop-only categories section with chip row */}
       <section 
         ref={sectionRef}
-        className={`categories draggable-scroll${isPointerDown ? " is-pointer-down" : ""}`}
+        className={`categories draggable-scroll desktop-categories-section${isPointerDown ? " is-pointer-down" : ""}`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleDragEnd}
@@ -214,7 +237,6 @@ export default function CategoriesSection({ categories = [] }) {
           </button>
         </div>
 
-        {/* Category chips - horizontal scroll on mobile and desktop */}
         <div
           ref={chipRowRef}
           className="chip-row"

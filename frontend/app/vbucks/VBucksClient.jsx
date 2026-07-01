@@ -808,7 +808,7 @@ export default function VBucksClient({ initialProductData }) {
           border-radius: 14px;
           border: none;
           background: linear-gradient(135deg, #fbbf24, #f59e0b);
-          color: #0f172a;
+          color: #1d1a3f;
           font-weight: 900;
           box-shadow: 0 14px 30px rgba(0,0,0,0.18);
           cursor: pointer;
@@ -906,7 +906,7 @@ export default function VBucksClient({ initialProductData }) {
           right: 8px;
           padding: 4px 10px;
           background: linear-gradient(135deg, #f59e0b, #fbbf24);
-          color: #0f172a;
+          color: #1d1a3f;
           font-size: 11px;
           font-weight: 900;
           border-radius: 999px;
@@ -1085,8 +1085,8 @@ export default function VBucksClient({ initialProductData }) {
           gap: 6px;
         }
         :root[data-theme="dark"] .conversion-box {
-          background: #0b1224;
-          border-color: #1f2937;
+          background: #13112c;
+          border-color: #373169;
         }
         .delivery-step {
           display: flex;
@@ -1158,7 +1158,7 @@ export default function VBucksClient({ initialProductData }) {
           background: var(--hover);
         }
         :root[data-theme="dark"] .faq-question:hover {
-          background: #111827;
+          background: #181534;
         }
         .faq-answer {
           padding: 0 18px 16px 18px;
@@ -1431,8 +1431,8 @@ export default function VBucksClient({ initialProductData }) {
           border: 1px solid var(--line);
         }
         :root[data-theme="dark"] .rating-breakdown {
-          background: #0b1224;
-          border-color: #1f2937;
+          background: #13112c;
+          border-color: #373169;
         }
         .rating-bar-row {
           display: grid;
@@ -1453,7 +1453,7 @@ export default function VBucksClient({ initialProductData }) {
           position: relative;
         }
         :root[data-theme="dark"] .rating-bar-bg {
-          background: #1f2937;
+          background: #373169;
         }
         .rating-bar-fill {
           height: 100%;
@@ -1500,7 +1500,7 @@ export default function VBucksClient({ initialProductData }) {
           border-radius: 999px;
           overflow: hidden;
           border: 1px solid var(--line);
-          background: radial-gradient(circle at 30% 20%, #38bdf8, #0f172a);
+          background: radial-gradient(circle at 30% 20%, #38bdf8, #1d1a3f);
           display: flex;
           align-items: center;
           justify-content: center;
