@@ -594,7 +594,7 @@ export default function Navbar() {
                         </div>
                         <div className="notif-dropdown__footer">
                           <Link href="/panel/user" onClick={() => setShowNotifMenu(false)} className="notif-link-btn">
-                            👤 ورود به پنل کاربری
+                            👤 داشبورد
                           </Link>
                           <button
                             onClick={async () => {
