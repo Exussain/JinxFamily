@@ -177,11 +177,34 @@ def estimate_item_cost(product, variant, quantity: int = 1) -> int:
         return 0
     variant_id = variant.id if variant else None
     unit = 0
-    try:
-        from .reseller_views import _price_for_quantity  # lazy: avoid import cycle
-        unit = _price_for_quantity(product.id, 1, variant_id) or 0
-    except Exception:
-        unit = 0
+
+    # Custom GTA VI Cost Retrieval
+    if product.slug == "gta6" and variant_id:
+        try:
+            from .models import SiteSetting
+            import json
+            setting = SiteSetting.objects.filter(key="gta6_config").first()
+            if setting and setting.value_text:
+                config = json.loads(setting.value_text)
+                pricing = config.get("pricing", {})
+                found = False
+                for ed_key, ed_val in pricing.items():
+                    for cap_key, cap_val in ed_val.items():
+                        if cap_val.get("variant_id") == variant_id:
+                            unit = int(cap_val.get("cost_toman") or 0)
+                            found = True
+                            break
+                    if found:
+                        break
+        except Exception:
+            unit = 0
+
+    if unit <= 0:
+        try:
+            from .reseller_views import _price_for_quantity  # lazy: avoid import cycle
+            unit = _price_for_quantity(product.id, 1, variant_id) or 0
+        except Exception:
+            unit = 0
     if unit <= 0:
         ratio = _setting_float("cost_fallback_ratio", 0.85)
         base = (variant.price if variant else product.price) or 0
@@ -200,15 +223,18 @@ def line_items_cost(line_items) -> int:
 def cap_discount_for_profit(line_items, gross_amount: int, discount_amount: int):
     """Clamp a discount so net profit can never fall below the floor.
 
-    profit = (gross - discount) - cost  must be >= min_profit_floor.
+    profit = (gross - discount) - cost  must be >= floor.
     Wallet credit (the customer's own prepaid balance) is intentionally NOT
     capped here — only promo/wheel discount codes are constrained, which is
     what "high-tier discount codes can't bypass the threshold" means.
 
     Returns (capped_discount, total_cost, allowed_discount).
     """
-    floor = _setting_int("min_profit_floor", 80000)
     total_cost = line_items_cost(line_items)
+    if int(gross_amount) < 1000000:
+        floor = max(170000, int(total_cost * 0.09))
+    else:
+        floor = max(290000, int(total_cost * 0.09))
     allowed = max(0, int(gross_amount) - total_cost - floor)
     capped = min(int(discount_amount or 0), allowed)
     return capped, total_cost, allowed

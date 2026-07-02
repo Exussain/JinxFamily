@@ -550,6 +550,15 @@ def _product_to_dict(p: Product):
         "link": SPECIAL_PRODUCT_LINKS.get(p.slug),
         "variants": variants_payload,
         "sold_count": getattr(p, "sold_count", 0) or 0,
+        # Product has no updated_at column (adding one needs a production DB
+        # migration) — created_at is the honest lower bound for sitemap lastmod.
+        "created_at": p.created_at.isoformat() if getattr(p, "created_at", None) else None,
+        # True when customers can actually order right now — used by the
+        # frontend for schema.org offer availability.
+        "purchasable": not (
+            bool(getattr(p, "ordering_disabled", False))
+            or bool(getattr(p, "customer_ordering_disabled", False))
+        ),
     }
 
 
@@ -1318,12 +1327,18 @@ def create_order(request):
         # Loyalty/referral milestone rewards are deliberate giveaways and are exempt.
         if dc.source != "milestone":
             try:
-                from .rewards import cap_discount_for_profit
+                from .rewards import line_items_cost
                 cost_lines = [
                     (it.product, it.variant, it.quantity)
                     for it in order.items.select_related("product", "variant").all()
                 ]
-                discount_amount, _cost, _allowed = cap_discount_for_profit(cost_lines, amount, discount_amount)
+                total_cost = line_items_cost(cost_lines)
+                if amount < 1000000:
+                    floor = max(170000, int(total_cost * 0.09))
+                else:
+                    floor = max(290000, int(total_cost * 0.09))
+                allowed = max(0, amount - total_cost - floor)
+                discount_amount = min(discount_amount, allowed)
             except Exception:
                 logger.exception("profit guardrail failed; applying discount uncapped")
 
@@ -1343,6 +1358,26 @@ def create_order(request):
         if diamonds_use > 0:
             usable_diamonds = min(diamonds_use, profile.points_balance)
             diamond_discount = min(diamonds_to_toman(usable_diamonds), amount)
+            
+            # Profit guardrail for diamonds:
+            try:
+                from .rewards import line_items_cost
+                cost_lines = [
+                    (it.product, it.variant, it.quantity)
+                    for it in order.items.select_related("product", "variant").all()
+                ]
+                total_cost = line_items_cost(cost_lines)
+                if amount < 1000000:
+                    floor = max(170000, int(total_cost * 0.09))
+                else:
+                    floor = max(290000, int(total_cost * 0.09))
+                min_payable = total_cost + floor
+                
+                allowed_diamond_discount = max(0, amount - min_payable)
+                diamond_discount = min(diamond_discount, allowed_diamond_discount)
+            except Exception:
+                logger.exception("profit guardrail for diamonds failed")
+                
             full_value = diamonds_to_toman(usable_diamonds)
             # Never charge more diamonds than the (possibly amount-capped) discount needs.
             diamonds_applied = (
@@ -5022,6 +5057,11 @@ def admin_users(request):
             phone = profile.phone_number or ""
             tier = profile.tier or "user"
             wallet = profile.wallet_balance or 0
+            if tier == "reseller" or hasattr(u, "reseller_profile"):
+                try:
+                    wallet = u.reseller_profile.wallet_balance
+                except Exception:
+                    pass
         except Exception:
             pass
 
@@ -7343,3 +7383,95 @@ def admin_site_notifications(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return HttpResponseNotAllowed(['GET', 'POST', 'DELETE'])
+
+
+@csrf_exempt
+def create_product_request(request):
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    try:
+        payload = json.loads(request.body)
+        product_name = payload.get("product_name", "").strip()
+        contact_info = payload.get("contact_info", "").strip()
+        
+        if not product_name:
+            return JsonResponse({"error": "نام محصول درخواستی الزامی است."}, status=400)
+        if not contact_info:
+            return JsonResponse({"error": "اطلاعات تماس الزامی است."}, status=400)
+            
+        user = request.user if request.user.is_authenticated else None
+        
+        from .models import ProductRequest
+        ProductRequest.objects.create(
+            product_name=product_name,
+            contact_info=contact_info,
+            user=user
+        )
+        return JsonResponse({"success": True, "message": "درخواست شما با موفقیت ثبت شد."})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def admin_product_requests(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    
+    if request.method == 'GET':
+        from .models import ProductRequest
+        reqs = ProductRequest.objects.all().order_by('-created_at')
+        data = []
+        for r in reqs:
+            data.append({
+                "id": r.id,
+                "product_name": r.product_name,
+                "contact_info": r.contact_info,
+                "username": r.user.username if r.user else "مهمان",
+                "status": r.status,
+                "created_at": r.created_at.isoformat(),
+                "admin_note": r.admin_note
+            })
+        return JsonResponse({"requests": data})
+        
+    elif request.method == 'POST':
+        try:
+            payload = json.loads(request.body)
+            req_id = payload.get("id")
+            status = payload.get("status")
+            admin_note = payload.get("admin_note")
+            
+            if not req_id:
+                return JsonResponse({"error": "شناسه درخواست الزامی است."}, status=400)
+                
+            from .models import ProductRequest
+            try:
+                req_obj = ProductRequest.objects.get(id=req_id)
+            except ProductRequest.DoesNotExist:
+                return JsonResponse({"error": "درخواست یافت نشد."}, status=404)
+                
+            if status is not None:
+                req_obj.status = status
+            if admin_note is not None:
+                req_obj.admin_note = admin_note
+            req_obj.save()
+            
+            return JsonResponse({"success": True, "message": "درخواست با موفقیت بروزرسانی شد."})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+            
+    elif request.method == 'DELETE':
+        try:
+            payload = json.loads(request.body)
+            req_id = payload.get("id")
+            if not req_id:
+                return JsonResponse({"error": "شناسه درخواست الزامی است."}, status=400)
+            from .models import ProductRequest
+            ProductRequest.objects.filter(id=req_id).delete()
+            return JsonResponse({"success": True, "message": "درخواست حذف شد."})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+            
+    return HttpResponseNotAllowed(['GET', 'POST', 'DELETE'])
+
