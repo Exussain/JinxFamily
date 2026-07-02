@@ -1351,42 +1351,48 @@ def create_order(request):
         dc.save(update_fields=["used_count"])
     
     # Apply diamond (الماس) redemption — replaces the old wallet-cashback system.
+    # Completely disabled for resellers.
     diamonds_applied = 0
     diamond_discount = 0
     if user is not None:
-        profile, _ = UserProfile.objects.get_or_create(user=user)
-        if diamonds_use > 0:
-            usable_diamonds = min(diamonds_use, profile.points_balance)
-            diamond_discount = min(diamonds_to_toman(usable_diamonds), amount)
-            
-            # Profit guardrail for diamonds:
-            try:
-                from .rewards import line_items_cost
-                cost_lines = [
-                    (it.product, it.variant, it.quantity)
-                    for it in order.items.select_related("product", "variant").all()
-                ]
-                total_cost = line_items_cost(cost_lines)
-                if amount < 1000000:
-                    floor = max(170000, int(total_cost * 0.09))
-                else:
-                    floor = max(290000, int(total_cost * 0.09))
-                min_payable = total_cost + floor
+        try:
+            is_reseller = user.profile.tier == "reseller"
+        except Exception:
+            is_reseller = False
+        if not is_reseller:
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            if diamonds_use > 0:
+                usable_diamonds = min(diamonds_use, profile.points_balance)
+                diamond_discount = min(diamonds_to_toman(usable_diamonds), amount)
                 
-                allowed_diamond_discount = max(0, amount - min_payable)
-                diamond_discount = min(diamond_discount, allowed_diamond_discount)
-            except Exception:
-                logger.exception("profit guardrail for diamonds failed")
-                
-            full_value = diamonds_to_toman(usable_diamonds)
-            # Never charge more diamonds than the (possibly amount-capped) discount needs.
-            diamonds_applied = (
-                usable_diamonds if diamond_discount >= full_value
-                else toman_to_diamonds_ceil(diamond_discount)
-            )
-            if diamonds_applied > 0:
-                from .rewards import award_points
-                award_points(user, -diamonds_applied, "redeem", related_order=order, note="تبدیل الماس به تخفیف خرید")
+                # Profit guardrail for diamonds:
+                try:
+                    from .rewards import line_items_cost
+                    cost_lines = [
+                        (it.product, it.variant, it.quantity)
+                        for it in order.items.select_related("product", "variant").all()
+                    ]
+                    total_cost = line_items_cost(cost_lines)
+                    if amount < 1000000:
+                        floor = max(170000, int(total_cost * 0.09))
+                    else:
+                        floor = max(290000, int(total_cost * 0.09))
+                    min_payable = total_cost + floor
+                    
+                    allowed_diamond_discount = max(0, amount - min_payable)
+                    diamond_discount = min(diamond_discount, allowed_diamond_discount)
+                except Exception:
+                    logger.exception("profit guardrail for diamonds failed")
+                    
+                full_value = diamonds_to_toman(usable_diamonds)
+                # Never charge more diamonds than the (possibly amount-capped) discount needs.
+                diamonds_applied = (
+                    usable_diamonds if diamond_discount >= full_value
+                    else toman_to_diamonds_ceil(diamond_discount)
+                )
+                if diamonds_applied > 0:
+                    from .rewards import award_points
+                    award_points(user, -diamonds_applied, "redeem", related_order=order, note="تبدیل الماس به تخفیف خرید")
     payable = amount - diamond_discount
 
     order.amount = payable
@@ -7130,6 +7136,12 @@ def admin_oldest_unsettled(request):
 def exchange_points(request):
     if not request.user.is_authenticated:
         return JsonResponse({"detail": "authentication required"}, status=401)
+    try:
+        is_reseller = request.user.profile.tier == "reseller"
+    except Exception:
+        is_reseller = False
+    if is_reseller:
+        return JsonResponse({"error": "همکاران امکان استفاده از سیستم الماس را ندارند."}, status=403)
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
         

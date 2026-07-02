@@ -120,6 +120,11 @@ def award_points(user, amount: int, reason: str, related_order=None, note: str =
     """
     if not user or not amount:
         return None
+    try:
+        if user.profile.tier == "reseller":
+            return None
+    except Exception:
+        pass
     with transaction.atomic():
         profile, _ = UserProfile.objects.select_for_update().get_or_create(user=user)
         new_balance = max(0, int(profile.points_balance) + int(amount))

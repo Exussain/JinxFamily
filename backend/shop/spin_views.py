@@ -52,6 +52,11 @@ def _spin_cost(launch_active: bool) -> int:
 
 def _eligibility(user):
     """Return (can_spin, reason, launch_active, cost, points_balance)."""
+    try:
+        if user.profile.tier == "reseller":
+            return False, "همکاران گرامی امکان شرکت در گردونه شانس را ندارند.", False, 0, 0
+    except Exception:
+        pass
     profile, _ = UserProfile.objects.get_or_create(user=user)
     points = int(profile.points_balance or 0)
     
