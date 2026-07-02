@@ -142,6 +142,12 @@ def spin(request):
             segment_type="discount20",
             created_at__gte=week_start
         ).exists()
+        
+        # Explicit lock: no 20% discount code can be won until July 9, 2026 at 16:18 UTC
+        lock_until = datetime(2026, 7, 9, 16, 18, 0, tzinfo=timezone.utc)
+        if now < lock_until:
+            already_won_this_week = True
+            
         if already_won_this_week:
             # Fallback to 5% code (discount5)
             win_type = "discount5"
