@@ -1386,7 +1386,7 @@ export default function UserPanelPage() {
         }
         .btn-cancel:hover:not(:disabled) { background: rgba(239, 68, 68, 0.18); transform: translateY(-1px); }
         .btn-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
-        :global(.tag) {
+        .tag {
           padding: 5px 12px;
           border-radius: 999px;
           font-size: 12px;
@@ -1394,8 +1394,8 @@ export default function UserPanelPage() {
           background: color-mix(in srgb, var(--primary) 12%, transparent);
           color: var(--primary);
         }
-        :global(.tag.success) { background: rgba(16, 185, 129, 0.14); color: #10b981; }
-        :global(.tag.danger) { background: rgba(239, 68, 68, 0.14); color: #ef4444; }
+        .tag.success { background: rgba(16, 185, 129, 0.14); color: #10b981; }
+        .tag.danger { background: rgba(239, 68, 68, 0.14); color: #ef4444; }
 
         /* ===== Club ===== */
         .club-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
