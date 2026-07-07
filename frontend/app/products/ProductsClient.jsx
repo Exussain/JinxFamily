@@ -11,12 +11,22 @@ const categoryGradients = {
   "SUBSCRIPTIONS": "linear-gradient(135deg, #3B82F6, #06B6D4)",
 };
 
-const categoryIcons = {
-  "FORTNITE": "🎮",
-  "AI": "🤖",
-  "GIFTCARDS": "🎁",
-  "GAMES": "🎯",
-  "SUBSCRIPTIONS": "⭐",
+const categorySvgIcons = {
+  "FORTNITE": (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M12 12h.01"></path><path d="M17 10h2"></path><path d="M8 12H6"></path><path d="M7 11v2"></path></svg>
+  ),
+  "AI": (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3"></path><path d="M15 1v3"></path><path d="M9 20v3"></path><path d="M15 20v3"></path><path d="M20 9h3"></path><path d="M20 15h3"></path><path d="M1 9h3"></path><path d="M1 15h3"></path></svg>
+  ),
+  "GIFTCARDS": (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M12 2v20"></path><path d="M2 11h20"></path><path d="M12 7.5a2.5 2.5 0 0 0 2.5-2.5C14.5 3 12 2 12 2s-2.5 1-2.5 3a2.5 2.5 0 0 0 2.5 2.5z"></path><path d="M12 7.5A2.5 2.5 0 0 0 9.5 5C9.5 3 12 2 12 2s2.5 1 2.5 3a2.5 2.5 0 0 0-2.5 2.5z"></path></svg>
+  ),
+  "GAMES": (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+  ),
+  "SUBSCRIPTIONS": (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+  )
 };
 
 // Custom sorting weights for Fortnite products
@@ -104,9 +114,45 @@ export default function ProductsClient({ categories = [] }) {
 
   const activeCategoryInfo = categories.find(cat => cat.code === activeCat);
   const activeGradient = categoryGradients[activeCat] || "linear-gradient(135deg, #6366F1, #8B5CF6)";
-  const activeIcon = categoryIcons[activeCat] || "🛍️";
 
   const styleContent = `
+    .products-minimal-header {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+    }
+    
+    .products-minimal-title {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--text);
+      margin: 8px 0 6px 0;
+    }
+    
+    .products-fomo-subtitle {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .products-fomo-pulse {
+      width: 8px;
+      height: 8px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      display: inline-block;
+      animation: products-pulse-anim 1.5s infinite ease-in-out;
+    }
+
+    @keyframes products-pulse-anim {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.8); opacity: 0.5; }
+    }
+
     .products-layout-wrapper {
       display: grid;
       grid-template-columns: 300px 1fr;
@@ -317,28 +363,23 @@ export default function ProductsClient({ categories = [] }) {
     <div className="products-client-container">
       <style dangerouslySetInnerHTML={{ __html: styleContent }} />
 
-      {/* Category landing hero banner */}
-      <section className="category-hero">
-        <div className="category-hero-glow" aria-hidden="true" />
-        <div className="category-hero-top">
-          <nav aria-label="مسیر صفحه" className="category-crumbs">
-            <Link href="/" className="category-crumb-link">نوبیکس شاپ</Link>
-            <span className="category-crumb-sep">/</span>
-            <span className="category-crumb-current">محصولات فروشگاه</span>
+      {/* Products Minimal Header */}
+      <section className="products-minimal-header">
+        <div className="products-minimal-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+          <nav aria-label="مسیر صفحه" className="category-crumbs" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Link href="/" className="category-crumb-link" style={{ color: 'var(--muted)', fontSize: '13.5px', textDecoration: 'none' }}>نوبیکس شاپ</Link>
+            <span className="category-crumb-sep" style={{ color: 'var(--muted)', fontSize: '12px' }}>/</span>
+            <span className="category-crumb-current" style={{ color: 'var(--text)', fontSize: '13.5px', fontWeight: '700' }}>محصولات فروشگاه</span>
           </nav>
-          <Link href="/" className="category-home-btn">
+          <Link href="/" className="category-home-btn" style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--text)', padding: '8px 16px', borderRadius: '10px', fontSize: '13px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <span className="category-home-btn-arrow">←</span>
             <span>بازگشت به صفحه اصلی</span>
           </Link>
         </div>
-        <div className="category-hero-body">
-          <div className="category-kicker">🛍️ ویترین محصولات و فیلتر پیشرفته</div>
-          <h1 className="category-title" style={{ fontSize: '26px', fontWeight: '900', color: '#fff', margin: '12px 0' }}>
-            خرید محصولات دیجیتال و گیمینگ
-          </h1>
-          <p className="category-description" style={{ color: 'rgba(255,255,255,0.75)', fontSize: '15px', lineHeight: '1.8' }}>
-            دسته‌بندی مورد نظر خود را انتخاب کرده و از فیلترهای پیشرفته جهت جستجو و مرتب‌سازی دقیق استفاده کنید. امکان نمایش محصولات ناموجود جهت اطلاع‌رسانی موجودی فعال است.
-          </p>
+        <h1 className="products-minimal-title">محصولات نوبیکس شاپ</h1>
+        <div className="products-fomo-subtitle">
+          <span className="products-fomo-pulse"></span>
+          <span>هر روز تخفیف‌های ویژه برای تمام سرویس‌ها</span>
         </div>
       </section>
 
@@ -377,15 +418,11 @@ export default function ProductsClient({ categories = [] }) {
                   onClick={() => setActiveCat(cat.code)}
                   style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
                 >
-                  {cat.image ? (
-                    <img 
-                      src={cat.image} 
-                      alt={cat.name} 
-                      style={{ width: '22px', height: '22px', borderRadius: '6px', objectFit: 'cover', display: 'block', filter: activeCat === cat.code ? 'none' : 'grayscale(30%)' }}
-                    />
-                  ) : (
-                    <span style={{ fontSize: '16px' }}>🛍️</span>
-                  )}
+                  <span className="sidebar-cat-icon-wrapper" style={{ display: 'flex', alignItems: 'center', color: activeCat === cat.code ? '#fff' : 'var(--muted)', transition: 'color 0.25s ease' }}>
+                    {categorySvgIcons[cat.code] || (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"></circle></svg>
+                    )}
+                  </span>
                   <span>{cat.name}</span>
                 </button>
               ))}
@@ -433,17 +470,11 @@ export default function ProductsClient({ categories = [] }) {
           {activeCategoryInfo && (
             <div className="cat-section-header">
               <div className="cat-section-title-wrapper">
-                {activeCategoryInfo.image ? (
-                  <img 
-                    src={activeCategoryInfo.image} 
-                    alt={activeCategoryInfo.name} 
-                    style={{ width: '42px', height: '42px', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  />
-                ) : (
-                  <div className="cat-section-gradient-icon" style={{ background: activeGradient }}>
-                    🛍️
-                  </div>
-                )}
+                <div className="cat-section-gradient-icon" style={{ background: activeGradient, width: '42px', height: '42px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  {categorySvgIcons[activeCat] || (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"></circle></svg>
+                  )}
+                </div>
                 <h2>{activeCategoryInfo.name}</h2>
               </div>
               <span className="cat-section-count">
