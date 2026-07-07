@@ -13,7 +13,7 @@ import ArticleCard from '../../components/articles/ArticleCard';
 import ArticlePagination from '../../components/articles/ArticlePagination';
 import FeatureStrip from '../../components/articles/FeatureStrip';
 import StickyBottomNav from '../../components/articles/StickyBottomNav';
-import { ARTICLES, FILTER_TABS } from '../../lib/articlesMockData.mjs';
+import { ARCHIVE, FILTER_TABS } from '../../lib/articlesMockData.mjs';
 
 const PER_PAGE = 6;
 
@@ -25,7 +25,7 @@ export default function ArchiveClient() {
   const openMenu = () => setDrawerOpen(true);
 
   const filtered = useMemo(
-    () => (filter === 'all' ? ARTICLES : ARTICLES.filter((a) => a.tagKey === filter)),
+    () => (filter === 'all' ? ARCHIVE : ARCHIVE.filter((a) => a.cat === filter)),
     [filter]
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
@@ -50,7 +50,7 @@ export default function ArchiveClient() {
         <section className={styles.blockGap} aria-labelledby="archive-heading">
           <div className={styles.sectionHead}>
             <div>
-              <span className={styles.eyebrow}>ARCHIVE</span>
+              <span className={styles.eyebrowFa}>دسته‌بندی بر اساس محصولات ما</span>
               <h2 id="archive-heading">مقالات و آموزش‌ها</h2>
             </div>
             <span className={styles.sectionHeadMeta}>

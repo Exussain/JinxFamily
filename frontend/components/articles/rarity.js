@@ -1,27 +1,33 @@
-// Content-type → loot "rarity" accent. The magazine treats each kind of article
-// like a rarity tier so the accent color itself tells the reader what they're
-// looking at (guide vs. news vs. review), the way loot rarity signals value.
+// Category → loot "rarity" accent. Each shop category gets a distinct accent
+// so the color itself signals the topic (Fortnite vs. AI vs. gift cards …),
+// the way loot rarity signals value. The accent drives the tag pill, the card
+// edge, and the featured card's glow.
 import styles from './articles.module.css';
 
 const MAP = {
-  visa: styles.legendary, // ویزا کارت  → gold
-  review: styles.epic, //   نقد و بررسی → magenta
-  guide: styles.rare, //    آموزش       → brand violet
-  news: styles.common, //   اخبار       → cyan
+  fortnite: styles.rare, //       violet  (brand)
+  ai: styles.epic, //             magenta
+  giftcards: styles.legendary, // gold
+  games: styles.mythic, //        rose
+  subscriptions: styles.uncommon, // green
+  guides: styles.common, //       cyan
 };
 
-// The short HUD label shown in monospace above a card title.
+// Short HUD label shown in monospace above a card title (Latin only, so the
+// letter-spacing/mono treatment is safe — Persian would break cursive joins).
 const LABELS = {
-  visa: 'VISA',
-  review: 'REVIEW',
-  guide: 'GUIDE',
-  news: 'NEWS',
+  fortnite: 'FORTNITE',
+  ai: 'AI',
+  giftcards: 'GIFT CARD',
+  games: 'GAME',
+  subscriptions: 'SUB',
+  guides: 'GUIDE',
 };
 
-export function rarityClass(tagKey) {
-  return MAP[tagKey] || styles.rare;
+export function rarityClass(cat) {
+  return MAP[cat] || styles.rare;
 }
 
-export function rarityLabel(tagKey) {
-  return LABELS[tagKey] || 'GUIDE';
+export function rarityLabel(cat) {
+  return LABELS[cat] || 'GUIDE';
 }

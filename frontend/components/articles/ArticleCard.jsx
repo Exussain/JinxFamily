@@ -10,11 +10,11 @@ export default function ArticleCard({ article }) {
   return (
     <Link
       href={`/articles/${article.slug}`}
-      className={`${styles.card} ${rarityClass(article.tagKey)}`}
+      className={`${styles.card} ${rarityClass(article.cat)}`}
     >
       <div className={styles.cardBody}>
         <div className={styles.cardKicker}>
-          <span>{rarityLabel(article.tagKey)}</span>
+          <span>{rarityLabel(article.cat)}</span>
           <span className={styles.dot} aria-hidden="true" />
           <span className={styles.cardKickerDate}>{article.date}</span>
         </div>
@@ -29,7 +29,12 @@ export default function ArticleCard({ article }) {
         </div>
       </div>
       <div className={styles.cardThumb}>
-        <GameThumb theme={article.theme} label={article.label} />
+        <GameThumb
+          theme={article.theme}
+          label={article.label}
+          image={article.image || article.cover_image || null}
+          alt={article.title}
+        />
       </div>
     </Link>
   );

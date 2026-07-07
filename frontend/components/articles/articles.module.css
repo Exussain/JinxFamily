@@ -30,10 +30,14 @@
 .legendary { --rarity: #f59e0b; --rarity-ink: #2a1a02; }
 .epic      { --rarity: #d946ef; --rarity-ink: #fff; }
 .common    { --rarity: #0ea5e9; --rarity-ink: #04283a; }
+.mythic    { --rarity: #f43f5e; --rarity-ink: #fff; }
+.uncommon  { --rarity: #10b981; --rarity-ink: #022c22; }
 :root[data-theme="dark"] .rare      { --rarity: #a78bfa; }
 :root[data-theme="dark"] .legendary { --rarity: #fbbf24; }
 :root[data-theme="dark"] .epic      { --rarity: #e879f9; }
 :root[data-theme="dark"] .common    { --rarity: #38bdf8; }
+:root[data-theme="dark"] .mythic    { --rarity: #fb7185; }
+:root[data-theme="dark"] .uncommon  { --rarity: #34d399; }
 
 /* Monospace HUD readout used throughout for Latin telemetry/labels. */
 .mono {
@@ -218,6 +222,23 @@
   height: 2px;
   background: linear-gradient(90deg, var(--primary), transparent);
 }
+/* Persian eyebrow: no letter-spacing/uppercase (would break cursive joins),
+   uses the active rarity accent and the regular Vazirmatn face. */
+.eyebrowFa {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--rarity);
+}
+.eyebrowFa::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--rarity), transparent);
+}
 
 .sectionHead {
   display: flex;
@@ -294,11 +315,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--muted);
-  letter-spacing: .04em;
 }
 .heroReadTime svg { color: var(--rarity); }
 .heroHeadline {
@@ -511,7 +530,12 @@
   color: var(--rarity);
 }
 .cardKicker .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--rarity); }
-.cardKickerDate { color: var(--muted); }
+/* Persian date — drop the mono/letter-spacing so the cursive joins render. */
+.cardKickerDate {
+  color: var(--muted);
+  font-family: Vazirmatn, ui-sans-serif, sans-serif;
+  letter-spacing: normal;
+}
 .cardTitle {
   margin: 0 0 8px;
   font-size: 16px;
@@ -612,13 +636,14 @@
   letter-spacing: .06em;
   text-shadow: 0 1px 3px rgba(0,0,0,.4);
 }
-.themeEpic     { background: linear-gradient(150deg, #18181b, #3f3f46); }
-.themeSteam    { background: linear-gradient(150deg, #0b1a2a, #1b4a6a); }
-.themeApple    { background: linear-gradient(150deg, #0f172a, #334155); }
-.themeXbox     { background: linear-gradient(150deg, #0e3d1f, #107c41); }
-.themeCod      { background: linear-gradient(150deg, #1c1917, #57534e); }
-.themeFortnite { background: linear-gradient(150deg, #4c1d95, #7c3aed); }
-.themeAi       { background: linear-gradient(150deg, #0f766e, #14b8a6); }
+.themeFortnite     { background: linear-gradient(150deg, #4c1d95, #7c3aed); }
+.themeAi           { background: linear-gradient(150deg, #0f766e, #14b8a6); }
+.themeGiftcards    { background: linear-gradient(150deg, #78350f, #f59e0b); }
+.themeGames        { background: linear-gradient(150deg, #4c0519, #f43f5e); }
+.themeSubscriptions{ background: linear-gradient(150deg, #064e3b, #10b981); }
+.themeGuides       { background: linear-gradient(150deg, #0c4a6e, #0ea5e9); }
+/* Real cover image fills the same slot as the placeholder gradient. */
+.thumbImg { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* ============================================================== Pagination */
 .pagination {
@@ -897,12 +922,9 @@
   align-items: center;
   gap: 10px;
   margin: 36px 0 18px;
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .16em;
+  font-size: 15px;
+  font-weight: 900;
   color: var(--rarity);
-  text-transform: uppercase;
 }
 .stagesHead::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .stepGrid { display: grid; gap: 16px; }

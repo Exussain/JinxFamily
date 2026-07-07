@@ -6,7 +6,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import styles from './articles.module.css';
-import { FEATURED } from '../../lib/articlesMockData.mjs';
+import { NEWS_FEATURED } from '../../lib/articlesMockData.mjs';
 import { rarityClass } from './rarity';
 import GameThumb from './GameThumb';
 import { IconChevronLeft, IconChevronRight, IconArrowLeft, IconClock } from './Icons';
@@ -20,7 +20,7 @@ function pad2(n) {
   return toFa(String(n).padStart(2, '0'));
 }
 
-export default function FeaturedCarousel({ slides = FEATURED }) {
+export default function FeaturedCarousel({ slides = NEWS_FEATURED }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchX = useRef(null);
@@ -50,16 +50,16 @@ export default function FeaturedCarousel({ slides = FEATURED }) {
 
   return (
     <section
-      className={`${styles.hero} ${rarityClass(active.tagKey)}`}
+      className={`${styles.hero} ${rarityClass(active.cat)}`}
       aria-roledescription="carousel"
-      aria-label="مقالات ویژه"
+      aria-label="تازه‌های دنیای گیم و هوش مصنوعی"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
       <div className={styles.heroTopline}>
-        <span className={styles.eyebrow}>PLAYER&rsquo;S CODEX</span>
+        <span className={styles.eyebrowFa}>تازه‌های دنیای گیم و هوش مصنوعی</span>
         <span className={styles.heroCounter} aria-hidden="true">
           <span className={styles.bracket}>⟨</span> <b>{pad2(index + 1)}</b> / {pad2(count)}{' '}
           <span className={styles.bracket}>⟩</span>
@@ -77,7 +77,7 @@ export default function FeaturedCarousel({ slides = FEATURED }) {
         >
           {slides.map((s, i) => (
             <div
-              className={`${styles.heroSlide} ${rarityClass(s.tagKey)}`}
+              className={`${styles.heroSlide} ${rarityClass(s.cat)}`}
               key={s.id}
               role="group"
               aria-roledescription="اسلاید"
@@ -109,7 +109,7 @@ export default function FeaturedCarousel({ slides = FEATURED }) {
                 </div>
 
                 <div className={styles.heroThumb}>
-                  <GameThumb theme={s.theme} label={s.label} />
+                  <GameThumb theme={s.theme} label={s.label} image={s.image} alt={s.title} />
                 </div>
               </article>
             </div>
