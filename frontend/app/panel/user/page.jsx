@@ -325,7 +325,7 @@ export default function UserPanelPage() {
             <div className="account-hero__id">
               <div className="account-hero__avatar sk-box" />
               <div className="account-hero__meta">
-                <p className="kicker">حساب کاربری</p>
+                <p className="kicker light">حساب کاربری</p>
                 <div className="sk-line" style={{ width: "170px", height: "26px", marginTop: "8px" }} />
                 <div className="sk-line" style={{ width: "120px", height: "22px", marginTop: "10px" }} />
               </div>
@@ -344,7 +344,24 @@ export default function UserPanelPage() {
           </div>
         </main>
         <style jsx>{`
-          .account-hero--skeleton { opacity: 0.9; }
+          .user-shell { display: grid; gap: 18px; margin-top: 16px; }
+          .account-hero {
+            border-radius: 22px;
+            padding: 26px 28px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 22px;
+            align-items: center;
+            color: #fff;
+            background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 46%, #9333ea 100%);
+          }
+          .account-hero__id { display: flex; align-items: center; gap: 18px; }
+          .account-hero__avatar { width: 76px; height: 76px; border-radius: 20px; }
+          .account-hero__meta .kicker { margin: 0; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.82); letter-spacing: .08em; text-transform: uppercase; }
+          .account-hero__stats { display: flex; gap: 10px; }
+          .hstat { min-width: 96px; padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.12); }
+          .tab-panel { display: grid; gap: 16px; }
+          .card.section { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 22px; }
           .sk-box {
             background: linear-gradient(90deg, rgba(255,255,255,0.12) 25%, rgba(255,255,255,0.24) 50%, rgba(255,255,255,0.12) 75%);
             background-size: 200% 100%;
@@ -372,419 +389,6 @@ export default function UserPanelPage() {
     { id: "club", label: "کلوپ الماس", icon: "💎" },
     { id: "cart", label: "سبد خرید", icon: "🛒", badge: cartCount },
   ];
-
-  const renderProfile = () => (
-    <section className="card section">
-      <div className="section-head">
-        <div>
-          <p className="kicker">ویرایش اطلاعات</p>
-          <h3>پروفایل من</h3>
-        </div>
-        <button type="button" className="btn-primary" disabled={savingProfile} onClick={handleSaveProfile}>
-          {savingProfile ? "در حال ذخیره…" : "ذخیره پروفایل"}
-        </button>
-      </div>
-
-      <div className="profile-grid">
-        <div className="field">
-          <label>نام نمایشی</label>
-          <input
-            value={profileName}
-            onChange={(e) => setProfileName(e.target.value)}
-            placeholder="خالی می‌ماند تا زمانی که ثبت کنید"
-          />
-        </div>
-        <div className="field">
-          <label>ایمیل</label>
-          <input
-            type="email"
-            value={profileEmail}
-            onChange={(e) => setProfileEmail(e.target.value)}
-            placeholder="you@example.com"
-          />
-        </div>
-        <div className="field">
-          <label>شماره موبایل (ثابت)</label>
-          <input value={displayPhone} readOnly placeholder="" />
-        </div>
-        <div className="field">
-          <label>رمز عبور جدید (اختیاری)</label>
-          <PasswordInput
-            value={profilePassword}
-            onChange={(e) => setProfilePassword(e.target.value)}
-            placeholder="اگر نمی‌خواهید عوض شود خالی بگذارید"
-          />
-        </div>
-        <div className="field">
-          <label>تکرار رمز عبور جدید</label>
-          <PasswordInput
-            value={profilePassword2}
-            onChange={(e) => setProfilePassword2(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {profileError && <div className="inline-note danger">{profileError}</div>}
-      {profileSuccess && <div className="inline-note ok">{profileSuccess}</div>}
-
-      <div className="avatar-lab">
-        <div className="avatar-lab__preview">
-          <div className="avatar-lab__orb">
-            {user?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatar_url} alt={displayName || "آواتار"} />
-            ) : (
-              <span>{(displayName || user?.name || "N")?.[0] || "N"}</span>
-            )}
-          </div>
-          <div>
-            <p className="kicker">آواتار پروفایل</p>
-            <h4>یک آواتار برای خودت انتخاب کن</h4>
-            <p className="avatar-lab__desc">
-              پروفایل کامل با نام، ایمیل و آواتار، یک‌بار
-              <strong> ۲۰ الماس </strong>
-              جایزه می‌گیرد.
-            </p>
-            {needsProfileCompletion && (
-              <span className="avatar-lab__hint">برای گرفتن جایزه، نام/ایمیل و آواتار را کامل کنید.</span>
-            )}
-          </div>
-        </div>
-
-        <div className="avatar-carousel" dir="rtl">
-          <button
-            type="button"
-            className="avatar-arrow"
-            onClick={() => shiftAvatar(1)}
-            disabled={avatarSaving}
-            aria-label="آواتار بعدی"
-          >
-            ‹
-          </button>
-
-          <div className="avatar-stage">
-            <div
-              className="avatar-stage__glow"
-              style={{
-                "--avatar-a": selectedAvatar?.gradient?.[0] || "#7c3aed",
-                "--avatar-b": selectedAvatar?.gradient?.[1] || "#f59e0b",
-              }}
-            />
-            {selectedAvatar?.src && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={selectedAvatar.src} alt={selectedAvatar.label} />
-            )}
-          </div>
-
-          <button
-            type="button"
-            className="avatar-arrow"
-            onClick={() => shiftAvatar(-1)}
-            disabled={avatarSaving}
-            aria-label="آواتار قبلی"
-          >
-            ›
-          </button>
-        </div>
-
-        <div className="avatar-carousel__meta">
-          <span>{selectedAvatar?.label}</span>
-          <small>{(selectedAvatarIndex + 1).toLocaleString("fa-IR")} از {PRESET_AVATARS.length.toLocaleString("fa-IR")}</small>
-        </div>
-
-        <div className="avatar-dots" aria-hidden="true">
-          {PRESET_AVATARS.map((preset, index) => (
-            <button
-              key={preset.id}
-              type="button"
-              className={`avatar-dot ${index === selectedAvatarIndex ? "active" : ""}`}
-              onClick={() => setSelectedAvatarId(preset.id)}
-              disabled={avatarSaving}
-              aria-label={`انتخاب ${preset.label}`}
-              title={preset.label}
-            />
-          ))}
-        </div>
-
-        <button
-          type="button"
-          className="avatar-save-btn"
-          onClick={() => handlePresetAvatar(selectedAvatar)}
-          disabled={avatarSaving || !selectedAvatar}
-        >
-          {avatarSaving ? "در حال ذخیره..." : "انتخاب این آواتار"}
-        </button>
-
-        <div className="avatar-mini-strip" aria-label="آواتارهای آماده">
-          {PRESET_AVATARS.map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              className={`avatar-mini ${selectedAvatarId === preset.id ? "active" : ""}`}
-              onClick={() => setSelectedAvatarId(preset.id)}
-              disabled={avatarSaving}
-              title={preset.label}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={preset.src} alt="" />
-            </button>
-          ))}
-        </div>
-
-        <label className={`avatar-upload ${avatarSaving ? "busy" : ""}`}>
-          <input
-            type="file"
-            accept="image/*"
-            disabled={avatarSaving}
-            onChange={(e) => handleAvatarFile(e.target.files?.[0])}
-          />
-          <span>{avatarSaving ? "در حال ذخیره آواتار..." : "یا عکس خودت را آپلود کن"}</span>
-          <small>خودکار فشرده می‌شود و زیر سقف ۲ مگابایت می‌ماند.</small>
-        </label>
-      </div>
-    </section>
-  );
-
-  const renderOrders = () => (
-    <section className="card section">
-      <div className="section-head">
-        <div>
-          <p className="kicker">سفارش‌ها</p>
-          <h3>سفارش‌های من</h3>
-        </div>
-      </div>
-      {successfulOrders.length === 0 && (
-        <div className="empty-state">
-          <span className="empty-state__icon">🧾</span>
-          <p>هنوز سفارش موفقی ثبت نکرده‌اید.</p>
-          <Link href="/" className="btn-ghost">شروع خرید</Link>
-        </div>
-      )}
-      {successfulOrders.length > 0 && (
-        <div className="orders-list">
-          {successfulOrders.map((o) => (
-            <div key={o.id} className="order-card">
-              <div className="order-card__top">
-                <div className="order-chip">{o.tracking_code}</div>
-                <span className={statusClass(o.status_fa)}>{o.status_fa}</span>
-              </div>
-              <div className="order-card__body">
-                <div className="order-thumb">
-                  {o.first_item_image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={o.first_item_image} alt={o.first_item_name || "محصول"} />
-                  ) : (
-                    <div className="order-thumb__fallback">
-                      {(o.first_item_name || "سفارش")?.[0] || "?"}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <div className="order-title">{o.first_item_name || "سفارش"}</div>
-                  <div className="muted-sm">{formatDate(o.created_at)}</div>
-                </div>
-                <div className="order-amount">
-                  <div className="price">{o.amount.toLocaleString("fa-IR")} تومان</div>
-                  {o.diamonds_used > 0 && (
-                    <div className="muted-xs">
-                      تخفیف الماس: {o.diamonds_used.toLocaleString("fa-IR")} 💎
-                    </div>
-                  )}
-                </div>
-              </div>
-              {o.can_cancel && (
-                <div className="order-card__actions">
-                  <button
-                    className="btn-cancel"
-                    onClick={() => handleCancelOrder(o.tracking_code)}
-                    disabled={cancellingOrder === o.tracking_code}
-                  >
-                    {cancellingOrder === o.tracking_code ? "در حال لغو..." : "لغو سفارش"}
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-
-  const renderClub = () => (
-    <section className="card section">
-      <div className="section-head">
-        <div>
-          <p className="kicker">کلوپ مشتریان</p>
-          <h3>تبدیل الماس و کسب پورسانت 💎</h3>
-        </div>
-      </div>
-
-      {exchangeError && <div className="inline-note danger">✖ {exchangeError}</div>}
-
-      {exchangeSuccess && (
-        <div className="exchange-success">
-          <div className="exchange-success__head">✓ {exchangeSuccess}</div>
-          <div className="exchange-success__code">{exchangeCode}</div>
-          <p>این کد را کپی کرده و در سبد خرید اعمال کنید.</p>
-        </div>
-      )}
-
-      <div className="club-grid" dir="rtl">
-        {/* Exchange */}
-        <div className="club-col">
-          <h4 className="club-col__title"><span>💸</span> تبدیل الماس به کد تخفیف</h4>
-          <p className="club-col__desc">
-            با تبدیل الماس‌های خود به کد تخفیف، از خریدهایتان تخفیف‌های شگفت‌انگیز بگیرید. نرخ تبدیل: هر ۳۵۰ الماس معادل ۱۱۰,۰۰۰ تومان تخفیف بدون حداقل خرید است.
-          </p>
-
-          <div className="club-stack">
-            <div className="club-field">
-              <label>تعداد الماس برای تبدیل (حداقل ۳۵۰)</label>
-              <div className="club-input-wrap">
-                <input
-                  type="number"
-                  min={350}
-                  step={50}
-                  value={exchangeAmount}
-                  onChange={(e) => setExchangeAmount(Math.max(0, Number(e.target.value) || 0))}
-                  className="club-input"
-                />
-                <span className="club-input__icon">💎</span>
-              </div>
-            </div>
-
-            <div className="club-readout">
-              <span>ارزش تخفیف دریافتی:</span>
-              <span className="club-readout__value">
-                {Math.floor((exchangeAmount * 110000) / 350).toLocaleString("fa-IR")} تومان
-              </span>
-            </div>
-
-            <button
-              className="btn-accent"
-              onClick={() => handleExchange(exchangeAmount)}
-              disabled={exchanging || exchangeAmount < 350 || (user?.points_balance || 0) < exchangeAmount}
-            >
-              {exchanging
-                ? "در حال تبدیل..."
-                : (user?.points_balance || 0) < exchangeAmount
-                  ? `به ${(exchangeAmount - (user?.points_balance || 0)).toLocaleString("fa-IR")} الماس دیگر نیاز دارید`
-                  : `تبدیل ${exchangeAmount.toLocaleString("fa-IR")} الماس`}
-            </button>
-          </div>
-        </div>
-
-        {/* Referral */}
-        <div className="club-col">
-          <h4 className="club-col__title"><span>🤝</span> کسب پورسانت و الماس رایگان</h4>
-          <p className="club-col__desc">
-            لینک یا کد دعوت اختصاصی خود را برای دوستانتان بفرستید. در صورتی که با کد شما در سایت ثبت‌نام کنند و <strong>خرید انجام دهند</strong>، پورسانت به صورت الماس به حساب شما اضافه می‌شود.
-          </p>
-
-          <div className="club-note">
-            <span className="club-note__title">🎁 توضیحات پورسانت:</span>
-            <ul>
-              <li>دریافت <strong>۱۵ تا ۵۰ الماس رایگان</strong> به ازای اولین خرید موفق هر دوست دعوت‌شده.</li>
-              <li>دریافت <strong>کد تخفیف ۱۵۰,۰۰۰ تومانی بدون حداقل خرید</strong> به محض رسیدن به ۱۰ دعوت موفق.</li>
-            </ul>
-          </div>
-
-          {referralData && (
-            <div className="club-stack">
-              <div className="club-field">
-                <label>کد معرف شما</label>
-                <div className="club-code">{referralData.referral_code}</div>
-              </div>
-              <div className="club-field">
-                <label>لینک دعوت اختصاصی</label>
-                <div className="club-link-row">
-                  <input readOnly value={referralData.link} className="club-link-input" dir="ltr" />
-                  <button
-                    className="btn-primary btn-primary--sm"
-                    onClick={async () => {
-                      if (!referralData.link) return;
-                      try {
-                        await navigator.clipboard.writeText(referralData.link);
-                        setCopiedLink(true);
-                        setTimeout(() => setCopiedLink(false), 1800);
-                      } catch {}
-                    }}
-                  >
-                    {copiedLink ? "کپی شد ✓" : "کپی لینک"}
-                  </button>
-                </div>
-              </div>
-              <div className="club-stats">
-                <div className="club-stat">
-                  <div className="club-stat__value">{referralData.invites_count.toLocaleString("fa-IR")}</div>
-                  <div className="club-stat__label">دعوت‌های موفق</div>
-                </div>
-                <div className="club-stat">
-                  <div className="club-stat__value">{referralData.points_earned.toLocaleString("fa-IR")} 💎</div>
-                  <div className="club-stat__label">الماس‌های دریافتی</div>
-                </div>
-              </div>
-              <Link href="/panel/user/referrals" className="btn-ghost btn-ghost--full">
-                مدیریت دعوت‌ها و جوایز ⚡
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-
-  const renderCart = () => (
-    <section className="card section">
-      <div className="section-head">
-        <div>
-          <p className="kicker">خلاصه خرید</p>
-          <h3>سبد خرید من</h3>
-        </div>
-      </div>
-      {items.length === 0 && (
-        <div className="empty-state">
-          <span className="empty-state__icon">🛒</span>
-          <p>سبد خرید شما خالی است.</p>
-          <Link href="/" className="btn-ghost">مشاهده محصولات</Link>
-        </div>
-      )}
-      {items.length > 0 && (
-        <>
-          <div className="cart-grid">
-            {items.map((it) => (
-              <div key={it.product_id} className="cart-card">
-                <div className="cart-thumb">
-                  {it.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={it.image} alt={it.name} />
-                  ) : (
-                    <div className="cart-thumb__fallback">{(it.name || "?")[0]}</div>
-                  )}
-                </div>
-                <div className="cart-card__meta">
-                  <div className="cart-card__title">{it.name}</div>
-                  <div className="muted-sm">
-                    {it.quantity} × {it.price.toLocaleString("fa-IR")} تومان
-                  </div>
-                </div>
-                <div className="cart-card__price">
-                  {(it.price * it.quantity).toLocaleString("fa-IR")} تومان
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="cart-total">
-            <span>مجموع</span>
-            <span className="price">{total().toLocaleString("fa-IR")} تومان</span>
-          </div>
-          <button className="btn-primary btn-primary--block" onClick={() => router.push("/checkout")}>
-            ادامه به ثبت سفارش
-          </button>
-        </>
-      )}
-    </section>
-  );
 
   return (
     <div>
@@ -850,10 +454,418 @@ export default function UserPanelPage() {
         </nav>
 
         <div className="tab-panel">
-          {activeTab === "profile" && renderProfile()}
-          {activeTab === "orders" && renderOrders()}
-          {activeTab === "club" && renderClub()}
-          {activeTab === "cart" && renderCart()}
+          {activeTab === "profile" && (
+            <section className="card section">
+              <div className="section-head">
+                <div>
+                  <p className="kicker">ویرایش اطلاعات</p>
+                  <h3>پروفایل من</h3>
+                </div>
+                <button type="button" className="btn-primary" disabled={savingProfile} onClick={handleSaveProfile}>
+                  {savingProfile ? "در حال ذخیره…" : "ذخیره پروفایل"}
+                </button>
+              </div>
+
+              <div className="profile-grid">
+                <div className="field">
+                  <label>نام نمایشی</label>
+                  <input
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    placeholder="خالی می‌ماند تا زمانی که ثبت کنید"
+                  />
+                </div>
+                <div className="field">
+                  <label>ایمیل</label>
+                  <input
+                    type="email"
+                    value={profileEmail}
+                    onChange={(e) => setProfileEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <div className="field">
+                  <label>شماره موبایل (ثابت)</label>
+                  <input value={displayPhone} readOnly placeholder="" />
+                </div>
+                <div className="field">
+                  <label>رمز عبور جدید (اختیاری)</label>
+                  <PasswordInput
+                    value={profilePassword}
+                    onChange={(e) => setProfilePassword(e.target.value)}
+                    placeholder="اگر نمی‌خواهید عوض شود خالی بگذارید"
+                  />
+                </div>
+                <div className="field">
+                  <label>تکرار رمز عبور جدید</label>
+                  <PasswordInput
+                    value={profilePassword2}
+                    onChange={(e) => setProfilePassword2(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {profileError && <div className="inline-note danger">{profileError}</div>}
+              {profileSuccess && <div className="inline-note ok">{profileSuccess}</div>}
+
+              <div className="avatar-lab">
+                <div className="avatar-lab__preview">
+                  <div className="avatar-lab__orb">
+                    {user?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.avatar_url} alt={displayName || "آواتار"} />
+                    ) : (
+                      <span>{(displayName || user?.name || "N")?.[0] || "N"}</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="kicker">آواتار پروفایل</p>
+                    <h4>یک آواتار برای خودت انتخاب کن</h4>
+                    <p className="avatar-lab__desc">
+                      پروفایل کامل با نام، ایمیل و آواتار، یک‌بار
+                      <strong> ۲۰ الماس </strong>
+                      جایزه می‌گیرد.
+                    </p>
+                    {needsProfileCompletion && (
+                      <span className="avatar-lab__hint">برای گرفتن جایزه، نام/ایمیل و آواتار را کامل کنید.</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="avatar-carousel" dir="rtl">
+                  <button
+                    type="button"
+                    className="avatar-arrow"
+                    onClick={() => shiftAvatar(1)}
+                    disabled={avatarSaving}
+                    aria-label="آواتار بعدی"
+                  >
+                    ‹
+                  </button>
+
+                  <div className="avatar-stage">
+                    <div
+                      className="avatar-stage__glow"
+                      style={{
+                        "--avatar-a": selectedAvatar?.gradient?.[0] || "#7c3aed",
+                        "--avatar-b": selectedAvatar?.gradient?.[1] || "#f59e0b",
+                      }}
+                    />
+                    {selectedAvatar?.src && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={selectedAvatar.src} alt={selectedAvatar.label} />
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="avatar-arrow"
+                    onClick={() => shiftAvatar(-1)}
+                    disabled={avatarSaving}
+                    aria-label="آواتار قبلی"
+                  >
+                    ›
+                  </button>
+                </div>
+
+                <div className="avatar-carousel__meta">
+                  <span>{selectedAvatar?.label}</span>
+                  <small>{(selectedAvatarIndex + 1).toLocaleString("fa-IR")} از {PRESET_AVATARS.length.toLocaleString("fa-IR")}</small>
+                </div>
+
+                <div className="avatar-dots" aria-hidden="true">
+                  {PRESET_AVATARS.map((preset, index) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      className={`avatar-dot ${index === selectedAvatarIndex ? "active" : ""}`}
+                      onClick={() => setSelectedAvatarId(preset.id)}
+                      disabled={avatarSaving}
+                      aria-label={`انتخاب ${preset.label}`}
+                      title={preset.label}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className="avatar-save-btn"
+                  onClick={() => handlePresetAvatar(selectedAvatar)}
+                  disabled={avatarSaving || !selectedAvatar}
+                >
+                  {avatarSaving ? "در حال ذخیره..." : "انتخاب این آواتار"}
+                </button>
+
+                <div className="avatar-mini-strip" aria-label="آواتارهای آماده">
+                  {PRESET_AVATARS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      className={`avatar-mini ${selectedAvatarId === preset.id ? "active" : ""}`}
+                      onClick={() => setSelectedAvatarId(preset.id)}
+                      disabled={avatarSaving}
+                      title={preset.label}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={preset.src} alt="" />
+                    </button>
+                  ))}
+                </div>
+
+                <label className={`avatar-upload ${avatarSaving ? "busy" : ""}`}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={avatarSaving}
+                    onChange={(e) => handleAvatarFile(e.target.files?.[0])}
+                  />
+                  <span>{avatarSaving ? "در حال ذخیره آواتار..." : "یا عکس خودت را آپلود کن"}</span>
+                  <small>خودکار فشرده می‌شود و زیر سقف ۲ مگابایت می‌ماند.</small>
+                </label>
+              </div>
+            </section>
+          )}
+
+          {activeTab === "orders" && (
+            <section className="card section">
+              <div className="section-head">
+                <div>
+                  <p className="kicker">سفارش‌ها</p>
+                  <h3>سفارش‌های من</h3>
+                </div>
+              </div>
+              {successfulOrders.length === 0 && (
+                <div className="empty-state">
+                  <span className="empty-state__icon">🧾</span>
+                  <p>هنوز سفارش موفقی ثبت نکرده‌اید.</p>
+                  <Link href="/" className="btn-ghost">شروع خرید</Link>
+                </div>
+              )}
+              {successfulOrders.length > 0 && (
+                <div className="orders-list">
+                  {successfulOrders.map((o) => (
+                    <div key={o.id} className="order-card">
+                      <div className="order-card__top">
+                        <div className="order-chip">{o.tracking_code}</div>
+                        <span className={statusClass(o.status_fa)}>{o.status_fa}</span>
+                      </div>
+                      <div className="order-card__body">
+                        <div className="order-thumb">
+                          {o.first_item_image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={o.first_item_image} alt={o.first_item_name || "محصول"} />
+                          ) : (
+                            <div className="order-thumb__fallback">
+                              {(o.first_item_name || "سفارش")?.[0] || "?"}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="order-title">{o.first_item_name || "سفارش"}</div>
+                          <div className="muted-sm">{formatDate(o.created_at)}</div>
+                        </div>
+                        <div className="order-amount">
+                          <div className="price">{o.amount.toLocaleString("fa-IR")} تومان</div>
+                          {o.diamonds_used > 0 && (
+                            <div className="muted-xs">
+                              تخفیف الماس: {o.diamonds_used.toLocaleString("fa-IR")} 💎
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {o.can_cancel && (
+                        <div className="order-card__actions">
+                          <button
+                            className="btn-cancel"
+                            onClick={() => handleCancelOrder(o.tracking_code)}
+                            disabled={cancellingOrder === o.tracking_code}
+                          >
+                            {cancellingOrder === o.tracking_code ? "در حال لغو..." : "لغو سفارش"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {activeTab === "club" && (
+            <section className="card section">
+              <div className="section-head">
+                <div>
+                  <p className="kicker">کلوپ مشتریان</p>
+                  <h3>تبدیل الماس و کسب پورسانت 💎</h3>
+                </div>
+              </div>
+
+              {exchangeError && <div className="inline-note danger">✖ {exchangeError}</div>}
+
+              {exchangeSuccess && (
+                <div className="exchange-success">
+                  <div className="exchange-success__head">✓ {exchangeSuccess}</div>
+                  <div className="exchange-success__code">{exchangeCode}</div>
+                  <p>این کد را کپی کرده و در سبد خرید اعمال کنید.</p>
+                </div>
+              )}
+
+              <div className="club-grid" dir="rtl">
+                {/* Exchange */}
+                <div className="club-col">
+                  <h4 className="club-col__title"><span>💸</span> تبدیل الماس به کد تخفیف</h4>
+                  <p className="club-col__desc">
+                    با تبدیل الماس‌های خود به کد تخفیف، از خریدهایتان تخفیف‌های شگفت‌انگیز بگیرید. نرخ تبدیل: هر ۳۵۰ الماس معادل ۱۱۰,۰۰۰ تومان تخفیف بدون حداقل خرید است.
+                  </p>
+
+                  <div className="club-stack">
+                    <div className="club-field">
+                      <label>تعداد الماس برای تبدیل (حداقل ۳۵۰)</label>
+                      <div className="club-input-wrap">
+                        <input
+                          type="number"
+                          min={350}
+                          step={50}
+                          value={exchangeAmount}
+                          onChange={(e) => setExchangeAmount(Math.max(0, Number(e.target.value) || 0))}
+                          className="club-input"
+                        />
+                        <span className="club-input__icon">💎</span>
+                      </div>
+                    </div>
+
+                    <div className="club-readout">
+                      <span>ارزش تخفیف دریافتی:</span>
+                      <span className="club-readout__value">
+                        {Math.floor((exchangeAmount * 110000) / 350).toLocaleString("fa-IR")} تومان
+                      </span>
+                    </div>
+
+                    <button
+                      className="btn-accent"
+                      onClick={() => handleExchange(exchangeAmount)}
+                      disabled={exchanging || exchangeAmount < 350 || (user?.points_balance || 0) < exchangeAmount}
+                    >
+                      {exchanging
+                        ? "در حال تبدیل..."
+                        : (user?.points_balance || 0) < exchangeAmount
+                          ? `به ${(exchangeAmount - (user?.points_balance || 0)).toLocaleString("fa-IR")} الماس دیگر نیاز دارید`
+                          : `تبدیل ${exchangeAmount.toLocaleString("fa-IR")} الماس`}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Referral */}
+                <div className="club-col">
+                  <h4 className="club-col__title"><span>🤝</span> کسب پورسانت و الماس رایگان</h4>
+                  <p className="club-col__desc">
+                    لینک یا کد دعوت اختصاصی خود را برای دوستانتان بفرستید. در صورتی که با کد شما در سایت ثبت‌نام کنند و <strong>خرید انجام دهند</strong>، پورسانت به صورت الماس به حساب شما اضافه می‌شود.
+                  </p>
+
+                  <div className="club-note">
+                    <span className="club-note__title">🎁 توضیحات پورسانت:</span>
+                    <ul>
+                      <li>دریافت <strong>۱۵ تا ۵۰ الماس رایگان</strong> به ازای اولین خرید موفق هر دوست دعوت‌شده.</li>
+                      <li>دریافت <strong>کد تخفیف ۱۵۰,۰۰۰ تومانی بدون حداقل خرید</strong> به محض رسیدن به ۱۰ دعوت موفق.</li>
+                    </ul>
+                  </div>
+
+                  {referralData && (
+                    <div className="club-stack">
+                      <div className="club-field">
+                        <label>کد معرف شما</label>
+                        <div className="club-code">{referralData.referral_code}</div>
+                      </div>
+                      <div className="club-field">
+                        <label>لینک دعوت اختصاصی</label>
+                        <div className="club-link-row">
+                          <input readOnly value={referralData.link} className="club-link-input" dir="ltr" />
+                          <button
+                            className="btn-primary btn-primary--sm"
+                            onClick={async () => {
+                              if (!referralData.link) return;
+                              try {
+                                await navigator.clipboard.writeText(referralData.link);
+                                setCopiedLink(true);
+                                setTimeout(() => setCopiedLink(false), 1800);
+                              } catch {}
+                            }}
+                          >
+                            {copiedLink ? "کپی شد ✓" : "کپی لینک"}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="club-stats">
+                        <div className="club-stat">
+                          <div className="club-stat__value">{referralData.invites_count.toLocaleString("fa-IR")}</div>
+                          <div className="club-stat__label">دعوت‌های موفق</div>
+                        </div>
+                        <div className="club-stat">
+                          <div className="club-stat__value">{referralData.points_earned.toLocaleString("fa-IR")} 💎</div>
+                          <div className="club-stat__label">الماس‌های دریافتی</div>
+                        </div>
+                      </div>
+                      <Link href="/panel/user/referrals" className="btn-ghost btn-ghost--full">
+                        مدیریت دعوت‌ها و جوایز ⚡
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === "cart" && (
+            <section className="card section">
+              <div className="section-head">
+                <div>
+                  <p className="kicker">خلاصه خرید</p>
+                  <h3>سبد خرید من</h3>
+                </div>
+              </div>
+              {items.length === 0 && (
+                <div className="empty-state">
+                  <span className="empty-state__icon">🛒</span>
+                  <p>سبد خرید شما خالی است.</p>
+                  <Link href="/" className="btn-ghost">مشاهده محصولات</Link>
+                </div>
+              )}
+              {items.length > 0 && (
+                <>
+                  <div className="cart-grid">
+                    {items.map((it) => (
+                      <div key={it.product_id} className="cart-card">
+                        <div className="cart-thumb">
+                          {it.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={it.image} alt={it.name} />
+                          ) : (
+                            <div className="cart-thumb__fallback">{(it.name || "?")[0]}</div>
+                          )}
+                        </div>
+                        <div className="cart-card__meta">
+                          <div className="cart-card__title">{it.name}</div>
+                          <div className="muted-sm">
+                            {it.quantity} × {it.price.toLocaleString("fa-IR")} تومان
+                          </div>
+                        </div>
+                        <div className="cart-card__price">
+                          {(it.price * it.quantity).toLocaleString("fa-IR")} تومان
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="cart-total">
+                    <span>مجموع</span>
+                    <span className="price">{total().toLocaleString("fa-IR")} تومان</span>
+                  </div>
+                  <button className="btn-primary btn-primary--block" onClick={() => router.push("/checkout")}>
+                    ادامه به ثبت سفارش
+                  </button>
+                </>
+              )}
+            </section>
+          )}
         </div>
       </main>
 
