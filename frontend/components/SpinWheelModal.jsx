@@ -19,6 +19,7 @@ export default function SpinWheelModal() {
   const types = (status?.segments && status.segments.map((s) => s.type)) || FALLBACK_TYPES;
 
   useEffect(() => {
+    if (!open) return;
     let cancelled = false;
     fetch("/api/spin/status", { credentials: "include", cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
@@ -29,11 +30,17 @@ export default function SpinWheelModal() {
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [pathname]);
+  }, [open, pathname]);
 
   const signedIn = !!status?.signed_in;
+  const isAdmin = !!status?.is_admin;
   const alreadyWon = !!result;
   const canSpin = !!status?.can_spin && !alreadyWon;
+
+  const handleSpinAgain = () => {
+    setResult(null);
+    setError(null);
+  };
 
   // The spin wheel is now only opened manually via the yellow banner.
   // Auto-open logic is removed per requirements.
@@ -147,10 +154,10 @@ export default function SpinWheelModal() {
 
             {alreadyWon ? (
               <div className="spin-result">
-                <span className="spin-result-emoji" aria-hidden>{result.type !== "blank" ? "🎉" : "🙁"}</span>
-                <span className="spin-result-label">{result.type !== "blank" ? "جایزه شما:" : "این بار شانس با شما یار نبود:"}</span>
-                <strong className="spin-result-name">{result.label}</strong>
-                {result.code && (
+                <span className="spin-result-emoji" aria-hidden>{result?.type !== "blank" ? "🎉" : "🙁"}</span>
+                <span className="spin-result-label">{result?.type !== "blank" ? "جایزه شما:" : "این بار شانس با شما یار نبود:"}</span>
+                <strong className="spin-result-name">{result?.label}</strong>
+                {result?.code && (
                   <div className="spin-code" onClick={handleCopyCode} title="برای کپی کلیک کنید">
                     <span className="spin-code-label">
                       {copied ? "کپی شد! ✅" : "کد تخفیف (مخصوص حساب شما):"}
@@ -158,10 +165,15 @@ export default function SpinWheelModal() {
                     <code>{result.code}</code>
                   </div>
                 )}
-                {result.diamonds_credit > 0 && (
+                {result?.diamonds_credit > 0 && (
                   <p className="spin-result-desc">
                     {Number(result.diamonds_credit).toLocaleString("fa-IR")} الماس به حساب شما اضافه شد.
                   </p>
+                )}
+                {isAdmin && (
+                  <button type="button" className="spin-btn" onClick={handleSpinAgain} style={{ marginBottom: 8 }}>
+                    چرخش مجدد (حالت دیباگ ادمین)
+                  </button>
                 )}
                 <button type="button" className="spin-btn ghost" onClick={handleClose}>بستن</button>
               </div>
@@ -187,15 +199,25 @@ export default function SpinWheelModal() {
           inset: 0;
           background: rgba(2, 6, 23, 0.8);
           backdrop-filter: blur(6px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          -webkit-backdrop-filter: blur(6px);
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          text-align: center;
           z-index: 9998;
           padding: 16px;
         }
+        .spin-overlay::after {
+          content: "";
+          display: inline-block;
+          height: 100%;
+          vertical-align: middle;
+        }
         .spin-modal {
           position: relative;
+          display: inline-block;
           width: min(420px, 100%);
+          margin: 24px 0;
+          vertical-align: middle;
           background: radial-gradient(120% 90% at 50% 0%, #2a1d63 0%, #14102e 55%, #0b0a1c 100%);
           border: 1px solid rgba(167, 139, 250, 0.3);
           border-radius: 24px;

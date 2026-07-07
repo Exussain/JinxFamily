@@ -4,7 +4,7 @@ import Image from "next/image";
 const WEBP_IMAGE_RE = /\.webp(?:[?#].*)?$/i;
 const DIRECT_IMAGE_RE = /^(https?:)?\/\//i;
 
-export default function SmartImage({ src, alt, base, fit = "cover" }) {
+export default function SmartImage({ src, alt, base, fit = "cover", eager = false }) {
   // If neither a direct src nor a base path is provided,
   // avoid generating invalid URLs like "undefined.svg".
   const imageSrc = src || (base ? `${base}.webp` : null);
@@ -18,6 +18,9 @@ export default function SmartImage({ src, alt, base, fit = "cover" }) {
       <img
         src={imageSrc}
         alt={alt}
+        loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager ? "high" : undefined}
+        decoding="async"
         style={{ width: "100%", height: "100%", objectFit: fit }}
         draggable="false"
       />
@@ -32,6 +35,7 @@ export default function SmartImage({ src, alt, base, fit = "cover" }) {
       sizes="(max-width: 640px) 100vw, 33vw"
       quality={95}
       unoptimized={preserveOriginal}
+      priority={eager}
       style={{ objectFit: fit }}
     />
   );

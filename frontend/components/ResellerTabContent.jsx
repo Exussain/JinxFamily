@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import ResellerPricingEditor from "./ResellerPricingEditor";
 
 const fmtToman = (n) => Number(n || 0).toLocaleString("en-US");
 const formatDateTime = (iso) => {
@@ -555,11 +556,8 @@ export default function ResellerTabContent({
   setResellerCreatedToken,
   resellerBusy,
   setResellerBusy,
+  products,
   resellerTiers,
-  resellerTierEditing,
-  setResellerTierEditing,
-  resellerTierSaved,
-  setResellerTierSaved,
   resellerOrdersList,
   setResellerOrdersList,
   resellerOrderFilter,
@@ -591,13 +589,6 @@ export default function ResellerTabContent({
     })();
     return () => { cancelled = true; };
   }, [activeSubTab, apiBase, setResellerOrdersList]);
-
-  // initialize tier editor when switching to tiers
-  useEffect(() => {
-    if (activeSubTab !== "tiers") return;
-    setResellerTierEditing(resellerTiers.map((t) => ({ ...t })));
-    setResellerTierSaved(false);
-  }, [activeSubTab, resellerTiers, setResellerTierEditing, setResellerTierSaved]);
 
   // helper: API call wrapper
   const callApi = async (path, options = {}) => {
@@ -729,66 +720,6 @@ export default function ResellerTabContent({
     } finally {
       setResellerBusy((b) => ({ ...b, [id]: null }));
     }
-  };
-
-  const handleSaveTiers = async () => {
-    // group by product
-    const byProduct = {};
-    for (const t of resellerTierEditing) {
-      if (!byProduct[t.product_id]) byProduct[t.product_id] = [];
-      byProduct[t.product_id].push(t);
-    }
-    setResellerBusy((b) => ({ ...b, tiers: true }));
-    try {
-      for (const [pid, tiers] of Object.entries(byProduct)) {
-        const payload = {
-          product_id: parseInt(pid),
-          tiers: tiers.map((t) => ({
-            min_quantity: t.min_quantity,
-            price: t.price,
-            active: t.active,
-          })),
-        };
-        const { res, data } = await callApi("/api/admin/reseller-tiers/upsert", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          alert(`خطا در ذخیره: ${data?.message}`);
-          return;
-        }
-      }
-      setResellerTierSaved(true);
-      onReload?.();
-    } finally {
-      setResellerBusy((b) => ({ ...b, tiers: false }));
-    }
-  };
-
-  const updateTier = (idx, field, value) => {
-    setResellerTierEditing((arr) => arr.map((t, i) => i === idx ? { ...t, [field]: value } : t));
-    setResellerTierSaved(false);
-  };
-
-  const addTier = () => {
-    setResellerTierEditing((arr) => [...arr, {
-      id: null,
-      product_id: resellerTiers[0]?.product_id || 1,
-      product_name: resellerTiers[0]?.product_name || "محصول",
-      product_slug: resellerTiers[0]?.product_slug || "",
-      variant_id: null,
-      variant_title: "",
-      min_quantity: 1,
-      price: 0,
-      active: true,
-    }]);
-    setResellerTierSaved(false);
-  };
-
-  const removeTier = (idx) => {
-    setResellerTierEditing((arr) => arr.filter((_, i) => i !== idx));
-    setResellerTierSaved(false);
   };
 
   // فیلتر کردن resellers
@@ -1516,81 +1447,15 @@ export default function ResellerTabContent({
         </div>
       )}
 
-      {/* تنظیمات قیمت پلکانی */}
+      {/* تنظیمات قیمت پلکانی گرافیکی (عمومی + اختصاصی هر همکار) */}
       {activeSubTab === "tiers" && (
-        <div className="form-card-premium">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h3 style={{ margin: 0, color: "#fff" }}>تنظیمات قیمت همکار (پلکانی)</h3>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="reseller-btn-action" onClick={addTier}>+ افزودن پله جدید</button>
-              <button
-                className="reseller-btn-action"
-                style={{ background: "linear-gradient(135deg, var(--primary), #4f46e5)", color: "#fff", border: "none" }}
-                onClick={handleSaveTiers}
-                disabled={resellerBusy.tiers || resellerTierSaved}
-              >
-                {resellerTierSaved ? "✓ ذخیره شد" : resellerBusy.tiers ? "در حال ذخیره..." : "ذخیره تغییرات"}
-              </button>
-            </div>
-          </div>
-          <div className="table-container-premium">
-            <table className="table-premium">
-              <thead>
-                <tr>
-                  <th>محصول</th>
-                  <th>حداقل تعداد برای تخفیف</th>
-                  <th>قیمت واحد همکار (تومان)</th>
-                  <th>وضعیت فعال بودن</th>
-                  <th>عملیات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {resellerTierEditing.map((t, idx) => (
-                  <tr key={idx}>
-                    <td style={{ fontWeight: 600 }}>{t.product_name}</td>
-                    <td>
-                      <input
-                        type="number"
-                        min={1}
-                        value={t.min_quantity}
-                        onChange={(e) => updateTier(idx, "min_quantity", parseInt(e.target.value) || 1)}
-                        className="form-input-premium"
-                        style={{ width: 80, padding: "6px 10px" }}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        min={0}
-                        value={t.price}
-                        onChange={(e) => updateTier(idx, "price", parseInt(e.target.value) || 0)}
-                        className="form-input-premium"
-                        style={{ width: 140, padding: "6px 10px", fontFamily: "monospace", fontWeight: 700 }}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={t.active}
-                        onChange={(e) => updateTier(idx, "active", e.target.checked)}
-                        style={{ width: 16, height: 16, cursor: "pointer" }}
-                      />
-                    </td>
-                    <td>
-                      <button 
-                        className="reseller-btn-action reseller-btn-reject" 
-                        style={{ padding: "6px 12px", fontSize: 12 }}
-                        onClick={() => removeTier(idx)}
-                      >
-                        حذف پله
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <ResellerPricingEditor
+          apiBase={apiBase}
+          resellers={resellers}
+          products={products}
+          resellerTiers={resellerTiers}
+          onGlobalTiersChanged={onReload}
+        />
       )}
 
       <ResellerCreatedTokenModal data={resellerCreatedToken} onClose={() => setResellerCreatedToken(null)} />

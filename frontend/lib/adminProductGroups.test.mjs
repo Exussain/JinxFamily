@@ -6,7 +6,7 @@ const products = [
   { id: 2, name_fa: "ChatGPT Plus", slug: "chatgpt-plus", category: "AI" },
   { id: 3, name_fa: "Crew Pack", slug: "crew-pack", category: "FORTNITE" },
   { id: 4, name_fa: "Spotify", slug: "spotify", category: "SUBSCRIPTIONS" },
-  { id: 5, name_fa: "LOL RP", slug: "lol-rp", category: "GAMES" },
+  { id: 5, name_fa: "GTA VI", slug: "gta6", category: "GAMES" },
 ];
 
 const groups = groupAdminProducts(products);
@@ -20,6 +20,6 @@ assert.deepEqual(groups.map((group) => group.key), [
 
 assert.deepEqual(groups.map((group) => group.count), [1, 1, 1, 2]);
 assert.deepEqual(groups.find((group) => group.key === "other-games").products.map((p) => p.slug), [
-  "lol-rp",
+  "gta6",
   "steam-gift",
 ]);

@@ -30,6 +30,12 @@ function addAdminCacheBustHeaders(response) {
   return response;
 }
 
+function addAdminNoStoreHeaders(response) {
+  response.headers.set("Cache-Control", "private, no-cache, no-store, max-age=0, must-revalidate");
+  response.headers.delete("Clear-Site-Data");
+  return response;
+}
+
 function buildAdminCacheBustPage(reqUrl) {
   // Redirect back to the SAME URL the user requested, with the cb marker
   // appended so the proxy lets the second request through to the auth check.
@@ -55,7 +61,6 @@ function buildAdminCacheBustPage(reqUrl) {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "private, no-cache, no-store, max-age=0, must-revalidate",
-        "Clear-Site-Data": '"cache"',
         "Refresh": `0; url=${target}`,
       },
     },
@@ -119,7 +124,12 @@ export default async function proxy(req) {
   }
 
   if (pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/otp-login")) {
-    return addAdminCacheBustHeaders(NextResponse.next());
+    // no-store is sufficient for the page HTML; Clear-Site-Data: "cache" would
+    // wipe the browser's HTTP cache for the entire origin (including immutable
+    // /_next/static chunks) on every visit, which buckles mobile login under
+    // the re-download cost — same failure mode the reseller/crewpack pages
+    // already moved away from (see comment above + next.config.js).
+    return addAdminNoStoreHeaders(NextResponse.next());
   }
 
   // Reseller pages have NO captcha, so they don't need stale-captcha cache
@@ -158,23 +168,23 @@ export default async function proxy(req) {
   }
 
   if (!response) {
-    return addAdminCacheBustHeaders(NextResponse.redirect(new URL("/login?from=protected", req.url)));
+    return addAdminNoStoreHeaders(NextResponse.redirect(new URL("/login?from=protected", req.url)));
   }
 
   if (response.status === 401) {
-    return addAdminCacheBustHeaders(NextResponse.redirect(new URL("/login?from=protected", req.url)));
+    return addAdminNoStoreHeaders(NextResponse.redirect(new URL("/login?from=protected", req.url)));
   }
 
   if (!response.ok) {
-    return addAdminCacheBustHeaders(NextResponse.redirect(new URL("/login?from=protected", req.url)));
+    return addAdminNoStoreHeaders(NextResponse.redirect(new URL("/login?from=protected", req.url)));
   }
 
   const data = await response.json().catch(() => null);
   if (!data?.is_admin) {
-    return addAdminCacheBustHeaders(NextResponse.redirect(new URL("/panel/user", req.url)));
+    return addAdminNoStoreHeaders(NextResponse.redirect(new URL("/panel/user", req.url)));
   }
 
-  return addAdminCacheBustHeaders(NextResponse.next());
+  return addAdminNoStoreHeaders(NextResponse.next());
 }
 
 export const config = {

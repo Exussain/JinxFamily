@@ -10,7 +10,7 @@ export default function RemoveRestrictionGuidePage() {
   return (
     <FaqSectionLayout
       title="راهنمای رفع محدودیت حساب (Remove Restriction)"
-      subtitle="نحوه برطرف کردن محدودیت‌های امنیتی، قفل موقت و خطاهای لاگین در حساب‌های Epic Games، Xbox و PlayStation"
+      subtitle="آموزش رفع محدودیت‌های امنیتی، قفل موقت و خطاهای ورود در حساب‌های Epic Games، Xbox و PlayStation"
       activeSection="remove-restriction"
     >
       <div className="guide-article-container">
@@ -77,7 +77,7 @@ export default function RemoveRestrictionGuidePage() {
             -webkit-backdrop-filter: blur(4px);
           }
           
-          .guide-article-banner h1 {
+          .guide-article-banner .page-banner-title {
             margin: 0;
             font-size: 28px;
             font-weight: 900;
@@ -339,7 +339,7 @@ export default function RemoveRestrictionGuidePage() {
               height: 140px;
               padding: 24px;
             }
-            .guide-article-banner h1 {
+            .guide-article-banner .page-banner-title {
               font-size: 20px;
             }
             .guide-article-info-bar {
@@ -364,7 +364,7 @@ export default function RemoveRestrictionGuidePage() {
             <span className="guide-article-banner-icon">🛡️</span>
             <div className="guide-article-meta">
               <span className="guide-article-tag">راهنمای امنیتی</span>
-              <h1>راهنمای رفع محدودیت‌های موقت حساب</h1>
+              <h2 className="page-banner-title">راهنمای رفع محدودیت‌های موقت حساب</h2>
             </div>
           </div>
           
@@ -385,7 +385,7 @@ export default function RemoveRestrictionGuidePage() {
 
           <div className="guide-article-content">
             <p className="guide-intro">
-              گاهی اوقات در فرآیند ورود به اکانت بازی شما (به دلیل لاگین از آی‌پی یا دستگاه‌های شعبه خارجی نوبیکس)، پلتفرم‌های مایکروسافت، سونی و یا اپیک گیمز جهت حفظ امنیت، حساب کاربری شما را به صورت موقت محدود یا قفل می‌کنند. این محدودیت‌ها کاملاً طبیعی بوده و به راحتی قابل برطرف کردن هستند.
+              گاهی هنگام ورود کارشناسان ما به اکانت شما (به دلیل ورود از آی‌پی یا دستگاه متفاوت)، پلتفرم‌های مایکروسافت، سونی یا اپیک گیمز برای حفظ امنیت، حساب کاربری شما را به‌صورت موقت محدود یا قفل می‌کنند. این محدودیت‌ها کاملاً طبیعی و به‌سادگی قابل رفع هستند و پشتیبانی نوبیکس در تمام مراحل تا تکمیل سفارش همراه شماست.
             </p>
 
             <div className="info-banner">
@@ -396,7 +396,7 @@ export default function RemoveRestrictionGuidePage() {
               </svg>
               <div>
                 <strong>چرا محدودیت ایجاد می‌شود؟</strong>
-                <p>پلتفرم‌های بازی رفتار ورود از کشورهای جدید را به عنوان فعالیت مشکوک تلقی کرده و درخواست تایید هویت مجدد می‌کنند. این اقدام صرفاً جهت تایید این است که خود مالک اکانت این دسترسی را ایجاد کرده است.</p>
+                <p>پلتفرم‌های بازی، ورود از کشورها یا دستگاه‌های جدید را فعالیتی غیرمعمول تلقی کرده و درخواست تایید هویت می‌کنند. این اقدام صرفاً برای اطمینان از این است که خود صاحب حساب اجازه این دسترسی را داده است.</p>
               </div>
             </div>
 
@@ -410,7 +410,7 @@ export default function RemoveRestrictionGuidePage() {
 
                 <div className="restriction-type">
                   <h3>۱. محدودیت "New Device Login"</h3>
-                  <p>اگر با پیام تایید دستگاه جدید مواجه شدید:</p>
+                  <p>اگر با پیام تایید دستگاه جدید روبه‌رو شدید:</p>
                   <div className="steps-compact">
                     <div className="step-compact">
                       <span className="step-num">۱</span>
@@ -422,14 +422,14 @@ export default function RemoveRestrictionGuidePage() {
                     </div>
                     <div className="step-compact">
                       <span className="step-num">۳</span>
-                      <span>روی دکمه "Yes, it's me" یا لینک تایید کلیک کنید تا قفل لاگین آی‌پی باز شود.</span>
+                      <span>روی دکمه "Yes, it's me" یا لینک تایید کلیک کنید تا محدودیت ورود برطرف شود.</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="restriction-type">
                   <h3>۲. محدودیت قفل اکانت (Account Locked)</h3>
-                  <p>در صورتی که به دلیل تلاش‌های متعدد لاگین، حساب قفل شده است:</p>
+                  <p>اگر حساب به دلیل تلاش‌های متعدد برای ورود قفل شده است:</p>
                   <div className="steps-compact">
                     <div className="step-compact">
                       <span className="step-num">۱</span>
@@ -441,7 +441,7 @@ export default function RemoveRestrictionGuidePage() {
                     </div>
                     <div className="step-compact">
                       <span className="step-num">۳</span>
-                      <span>پس از تغییر رمز عبور، حساب شما به صورت خودکار بازگشایی می‌شود.</span>
+                      <span>پس از تغییر رمز عبور، حساب شما به‌صورت خودکار از حالت قفل خارج می‌شود.</span>
                     </div>
                   </div>
                 </div>
@@ -456,26 +456,26 @@ export default function RemoveRestrictionGuidePage() {
 
                 <div className="restriction-type">
                   <h3>۱. محدودیت فعالیت مشکوک (Unusual Activity)</h3>
-                  <p>اگر پیام "We've noticed some unusual activity" دریافت کردید:</p>
+                  <p>اگر پیام "We've noticed some unusual activity" را دریافت کردید:</p>
                   <div className="steps-compact">
                     <div className="step-compact">
                       <span className="step-num">۱</span>
-                      <span>بر روی گزینه "Verify my identity" کلیک کنید.</span>
+                      <span>روی گزینه "Verify my identity" کلیک کنید.</span>
                     </div>
                     <div className="step-compact">
                       <span className="step-num">۲</span>
-                      <span>کد تایید ارسال شده به ایمیل پشتیبان یا شماره موبایل متصل به اکانت را وارد نمایید.</span>
+                      <span>کد تایید ارسال‌شده به ایمیل پشتیبان یا شماره موبایل متصل به حساب را وارد کنید.</span>
                     </div>
                     <div className="step-compact">
                       <span className="step-num">۳</span>
-                      <span>در صورت درخواست سیستم، رمز عبور خود را موقتاً تعویض و بروزرسانی کنید.</span>
+                      <span>در صورت درخواست سیستم، رمز عبور خود را به‌روزرسانی کنید.</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="restriction-type">
                   <h3>۲. غیرفعال‌سازی Passkey</h3>
-                  <p>اگر رمز عبورهای Passkey ویندوز/مایکروسافت مانع ورود کارشناسان ما شده است:</p>
+                  <p>اگر Passkey ویندوز یا مایکروسافت مانع ورود کارشناسان ما شده است:</p>
                   <div className="steps-compact">
                     <div className="step-compact">
                       <span className="step-num">۱</span>
@@ -487,7 +487,7 @@ export default function RemoveRestrictionGuidePage() {
                     </div>
                     <div className="step-compact">
                       <span className="step-num">۳</span>
-                      <span>گزینه Passkey را موقتاً خاموش یا حذف کنید تا لاگین عادی امکان‌پذیر گردد.</span>
+                      <span>گزینه Passkey را به‌طور موقت غیرفعال یا حذف کنید تا ورود عادی امکان‌پذیر شود.</span>
                     </div>
                   </div>
                 </div>
@@ -502,22 +502,22 @@ export default function RemoveRestrictionGuidePage() {
 
                 <div className="restriction-type">
                   <h3>۱. تایید لاگین دستگاه جدید (Sign-in Verification)</h3>
-                  <p>اگر در حین ورود، سیستم درخواست کد تایید هویت کرد:</p>
+                  <p>اگر هنگام ورود، سیستم درخواست کد تایید هویت کرد:</p>
                   <div className="steps-compact">
                     <div className="step-compact">
                       <span className="step-num">۱</span>
-                      <span>کد فرستاده شده به ایمیل یا موبایل خود را سریعاً به پشتیبانی ارسال کنید.</span>
+                      <span>کد ارسال‌شده به ایمیل یا موبایل خود را در اسرع وقت برای پشتیبانی نوبیکس بفرستید.</span>
                     </div>
                     <div className="step-compact">
                       <span className="step-num">۲</span>
-                      <span>دسترسی ورود کنسول جدید را در ایمیل خود تایید (Authorize) نمایید.</span>
+                      <span>دسترسی ورود دستگاه جدید را از طریق ایمیل خود تایید (Authorize) کنید.</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="restriction-type">
                   <h3>۲. بازیابی حساب قفل شده (PSN Recovery)</h3>
-                  <p>اگر حساب شما به طور کلی به دلیل مسائل امنیتی مسدود گردیده است:</p>
+                  <p>اگر حساب شما به دلیل مسائل امنیتی به‌طور کامل مسدود شده است:</p>
                   <div className="steps-compact">
                     <div className="step-compact">
                       <span className="step-num">۱</span>
@@ -525,7 +525,7 @@ export default function RemoveRestrictionGuidePage() {
                     </div>
                     <div className="step-compact">
                       <span className="step-num">۲</span>
-                      <span>شناسه PSN یا ایمیل اکانت خود را وارد کرده و درخواست بازیابی رمز را بدهید.</span>
+                      <span>شناسه PSN یا ایمیل حساب خود را وارد کرده و درخواست بازیابی رمز عبور را ثبت کنید.</span>
                     </div>
                   </div>
                 </div>
@@ -539,20 +539,20 @@ export default function RemoveRestrictionGuidePage() {
                 </svg>
                 <div>
                   <h4>نکته بسیار مهم برای پیشگیری</h4>
-                  <p>خاموش کردن تایید دو مرحله‌ای (2FA) قبل از ثبت نهایی خرید، احتمال بروز هرگونه قفل یا محدودیت امنیتی در حین سفارش را تا ۹۰٪ کاهش می‌دهد.</p>
+                  <p>غیرفعال کردن تایید دو مرحله‌ای (2FA) پیش از ثبت نهایی خرید، احتمال بروز هرگونه قفل یا محدودیت امنیتی در حین سفارش را به‌طور چشمگیری کاهش می‌دهد.</p>
                   <Link href="/guides/disable-2fa" className="tip-link">مطالعه راهنمای خاموش کردن 2FA</Link>
                 </div>
               </div>
             </div>
 
             <div className="guide-footer">
-              <h3>آیا مشکل محدودیت اکانت حل نشد؟</h3>
-              <p>اگر با خطاهای دیگری مواجه شدید یا نتوانستید قفل حساب خود را باز کنید، با کارشناسان نوبیکس در ارتباط باشید.</p>
+              <h3>محدودیت حساب همچنان برطرف نشد؟</h3>
+              <p>اگر با خطای دیگری مواجه شدید یا نتوانستید قفل حساب خود را باز کنید، کارشناسان نوبیکس تا رفع کامل مشکل و تکمیل سفارش در کنار شما هستند.</p>
               <a href="https://t.me/Nubixsupport" target="_blank" rel="noopener noreferrer" className="support-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.242-1.865-.442-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.121.099.155.232.171.325.016.093.036.305.02.471z"/>
                 </svg>
-                ارتباط با پشتیبانی فنی در تلگرام
+ارتباط با پشتیبانی نوبیکس در تلگرام
               </a>
             </div>
           </div>

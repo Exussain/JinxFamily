@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useCart } from "../lib/useCart";
 import { resolveProductImage } from "../lib/productImageHelpers";
+import { productHref } from "../lib/productUrls.mjs";
 import SmartImage from "./SmartImage";
 import Link from "next/link";
 
@@ -30,7 +31,8 @@ export default function ProductCard({ p, imageFit = "contain" }) {
     return "تحویل سریع و تضمینی";
   };
   const subtitleText = p.subtitle || getFallbackSubtitle(p.category);
-  const targetUrl = p.link || (hasProductPage ? `/product/${p.slug}` : null);
+  const targetUrl =
+    p.link || (hasProductPage ? productHref(p.slug) : null);
 
   return (
     <div className="card product-card">

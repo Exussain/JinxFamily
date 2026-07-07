@@ -1,13 +1,14 @@
 "use client";
 export const dynamic = 'force-dynamic';
 import { useCart } from "../../lib/useCart";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import BackToHomeButton from "../../components/BackToHomeButton";
 import SmartImage from "../../components/SmartImage";
 import { getPlatformOption } from "../../lib/platforms";
 import PasswordInput from '../../components/PasswordInput';
+import { SpinWheelSvg, FALLBACK_TYPES, SLICE } from "../../components/spinWheel";
 
 // Constants
 const CREWPACK_SLUG = 'fortnite-crew-pack';
@@ -57,6 +58,7 @@ export default function CheckoutPage() {
   const [meLoaded, setMeLoaded] = useState(false);
   const [diamondsUse, setDiamondsUse] = useState(0);
   const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscountCode, setAppliedDiscountCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState(0);
   const [discountFlat, setDiscountFlat] = useState(0);
   const [discountMessage, setDiscountMessage] = useState('');
@@ -74,6 +76,15 @@ export default function CheckoutPage() {
   const [savingName, setSavingName] = useState(false);
   const [contactEmail, setContactEmail] = useState('');
   const [discountOpen, setDiscountOpen] = useState(false);
+  const [howToGetDiscount, setHowToGetDiscount] = useState(false);
+  const [joinedChannel, setJoinedChannel] = useState(false);
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [spinStatus, setSpinStatus] = useState(null);
+  const [spinError, setSpinError] = useState(null);
+  const [spinResult, setSpinResult] = useState(null);
+  const [spinCopied, setSpinCopied] = useState(false);
+  const spinTimer = useRef(null);
   const [rushDisabled, setRushDisabled] = useState(false);
   const [rushDisabledReason, setRushDisabledReason] = useState('');
   const [hideRushOption, setHideRushOption] = useState(false);
@@ -81,7 +92,66 @@ export default function CheckoutPage() {
   // const [telegramPromoVisible, setTelegramPromoVisible] = useState(false);
   const [vpnDetected, setVpnDetected] = useState(false);
   const [vpnLocationData, setVpnLocationData] = useState(null);
+  const [activeStep, setActiveStep] = useState(1);
   const router = useRouter();
+
+  const validateStep1 = () => {
+    if (needsName && !fullName.trim()) {
+      setError("لطفاً نام و نام خانوادگی خود را وارد کنید.");
+      return false;
+    }
+    const itemsNeedingCreds = items.filter(it => productSupportsPlatforms(it));
+    for (const it of itemsNeedingCreds) {
+      if (!it.account_type) {
+        setError(`لطفاً پلتفرم بازی را برای آیتم «${it.name}» انتخاب کنید.`);
+        return false;
+      }
+      if (!(it.account_type === 'xbox' && it.xbox_create_account)) {
+        if (!it.account_email || !it.account_email.trim()) {
+          setError(`لطفاً ایمیل اکانت را برای آیتم «${it.name}» وارد کنید.`);
+          return false;
+        }
+        if (!it.account_password || !it.account_password.trim()) {
+          setError(`لطفاً رمز عبور اکانت را برای آیتم «${it.name}» وارد کنید.`);
+          return false;
+        }
+      }
+    }
+    setError('');
+    return true;
+  };
+
+  const validateStep2 = () => {
+    if (!me?.email && (!contactEmail || !contactEmail.trim())) {
+      setError("وارد کردن ایمیل تماس الزامی است.");
+      return false;
+    }
+    if (!form.telegram || !form.telegram.trim()) {
+      setError("وارد کردن آیدی تلگرام برای هماهنگی سفارش الزامی است.");
+      return false;
+    }
+    if (showAckSection && !ackImportant) {
+      setError("لطفاً تایید کنید که تمامی نکات قبل از خرید (از جمله خاموش بودن 2FA) را مطالعه کرده‌اید.");
+      return false;
+    }
+    setError('');
+    return true;
+  };
+
+  const handleNextStep = (nextStepNum) => {
+    if (nextStepNum === 2) {
+      if (!validateStep1()) return;
+    } else if (nextStepNum === 3) {
+      if (!validateStep1()) {
+        setActiveStep(1);
+        return;
+      }
+      if (!validateStep2()) return;
+    }
+    setError('');
+    setActiveStep(nextStepNum);
+    window.scrollTo({ top: 100, behavior: 'smooth' });
+  };
 
   const isCrewPackItem = (item) => {
     const slug = (item?.slug || '').toString().toLowerCase();
@@ -136,9 +206,7 @@ export default function CheckoutPage() {
       if (!(it.account_password || '').trim()) requiredMissing.push(`رمز عبور ${it.name}`);
     }
   });
-  if (!form.telegram.trim()) {
-    requiredMissing.push('آیدی تلگرام');
-  }
+
 
   // Calculate final total with rush fee + discount (بدون مالیات اضافی کروپک)
   const baseTotal = total();
@@ -532,10 +600,21 @@ export default function CheckoutPage() {
     }
     setDiscountMessage('');
     try {
+      const validationItems = items.map((it) => ({
+        product_id: it.product_id || it.id,
+        slug: it.slug,
+        variant_id: it.variant_id,
+        quantity: it.quantity || 1,
+      }));
       const res = await fetch(`${apiBase}/api/discounts/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: discountCode.trim() }),
+        body: JSON.stringify({
+          code: discountCode.trim(),
+          items: validationItems,
+          rush_order: rushOrder,
+          rush_fee: rushFee,
+        }),
       });
       const contentType = res.headers.get('content-type') || '';
       let data = {};
@@ -548,14 +627,20 @@ export default function CheckoutPage() {
       if (!res.ok) {
         throw new Error(data?.message || 'کد تخفیف نامعتبر است');
       }
-      setDiscountPercent(data.percent || 0);
-      setDiscountFlat(data.amount || 0);
+      const appliedAmount = Number(data.discount_amount ?? data.amount ?? 0);
+      if (data.previewed && appliedAmount <= 0) {
+        throw new Error(data?.message || 'این کد تخفیف مبلغی برای این سبد کم نمی‌کند.');
+      }
+      setAppliedDiscountCode(data.code || discountCode.trim().toUpperCase());
+      setDiscountPercent(data.previewed ? 0 : (data.percent || 0));
+      setDiscountFlat(data.previewed ? appliedAmount : (data.amount || 0));
       setDiscountMessage(
-        data.amount > 0
-          ? `کد اعمال شد: ${data.amount.toLocaleString('fa-IR')} تومان`
+        appliedAmount > 0
+          ? `کد اعمال شد: ${appliedAmount.toLocaleString('fa-IR')} تومان`
           : `کد اعمال شد: ${data.percent}% تخفیف`
       );
     } catch (err) {
+      setAppliedDiscountCode('');
       setDiscountPercent(0);
       setDiscountFlat(0);
       setDiscountMessage(err?.message || 'کد تخفیف نامعتبر است');
@@ -593,10 +678,6 @@ export default function CheckoutPage() {
 
     if (nameRequired) {
       setError('لطفاً نام و نام خانوادگی را وارد کنید.');
-      return;
-    }
-    if (emailRequired) {
-      setError('لطفاً ایمیل تماس را وارد کنید.');
       return;
     }
     if (requiredMissing.length > 0) {
@@ -703,7 +784,7 @@ export default function CheckoutPage() {
           diamonds_use: diamondsUse,
           rush_order: rushOrder,
           rush_fee: rushFee,
-          discount_code: discountCode.trim() || undefined,
+          discount_code: appliedDiscountCode || undefined,
         })
       });
       const contentType = res.headers.get('content-type') || '';
@@ -769,9 +850,29 @@ export default function CheckoutPage() {
       </Suspense>
 
       <main className="container checkout-container">
+        {/* Checkout Top Header */}
+        <div className="checkout-top-header">
+          <h1 className="checkout-main-title">تکمیل و ثبت سفارش آنلاین</h1>
+        </div>
+
         <div className="checkout-grid">
-          {/* Form Section */}
-          <section className="checkout-form-section">
+          {/* Main Form Flow Column (Right in RTL) */}
+          <section className="checkout-main-content">
+            {error && (
+              <div className="error-message">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="15" y1="9" x2="9" y2="15"/>
+                  <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                {errorIsHtml ? (
+                  <span dangerouslySetInnerHTML={{ __html: error }} />
+                ) : (
+                  <span>{error}</span>
+                )}
+              </div>
+            )}
+
             {/* Name Input Section - Show if user doesn't have a name */}
             {needsName && (
               <div className="name-required-section">
@@ -828,99 +929,188 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            <div className="section-header">
-              <div className="section-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-              </div>
-              <div>
-                <h2>اطلاعات حساب</h2>
-                <p>اطلاعات ورود به حساب‌های بازی خود را وارد کنید</p>
-              </div>
-            </div>
-
-            {/* Contact Email (required if کاربر ایمیل حساب ندارد) */}
-            {!me?.email && (
-              <div className="field">
-                <label>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                  </svg>
-                  ایمیل تماس (الزامی)
-                </label>
-                <input
-                  type="email"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className={contactEmailMissing ? "input-error" : ""}
-                  aria-invalid={contactEmailMissing ? "true" : "false"}
-                  required
-                />
-                {emailRequired && (
-                  <div className="name-required-hint">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <line x1="12" y1="8" x2="12" y2="12"/>
-                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+            {/* 1. Account Credentials Card (if any item supports platform login) */}
+            {items.some(it => productSupportsPlatforms(it)) && (
+              <div className="checkout-card credentials-card">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
-                    وارد کردن ایمیل برای ثبت سفارش الزامی است
+                  </div>
+                  <div>
+                    <h3>اطلاعات پرداخت</h3>
+                    <p>پلتفرم و مشخصات اکانت خود را برای ورود پشتیبان نوبیکس وارد کنید</p>
+                  </div>
+                </div>
+                
+                <div className="credentials-list">
+                  {items.filter(it => productSupportsPlatforms(it)).map((it, idx) => {
+                    const supportedPlatforms = productSupportsPlatforms(it);
+                    const option = it.account_type ? getPlatformOption(it.account_type) : null;
+                    return (
+                      <div key={`${it.product_id}-${it.variant_id ?? ""}`} className="item-credentials-block">
+                        <div className="item-credentials-header">
+                          <span className="item-index-badge">آیتم {idx + 1}</span>
+                          <span className="item-product-name">{it.name}</span>
+                          {option && (
+                            <span className="platform-badge" style={{ '--platform-color': option.color }}>
+                              <span className="platform-badge-icon">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={option.icon} alt={option.iconAlt || it.account_type} />
+                              </span>
+                              {option.shortLabel}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Inline Platform Selector */}
+                        <div className="inline-platform-selector-box">
+                          <div className="inline-platform-label">
+                            <span>پلتفرم بازی شما:</span>
+                            {!it.account_type && <span className="platform-required-badge">پلتفرم را انتخاب کنید</span>}
+                          </div>
+                          <div className="inline-platform-buttons">
+                            {supportedPlatforms && supportedPlatforms.map(key => {
+                              const opt = getPlatformOption(key);
+                              const isActive = (it.account_type || '').toLowerCase() === key;
+                              return (
+                                <button
+                                  key={key}
+                                  type="button"
+                                  className={`inline-platform-btn ${isActive ? 'active' : ''} platform-${key}`}
+                                  onClick={() => setPlatform(it.product_id, it.variant_id ?? null, key)}
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={opt.icon} alt={opt.iconAlt || key} />
+                                  <span>{opt.shortLabel}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {it.account_type === 'xbox' && (
+                          <div className="xbox-create-option-wrapper">
+                            <label className="xbox-create-option">
+                              <input
+                                type="checkbox"
+                                checked={it.xbox_create_account || false}
+                                onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, 'xbox', { xbox_create_account: e.target.checked })}
+                              />
+                              <span className="checkbox-text">اکانت ایکس‌باکس ندارم، لطفاً برای من بسازید (رایگان و ایمن)</span>
+                            </label>
+                          </div>
+                        )}
+
+                        {it.account_type ? (
+                          !(it.account_type === 'xbox' && it.xbox_create_account) ? (
+                            <div className="credentials-inputs-grid">
+                              <div className="field">
+                                <label>ایمیل اکانت (اپیک گیمز)</label>
+                                <input
+                                  type="email"
+                                  value={it.account_email || ''}
+                                  onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_email: e.target.value })}
+                                  placeholder="example@email.com"
+                                  required
+                                />
+                              </div>
+                              <div className="field">
+                                <label>رمز عبور اکانت (اپیک گیمز)</label>
+                                <PasswordInput
+                                  value={it.account_password || ''}
+                                  onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_password: e.target.value })}
+                                  placeholder="Password"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="xbox-create-message">
+                              💚 تیم نوبیکس یک اکانت جدید و امن Xbox متصل به اکانت شما خواهد ساخت و اطلاعات آن پس از تکمیل سفارش ارسال می‌شود.
+                            </div>
+                          )
+                        ) : null}
+
+                      </div>
+                    );
+                  })}
+
+                  <div className="field" style={{ marginTop: 16 }}>
+                    <label>توضیحات سفارش (اختیاری)</label>
+                    <input
+                      value={form.note}
+                      onChange={(e) => setForm({...form, note: e.target.value})}
+                      placeholder="نکته یا توضیح خاصی دارید؟ اینجا بنویسید..."
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. Tips and Agreement Section */}
+            <div className="checkout-card tips-card">
+              <div className="card-header">
+                <div className="card-icon warning-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3>نکات و مقررات قبل از خرید</h3>
+                  <p>لطفاً برای جلوگیری از بروز تاخیر در انجام سفارش، موارد زیر را مطالعه فرمایید</p>
+                </div>
+              </div>
+
+              <div className="tips-content">
+                <ul className="order-tips-list-new">
+                  <li>
+                    <span className="tip-bullet">۱</span>
+                    <div>
+                      <strong>غیرفعال‌سازی ۲ مرحله‌ای (2FA)</strong>: پیش از نهایی کردن سفارش، حتماً تایید دو مرحله‌ای اکانت خود را خاموش کنید تا بدون معطلی و بلافاصله سفارش شما انجام شود.
+                      <a href="/guides/disable-2fa" className="order-tips-link-new" target="_blank" rel="noopener noreferrer">
+                         راهنمای غیرفعال‌سازی 2FA ↗
+                      </a>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="tip-bullet">۲</span>
+                    <div>
+                      <strong>اطلاعات ورود صحیح</strong>: ایمیل و رمز عبور اکانت وارد شده را مجدداً چک کنید. در صورت نادرست بودن اطلاعات، روند تکمیل سفارش با تاخیر مواجه خواهد شد.
+                    </div>
+                  </li>
+                  <li>
+                    <span className="tip-bullet">۳</span>
+                    <div>
+                      <strong>پشتیبانی آنلاین و پیامکی</strong>: کلیه مراحل تغییر وضعیت سفارش از طریق پیامک و ایمیل ثبت شده به شما اطلاع‌رسانی خواهد شد.
+                    </div>
+                  </li>
+                </ul>
+
+                {showAckSection && (
+                  <div className="ack-agreement-row">
+                    <label className="ack-checkbox-new">
+                      <input
+                        type="checkbox"
+                        checked={ackImportant}
+                        onChange={(e) => handleAckChange(e.target.checked)}
+                      />
+                      <span className="checkmark-new"></span>
+                      <span className="ack-text">تمامی موارد فوق را با دقت مطالعه کرده و تایید می‌کنم</span>
+                    </label>
                   </div>
                 )}
               </div>
-            )}
-
-
-
-            <div className="optional-fields">
-              <div className="field">
-                <label>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-                  </svg>
-                  آیدی تلگرام
-                </label>
-                <input
-                  value={form.telegram}
-                  onChange={(e) => setForm({...form, telegram: e.target.value})}
-                  placeholder="@username"
-                  className={telegramMissing ? "input-error" : ""}
-                  aria-invalid={telegramMissing ? "true" : "false"}
-                  required
-                />
-              </div>
-              <div className="field">
-                <label>توضیحات (اختیاری)</label>
-                <input
-                  value={form.note}
-                  onChange={(e) => setForm({...form, note: e.target.value})}
-                  placeholder="نکته خاصی دارید؟"
-                />
-              </div>
             </div>
-
-            {error && (
-              <div className="error-message">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="15" y1="9" x2="9" y2="15"/>
-                  <line x1="9" y1="9" x2="15" y2="15"/>
-                </svg>
-                {errorIsHtml ? (
-                  <span dangerouslySetInnerHTML={{ __html: error }} />
-                ) : (
-                  <span>{error}</span>
-                )}
-              </div>
-            )}
           </section>
 
-          {/* Sidebar - Cart Summary */}
+          {/* Sidebar - Order Summary Column (Left in RTL) */}
           <aside className="checkout-sidebar">
-            {/* Rush Order - Instant Delivery for All Products */}
+            {/* Rush Order VIP Card */}
             {!hideRushOption && (
               <div
                 className={`rush-order-card vip-card instant-card ${rushOrder ? 'active' : ''} ${rushDisabled ? 'disabled' : ''}`}
@@ -948,10 +1138,9 @@ export default function CheckoutPage() {
                       <h3>فعال‌سازی فوری</h3>
                       <div className="rush-title-actions">
                         <span className={`rush-fire ${rushOrder ? 'active' : ''}`} aria-hidden="true">🔥</span>
-                        <span className={`rush-pill ${rushOrder ? 'active' : ''}`} aria-hidden="true">{rushOrder ? "فعال" : "خاموش"}</span>
                       </div>
                     </div>
-                    <p>۱۵ دقیقه تا ۴۵ دقیقه</p>
+                    <p>زمان تقریبی انجام: ۱۵ تا ۴۵ دقیقه</p>
                   </div>
                 </div>
                 <div className="rush-order-body">
@@ -971,77 +1160,88 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Cart Items */}
+            {/* Simplified Cart items inside Order Summary Card */}
             <div className="cart-summary-card">
-              <div className="cart-summary-header">
-                              {items.map((it) => {
+              <div className="summary-title-row">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <h3>خلاصه سفارش</h3>
+                <span className="cart-badge">{items.reduce((acc, x) => acc + x.quantity, 0).toLocaleString('fa-IR')} کالا</span>
+              </div>
+
+              <div className="cart-summary-items-list">
+                {items.map((it) => {
                   const platform = getPlatformLabel(it.account_type);
                   const supportedPlatforms = productSupportsPlatforms(it);
                   return (
-                    <div key={`${it.product_id}-${it.variant_id ?? ""}`} className="cart-item-wrapper">
-                      <div className="cart-item">
-                        <div className="cart-item-image">
-                          {it.image ? (
-                            <SmartImage src={it.image} alt={it.name} />
-                          ) : (
-                            <div className="cart-item-placeholder">
-                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                                <circle cx="8.5" cy="8.5" r="1.5"/>
-                                <polyline points="21,15 16,10 5,21"/>
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <div className="cart-item-details">
-                          <div className="cart-item-name">{it.name}</div>
-                          <div className="cart-item-meta">
-                            {supportedPlatforms ? (
-                              <div className="item-platform-selector">
-                                <span className="selector-label">پلتفرم:</span>
-                                <div className="platform-icon-buttons">
-                                  {supportedPlatforms.map(key => {
-                                    const option = getPlatformOption(key);
-                                    const isActive = (it.account_type || '').toLowerCase() === key;
-                                    return (
-                                      <button
-                                        key={key}
-                                        type="button"
-                                        className={`platform-icon-btn ${isActive ? 'active' : ''} platform-${key}`}
-                                        onClick={() => setPlatform(it.product_id, it.variant_id ?? null, key)}
-                                        title={option.longLabel}
-                                      >
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={option.icon} alt={option.iconAlt || key} />
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                                {!it.account_type && (
-                                  <span className="platform-missing-warn">⚠️ انتخاب کنید</span>
-                                )}
-                              </div>
+                    <div key={`${it.product_id}-${it.variant_id ?? ""}`} className="cart-item-wrapper-compact">
+                      <div className="cart-item-compact">
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <div className="cart-item-image">
+                            {it.image ? (
+                              <SmartImage src={it.image} alt={it.name} />
                             ) : (
-                              platform.label && (
-                                <span 
-                                  className="platform-badge" 
-                                  style={{ '--platform-color': platform.color }}
-                                >
-                                  <span className="platform-badge-icon">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={platform.icon} alt={platform.iconAlt || platform.label} />
-                                  </span>
-                                  {platform.label}
-                                </span>
-                              )
+                              <div className="cart-item-placeholder">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                                  <polyline points="21,15 16,10 5,21"/>
+                                </svg>
+                              </div>
                             )}
-                            <span className="cart-item-price">
-                              {(it.price * it.quantity).toLocaleString('fa-IR')} تومان
-                            </span>
+                          </div>
+                          
+                          <div className="cart-item-details">
+                            <div className="cart-item-name">{it.name}</div>
+                            
+                            <div className="cart-item-meta-compact">
+                              {supportedPlatforms ? (
+                                <div className="item-platform-selector-compact">
+                                  <div className="platform-icon-buttons-compact">
+                                    {supportedPlatforms.map(key => {
+                                      const option = getPlatformOption(key);
+                                      const isActive = (it.account_type || '').toLowerCase() === key;
+                                      return (
+                                        <button
+                                          key={key}
+                                          type="button"
+                                          className={`platform-icon-btn-compact ${isActive ? 'active' : ''} platform-${key}`}
+                                          onClick={() => setPlatform(it.product_id, it.variant_id ?? null, key)}
+                                          title={option.longLabel}
+                                        >
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img src={option.icon} alt={option.iconAlt || key} />
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  {!it.account_type && (
+                                    <span className="platform-missing-warn-compact">⚠️ انتخاب پلتفرم</span>
+                                  )}
+                                </div>
+                              ) : (
+                                platform.label && (
+                                  <span 
+                                    className="platform-badge-compact" 
+                                    style={{ '--platform-color': platform.color }}
+                                  >
+                                    <span className="platform-badge-icon-compact">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={platform.icon} alt={platform.iconAlt || platform.label} />
+                                    </span>
+                                    {platform.label}
+                                  </span>
+                                )
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <div className="cart-item-actions">
-                          <div className="qty-control">
+
+                        <div className="cart-item-price-quantity-row">
+                          <div className="qty-control-compact">
                             <button 
                               className="qty-btn"
                               onClick={() => setQty(it.product_id, Math.max(1, it.quantity - 1), it.variant_id ?? null)}
@@ -1057,175 +1257,213 @@ export default function CheckoutPage() {
                               +
                             </button>
                           </div>
+                          <span className="cart-item-price">
+                            {(it.price * it.quantity).toLocaleString('fa-IR')} <span className="currency-label">تومان</span>
+                          </span>
                           <button 
-                            className="remove-btn" 
+                            className="remove-btn-compact" 
                             onClick={() => removeItem(it.product_id, it.variant_id ?? null)}
                             title="حذف"
                           >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <polyline points="3,6 5,6 21,6"/>
                               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                             </svg>
                           </button>
                         </div>
                       </div>
-
-                      {/* Per-Item Platform Credentials Section */}
-                      {supportedPlatforms && it.account_type && (
-                        <div className="item-credentials-section">
-                          <div className="credentials-fields-row">
-                            <div className="field compact-field">
-                              <label>ایمیل اکانت ({getPlatformOption(it.account_type).shortLabel})</label>
-                              <input
-                                type="email"
-                                value={it.account_email || ''}
-                                onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_email: e.target.value })}
-                                placeholder="Email"
-                                required
-                              />
-                            </div>
-                            <div className="field compact-field">
-                              <label>رمز عبور</label>
-                              <PasswordInput
-                                value={it.account_password || ''}
-                                onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_password: e.target.value })}
-                                placeholder="Password"
-                                required
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
-            </div>
-
-            {/* Friendly order tips - single yellow info card */}
-            <div className="order-tips-card">
-              <div className="order-tips-header">
-                <span className="order-tips-emoji">🔔</span>
-                <span>نکات مهم قبل از ثبت سفارش</span>
-              </div>
-              <ul className="order-tips-list">
-                <li>
-                  <strong>غیرفعال‌سازی ۲ مرحله‌ای (2FA)</strong>: پیش از خرید تایید دو مرحله‌ای اکانت خود را خاموش کنید تا سفارش بدون معطلی انجام شود. 
-                  <a href="/guides/disable-2fa" className="order-tips-link" target="_blank" rel="noopener noreferrer">
-                    [راهنمای خاموش کردن 2FA ↗]
-                  </a>
-                </li>
-                <li><strong>دقت در اطلاعات ورود</strong>: لطفاً ایمیل و رمز اکانت را دقیق و صحیح وارد کنید.</li>
-                <li><strong>پشتیبانی و پیگیری</strong>: مراحل سفارش از طریق پیامک و ایمیل اطلاع‌رسانی می‌شود.</li>
-              </ul>
-              {showAckSection && (
-                <label className="ack-checkbox required">
-                  <input
-                    type="checkbox"
-                    checked={ackImportant}
-                    onChange={(e) => handleAckChange(e.target.checked)}
-                  />
-                  <span className="checkmark"></span>
-                  موارد بالا را خواندم و تایید می‌کنم
-                </label>
-              )}
-            </div>
-
-              {/* Diamonds (الماس) */}
-              {me && diamondsBalance > 0 && (
-                <div className="wallet-section">
-                  <div className="wallet-balance">
-                    <span aria-hidden style={{ fontSize: 16 }}>💎</span>
-                    <span className="wallet-amount">{diamondsBalance.toLocaleString('fa-IR')}</span>
-                    <span className="wallet-currency">الماس</span>
-                  </div>
-                  <div className="wallet-input-wrap">
-                    <input
-                      type="number"
-                      min={0}
-                      max={diamondsCap}
-                      value={diamondsUse}
-                      onChange={(e) => setDiamondsUse(Math.min(diamondsCap, Math.max(0, Number(e.target.value) || 0)))}
-                      placeholder="استفاده"
-                    />
-                    <span className="wallet-input-unit">💎</span>
-                  </div>
-                  {diamondsUse > 0 && diamondsUse < MIN_DIAMONDS_TO_REDEEM && (
-                    <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                      حداقل {MIN_DIAMONDS_TO_REDEEM} الماس برای تبدیل به تخفیف لازم است.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Discount Code */}
-              <div className="discount-section">
-                <button
-                  type="button"
-                  className={`discount-toggle-link ${discountOpen ? 'active' : ''}`}
-                  onClick={() => setDiscountOpen(v => !v)}
-                  aria-expanded={discountOpen}
-                >
-                  کد تخفیف دارم
-                </button>
-                {discountOpen && (
-                  <div className="discount-form">
-                    <div className="discount-input-row">
-                      <input
-                        type="text"
-                        value={discountCode}
-                        onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                        placeholder="کد تخفیف"
-                        autoFocus
-                      />
-                      <button type="button" className="discount-apply-btn" onClick={applyDiscountCode}>
-                        اعمال
-                      </button>
-                    </div>
-                    {discountMessage && <div className="muted discount-message">{discountMessage}</div>}
-                  </div>
-                )}
               </div>
 
-              {/* Price Summary */}
-              <div className="price-summary">
+              {/* Price Breakdown */}
+              <div className="price-summary-box">
                 <div className="price-row">
-                  <span>جمع محصولات</span>
+                  <span>جمع کل اقلام</span>
                   <span>{baseTotal.toLocaleString('fa-IR')} تومان</span>
                 </div>
                 {rushOrder && (
                   <div className="price-row rush-fee">
-                    <span>فعال‌سازی فوری (۵ دقیقه تا ۲ ساعت)</span>
+                    <span>فعال‌سازی فوری</span>
                     <span>+{rushFee.toLocaleString('fa-IR')} تومان</span>
                   </div>
                 )}
                 {discountAmount > 0 && (
-                  <div className="price-row wallet-discount">
-                    <span>{discountFlat > 0 ? "تخفیف" : `تخفیف (${discountPercent}%)`}</span>
+                  <div className="price-row discount-row-price">
+                    <span>تخفیف کد تخفیف</span>
                     <span>-{discountAmount.toLocaleString('fa-IR')} تومان</span>
                   </div>
                 )}
                 {diamondDiscount > 0 && (
-                  <div className="price-row wallet-discount">
-                    <span>تخفیف الماس ({diamondsUse.toLocaleString('fa-IR')} 💎)</span>
+                  <div className="price-row discount-row-price">
+                    <span>تخفیف وفاداری (الماس)</span>
                     <span>-{diamondDiscount.toLocaleString('fa-IR')} تومان</span>
                   </div>
                 )}
+                <div className="price-divider"></div>
                 <div className="price-row total">
-                  <span>مبلغ قابل پرداخت</span>
+                  <span>مبلغ نهایی قابل پرداخت</span>
                   <span className="total-price">{finalTotal.toLocaleString('fa-IR')} تومان</span>
                 </div>
               </div>
 
+              {/* Compact Discount & Rewards Widget directly under price-summary-box */}
+              <div className="sidebar-discount-box">
+                <div className="sidebar-discount-input-row">
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={(e) => {
+                      setDiscountCode(e.target.value.toUpperCase());
+                      setAppliedDiscountCode('');
+                      setDiscountPercent(0);
+                      setDiscountFlat(0);
+                    }}
+                    placeholder="کد تخفیف دارید؟"
+                    className="sidebar-discount-input"
+                  />
+                  <button type="button" className="sidebar-discount-btn" onClick={applyDiscountCode}>
+                    اعمال
+                  </button>
+                </div>
+
+                {discountMessage && (
+                  <div className={`discount-message-box ${discountPercent > 0 || discountFlat > 0 ? 'success' : 'error'}`}>
+                    {discountMessage}
+                  </div>
+                )}
+
+                <div className="sidebar-discount-actions">
+                  {me && diamondsBalance > 0 && (
+                    <button
+                      type="button"
+                      className={`sidebar-discount-action-btn ${diamondsUse > 0 ? 'active' : ''}`}
+                      onClick={() => setDiamondsUse(diamondsUse > 0 ? 0 : Math.min(diamondsBalance, diamondsCap))}
+                    >
+                      <span>💎 استفاده از الماس ({diamondsBalance.toLocaleString('fa-IR')})</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className={`sidebar-discount-action-btn ${howToGetDiscount ? 'active' : ''}`}
+                    onClick={() => setHowToGetDiscount(v => !v)}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span>چطوری تخفیف بگیرم؟</span>
+                  </button>
+                </div>
+
+                {diamondsUse > 0 && me && diamondsBalance > 0 && (
+                  <div className="sidebar-diamond-use-box">
+                    <div className="wallet-input-inner">
+                      <input
+                        type="number"
+                        min={0}
+                        max={diamondsCap}
+                        value={diamondsUse}
+                        onChange={(e) => setDiamondsUse(Math.min(diamondsCap, Math.max(0, Number(e.target.value) || 0)))}
+                        placeholder="تعداد الماس"
+                      />
+                      <span className="wallet-input-unit">💎</span>
+                    </div>
+                    {diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? (
+                      <span className="diamond-discount-tag">
+                        ✅ {diamondsToToman(diamondsUse).toLocaleString('fa-IR')} تومان تخفیف
+                      </span>
+                    ) : (
+                      <span className="diamond-discount-tag warning">
+                        ⚠️ حداقل {MIN_DIAMONDS_TO_REDEEM} الماس
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {howToGetDiscount && (
+                  <div className="discount-how-section-compact">
+                    <div className="discount-how-card">
+                      <div className="discount-how-icon">🎁</div>
+                      <div className="discount-how-content">
+                        <div className="discount-how-title">راهنمای دریافت تخفیف</div>
+                        <div className="discount-how-steps">
+                          <div className="discount-how-step">
+                            <span className="discount-how-step-num">۱</span>
+                            <span>عضویت در کانال تلگرام <a href="https://t.me/NubixShopIR" target="_blank" rel="noopener noreferrer" className="discount-how-link">@NubixShopIR</a></span>
+                          </div>
+                          <div className="discount-how-step">
+                            <span className="discount-how-step-num">۲</span>
+                            <span>چرخش گردونه شانس 🎡 تا ۲۰٪ تخفیف</span>
+                          </div>
+                          <div className="discount-how-step">
+                            <span className="discount-how-step-num">۳</span>
+                            <span>اعمال خودکار کد در کادر بالا</span>
+                          </div>
+                        </div>
+
+                        {!joinedChannel ? (
+                          <button
+                            type="button"
+                            className="join-channel-btn"
+                            onClick={() => setJoinedChannel(true)}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L13.41 17l-2.81 2.73c-.32.32-.59.59-1.22.59l.4-.67z"/></svg>
+                            عضو کانال شدم، گردونه را فعال کن!
+                          </button>
+                        ) : !spinResult ? (
+                          <div className="inline-spin-wheel-new">
+                            <div className="spin-wheel-wrap-inline">
+                              <div className="spin-pointer-inline" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="24" height="24">
+                                  <polygon points="12,22 3,3 21,3" fill="#fbbf24" stroke="#92400e" strokeWidth="1" />
+                                </svg>
+                              </div>
+                              <SpinWheelSvg
+                                rotation={wheelRotation}
+                                isSpinning={isSpinning}
+                                types={(spinStatus?.segments && spinStatus.segments.map((s) => s.type)) || FALLBACK_TYPES}
+                                className="spin-svg-inline"
+                              />
+                            </div>
+                            {spinError && <div className="spin-error-inline">⚠ {spinError}</div>}
+                            <button
+                              type="button"
+                              className="spin-btn-inline"
+                              onClick={handleInlineSpin}
+                              disabled={isSpinning || !spinStatus?.can_spin}
+                            >
+                              {isSpinning ? "در حال چرخش..." : spinStatus?.can_spin ? "چرخش گردونه شانس 🎡" : "سهمیه چرخش شما تمام شده"}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="spin-result-inline-new">
+                            <span className="spin-result-emoji-inline">{spinResult?.type !== "blank" ? "🎉" : "🙁"}</span>
+                            <div className="spin-result-text-group">
+                              <strong className="spin-result-name-inline">{spinResult?.label}</strong>
+                            </div>
+                            {spinResult?.code && (
+                              <button type="button" className="apply-spin-code-btn" onClick={applySpinCode}>
+                                اعمال خودکار کد: {spinResult.code}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Submit Button */}
               <button 
-                className={`submit-btn ${loading ? 'loading' : ''}`} 
+                className={`submit-btn-new ${loading ? 'loading' : ''}`} 
                 aria-disabled={loading ? "true" : "false"}
                 onClick={submit}
               >
                 {loading ? (
                   <>
                     <span className="spinner"></span>
-                    در حال ثبت سفارش...
+                    در حال اتصال به درگاه پرداخت...
                   </>
                 ) : (
                   <>
@@ -1233,19 +1471,35 @@ export default function CheckoutPage() {
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                       <polyline points="22,4 12,14.01 9,11.01"/>
                     </svg>
-                    ثبت سفارش
+                    تکمیل خرید و پرداخت آنلاین
                   </>
                 )}
               </button>
 
-	              {/* Delivery Time Info */}
-	              <div className="delivery-info">
-	                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-	                  <circle cx="12" cy="12" r="10"/>
-	                  <polyline points="12,6 12,12 16,14"/>
-	                </svg>
-	                <span>{deliveryEtaText}</span>
-	              </div>
+              {/* Delivery ETA */}
+              <div className="delivery-info-new">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12,6 12,12 16,14"/>
+                </svg>
+                <span>{deliveryEtaText}</span>
+              </div>
+
+              {/* Security & Trust Badges */}
+              <div className="checkout-trust-grid">
+                <div className="trust-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <span>درگاه پرداخت بانک</span>
+                </div>
+                <div className="trust-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  <span>تضمین تحویل به موقع</span>
+                </div>
+                <div className="trust-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span>پشتیبانی پیامکی و آنلاین</span>
+                </div>
+              </div>
             </div>
           </aside>
         </div>
@@ -2796,77 +3050,116 @@ export default function CheckoutPage() {
         .wallet-section {
           margin-top: 12px;
           padding: 8px 12px;
-          background: rgba(34, 197, 94, 0.08);
-          border: 1px solid rgba(34, 197, 94, 0.2);
-          border-radius: 10px;
+        /* Step Content Box & Rectangular Card Layout */
+        .step-content-box {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .wallet-section {
+          background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(124, 58, 237, 0.08));
+          border: 1px solid rgba(251, 191, 36, 0.25);
+          border-radius: 16px;
+          padding: 16px 20px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 18px;
         }
 
         .wallet-balance {
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          color: var(--text);
+          gap: 12px;
+        }
+
+        .wallet-balance-info {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
         }
 
         .wallet-amount {
-          font-weight: 800;
-          color: #22c55e;
+          font-size: 24px;
+          font-weight: 900;
+          color: #fbbf24;
+          line-height: 1;
+          letter-spacing: -0.5px;
         }
 
         .wallet-currency {
-          font-size: 11px;
-          color: var(--muted);
-        }
-
-        .wallet-input-wrap {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          background: var(--card);
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          padding: 4px 8px;
-        }
-
-        .wallet-input-wrap input {
-          width: 70px;
-          border: none;
-          background: transparent;
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--text);
-          text-align: left;
-          direction: ltr;
-        }
-
-        .wallet-input-wrap input:focus {
-          outline: none;
-        }
-
-        .wallet-input-wrap input::placeholder {
-          color: var(--muted);
-          font-weight: 400;
-        }
-
-        .wallet-input-unit {
-          font-size: 11px;
+          font-size: 14px;
           font-weight: 700;
-          color: #22c55e;
+          color: #f1f5f9;
         }
 
-        .discount-section {
-          margin-top: 14px;
+        /* Compact Tips Section Grid */
+        .tips-grid-compact {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 14px;
+          margin-bottom: 16px;
+        }
+
+        .tip-box-compact {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          background: rgba(124, 58, 237, 0.05);
+          border: 1px solid rgba(139, 92, 246, 0.15);
+          border-radius: 14px;
+          padding: 14px;
+          transition: all 0.2s ease;
+        }
+
+        .tip-box-compact:hover {
+          background: rgba(124, 58, 237, 0.1);
+          border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .tip-icon {
+          font-size: 20px;
+          line-height: 1;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        .tip-text-group {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 4px;
         }
 
-        .discount-toggle-link {
+        .tip-text-group strong {
+          font-size: 13.5px;
+          font-weight: 800;
+          color: #f8fafc;
+        }
+
+        .tip-text-group span {
+          font-size: 12px;
+          color: #94a3b8;
+          line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+          .tips-grid-compact {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+
+          .wallet-section {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .wallet-balance {
+            justify-content: center;
+          }
+        }
           background: none;
           border: none;
           padding: 0;
@@ -3112,6 +3405,1505 @@ export default function CheckoutPage() {
 
           .rush-price-value {
             font-size: 16px;
+          }
+        }
+
+        /* ========================================================== */
+        /* Antigravity Checkout Polish Styles                         */
+        /* ========================================================== */
+
+        /* Header & Title Bar */
+        .checkout-top-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 16px;
+          padding: 10px 18px;
+          background: rgba(124, 58, 237, 0.04);
+          border: 1px solid rgba(139, 92, 246, 0.15);
+          border-radius: 12px;
+        }
+
+        .checkout-main-title {
+          font-size: 16px;
+          font-weight: 800;
+          color: var(--text);
+          margin: 0;
+        }
+
+        .checkout-steps-bar {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          max-width: 780px;
+          justify-content: space-between;
+        }
+
+        .checkout-step-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(30, 27, 75, 0.4);
+          border: 1.5px solid rgba(139, 92, 246, 0.2);
+          border-radius: 14px;
+          padding: 10px 18px;
+          color: #94a3b8;
+          font-size: 13.5px;
+          font-weight: 700;
+          cursor: default;
+          user-select: none;
+          transition: all 0.25s ease;
+        }
+
+        .checkout-step-item.active {
+          background: linear-gradient(135deg, #7c3aed, #4f46e5);
+          border-color: #a78bfa;
+          color: #ffffff;
+          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+        }
+
+        .checkout-step-item.completed {
+          background: rgba(16, 185, 129, 0.15);
+          border-color: rgba(16, 185, 129, 0.4);
+          color: #34d399;
+        }
+
+        .step-num {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        .checkout-step-item.active .step-num {
+          background: rgba(255, 255, 255, 0.25);
+        }
+
+        .step-line {
+          flex: 1;
+          height: 3px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+          min-width: 20px;
+          transition: background 0.3s ease;
+        }
+
+        .step-line.active {
+          background: linear-gradient(90deg, #8b5cf6, #10b981);
+        }
+
+        /* Wizard Step Action Buttons */
+        .wizard-step-actions {
+          display: flex;
+          gap: 16px;
+          margin-top: 24px;
+        }
+
+        .wizard-step-actions.split {
+          justify-content: space-between;
+        }
+
+        .wizard-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 14px 28px;
+          border-radius: 14px;
+          font-size: 14px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          border: none;
+        }
+
+        .wizard-btn.primary {
+          background: linear-gradient(135deg, #8b5cf6, #6366f1);
+          color: white;
+          box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
+          flex: 1;
+        }
+
+        .wizard-btn.primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(139, 92, 246, 0.5);
+          background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        }
+
+        .wizard-btn.secondary {
+          background: rgba(30, 27, 75, 0.6);
+          border: 1px solid rgba(139, 92, 246, 0.25);
+          color: #cbd5e1;
+        }
+
+        .wizard-btn.secondary:hover {
+          background: rgba(139, 92, 246, 0.2);
+          color: white;
+        }
+
+        .no-creds-card {
+          text-align: center;
+          padding: 36px 24px;
+        }
+
+        /* Main Grid and Two Column Layout on Desktop */
+        .checkout-grid {
+          display: grid;
+          grid-template-columns: 1.55fr 1fr; /* Make forms column wider, sidebar summary narrower */
+          gap: 32px;
+          align-items: start;
+          direction: rtl;
+        }
+
+        .checkout-main-content {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        /* checkout card base */
+        .checkout-card {
+          background: var(--card);
+          border: 1px solid var(--line);
+          border-radius: 20px;
+          padding: 28px;
+          margin-bottom: 24px !important;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .compact-rewards {
+          padding: 16px 20px !important;
+          border-radius: 16px !important;
+          background: rgba(124, 58, 237, 0.06) !important;
+          border: 1px solid rgba(139, 92, 246, 0.2) !important;
+        }
+
+        :global([data-theme="dark"]) .checkout-card {
+          background: rgba(30, 27, 75, 0.4);
+          border-color: rgba(139, 92, 246, 0.15);
+          box-shadow: 0 10px 45px rgba(0, 0, 0, 0.35);
+          backdrop-filter: blur(12px);
+        }
+
+        .checkout-card:hover {
+          border-color: rgba(139, 92, 246, 0.35);
+          box-shadow: 0 12px 50px rgba(124, 58, 237, 0.1);
+        }
+
+        /* Card Header */
+        .card-header {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 24px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid var(--line);
+        }
+
+        :global([data-theme="dark"]) .card-header {
+          border-bottom-color: rgba(139, 92, 246, 0.1);
+        }
+
+        .card-icon {
+          width: 48px;
+          height: 48px;
+          background: linear-gradient(135deg, var(--primary), var(--primary-2));
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+          flex-shrink: 0;
+        }
+
+        .card-icon.warning-icon {
+          background: linear-gradient(135deg, #f59e0b, #ea580c);
+          box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
+        }
+
+        .card-header h3 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 800;
+          color: var(--text);
+        }
+
+        .card-header p {
+          margin: 4px 0 0 0;
+          font-size: 13px;
+          color: var(--muted);
+        }
+
+        /* Credentials list */
+        .credentials-list {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .item-credentials-block {
+          background: rgba(124, 58, 237, 0.03);
+          border: 1px solid rgba(124, 58, 237, 0.1);
+          border-radius: 16px;
+          padding: 20px;
+        }
+
+        :global([data-theme="dark"]) .item-credentials-block {
+          background: rgba(124, 58, 237, 0.05);
+          border-color: rgba(139, 92, 246, 0.15);
+        }
+
+        .item-credentials-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-bottom: 16px;
+          padding-bottom: 12px;
+          border-bottom: 1px dashed var(--line);
+        }
+
+        :global([data-theme="dark"]) .item-credentials-header {
+          border-bottom-color: rgba(139, 92, 246, 0.1);
+        }
+
+        /* Inline Platform Selector inside Credentials Card */
+        .inline-platform-selector-box {
+          margin-bottom: 18px;
+          background: rgba(15, 12, 33, 0.5);
+          border: 1px solid rgba(139, 92, 246, 0.15);
+          border-radius: 14px;
+          padding: 14px 16px;
+        }
+
+        .inline-platform-label {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text);
+          margin-bottom: 12px;
+        }
+
+        .platform-required-badge {
+          font-size: 11px;
+          background: rgba(245, 158, 11, 0.15);
+          color: #fbbf24;
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          padding: 3px 10px;
+          border-radius: 6px;
+          font-weight: 700;
+        }
+
+        .inline-platform-buttons {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .inline-platform-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          border-radius: 10px;
+          background: rgba(30, 27, 75, 0.5);
+          border: 1.5px solid rgba(255, 255, 255, 0.1);
+          color: var(--text);
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .inline-platform-btn:hover {
+          background: rgba(139, 92, 246, 0.2);
+          border-color: rgba(167, 139, 250, 0.4);
+          color: #ffffff;
+        }
+
+        .inline-platform-btn.active {
+          background: linear-gradient(135deg, #7c3aed, #4f46e5);
+          border-color: #a78bfa;
+          color: #ffffff;
+          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+        }
+
+        .inline-platform-btn img {
+          width: 18px;
+          height: 18px;
+          object-fit: contain;
+        }
+
+        /* Light mode overrides for platform selector */
+        :global([data-theme="light"]) .inline-platform-selector-box {
+          background: rgba(124, 58, 237, 0.04) !important;
+          border: 1px solid rgba(139, 92, 246, 0.2) !important;
+        }
+
+        :global([data-theme="light"]) .inline-platform-label {
+          color: #0f172a !important;
+        }
+
+        :global([data-theme="light"]) .platform-required-badge {
+          background: rgba(245, 158, 11, 0.1) !important;
+          color: #b45309 !important;
+          border-color: rgba(245, 158, 11, 0.25) !important;
+        }
+
+        :global([data-theme="light"]) .inline-platform-btn {
+          background: #ffffff !important;
+          border: 1.5px solid rgba(139, 92, 246, 0.2) !important;
+          color: #1e293b !important;
+        }
+
+        :global([data-theme="light"]) .inline-platform-btn:hover {
+          background: rgba(139, 92, 246, 0.1) !important;
+          border-color: #7c3aed !important;
+          color: #7c3aed !important;
+        }
+
+        :global([data-theme="light"]) .inline-platform-btn.active {
+          background: linear-gradient(135deg, #7c3aed, #4f46e5) !important;
+          border-color: #7c3aed !important;
+          color: #ffffff !important;
+          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
+        }
+
+        .item-index-badge {
+          background: var(--primary);
+          color: white;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 2px 8px;
+          border-radius: 6px;
+        }
+
+        .item-product-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text);
+          flex: 1;
+        }
+
+        .platform-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: var(--platform-color, #7c3aed);
+          color: white;
+          font-size: 12px;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .platform-badge-icon {
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .platform-badge-icon img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        /* Xbox create account styles */
+        .xbox-create-option-wrapper {
+          margin-bottom: 16px;
+        }
+
+        .xbox-create-option {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          cursor: pointer;
+          font-size: 13px;
+          color: var(--text);
+          font-weight: 600;
+        }
+
+        .xbox-create-option input {
+          width: 18px;
+          height: 18px;
+          accent-color: #107c10;
+        }
+
+        .xbox-create-message {
+          background: rgba(16, 124, 16, 0.08);
+          border: 1px solid rgba(16, 124, 16, 0.2);
+          color: #107c10;
+          border-radius: 12px;
+          padding: 12px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 1.6;
+        }
+
+        :global([data-theme="dark"]) .xbox-create-message {
+          background: rgba(16, 124, 16, 0.15);
+          color: #a7f3d0;
+          border-color: rgba(16, 124, 16, 0.3);
+        }
+
+        .credentials-inputs-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+
+        .credentials-inputs-grid.extra-fields-row {
+          margin-top: 16px;
+          border-top: 1px dashed rgba(139, 92, 246, 0.1);
+          padding-top: 16px;
+        }
+
+        /* Contact Details */
+        .contact-fields-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+
+        .contact-fields-grid .field.full-width {
+          grid-column: span 2;
+        }
+
+        /* Rewards section */
+        .rewards-content {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        /* Wallet input new */
+        .wallet-input-wrap-new {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: rgba(124, 58, 237, 0.04);
+          border: 1px solid rgba(124, 58, 237, 0.12);
+          border-radius: 12px;
+          padding: 8px 16px;
+          margin-top: 12px;
+        }
+
+        :global([data-theme="dark"]) .wallet-input-wrap-new {
+          background: rgba(139, 92, 246, 0.05);
+          border-color: rgba(139, 92, 246, 0.15);
+        }
+
+        .wallet-input-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--muted);
+        }
+
+        .wallet-input-inner {
+          position: relative;
+          display: flex;
+          align-items: center;
+          flex: 1;
+        }
+
+        .wallet-input-inner input {
+          width: 100%;
+          background: transparent;
+          border: none !important;
+          outline: none !important;
+          padding: 8px 0;
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--text);
+          text-align: left;
+          direction: ltr;
+        }
+
+        .wallet-input-unit {
+          font-size: 16px;
+          margin-right: 8px;
+        }
+
+        .wallet-warning-hint {
+          color: #f59e0b;
+          font-size: 12px;
+          font-weight: 600;
+          margin-top: 8px;
+        }
+
+        .wallet-success-hint {
+          color: #10b981;
+          font-size: 12px;
+          font-weight: 600;
+          margin-top: 8px;
+        }
+
+        /* Discount toggle & how-to buttons */
+        .discount-section-new {
+          border-top: 1px solid var(--line);
+          padding-top: 20px;
+        }
+
+        :global([data-theme="dark"]) .discount-section-new {
+          border-top-color: rgba(139, 92, 246, 0.1);
+        }
+
+        .discount-actions-row {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+
+        .discount-toggle-btn,
+        .discount-how-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 16px;
+          border-radius: 10px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: 1px solid var(--line);
+          background: var(--bg);
+          color: var(--text);
+        }
+
+        :global([data-theme="dark"]) .discount-toggle-btn,
+        :global([data-theme="dark"]) .discount-how-btn {
+          border-color: rgba(139, 92, 246, 0.15);
+          background: rgba(30, 27, 75, 0.3);
+        }
+
+        .discount-toggle-btn.active,
+        .discount-toggle-btn:hover {
+          background: var(--primary);
+          color: white;
+          border-color: var(--primary);
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .discount-how-btn.active,
+        .discount-how-btn:hover {
+          background: #fbbf24;
+          color: #92400e;
+          border-color: #fbbf24;
+          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+        }
+
+        .discount-form-new {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          background: rgba(124, 58, 237, 0.03);
+          border: 1px dashed rgba(124, 58, 237, 0.2);
+          border-radius: 12px;
+          padding: 16px;
+        }
+
+        .discount-input-row {
+          display: flex;
+          gap: 10px;
+        }
+
+        .discount-input-row input {
+          flex: 1;
+          background: var(--bg);
+          border: 2px solid var(--line);
+          border-radius: 10px;
+          padding: 10px 14px;
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text);
+          text-align: center;
+          text-transform: uppercase;
+        }
+
+        .discount-apply-btn {
+          background: var(--primary);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          padding: 0 20px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .discount-apply-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+        }
+
+        .discount-message-box {
+          border-radius: 8px;
+          padding: 8px 12px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .discount-message-box.success {
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          color: #10b981;
+        }
+
+        .discount-message-box.error {
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          color: #ef4444;
+        }
+
+        /* Telegram Spin Wheel section */
+        .discount-how-section {
+          background: rgba(30, 27, 75, 0.3);
+          border: 1px solid rgba(139, 92, 246, 0.2);
+          border-radius: 14px;
+          padding: 16px;
+          margin-top: 12px;
+        }
+
+        .discount-how-card {
+          display: flex;
+          gap: 16px;
+        }
+
+        .discount-how-icon {
+          font-size: 32px;
+          flex-shrink: 0;
+        }
+
+        .discount-how-content {
+          flex: 1;
+        }
+
+        .discount-how-title {
+          font-size: 15px;
+          font-weight: 800;
+          color: var(--text);
+          margin-bottom: 12px;
+        }
+
+        .discount-how-steps {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-bottom: 16px;
+        }
+
+        .discount-how-step {
+          display: flex;
+          gap: 8px;
+          font-size: 13px;
+          line-height: 1.6;
+          color: var(--muted);
+          align-items: flex-start;
+        }
+
+        .discount-how-step-num {
+          background: #fbbf24;
+          color: #92400e;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: 800;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        .discount-how-link {
+          color: #38bdf8;
+          font-weight: 700;
+          text-decoration: underline;
+        }
+
+        .join-channel-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background: #229ed9;
+          color: white;
+          border: none;
+          border-radius: 10px;
+          padding: 12px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .join-channel-btn:hover {
+          background: #24a1de;
+          box-shadow: 0 4px 12px rgba(34, 158, 217, 0.4);
+        }
+
+        /* Inline Spin Wheel SVG and logic */
+        .inline-spin-wheel-new {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          margin-top: 16px;
+          padding: 16px;
+          background: rgba(124, 58, 237, 0.05);
+          border: 1px solid rgba(124, 58, 237, 0.15);
+          border-radius: 12px;
+        }
+
+        .spin-wheel-wrap-inline {
+          position: relative;
+          width: 180px;
+          height: 180px;
+        }
+
+        .spin-pointer-inline {
+          position: absolute;
+          top: -12px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10;
+        }
+
+        .spin-svg-inline {
+          width: 100%;
+          height: 100%;
+        }
+
+        .spin-btn-inline {
+          background: linear-gradient(135deg, #fbbf24, #ea580c);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          padding: 10px 20px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .spin-btn-inline:hover:not(:disabled) {
+          transform: scale(1.05);
+          box-shadow: 0 4px 15px rgba(234, 88, 12, 0.4);
+        }
+
+        .spin-btn-inline:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .spin-error-inline {
+          color: #ef4444;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .spin-signin-hint {
+          font-size: 11px;
+          color: var(--muted);
+          margin: 0;
+        }
+
+        /* Spin Result styling */
+        .spin-result-inline-new {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          border-radius: 12px;
+          padding: 16px;
+          text-align: center;
+        }
+
+        .spin-result-emoji-inline {
+          font-size: 36px;
+        }
+
+        .spin-result-text-group {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .spin-result-label-inline {
+          font-size: 12px;
+          color: var(--muted);
+        }
+
+        .spin-result-name-inline {
+          font-size: 16px;
+          font-weight: 800;
+          color: #10b981;
+        }
+
+        .spin-code-box {
+          background: var(--bg);
+          border: 1px dashed rgba(16, 185, 129, 0.4);
+          border-radius: 8px;
+          padding: 8px 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .spin-code-box:hover {
+          border-color: #10b981;
+          background: rgba(16, 185, 129, 0.03);
+        }
+
+        .spin-code-box span {
+          font-size: 11px;
+          color: var(--muted);
+        }
+
+        .spin-code-box code {
+          font-family: monospace;
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--text);
+          letter-spacing: 1px;
+        }
+
+        .apply-spin-code-btn {
+          background: #10b981;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .apply-spin-code-btn:hover {
+          background: #059669;
+          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Tips and agreement section styling */
+        .order-tips-list-new {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .order-tips-list-new li {
+          display: flex;
+          gap: 14px;
+          align-items: flex-start;
+          line-height: 1.6;
+          font-size: 13.5px;
+          color: var(--text);
+        }
+
+        .tip-bullet {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: rgba(245, 158, 11, 0.15);
+          color: #d97706;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 800;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        :global([data-theme="dark"]) .tip-bullet {
+          background: rgba(245, 158, 11, 0.2);
+          color: #fbbf24;
+        }
+
+        .order-tips-link-new {
+          color: var(--primary-2);
+          font-weight: 700;
+          margin-right: 6px;
+          text-decoration: underline;
+        }
+
+        .ack-agreement-row {
+          border-top: 1px solid var(--line);
+          padding-top: 16px;
+          margin-top: 20px;
+        }
+
+        :global([data-theme="dark"]) .ack-agreement-row {
+          border-top-color: rgba(139, 92, 246, 0.1);
+        }
+
+        .ack-checkbox-new {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text);
+        }
+
+        .ack-checkbox-new input {
+          width: 20px;
+          height: 20px;
+          accent-color: var(--primary);
+        }
+
+        /* Order Summary Sidebar Card */
+        .cart-summary-card {
+          background: var(--card);
+          border: 1px solid var(--line);
+          border-radius: 20px;
+          padding: 24px;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        :global([data-theme="dark"]) .cart-summary-card {
+          background: rgba(30, 27, 75, 0.6);
+          border-color: rgba(139, 92, 246, 0.2);
+          box-shadow: 0 12px 48px rgba(124, 58, 237, 0.12);
+        }
+
+        .summary-title-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 20px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid var(--line);
+        }
+
+        :global([data-theme="dark"]) .summary-title-row {
+          border-bottom-color: rgba(139, 92, 246, 0.1);
+        }
+
+        .summary-title-row h3 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 800;
+          color: var(--text);
+          flex: 1;
+        }
+
+        .cart-badge {
+          background: rgba(124, 58, 237, 0.1);
+          color: var(--primary-2);
+          font-size: 11px;
+          font-weight: 800;
+          padding: 2px 8px;
+          border-radius: 6px;
+        }
+
+        .cart-summary-items-list {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          max-height: 350px;
+          overflow-y: auto;
+          margin-bottom: 20px;
+          padding-left: 4px;
+        }
+
+        .cart-item-wrapper-compact {
+          border-bottom: 1px solid var(--line);
+          padding-bottom: 14px;
+        }
+
+        .cart-item-wrapper-compact:last-child {
+          border-bottom: none;
+          padding-bottom: 0;
+        }
+
+        :global([data-theme="dark"]) .cart-item-wrapper-compact {
+          border-bottom-color: rgba(139, 92, 246, 0.08);
+        }
+
+        .cart-item-compact {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .cart-item-meta-compact {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 4px;
+        }
+
+        .platform-badge-compact {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: var(--platform-color, #7c3aed);
+          color: white;
+          font-size: 10px;
+          font-weight: 700;
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .platform-badge-icon-compact {
+          width: 10px;
+          height: 10px;
+        }
+
+        .platform-badge-icon-compact img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .item-platform-selector-compact {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .platform-icon-buttons-compact {
+          display: flex;
+          gap: 4px;
+        }
+
+        .platform-icon-btn-compact {
+          background: var(--bg);
+          border: 1px solid var(--line);
+          width: 22px;
+          height: 22px;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          padding: 2px;
+        }
+
+        :global([data-theme="dark"]) .platform-icon-btn-compact {
+          border-color: rgba(139, 92, 246, 0.15);
+          background: rgba(30, 27, 75, 0.4);
+        }
+
+        .platform-icon-btn-compact img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .platform-icon-btn-compact.active {
+          border-color: var(--primary);
+          background: rgba(124, 58, 237, 0.15);
+        }
+
+        .platform-missing-warn-compact {
+          color: #f59e0b;
+          font-size: 10px;
+          font-weight: 700;
+        }
+
+        .cart-item-price-quantity-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .qty-control-compact {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: var(--bg);
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          padding: 2px 6px;
+        }
+
+        :global([data-theme="dark"]) .qty-control-compact {
+          border-color: rgba(139, 92, 246, 0.15);
+          background: rgba(30, 27, 75, 0.4);
+        }
+
+        .qty-control-compact .qty-btn {
+          background: none;
+          border: none;
+          color: var(--text);
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 700;
+          padding: 0 4px;
+          transition: opacity 0.2s ease;
+        }
+
+        .qty-control-compact .qty-value {
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--text);
+          min-width: 12px;
+          text-align: center;
+        }
+
+        .remove-btn-compact {
+          background: none;
+          border: none;
+          color: var(--muted);
+          cursor: pointer;
+          transition: color 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 4px;
+        }
+
+        .remove-btn-compact:hover {
+          color: #ef4444;
+        }
+
+        .price-summary-box {
+          background: rgba(124, 58, 237, 0.02);
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          padding: 16px;
+          margin-bottom: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        :global([data-theme="dark"]) .price-summary-box {
+          background: rgba(30, 27, 75, 0.2);
+          border-color: rgba(139, 92, 246, 0.1);
+        }
+
+        .price-summary-box .price-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          color: var(--muted);
+          font-weight: 600;
+        }
+
+        .price-summary-box .price-row.rush-fee {
+          color: #f59e0b;
+        }
+
+        .price-summary-box .price-row.discount-row-price {
+          color: #10b981;
+        }
+
+        .price-summary-box .price-divider {
+          height: 1px;
+          background: var(--line);
+        }
+
+        :global([data-theme="dark"]) .price-summary-box .price-divider {
+          background: rgba(139, 92, 246, 0.1);
+        }
+
+        .price-summary-box .price-row.total {
+          color: var(--text);
+          font-size: 14px;
+          font-weight: 800;
+          align-items: center;
+        }
+
+        .price-summary-box .price-row.total .total-price {
+          font-size: 18px;
+          color: var(--primary-2);
+          text-shadow: 0 0 15px rgba(167, 139, 250, 0.2);
+        }
+
+        /* Small Sidebar Discount & Diamonds Textbox Widget */
+        .sidebar-discount-box {
+          margin-top: 14px;
+          margin-bottom: 20px;
+          padding: 12px 14px;
+          background: rgba(30, 27, 75, 0.35);
+          border: 1px solid rgba(139, 92, 246, 0.2);
+          border-radius: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        :global([data-theme="light"]) .sidebar-discount-box {
+          background: rgba(241, 245, 249, 0.8);
+          border-color: rgba(139, 92, 246, 0.15);
+        }
+
+        .sidebar-discount-input-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .sidebar-discount-input {
+          flex: 1;
+          height: 38px;
+          padding: 0 12px;
+          border-radius: 10px;
+          border: 1px solid var(--line);
+          background: var(--bg);
+          color: var(--text);
+          font-size: 13px;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .sidebar-discount-input:focus {
+          border-color: var(--primary);
+        }
+
+        .sidebar-discount-btn {
+          height: 38px;
+          padding: 0 16px;
+          border-radius: 10px;
+          border: none;
+          background: linear-gradient(135deg, #7c3aed, #4f46e5);
+          color: white;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: opacity 0.2s;
+          white-space: nowrap;
+        }
+
+        .sidebar-discount-btn:hover {
+          opacity: 0.9;
+        }
+
+        .sidebar-discount-actions {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+
+        .sidebar-discount-action-btn {
+          background: none;
+          border: none;
+          color: #a78bfa;
+          font-size: 11.5px;
+          font-weight: 700;
+          cursor: pointer;
+          padding: 2px 4px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: color 0.2s;
+        }
+
+        .sidebar-discount-action-btn:hover,
+        .sidebar-discount-action-btn.active {
+          color: #fbbf24;
+        }
+
+        .sidebar-diamond-use-box {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          padding-top: 8px;
+          border-top: 1px dashed rgba(139, 92, 246, 0.15);
+        }
+
+        .sidebar-diamond-use-box .wallet-input-inner {
+          display: flex;
+          align-items: center;
+          width: 100px;
+          background: var(--bg);
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          padding: 2px 8px;
+        }
+
+        .sidebar-diamond-use-box input {
+          width: 100%;
+          border: none;
+          background: none;
+          color: var(--text);
+          font-size: 12px;
+          font-weight: 700;
+          outline: none;
+        }
+
+        .diamond-discount-tag {
+          font-size: 11px;
+          font-weight: 700;
+          color: #34d399;
+        }
+
+        .diamond-discount-tag.warning {
+          color: #f59e0b;
+        }
+
+        .discount-how-section-compact {
+          padding-top: 8px;
+          border-top: 1px dashed rgba(139, 92, 246, 0.15);
+          font-size: 11.5px;
+        }
+
+        .discount-how-title {
+          font-weight: 800;
+          color: #fbbf24;
+          margin-bottom: 6px;
+        }
+
+        .discount-how-steps {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          color: var(--muted);
+        }
+
+        .discount-how-step {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .discount-how-step-num {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: rgba(124, 58, 237, 0.2);
+          color: #a78bfa;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          font-weight: 800;
+        }
+
+        /* Glowing Submit button */
+        .submit-btn-new {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          border-radius: 14px;
+          padding: 16px 24px;
+          font-size: 15px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+        }
+
+        .submit-btn-new:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+          background: linear-gradient(135deg, #059669, #047857);
+        }
+
+        .submit-btn-new:active:not(:disabled) {
+          transform: translateY(1px);
+        }
+
+        .submit-btn-new.loading {
+          opacity: 0.8;
+          cursor: not-allowed;
+        }
+
+        .delivery-info-new {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 14px;
+          font-size: 12.5px;
+          color: var(--muted);
+          font-weight: 600;
+        }
+
+        /* Trust & Security Badges */
+        .checkout-trust-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+          margin-top: 18px;
+          padding-top: 16px;
+          border-top: 1px dashed var(--line);
+        }
+
+        :global([data-theme="dark"]) .checkout-trust-grid {
+          border-top-color: rgba(139, 92, 246, 0.15);
+        }
+
+        .trust-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          text-align: center;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--muted);
+        }
+
+        .trust-item svg {
+          color: #10b981;
+        }
+
+        /* Mobile Responsive media query updates */
+        @media (max-width: 1024px) {
+          .checkout-grid {
+            grid-template-columns: 1fr;
+            gap: 24px;
+          }
+
+          .checkout-sidebar {
+            position: static;
+            order: 2; /* Forms first, then Order Summary */
+          }
+
+          .checkout-main-content {
+            order: 1;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .credentials-inputs-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .contact-fields-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .contact-fields-grid .field.full-width {
+            grid-column: span 1;
           }
         }
       `}</style>
@@ -3720,6 +5512,102 @@ function PlatformFields({ form, setForm, items, rushOrder, showValidation }) {
           padding: 14px 28px;
           font-size: 15px;
           font-weight: 700;
+        }
+
+        /* ── LIGHT MODE OVERRIDES ───────────────────────────────────────── */
+        :global([data-theme="light"]) .checkout-card {
+          background: #ffffff !important;
+          border: 1px solid rgba(139, 92, 246, 0.18) !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        :global([data-theme="light"]) .checkout-card h3 {
+          color: #0f172a !important;
+        }
+
+        :global([data-theme="light"]) .checkout-card p {
+          color: #64748b !important;
+        }
+
+        :global([data-theme="light"]) .field input,
+        :global([data-theme="light"]) .name-input,
+        :global([data-theme="light"]) .sidebar-discount-input,
+        :global([data-theme="light"]) .password-toggle-wrapper input {
+          background: #ffffff !important;
+          border: 1.5px solid #cbd5e1 !important;
+          color: #0f172a !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+        }
+
+        :global([data-theme="light"]) .field input::placeholder,
+        :global([data-theme="light"]) .name-input::placeholder,
+        :global([data-theme="light"]) .sidebar-discount-input::placeholder {
+          color: #94a3b8 !important;
+        }
+
+        :global([data-theme="light"]) .field input:focus,
+        :global([data-theme="light"]) .name-input:focus,
+        :global([data-theme="light"]) .sidebar-discount-input:focus {
+          border-color: #7c3aed !important;
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+        }
+
+        :global([data-theme="light"]) .item-credentials-block {
+          background: rgba(124, 58, 237, 0.02) !important;
+          border: 1px solid rgba(139, 92, 246, 0.15) !important;
+        }
+
+        :global([data-theme="light"]) .item-credentials-header {
+          border-bottom-color: rgba(203, 213, 225, 0.8) !important;
+        }
+
+        :global([data-theme="light"]) .item-product-name {
+          color: #0f172a !important;
+        }
+
+        :global([data-theme="light"]) .sidebar-discount-box,
+        :global([data-theme="light"]) .price-summary-box {
+          background: #ffffff !important;
+          border: 1px solid rgba(139, 92, 246, 0.18) !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        :global([data-theme="light"]) .price-row {
+          color: #334155 !important;
+        }
+
+        :global([data-theme="light"]) .price-row.total-row {
+          color: #0f172a !important;
+          border-top-color: #e2e8f0 !important;
+        }
+
+        :global([data-theme="light"]) .delivery-info-new {
+          background: rgba(124, 58, 237, 0.06) !important;
+          color: #6d28d9 !important;
+          border: 1px solid rgba(124, 58, 237, 0.15) !important;
+        }
+
+        :global([data-theme="light"]) .trust-item {
+          background: #ffffff !important;
+          border: 1px solid rgba(203, 213, 225, 0.8) !important;
+          color: #475569 !important;
+        }
+
+        :global([data-theme="light"]) .rush-order-card:not(.active) {
+          background: #ffffff !important;
+          border: 1px solid rgba(139, 92, 246, 0.2) !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        :global([data-theme="light"]) .rush-order-card:not(.active) .rush-info h3,
+        :global([data-theme="light"]) .rush-order-card:not(.active) .rush-price-value {
+          color: #0f172a !important;
+        }
+
+        :global([data-theme="light"]) .rush-order-card:not(.active) .rush-info p,
+        :global([data-theme="light"]) .rush-order-card:not(.active) .rush-price-unit,
+        :global([data-theme="light"]) .rush-order-card:not(.active) .toggle-label {
+          color: #64748b !important;
         }
       `}</style>
     </div>

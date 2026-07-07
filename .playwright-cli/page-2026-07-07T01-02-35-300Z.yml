@@ -1,0 +1,9 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e1121]:
+    - img "NubixShop" [ref=f1e1122]
+    - heading "پنل همکاران NubixShop" [level=1] [ref=f1e1123]
+    - paragraph [ref=f1e1124]: با نوبیکس شاپ همکار شوید و از فروش محصولات کسب درآمد کنید
+    - link "مشاهده شرایط همکاری با ما" [ref=f1e1126] [cursor=pointer]:
+      - /url: /reseller/apply
+    - button "توکن دارید؟ ورود به پنل" [ref=f1e1127] [cursor=pointer]
+  - alert [ref=f1e503]: همکاری در فروش | پنل همکاران | نوبیکس شاپ

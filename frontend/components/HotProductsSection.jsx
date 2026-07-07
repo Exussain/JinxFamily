@@ -1,8 +1,18 @@
 "use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function HotProductsSection() {
-  const openSpin = () => {
+  const [isWednesday, setIsWednesday] = useState(false);
+
+  useEffect(() => {
+    setIsWednesday(new Date().getDay() === 3);
+  }, []);
+
+  const openSpin = (e) => {
     if (typeof window !== "undefined") {
+      // Crawlers follow the real /spin href; JS users get the modal instead.
+      e.preventDefault();
       window.dispatchEvent(new Event("open-spin-wheel"));
     }
   };
@@ -10,7 +20,7 @@ export default function HotProductsSection() {
   return (
     <section className="hot-section">
       {/* 3D Spin Wheel Banner */}
-      <div className="spin-banner" onClick={openSpin} role="button" tabIndex={0}>
+      <Link href="/spin" className={`spin-banner ${isWednesday ? "is-wednesday" : ""}`} onClick={openSpin}>
         {/* Glow ambient background elements clipped inside the banner */}
         <div className="spin-banner-glows-wrapper" aria-hidden="true">
           <div className="spin-banner-glow-1" />
@@ -20,28 +30,32 @@ export default function HotProductsSection() {
         <div className="spin-banner-inner">
           {/* Right side content (RTL) */}
           <div className="spin-banner-content">
-            <span className="spin-banner-badge">🎡 چهارشنبه‌های طلایی نوبیکس</span>
+            <span className="spin-banner-badge">
+              {isWednesday ? "امروز چهارشنبه‌ست ✨" : "🎡 چهارشنبه‌های طلایی نوبیکس"}
+            </span>
             <div className="spin-banner-text">
-              <strong>گردونه شانس رو بچرخون!</strong>
-              <span>هر هفته بچرخان، تا ۲۰٪ تخفیف یا اعتبار رایگان کیف پول برنده شو.</span>
+              <strong>{isWednesday ? "چهارشنبه‌ست، بیا گردونتو بچرخون" : "گردونه شانس رو بچرخون!"}</strong>
+              <span>{isWednesday ? "امروز شانس طلایی داری: الماس، کد تخفیف یا جایزه واقعی بگیر." : "هر هفته بچرخان، تا ۲۰٪ تخفیف یا الماس رایگان برنده شو."}</span>
             </div>
           </div>
 
           {/* Button CTA */}
           <div className="spin-banner-action">
-            <span className="spin-banner-btn">بچرخون! 🚀</span>
+            <span className="spin-banner-btn">{isWednesday ? "گردونه طلایی رو بچرخون" : "بچرخون! 🚀"}</span>
           </div>
 
           {/* Left side 3D asset overflowing the container */}
           <div className="spin-banner-image-container">
             <img
-              src="/images/lucky_chest.png"
+              src="/images/lucky_chest.webp"
               alt="صندوقچه شانس نوبیکس"
               className="spin-banner-wheel-img"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         </div>
-      </div>
+      </Link>
 
       <style jsx>{`
         .hot-section {
@@ -53,14 +67,26 @@ export default function HotProductsSection() {
 
         /* Spin Banner Container */
         .spin-banner {
-          background: linear-gradient(135deg, #0f0c2d 0%, #171242 45%, #2c1a4d 100%);
+          display: block;
+          text-decoration: none;
+          color: inherit;
+          background:
+            radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.35), transparent 22%),
+            linear-gradient(110deg, #fef3c7 0%, #fcd34d 28%, #f59e0b 50%, #fcd34d 72%, #fef3c7 100%);
+          background-size: 100% 100%, 220% 100%;
+          background-position: 0% 0%, 0% 50%;
+          animation: goldShimmer 6s ease-in-out infinite;
           border-radius: 20px;
           cursor: pointer;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 12px 32px rgba(217, 119, 6, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+          border: 1px solid rgba(217, 119, 6, 0.35);
           transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1), box-shadow 0.3s ease;
           overflow: visible; /* To allow the 3D asset to overflow top & bottom */
           position: relative;
+        }
+        @keyframes goldShimmer {
+          0%, 100% { background-position: 0% 0%, 0% 50%; }
+          50% { background-position: 0% 0%, 100% 50%; }
         }
 
         /* Ambient Glow Behind Content */
@@ -78,7 +104,7 @@ export default function HotProductsSection() {
           top: -40px;
           width: 200px;
           height: 200px;
-          background: radial-gradient(circle, rgba(168, 85, 247, 0.22) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(252, 211, 77, 0.5) 0%, transparent 70%);
           pointer-events: none;
         }
         .spin-banner-glow-2 {
@@ -87,7 +113,7 @@ export default function HotProductsSection() {
           bottom: -40px;
           width: 200px;
           height: 200px;
-          background: radial-gradient(circle, rgba(6, 182, 212, 0.18) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%);
           pointer-events: none;
         }
 
@@ -95,22 +121,70 @@ export default function HotProductsSection() {
         .spin-banner::before {
           content: '';
           position: absolute;
-          top: 0; left: -100%; width: 50%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+          top: 0; left: -100%; width: 55%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
           transform: skewX(-20deg);
-          animation: shine 5s infinite;
+          animation: shine 4.5s infinite;
           z-index: 2;
           border-radius: 20px;
+          pointer-events: none;
         }
         @keyframes shine {
           0% { left: -100%; }
-          15% { left: 200%; }
+          18% { left: 200%; }
           100% { left: 200%; }
+        }
+
+        /* Sparkle particles — 4-pointed twinkles painted with radial-gradients.
+           Lightweight: only opacity is animated, no layout/paint cost. */
+        .spin-banner::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 20px;
+          pointer-events: none;
+          z-index: 2;
+          background-image:
+            radial-gradient(circle at 12% 30%, rgba(255, 255, 255, 0.95) 0px, rgba(255, 255, 255, 0) 1.8px),
+            radial-gradient(circle at 28% 70%, rgba(255, 255, 255, 0.9) 0px, rgba(255, 255, 255, 0) 2.2px),
+            radial-gradient(circle at 46% 18%, rgba(255, 255, 255, 0.95) 0px, rgba(255, 255, 255, 0) 1.6px),
+            radial-gradient(circle at 62% 78%, rgba(255, 255, 255, 0.9) 0px, rgba(255, 255, 255, 0) 2px),
+            radial-gradient(circle at 78% 35%, rgba(255, 255, 255, 0.95) 0px, rgba(255, 255, 255, 0) 1.8px),
+            radial-gradient(circle at 88% 62%, rgba(255, 255, 255, 0.85) 0px, rgba(255, 255, 255, 0) 1.5px);
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+          animation: sparkles 3.5s ease-in-out infinite;
+          mix-blend-mode: screen;
+        }
+        @keyframes sparkles {
+          0%, 100% { opacity: 0.35; }
+          50% { opacity: 1; }
         }
 
         .spin-banner:hover {
           transform: translateY(-4px);
-          box-shadow: 0 16px 40px rgba(124, 58, 237, 0.35);
+          box-shadow: 0 18px 44px rgba(217, 119, 6, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+        .spin-banner.is-wednesday {
+          background:
+            radial-gradient(circle at 18% 50%, rgba(255, 255, 255, 0.26), transparent 18%),
+            linear-gradient(135deg, #3b2600 0%, #8a5200 42%, #f59e0b 100%);
+          border-color: rgba(253, 230, 138, 0.65);
+          box-shadow: 0 18px 42px rgba(217, 119, 6, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        }
+        .spin-banner.is-wednesday:hover {
+          box-shadow: 0 22px 55px rgba(217, 119, 6, 0.48);
+        }
+        .spin-banner.is-wednesday .spin-banner-badge {
+          color: #3b2600;
+          background: linear-gradient(90deg, #fff7ed, #fde68a);
+          border-color: rgba(255, 255, 255, 0.55);
+          text-shadow: none;
+        }
+        .spin-banner.is-wednesday .spin-banner-btn {
+          background: #111827;
+          color: #fde68a;
+          box-shadow: 0 10px 24px rgba(17, 24, 39, 0.28);
         }
 
         /* Inner Content Wrapper */
@@ -188,6 +262,66 @@ export default function HotProductsSection() {
           background: #f8fafc;
           transform: scale(1.06);
           box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Light Theme Adaptations */
+        :global(:root[data-theme="light"]) .spin-banner {
+          background: linear-gradient(135deg, #f5f3ff 0%, #e0e7ff 100%);
+          box-shadow: 0 10px 25px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(99, 102, 241, 0.12);
+        }
+        :global(:root[data-theme="light"]) .spin-banner-badge {
+          color: #6366f1;
+          background: rgba(99, 102, 241, 0.08);
+          border: 1px solid rgba(99, 102, 241, 0.2);
+          text-shadow: none;
+          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.05);
+        }
+        :global(:root[data-theme="light"]) .spin-banner-text strong {
+          color: #1e1b4b;
+          text-shadow: none;
+        }
+        :global(:root[data-theme="light"]) .spin-banner-text span {
+          color: #4f46e5;
+          opacity: 0.95;
+        }
+        :global(:root[data-theme="light"]) .spin-banner-btn {
+          background: #6366f1;
+          color: #ffffff;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+        :global(:root[data-theme="light"]) .spin-banner:hover {
+          box-shadow: 0 16px 35px rgba(99, 102, 241, 0.25);
+        }
+        :global(:root[data-theme="light"]) .spin-banner:hover .spin-banner-btn {
+          background: #4f46e5;
+          box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+        }
+        :global(:root[data-theme="light"]) .spin-banner.is-wednesday {
+          background:
+            radial-gradient(circle at 18% 50%, rgba(255, 255, 255, 0.55), transparent 18%),
+            linear-gradient(135deg, #fff7ed 0%, #fde68a 48%, #f59e0b 100%);
+          border-color: rgba(217, 119, 6, 0.35);
+          box-shadow: 0 16px 38px rgba(217, 119, 6, 0.18);
+        }
+        :global(:root[data-theme="light"]) .spin-banner.is-wednesday .spin-banner-badge {
+          color: #92400e;
+          background: rgba(255, 255, 255, 0.55);
+          border-color: rgba(217, 119, 6, 0.22);
+        }
+        :global(:root[data-theme="light"]) .spin-banner.is-wednesday .spin-banner-text strong {
+          color: #431407;
+        }
+        :global(:root[data-theme="light"]) .spin-banner.is-wednesday .spin-banner-text span {
+          color: #78350f;
+        }
+        :global(:root[data-theme="light"]) .spin-banner.is-wednesday .spin-banner-btn {
+          background: #111827;
+          color: #fde68a;
+          box-shadow: 0 8px 20px rgba(17, 24, 39, 0.2);
+        }
+        :global(:root[data-theme="light"]) .spin-banner-image-container::before {
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(236, 72, 153, 0.02) 50%, transparent 70%);
         }
 
         /* 3D Wheel Image Asset & Positioning */

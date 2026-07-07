@@ -24,26 +24,81 @@ export async function fetchReviewStats(slug) {
   return null;
 }
 
-export function buildProductJsonLd({ path, name, description, image, priceToman, stats }) {
+function absolutize(url) {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  return `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
+// Digital codes/top-ups: delivered instantly, non-returnable. Google Merchant
+// flags offers missing these two fields, so every Offer/AggregateOffer
+// carries them (mirrored in app/product/[slug]/layout.jsx).
+const RETURN_POLICY = {
+  "@type": "MerchantReturnPolicy",
+  applicableCountry: "IR",
+  returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+};
+const SHIPPING_DETAILS = {
+  "@type": "OfferShippingDetails",
+  shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "IRR" },
+  shippingDestination: { "@type": "DefinedRegion", addressCountry: "IR" },
+  deliveryTime: {
+    "@type": "ShippingDeliveryTime",
+    handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 1, unitCode: "DAY" },
+    transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
+  },
+};
+
+export function buildProductJsonLd({ path, name, description, image, priceToman, stats, brand, variants }) {
   // Prices are in toman; schema.org IRR is rial (1 toman = 10 rial).
-  const price = Number(priceToman || 0) * 10;
+  const variantPrices = (variants || [])
+    .map((v) => Number(v?.price) || 0)
+    .filter((p) => p > 0)
+    .map((p) => p * 10);
+  // Fall back to the cheapest variant when the product-level price is 0 —
+  // a Product without offers is invalid for rich results.
+  let price = Number(priceToman || 0) * 10;
+  if (!price && variantPrices.length) price = Math.min(...variantPrices);
+  const highPrice = variantPrices.length ? Math.max(...variantPrices) : price;
+  const priceValidUntil = new Date(Date.now() + 30 * 24 * 3600 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const offers =
+    variantPrices.length > 1 && highPrice > price
+      ? {
+          "@type": "AggregateOffer",
+          lowPrice: String(price),
+          highPrice: String(highPrice),
+          offerCount: variantPrices.length,
+          priceCurrency: "IRR",
+          availability: "https://schema.org/InStock",
+          url: `${BASE_URL}${path}`,
+          hasMerchantReturnPolicy: RETURN_POLICY,
+          shippingDetails: SHIPPING_DETAILS,
+        }
+      : price > 0
+        ? {
+            "@type": "Offer",
+            price: String(price),
+            priceCurrency: "IRR",
+            priceValidUntil,
+            availability: "https://schema.org/InStock",
+            url: `${BASE_URL}${path}`,
+            hasMerchantReturnPolicy: RETURN_POLICY,
+            shippingDetails: SHIPPING_DETAILS,
+          }
+        : null;
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
     name,
     description,
-    image: image || `${BASE_URL}/web_logo.webp`,
+    image: absolutize(image) || `${BASE_URL}/web_logo.webp`,
     url: `${BASE_URL}${path}`,
-    brand: { "@type": "Brand", name: "نوبیکس شاپ" },
-    ...(price > 0 && {
-      offers: {
-        "@type": "Offer",
-        price: String(price),
-        priceCurrency: "IRR",
-        availability: "https://schema.org/InStock",
-        url: `${BASE_URL}${path}`,
-      },
-    }),
+    brand: { "@type": "Brand", name: brand || "نوبیکس شاپ" },
+    ...(offers && { offers }),
     ...(stats && {
       aggregateRating: {
         "@type": "AggregateRating",
@@ -53,6 +108,22 @@ export function buildProductJsonLd({ path, name, description, image, priceToman,
         worstRating: 1,
       },
     }),
+  };
+}
+
+export function buildFaqJsonLd(items) {
+  const entities = (items || [])
+    .filter((f) => f && (f.q || f.question) && (f.a || f.answer))
+    .map((f) => ({
+      "@type": "Question",
+      name: f.q || f.question,
+      acceptedAnswer: { "@type": "Answer", text: f.a || f.answer },
+    }));
+  if (!entities.length) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: entities,
   };
 }
 

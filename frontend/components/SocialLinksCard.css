@@ -5,9 +5,6 @@
 }
 
 @media (max-width: 1024px) {
-  .hero-side .social-links-card {
-    display: none;
-  }
   .mobile-social-section {
     display: block;
     margin: 24px auto 0;
@@ -33,7 +30,7 @@
   color: #fbbf24 !important;
 }
 
-.mini-hero.social-links-card h3 {
+.mini-hero.social-links-card .social-links-heading {
   color: #fff;
   margin: 10px 0 6px;
   font-size: 18px;
@@ -86,7 +83,7 @@
   color: var(--text) !important;
 }
 
-:root[data-theme="light"] .mini-hero.social-links-card h3 {
+:root[data-theme="light"] .mini-hero.social-links-card .social-links-heading {
   color: var(--text) !important;
 }
 

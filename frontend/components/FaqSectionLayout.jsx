@@ -3,15 +3,31 @@ import Link from 'next/link';
 import Navbar from './Navbar';
 import { Suspense } from 'react';
 
-const navSections = [
-  { id: 'faq', label: 'سوالات متداول', href: '/faq' },
-  { id: 'rules', label: 'قوانین و مقررات', href: '/faq/rules' },
-  { id: 'privacy', label: 'حریم خصوصی', href: '/faq/privacy' },
-  { id: 'contact', label: 'تماس با ما', href: '/faq/contact' },
-  { id: 'how-to-buy', label: 'راهنمای خرید', href: '/faq/how-to-buy' },
-  { id: 'disable-2fa', label: 'راهنمای خاموش کردن 2FA', href: '/guides/disable-2fa' },
-  { id: 'link-unlink', label: 'راهنمای لینک/آنلینک اکانت', href: '/guides/link-unlink' },
-  { id: 'remove-restriction', label: 'راهنمای رفع محدودیت حساب', href: '/guides/remove-restriction' },
+const navGroups = [
+  {
+    title: 'راهنما و پشتیبانی',
+    items: [
+      { id: 'faq', label: 'سوالات متداول', href: '/faq' },
+      { id: 'about', label: 'درباره نوبیکس', href: '/faq/about' },
+      { id: 'contact', label: 'تماس با ما', href: '/faq/contact' },
+      { id: 'how-to-buy', label: 'راهنمای خرید', href: '/faq/how-to-buy' },
+    ],
+  },
+  {
+    title: 'قوانین و حریم خصوصی',
+    items: [
+      { id: 'rules', label: 'قوانین و مقررات', href: '/faq/rules' },
+      { id: 'privacy', label: 'حریم خصوصی', href: '/faq/privacy' },
+    ],
+  },
+  {
+    title: 'راهنمای اکانت',
+    items: [
+      { id: 'disable-2fa', label: 'خاموش کردن ۲FA', href: '/guides/disable-2fa' },
+      { id: 'link-unlink', label: 'لینک و آنلینک اکانت', href: '/guides/link-unlink' },
+      { id: 'remove-restriction', label: 'رفع محدودیت حساب', href: '/guides/remove-restriction' },
+    ],
+  },
 ];
 
 const trustLogos = [
@@ -149,14 +165,28 @@ export default function FaqSectionLayout({
           .faq-nav {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 18px;
             background: var(--card);
             padding: 16px;
             border-radius: 24px;
             border: 1px solid var(--line);
             box-shadow: var(--shadow);
           }
-          
+          .faq-nav-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+          }
+          .faq-nav-group-title {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            opacity: 0.7;
+            padding: 0 8px 4px;
+            text-transform: none;
+          }
+
           .faq-nav-link {
             display: flex;
             align-items: center;
@@ -216,6 +246,32 @@ export default function FaqSectionLayout({
             display: flex;
             flex-direction: column;
             gap: 16px;
+          }
+
+          .faq-popular-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+          }
+          .faq-popular-links {
+            list-style: none;
+            margin: 12px 0 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+          }
+          .faq-popular-links a {
+            color: var(--muted);
+            font-size: 13.5px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.2s;
+          }
+          .faq-popular-links a:hover {
+            color: var(--primary);
           }
           
           .faq-trust-title {
@@ -299,16 +355,27 @@ export default function FaqSectionLayout({
               gap: 16px;
             }
             .faq-nav {
+              flex-direction: column;
+              padding: 12px;
+              border-radius: 16px;
+              gap: 14px;
+            }
+            .faq-nav-group {
               flex-direction: row;
               overflow-x: auto;
-              padding: 10px;
-              border-radius: 16px;
-              white-space: nowrap;
               gap: 8px;
+              white-space: nowrap;
               scrollbar-width: none; /* Firefox */
+              align-items: center;
             }
-            .faq-nav::-webkit-scrollbar {
+            .faq-nav-group::-webkit-scrollbar {
               display: none; /* Chrome/Safari */
+            }
+            .faq-nav-group-title {
+              flex-shrink: 0;
+              padding: 0 4px 0 0;
+              border-left: 1px solid var(--line);
+              padding-left: 10px;
             }
             .faq-nav-link {
               flex-shrink: 0;
@@ -356,19 +423,35 @@ export default function FaqSectionLayout({
           <div className="faq-body-grid">
             <aside className="faq-sidebar">
               <nav className="faq-nav">
-                {navSections.map((section) => {
-                  const isActive = section.id === activeSection;
-                  return (
-                    <Link
-                      key={section.id}
-                      href={section.href}
-                      className={`faq-nav-link ${isActive ? 'active' : ''}`}
-                    >
-                      {section.label}
-                    </Link>
-                  );
-                })}
+                {navGroups.map((group) => (
+                  <div key={group.title} className="faq-nav-group">
+                    <span className="faq-nav-group-title">{group.title}</span>
+                    {group.items.map((section) => {
+                      const isActive = section.id === activeSection;
+                      return (
+                        <Link
+                          key={section.id}
+                          href={section.href}
+                          className={`faq-nav-link ${isActive ? 'active' : ''}`}
+                        >
+                          {section.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ))}
               </nav>
+
+              <div className="faq-popular-card">
+                <h3 className="faq-trust-title">محصولات پرفروش</h3>
+                <ul className="faq-popular-links">
+                  <li><Link href="/vbucks">خرید وی باکس فورتنایت</Link></li>
+                  <li><Link href="/crewpack">خرید کروپک فورتنایت</Link></li>
+                  <li><Link href="/product/chatgpt-subscription">خرید اشتراک ChatGPT</Link></li>
+                  <li><Link href="/gemini">خرید اشتراک Gemini</Link></li>
+                  <li><Link href="/gta6">پیش‌خرید GTA 6</Link></li>
+                </ul>
+              </div>
 
               <div className="faq-trust-card">
                 <h3 className="faq-trust-title">پرداخت امن و قانونی</h3>

@@ -7,10 +7,11 @@ store's real knowledge base and the customer's own order history.
 
 Design notes
 ------------
-* The API is the Parspack AI-Studio OpenAI-compatible gateway. The key lives in
-   ``/root/NubixShop/.envap`` (one line). The model is configurable through the
-   ``ai_support_model`` SiteSetting (default: Claude Sonnet 4.6) with an
-   automatic fallback chain so support never goes dark if one provider is cold.
+* The API is an OpenAI-compatible gateway at ``https://ai.nubixshop.ir/v1``.
+  The key lives in the ``AI_NUBSHOP_KEY`` environment variable (or
+  ``/root/NubixShop/.ainubshop_key`` as fallback). The model is configurable
+  through the ``ai_support_model`` SiteSetting (default: ``combo``, which
+  auto-routes to the best available provider).
 * Responses come back in either OpenAI (`choices[].message.content`) or native
   Anthropic (`content[].text`) shape; ``_extract_text`` handles both.
 * A second "quality gate" call lets the model critique/repair its own draft so
@@ -33,15 +34,15 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # ── Configuration ───────────────────────────────────────────────────────────
-AI_BASE_URL = "https://my.parspack.com/api/aistudio/api/v1/chat/completions"
-ENVAP_PATH = Path("/root/NubixShop/.envap")
+AI_BASE_URL = "https://ai.nubixshop.ir/v1"
+API_KEY_PATH = Path("/root/NubixShop/.ainubshop_key")
 
 # Preferred model first, then graceful fallbacks (gateway-native ids).
-DEFAULT_MODEL = "anthropic/claude-sonnet-4.6"
+# The "combo" model auto-routes to the best available provider.
+DEFAULT_MODEL = "combo"
 FALLBACK_MODELS = [
-    "anthropic/claude-3-haiku",
-    "google/gemini-2.5-flash",
-    "openai/gpt-5.5",
+    "gemini/gemini-3.5-flash",
+    "cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
 ]
 HISTORY_LIMIT = 9999        # effectively unlimited — send all past messages
 REQUEST_TIMEOUT = 45        # seconds per model attempt
@@ -58,13 +59,13 @@ def _setting(key: str, default: str = "") -> str:
 
 
 def _load_api_key() -> str:
-    key = os.environ.get("PARSPACK_AI_KEY", "").strip()
+    key = os.environ.get("AI_NUBSHOP_KEY", "").strip()
     if key:
         return key
     try:
-        return ENVAP_PATH.read_text(encoding="utf-8").strip()
+        return API_KEY_PATH.read_text(encoding="utf-8").strip()
     except Exception as exc:
-        logger.error("AI support: could not read API key from %s: %s", ENVAP_PATH, exc)
+        logger.error("AI support: could not read API key from %s: %s", API_KEY_PATH, exc)
         return ""
 
 
@@ -172,7 +173,7 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 
 # ── Low-level API call ──────────────────────────────────────────────────────
 def _extract_text(data: dict) -> str:
-    """Handle both OpenAI and Anthropic native response shapes."""
+    """Handle OpenAI, Anthropic native, and reasoning-model response shapes."""
     try:
         choices = data.get("choices")
         if choices:
@@ -182,6 +183,9 @@ def _extract_text(data: dict) -> str:
                 return "".join(part.get("text", "") for part in content if isinstance(part, dict)).strip()
             if content:
                 return str(content).strip()
+            reasoning = msg.get("reasoning")
+            if reasoning:
+                return str(reasoning).strip()
         content = data.get("content")  # Anthropic native
         if isinstance(content, list):
             return "".join(part.get("text", "") for part in content if isinstance(part, dict)).strip()
@@ -201,7 +205,7 @@ def _call_model(model: str, messages: list, max_tokens: int = 2500, temperature:
         "temperature": temperature,
     }).encode("utf-8")
     req = urllib.request.Request(
-        AI_BASE_URL,
+        AI_BASE_URL + "/chat/completions",
         data=body,
         headers={
             "Authorization": f"Bearer {key}",
@@ -215,7 +219,11 @@ def _call_model(model: str, messages: list, max_tokens: int = 2500, temperature:
     )
     try:
         with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+            raw = resp.read().decode("utf-8").strip()
+            # Some gateway responses append SSE "data: [DONE]" after JSON.
+            if raw.endswith("data: [DONE]"):
+                raw = raw[: -len("data: [DONE]")].strip()
+            data = json.loads(raw)
         return _extract_text(data)
     except (urllib.error.URLError, TimeoutError, Exception) as exc:
         logger.warning("AI support: model %s failed: %s", model, exc)
@@ -285,7 +293,7 @@ def chat_completion_single_full(model: str, messages: list, max_tokens: int = 25
         "temperature": temperature,
     }).encode("utf-8")
     req = urllib.request.Request(
-        AI_BASE_URL,
+        AI_BASE_URL + "/chat/completions",
         data=body,
         headers={
             "Authorization": f"Bearer {key}",
@@ -297,7 +305,10 @@ def chat_completion_single_full(model: str, messages: list, max_tokens: int = 25
     )
     try:
         with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+            raw = resp.read().decode("utf-8").strip()
+            if raw.endswith("data: [DONE]"):
+                raw = raw[: -len("data: [DONE]")].strip()
+            data = json.loads(raw)
         text = _extract_text(data)
         usage = data.get("usage", {})
         return {"text": text, "usage": usage, "model": model}

@@ -4,7 +4,8 @@ import HelpfulnessWidget from "../HelpfulnessWidget";
 import { contactChannels, officeLocations } from "../data.jsx";
 
 export const metadata = {
-  title: "تماس با ما | نوبیکس شاپ",
+  title: "تماس با نوبیکس شاپ",
+  alternates: { canonical: "/faq/contact" },
   description: "راه‌های ارتباطی، پشتیبانی تلفنی، آدرس آیدی رسمی تلگرام و اطلاعات شعب نوبیکس شاپ.",
 };
 
@@ -105,7 +106,7 @@ export default function FaqContactPage() {
             -webkit-backdrop-filter: blur(4px);
           }
           
-          .contact-article-banner h1 {
+          .contact-article-banner .page-banner-title {
             margin: 0;
             font-size: 28px;
             font-weight: 900;
@@ -293,7 +294,7 @@ export default function FaqContactPage() {
               height: 140px;
               padding: 24px;
             }
-            .contact-article-banner h1 {
+            .contact-article-banner .page-banner-title {
               font-size: 22px;
             }
             .contact-article-info-bar {
@@ -319,7 +320,7 @@ export default function FaqContactPage() {
             <span className="contact-article-banner-icon">📞</span>
             <div className="contact-article-meta">
               <span className="contact-article-tag">ارتباط با ما</span>
-              <h1>راه‌های ارتباطی و آدرس شعب نوبیکس</h1>
+              <h2 className="page-banner-title">راه‌های ارتباطی و آدرس شعب نوبیکس</h2>
             </div>
           </div>
           

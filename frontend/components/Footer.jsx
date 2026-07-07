@@ -7,7 +7,27 @@ export default function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Some layouts put the scrollable element on `document.documentElement`
+    // (the <html> tag, used by the Reseller portal). Try that first, then
+    // fall back to the body / window, so the button always jumps to the top
+    // regardless of which element owns the scroll.
+    const docEl = document.documentElement;
+    const scrollableEl =
+      docEl && docEl.scrollHeight > docEl.clientHeight ? docEl : null;
+    if (scrollableEl) {
+      try {
+        scrollableEl.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      } catch {
+        // Older browsers: fall through to the legacy two-arg form.
+        scrollableEl.scrollTop = 0;
+      }
+    }
+    try {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      window.scrollTo(0, 0);
+    }
   };
 
   const handleNewsletterSubmit = (e) => {
@@ -88,27 +108,33 @@ export default function Footer() {
               </form>
             </div>
 
-            {/* Column 2: Quick Links */}
+            {/* Column 2: Quick Links — keyword anchors to the canonical money pages */}
             <div className="footer-col-new">
               <h4 className="footer-title-new">دسترسی سریع</h4>
               <ul className="footer-links-new">
-                <li><Link href="/">صفحه اصلی</Link></li>
-                <li><Link href="/?cat=فورتنایت">محصولات فورتنایت</Link></li>
-                <li><Link href="/?cat=هوش%20مصنوعی">اشتراک هوش مصنوعی</Link></li>
-                <li><Link href="/?cat=گیفت%20کارت‌ها">گیفت کارت‌ها</Link></li>
-                <li><Link href="/track">پیگیری سفارش</Link></li>
+                <li><Link href="/vbucks">خرید وی باکس فورتنایت</Link></li>
+                <li><Link href="/crewpack">خرید کروپک فورتنایت</Link></li>
+                <li><Link href="/product/chatgpt-subscription">خرید اشتراک ChatGPT</Link></li>
+                <li><Link href="/gemini">خرید اشتراک Gemini</Link></li>
+                <li><Link href="/gta6">پیش‌خرید GTA 6</Link></li>
+                <li><Link href="/category/fortnite">محصولات فورتنایت</Link></li>
+                <li><Link href="/category/giftcards">گیفت کارت‌ها</Link></li>
+                <li><Link href="/faq/track-my-order">پیگیری سفارش</Link></li>
               </ul>
             </div>
 
-            {/* Column 3: Customer Service */}
+            {/* Column 3: Customer Service — canonical URLs, not alias routes */}
             <div className="footer-col-new">
               <h4 className="footer-title-new">خدمات مشتریان</h4>
               <ul className="footer-links-new">
                 <li><Link href="/faq">سوالات متداول</Link></li>
-                <li><Link href="/guide">راهنمای خرید</Link></li>
-                <li><Link href="/terms">قوانین و مقررات</Link></li>
-                <li><Link href="/privacy">حریم خصوصی</Link></li>
-                <li><Link href="/contact">تماس با ما</Link></li>
+                <li><Link href="/faq/about">درباره نوبیکس</Link></li>
+                <li><Link href="/faq/how-to-buy">راهنمای خرید</Link></li>
+                <li><Link href="/blog">وبلاگ و مقالات</Link></li>
+                <li><Link href="/guides/disable-2fa">آموزش غیرفعال‌سازی 2FA</Link></li>
+                <li><Link href="/faq/rules">قوانین و مقررات</Link></li>
+                <li><Link href="/faq/privacy">حریم خصوصی</Link></li>
+                <li><Link href="/faq/contact">تماس با ما</Link></li>
               </ul>
             </div>
 
@@ -140,7 +166,7 @@ export default function Footer() {
                   className="footer-badge-card"
                   aria-label="ساماندهی"
                 >
-                  <img src="/samandehi_logo.png" alt="ساماندهی" loading="lazy" decoding="async" />
+                  <img src="/samandehi_logo.webp" alt="ساماندهی" loading="lazy" decoding="async" />
                 </a>
                 <a 
                   href="https://www.zarinpal.com/trustPage/nubixshop.ir" 
@@ -152,7 +178,7 @@ export default function Footer() {
                   <img src="/icons/ZarinPal.svg" alt="درگاه پرداخت زرین‌پال" loading="lazy" decoding="async" />
                 </a>
                 <div className="footer-badge-card" aria-label="پرداخت امن شاپرک">
-                  <img src="/shaparak_logo.png" alt="پرداخت امن شاپرک" loading="lazy" decoding="async" />
+                  <img src="/shaparak_logo.webp" alt="پرداخت امن شاپرک" loading="lazy" decoding="async" />
                 </div>
               </div>
 

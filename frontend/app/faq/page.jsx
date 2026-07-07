@@ -3,7 +3,8 @@ import { faqItems } from "./data.jsx";
 import FaqCatalog from "./FaqCatalog";
 
 export const metadata = {
-  title: "سوالات متداول | نوبیکس شاپ",
+  title: "سوالات متداول",
+  alternates: { canonical: "/faq" },
   description:
     "پاسخ به سوالات شما درباره نحوه خرید، تحویل، پیگیری سفارشات و پرداخت در نوبیکس شاپ. راهنمای جامع و کامل مشتریان.",
   openGraph: {
@@ -11,6 +12,19 @@ export const metadata = {
     description: "پاسخ به سوالات شما درباره نحوه خرید، تحویل، پیگیری سفارشات و پرداخت در نوبیکس شاپ.",
     type: "website",
     locale: "fa_IR",
+    url: "https://nubixshop.ir/faq",
+    images: [
+      {
+        url: "https://nubixshop.ir/og-image.webp",
+        alt: "سوالات متداول نوبیکس شاپ",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "سوالات متداول | نوبیکس شاپ",
+    description: "پاسخ به سوالات شما درباره نحوه خرید، تحویل، پیگیری سفارشات و پرداخت در نوبیکس شاپ.",
+    images: ["https://nubixshop.ir/og-image.webp"],
   },
 };
 

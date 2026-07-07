@@ -3,7 +3,8 @@ import HelpfulnessWidget from "../HelpfulnessWidget";
 import { privacyItems } from "../data.jsx";
 
 export const metadata = {
-  title: "حریم خصوصی | نوبیکس شاپ",
+  title: "حریم خصوصی",
+  alternates: { canonical: "/faq/privacy" },
   description: "سیاست‌های حفظ حریم خصوصی، حفاظت از داده‌های کاربران و پردازش امن سفارشات در نوبیکس شاپ.",
 };
 
@@ -78,7 +79,7 @@ export default function FaqPrivacyPage() {
             -webkit-backdrop-filter: blur(4px);
           }
           
-          .privacy-article-banner h1 {
+          .privacy-article-banner .page-banner-title {
             margin: 0;
             font-size: 28px;
             font-weight: 900;
@@ -181,7 +182,7 @@ export default function FaqPrivacyPage() {
               height: 140px;
               padding: 24px;
             }
-            .privacy-article-banner h1 {
+            .privacy-article-banner .page-banner-title {
               font-size: 22px;
             }
             .privacy-article-info-bar {
@@ -205,7 +206,7 @@ export default function FaqPrivacyPage() {
             <span className="privacy-article-banner-icon">🔒</span>
             <div className="privacy-article-meta">
               <span className="privacy-article-tag">امنیت داده‌ها</span>
-              <h1>سیاست‌های حفاظت و حریم خصوصی نوبیکس</h1>
+              <h2 className="page-banner-title">سیاست‌های حفاظت و حریم خصوصی نوبیکس</h2>
             </div>
           </div>
           

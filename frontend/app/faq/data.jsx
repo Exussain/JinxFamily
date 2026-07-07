@@ -284,39 +284,21 @@ const officeLocations = [
 const purchaseSteps = [
   {
     step: 1,
-    title: 'انتخاب محصول',
-    description: 'پک فورتنایت، گیفت کارت یا سرویس هوش مصنوعی مورد نظر را انتخاب کنید.',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+    title: 'ورود با شماره تماس',
+    description: 'محصول مورد نظر را انتخاب کرده و تنها با شماره موبایل خود وارد شوید؛ بدون فرم‌های طولانی و ثبت‌نام پیچیده.',
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
   },
   {
     step: 2,
-    title: 'ثبت اطلاعات',
-    description: 'تمامی اطلاعات اکانت و پلتفرم را با دقت وارد کنید.',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
-  },
-  {
-    step: 3,
-    title: 'پرداخت امن',
-    description: 'پرداخت را از طریق درگاه زرین‌پال انجام داده و فاکتور خرید را دریافت کنید.',
+    title: 'ثبت سفارش و پرداخت امن',
+    description: 'سفارش خود را ثبت کنید و پرداخت را از طریق درگاه رسمی و امن زرین‌پال به‌سادگی انجام دهید. همین.',
     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
   },
   {
-    step: 4,
-    title: 'پردازش خودکار سیستم',
-    description: 'سفارش شما بلافاصله پس از پرداخت به صورت کاملاً خودکار و هوشمند توسط سیستم پردازش می‌شود.',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>,
-  },
-  {
-    step: 5,
-    title: 'انتظار فعال‌سازی',
-    description: 'تا زمان تحویل نهایی و دریافت پیامک اتمام سفارش، وارد اکانت بازی خود نشوید.',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-  },
-  {
-    step: 6,
-    title: 'اتمام و استفاده',
-    description: 'پس از دریافت پیامک تایید تحویل، وارد بازی شوید و از محصول خود لذت ببرید.',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>,
+    step: 3,
+    title: 'همراهی پشتیبانی تا لحظه تحویل',
+    description: 'از همین لحظه، تیم پشتیبانی نوبیکس تا فعال‌سازی و تحویل کامل سفارش کنار شماست و نتیجه را با پیامک و ایمیل اطلاع می‌دهد.',
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
   },
 ];
 

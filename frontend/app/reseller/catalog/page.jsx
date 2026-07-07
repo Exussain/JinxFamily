@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import SmartImage from "../../../components/SmartImage";
 import { resolveProductImage } from "../../../lib/productImageHelpers";
@@ -33,6 +33,88 @@ const XboxLogo = () => (
     XBOX
   </span>
 );
+
+const RulesModal = ({ onCancel, onConfirm, checked, onCheckChange }) => {
+  return (
+    <div className="reseller-modal-backdrop" onClick={onCancel} style={{ zIndex: 101 }}>
+      <div className="reseller-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600, border: "1px solid rgba(99, 102, 241, 0.4)", boxShadow: "0 25px 80px rgba(99, 102, 241, 0.25)" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16 }}>
+          <div style={{
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            background: "rgba(99, 102, 241, 0.15)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--accent-primary)",
+            fontSize: 28,
+            boxShadow: "0 0 16px rgba(99, 102, 241, 0.4)"
+          }}>
+            📋
+          </div>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "var(--text-main)" }}>قوانین ثبت سفارش اپیک گیمز / ایکس باکس</h3>
+          <div style={{
+            color: "var(--text-muted)", fontSize: 14, lineHeight: 1.9, width: "100%",
+            textAlign: "right", direction: "rtl",
+            padding: "14px 16px", background: "rgba(6, 8, 20, 0.35)", borderRadius: 12,
+            border: "1px solid var(--glass-border)"
+          }}>
+            <div style={{ marginBottom: 10, color: "var(--accent-rose)", fontSize: 13, fontWeight: 700 }}>
+              ⚠️ هشدار مهم:
+            </div>
+            <div style={{ color: "var(--text-main)", marginBottom: 10 }}>
+              فقط اکانت‌هایی از اپیک گیمز پذیرفته می‌شوند که قابلیت ریلینک (Relink) نداشته باشند یا امکان خارج کردن (Unlink) آن از ایکس باکس وجود نداشته باشد.
+            </div>
+            <div style={{ color: "var(--text-muted)" }}>
+              در غیر این صورت، سفارش از طریق ایکس باکس تکمیل خواهد شد و امکان پیگیری یا اعتراض وجود ندارد. انتخاب پلتفرم اپیک گیمز به معنای تکمیل قطعی از آن پلتفرم نیست.
+            </div>
+          </div>
+          <label style={{
+            display: "flex", alignItems: "center", gap: 10, cursor: "pointer",
+            color: "var(--text-main)", fontSize: 14, fontWeight: 600,
+            userSelect: "none", width: "100%", justifyContent: "center"
+          }}>
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => onCheckChange(e.target.checked)}
+              style={{
+                width: 18, height: 18, accentColor: "var(--accent-primary)",
+                cursor: "pointer"
+              }}
+            />
+            <span>خواندم و تایید می‌کنم</span>
+          </label>
+          <div style={{ display: "flex", gap: 10, width: "100%", marginTop: 8 }}>
+            <button
+              className="reseller-btn outline"
+              onClick={onCancel}
+              style={{ flex: 1, padding: "10px" }}
+            >
+              لغو
+            </button>
+            <button
+              className="reseller-btn"
+              onClick={onConfirm}
+              disabled={!checked}
+              style={{
+                flex: 1, padding: "10px",
+                background: !checked ? "var(--line)" : "linear-gradient(135deg, var(--accent-primary) 0%, #4f46e5 100%)",
+                color: "#fff",
+                opacity: !checked ? 0.5 : 1,
+                cursor: !checked ? "not-allowed" : "pointer",
+                boxShadow: !checked ? "none" : "0 4px 12px rgba(99, 102, 241, 0.3)"
+              }}
+            >
+              تأیید و ادامه
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ErrorModal = ({ message, onClose }) => {
   if (!message) return null;
@@ -83,6 +165,7 @@ function CatalogInner() {
   const [meta, setMeta] = useState({ lira_rate: 0, crew_ref_rate: 3360, fluct_threshold: 5, reserve_enabled: true });
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [selectedVariantId, setSelectedVariantId] = useState(null);
 
   // Drag-and-drop state for product catalog card
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -130,6 +213,12 @@ function CatalogInner() {
   const [okMsg, setOkMsg] = useState("");
   const [topupOpen, setTopupOpen] = useState(false);
 
+  const epicRulesAcceptedRef = useRef(false);
+  const [epicRulesAccepted, setEpicRulesAccepted] = useState(false);
+  const [showEpicRulesModal, setShowEpicRulesModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [epicRulesChecked, setEpicRulesChecked] = useState(false);
+
   // Group cart state
   const [cart, setCart] = useState([]);
   const [cartBusy, setCartBusy] = useState(false);
@@ -170,6 +259,12 @@ function CatalogInner() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
+  useEffect(() => {
+    if (selected?.variants?.length && !selectedVariantId) {
+      setSelectedVariantId(selected.variants[0].id);
+    }
+  }, [selected, selectedVariantId]);
+
   // وقتی تعداد یا محصول تغییر می‌کند، آرایه‌ی اکانت‌ها را هم‌اندازه می‌کنیم
   useEffect(() => {
     setAccounts((cur) => {
@@ -181,7 +276,22 @@ function CatalogInner() {
     });
   }, [qty]);
 
-  const tiers = selected?.tiers || [];
+  const selectedVariant = useMemo(() => {
+    if (!selectedVariantId || !selected?.variants) return null;
+    return selected.variants.find((v) => v.id === selectedVariantId) || null;
+  }, [selectedVariantId, selected?.variants]);
+
+  const tiers = useMemo(() => {
+    const baseTiers = selected?.tiers || [];
+    if (selectedVariant?.tiers && selectedVariant.tiers.length > 0) return selectedVariant.tiers;
+    if (!selectedVariant || !selected?.price_lira || selectedVariant.price_lira === selected.price_lira) return baseTiers;
+    const ratio = selectedVariant.price_lira / selected.price_lira;
+    return baseTiers.map(t => ({
+      ...t,
+      price: Math.round(t.price * ratio / 1000) * 1000
+    }));
+  }, [selected, selectedVariant]);
+
   const unitPrice = priceForQuantity(tiers, qty);
   const total = unitPrice * qty;
   const balance = me?.wallet_balance ?? 0;
@@ -190,9 +300,9 @@ function CatalogInner() {
   const isCrew = selected?.lira_priced;
 
   const isOrderingDisabled = selected && (selected.ordering_disabled || selected.reseller_ordering_disabled);
-  const isResellerLimitExceeded = selected && selected.reseller_daily_order_limit >= 0 && 
+  const isResellerLimitExceeded = selected && selected.reseller_daily_order_limit >= 0 &&
     ((selected.ordered_today_reseller || 0) + qty > selected.reseller_daily_order_limit);
-  const isTotalLimitExceeded = selected && selected.daily_order_limit >= 0 && 
+  const isTotalLimitExceeded = selected && selected.daily_order_limit >= 0 &&
     ((selected.ordered_today_total || 0) + qty > selected.daily_order_limit);
   const isLimitReached = isOrderingDisabled || isResellerLimitExceeded || isTotalLimitExceeded;
 
@@ -214,9 +324,11 @@ function CatalogInner() {
 
   const payload = () => ({
     product_id: selected.id,
+    variant_id: selectedVariant?.id || null,
     quantity: qty,
     reserve_mode: reserveMode,
     note: orderNote,
+    epic_rules_accepted: epicRulesAcceptedRef.current || epicRulesAccepted,
     ...(reserveMode === "now" ? { accounts: accounts.map((a) => ({
       index: a.index,
       mode: a.mode,
@@ -228,7 +340,20 @@ function CatalogInner() {
     })) } : {}),
   });
 
+  const needsEpicRules = () => {
+    if (!selected) return false;
+    const isCrewProduct = selected.lira_priced || (selected.slug && selected.slug.includes("crew"));
+    const hasXboxAccount = accounts.some((a) => a.account_type === "xbox");
+    return isCrewProduct || hasXboxAccount;
+  };
+
   const payWallet = async () => {
+    if (needsEpicRules() && !epicRulesAcceptedRef.current) {
+      setPendingAction("wallet");
+      setEpicRulesChecked(false);
+      setShowEpicRulesModal(true);
+      return;
+    }
     setError(""); setOkMsg(""); setBusy("wallet");
     try {
       const { ok, data } = await api("/api/reseller/orders", { method: "POST", body: JSON.stringify(payload()) });
@@ -252,6 +377,12 @@ function CatalogInner() {
   };
 
   const payGateway = async () => {
+    if (needsEpicRules() && !epicRulesAcceptedRef.current) {
+      setPendingAction("gateway");
+      setEpicRulesChecked(false);
+      setShowEpicRulesModal(true);
+      return;
+    }
     setError(""); setOkMsg(""); setBusy("gateway");
     try {
       const { ok, data } = await api("/api/reseller/orders/checkout", { method: "POST", body: JSON.stringify(payload()) });
@@ -269,6 +400,12 @@ function CatalogInner() {
   };
 
   const payDeficitSingleOrder = async () => {
+    if (needsEpicRules() && !epicRulesAcceptedRef.current) {
+      setPendingAction("deficit");
+      setEpicRulesChecked(false);
+      setShowEpicRulesModal(true);
+      return;
+    }
     const deficit = total - balance;
     setBusy("wallet");
     setError("");
@@ -301,6 +438,12 @@ function CatalogInner() {
     setError(""); setOkMsg("");
     if (reserveMode === "now" && !accountsValid) {
       setError("لطفاً اطلاعات اکانت‌ها را تکمیل کنید.");
+      return;
+    }
+    if (needsEpicRules() && !epicRulesAcceptedRef.current) {
+      setPendingAction("addCart");
+      setEpicRulesChecked(false);
+      setShowEpicRulesModal(true);
       return;
     }
 
@@ -391,6 +534,25 @@ function CatalogInner() {
     }
   };
 
+  const handleEpicRulesCancel = () => {
+    setShowEpicRulesModal(false);
+    setPendingAction(null);
+    setEpicRulesChecked(false);
+  };
+
+  const handleEpicRulesConfirm = () => {
+    epicRulesAcceptedRef.current = true;
+    setEpicRulesAccepted(true);
+    setShowEpicRulesModal(false);
+    const action = pendingAction;
+    setPendingAction(null);
+    setEpicRulesChecked(false);
+    if (action === "wallet") payWallet();
+    else if (action === "gateway") payGateway();
+    else if (action === "deficit") payDeficitSingleOrder();
+    else if (action === "addCart") addToCart();
+  };
+
   if (loading) {
     return <div className="reseller-card"><div className="reseller-skel" style={{ width: "40%", height: 24 }} /><div className="reseller-skel" /></div>;
   }
@@ -469,7 +631,7 @@ function CatalogInner() {
               const rankClass = rank <= 3 ? `rank-${rank}` : "";
               return (
                 <div key={p.id} className={`reseller-cat-card ${selected?.id === p.id ? "selected" : ""} ${p.lira_priced ? "lira-priced" : ""}`}
-                  onClick={() => { setSelected(p); setQty(1); setOkMsg(""); setError(""); }}>
+                                     onClick={() => { setSelected(p); setSelectedVariantId(p.variants?.[0]?.id || null); setQty(1); setOkMsg(""); setError(""); }}>
                   <div className="cat-thumb">
                     <SmartImage src={pImg} alt={p.name_fa} fit="contain" />
                     {rank > 0 && rank <= 3 && <span className={`cat-rank ${rankClass}`}>#{rank} پرفروش</span>}
@@ -477,11 +639,44 @@ function CatalogInner() {
                   </div>
                   <div className="cat-name">{p.name_fa}</div>
                   <div className="cat-price">
-                    از {fmtToman(
-                      p.tiers && p.tiers.length > 0
-                        ? Math.min(...p.tiers.map(t => t.price))
-                        : p.base_price
-                    )} تومان
+                    {p.behavior_pricing && p.behavior_pricing.crew_single ? (
+                      <>
+                        <span style={{ textDecoration: "line-through", color: "var(--muted)", fontSize: 11, display: "block" }}>
+                          قیمت سایت: {fmtToman(p.original_price || Math.min(...p.tiers.map(t => t.price)))} تومان
+                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                          <span style={{ color: "var(--accent-emerald)", fontWeight: 800, fontSize: 15 }}>
+                            {fmtToman(p.behavior_pricing.crew_single)} تومان
+                          </span>
+                          <span style={{
+                            background: "rgba(16, 185, 129, 0.15)",
+                            color: "var(--accent-emerald)",
+                            padding: "1px 6px",
+                            borderRadius: 6,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            border: "1px solid rgba(16, 185, 129, 0.25)"
+                          }}>
+                            {fmtToman((p.original_price || 0) - (p.behavior_pricing.crew_single || 0))} تومان تخفیف
+                          </span>
+                        </div>
+                      </>
+                    ) : p.original_price && p.original_price > 0 ? (
+                      <>
+                        <span style={{ textDecoration: "line-through", color: "var(--muted)", fontSize: 11, display: "block" }}>
+                          {fmtToman(p.original_price)} تومان
+                        </span>
+                        <span style={{ color: "var(--text)", fontWeight: 700 }}>
+                          از {fmtToman(Math.min(...p.tiers.map(t => t.price)))} تومان
+                        </span>
+                      </>
+                    ) : (
+                      <>از {fmtToman(
+                        p.tiers && p.tiers.length > 0
+                          ? Math.min(...p.tiers.map(t => t.price))
+                          : p.base_price
+                      )} تومان</>
+                    )}
                   </div>
                 </div>
               );
@@ -622,6 +817,42 @@ function CatalogInner() {
                 </div>
               </div>
             </div>
+            {selected.variants && selected.variants.length > 0 && (
+              <div className="reseller-form-row">
+                <label>انتخاب واریانت</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {selected.variants.map((v) => {
+                    const isActive = selectedVariant?.id === v.id;
+                    return (
+                      <button
+                        type="button"
+                        key={v.id}
+                        onClick={() => setSelectedVariantId(v.id)}
+                        style={{
+                          padding: "10px 16px",
+                          borderRadius: 12,
+                          border: isActive ? "2px solid var(--accent-primary)" : "1px solid var(--glass-border)",
+                          background: isActive ? "rgba(99, 102, 241, 0.15)" : "var(--bg-card)",
+                          color: isActive ? "var(--accent-primary)" : "var(--text-main)",
+                          fontSize: 14,
+                          fontWeight: isActive ? 800 : 600,
+                          cursor: "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 2,
+                          transition: "all 0.15s ease",
+                          minWidth: 120,
+                        }}
+                      >
+                        <span>{v.title}</span>
+                        <span style={{ fontSize: 11, opacity: 0.7, direction: "ltr" }}>{v.price_lira}₺</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="reseller-form-row">
               <label>تعداد <span style={{ color: "var(--muted)", fontWeight: 500 }}>(با + و − تغییر دهید)</span></label>
               <QtyStepper value={qty} min={1} max={100} onChange={setQty} />
@@ -630,6 +861,40 @@ function CatalogInner() {
           </div>
 
           <table className="tier-table">
+            {selected.behavior_pricing && (
+              <div style={{
+                background: "linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.04))",
+                border: "1px solid rgba(16, 185, 129, 0.25)",
+                borderRadius: 12,
+                padding: "12px 16px",
+                marginBottom: 12,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 8
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 20 }}>💰</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "var(--accent-emerald)" }}>
+                      قیمت ویژه شما
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                      قیمت‌گذاری هوشمند بر اساس سابقه همکاری — صرفه‌جویی {fmtToman((selected.original_price || 0) - (selected.behavior_pricing.crew_single || 0))} تومان نسبت به قیمت سایت
+                    </div>
+                  </div>
+                </div>
+                <div style={{ textAlign: "left", direction: "ltr" }}>
+                  <div style={{ fontSize: 11, color: "var(--muted)", textDecoration: "line-through" }}>
+                    {fmtToman(selected.original_price || Math.min(...tiers.map(t => t.price)))} تومان
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "var(--accent-emerald)" }}>
+                    {fmtToman(selected.behavior_pricing.crew_single)} تومان
+                  </div>
+                </div>
+              </div>
+            )}
             <thead><tr><th>پله تعداد</th><th>قیمت واحد</th><th>قیمت کل</th></tr></thead>
             <tbody>
               {tiers.map((t, i) => {
@@ -779,6 +1044,18 @@ function CatalogInner() {
           </div>
 
           <div className="order-summary">
+            {selected?.behavior_pricing && (
+              <>
+                <div className="label" style={{ color: "var(--muted)", fontSize: 12 }}>قیمت عادی در سایت:</div>
+                <div className="value" style={{ color: "var(--muted)", textDecoration: "line-through", fontSize: 13 }}>
+                  {fmtToman(selected.original_price || unitPrice)} تومان
+                </div>
+                <div className="label" style={{ color: "var(--accent-emerald)" }}>قیمت ویژه شما:</div>
+                <div className="value" style={{ color: "var(--accent-emerald)", fontWeight: 700 }}>
+                  {fmtToman(unitPrice)} تومان
+                </div>
+              </>
+            )}
             <div className="label">قیمت واحد:</div><div className="value">{fmtToman(unitPrice)} تومان</div>
             <div className="label">تعداد:</div><div className="value">{qty}</div>
             <div className="label">جمع کل:</div><div className="value total-row">{fmtToman(total)} تومان</div>
@@ -845,6 +1122,14 @@ function CatalogInner() {
 
       {topupOpen && <TopupModal initial={Math.max(total, 1_000_000)} onClose={() => setTopupOpen(false)} />}
       {errorModalMsg && <ErrorModal message={errorModalMsg} onClose={() => setErrorModalMsg("")} />}
+      {showEpicRulesModal && (
+        <RulesModal
+          onCancel={handleEpicRulesCancel}
+          onConfirm={handleEpicRulesConfirm}
+          checked={epicRulesChecked}
+          onCheckChange={setEpicRulesChecked}
+        />
+      )}
     </>
   );
 }

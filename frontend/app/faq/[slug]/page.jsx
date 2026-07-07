@@ -21,6 +21,18 @@ export async function generateMetadata({ params }) {
         description: item.answer,
         url: `https://nubixshop.ir/faq/${slug}`,
         type: 'article',
+        images: [
+          {
+            url: 'https://nubixshop.ir/og-image.webp',
+            alt: 'سوالات متداول نوبیکس شاپ',
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: item.question,
+        description: item.answer,
+        images: ['https://nubixshop.ir/og-image.webp'],
       },
     };
   }
@@ -147,7 +159,7 @@ export default async function FaqDetailPage({ params }) {
             -webkit-backdrop-filter: blur(4px);
           }
           
-          .faq-article-banner h1 {
+          .faq-article-banner .page-banner-title {
             margin: 0;
             font-size: 28px;
             font-weight: 900;
@@ -274,7 +286,7 @@ export default async function FaqDetailPage({ params }) {
               height: 140px;
               padding: 24px;
             }
-            .faq-article-banner h1 {
+            .faq-article-banner .page-banner-title {
               font-size: 20px;
             }
             .faq-article-info-bar {
@@ -308,7 +320,7 @@ export default async function FaqDetailPage({ params }) {
             <span className="faq-article-banner-icon">{article.icon}</span>
             <div className="faq-article-meta">
               <span className="faq-article-tag">{article.category}</span>
-              <h1>{article.question}</h1>
+              <h2 className="page-banner-title">{article.question}</h2>
             </div>
           </div>
           

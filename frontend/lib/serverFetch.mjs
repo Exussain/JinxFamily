@@ -29,3 +29,22 @@ export async function fetchApiJson(path, init = { cache: "no-store" }) {
   }
   return null;
 }
+
+// Like fetchApiJson, but distinguishes "the API said 404" (resource is gone —
+// the page should return a real HTTP 404 via notFound()) from "no base was
+// reachable" (transient backend outage — degrade gracefully, never 404 live
+// pages because of it). status is 404 when any base answered 404, 0 when
+// every base failed with a network error or 5xx.
+export async function fetchApiJsonWithStatus(path, init = { cache: "no-store" }) {
+  for (const base of getServerApiBases()) {
+    try {
+      const res = await fetch(`${base}${path}`, init);
+      if (res.ok) return { data: await res.json(), status: res.status };
+      if (res.status === 404) return { data: null, status: 404 };
+      // 5xx/other: try the next base
+    } catch {
+      // unreachable: try the next base
+    }
+  }
+  return { data: null, status: 0 };
+}

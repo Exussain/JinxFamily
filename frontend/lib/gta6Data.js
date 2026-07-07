@@ -97,14 +97,14 @@ export const PLATFORMS = [
     fa: "PlayStation 5",
     short: "PS5",
     accent: "#2f6bff",
-    images: { standard: "/products/gta6/ps5-standard.jpg", ultimate: "/products/gta6/ps5-ultimate.jpg" },
+    images: { standard: "/products/gta6/ps5-standard.webp", ultimate: "/products/gta6/ps5-ultimate.webp" },
   },
   {
     key: "xbox",
     fa: "Xbox Series X|S",
     short: "Xbox X|S",
     accent: "#19c37d",
-    images: { standard: "/products/gta6/xbox-standard.jpg", ultimate: "/products/gta6/xbox-ultimate.jpg" },
+    images: { standard: "/products/gta6/xbox-standard.webp", ultimate: "/products/gta6/xbox-ultimate.webp" },
   },
 ];
 

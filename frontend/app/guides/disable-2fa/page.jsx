@@ -18,7 +18,7 @@ export default function Disable2FAGuidePage() {
   return (
     <FaqSectionLayout
       title="راهنمای خاموش کردن تایید دو مرحله‌ای (2FA)"
-      subtitle="قبل از ثبت سفارش، حتماً تایید دو مرحله‌ای را خاموش کنید تا سفارش شما بدون تاخیر انجام شود."
+      subtitle="پیش از ثبت سفارش، تایید دو مرحله‌ای حساب خود را غیرفعال کنید تا سفارش شما بدون هیچ تاخیری و در کوتاه‌ترین زمان انجام شود."
       activeSection="disable-2fa"
     >
       <div className="guide-article-container">
@@ -85,7 +85,7 @@ export default function Disable2FAGuidePage() {
             -webkit-backdrop-filter: blur(4px);
           }
           
-          .guide-article-banner h1 {
+          .guide-article-banner .page-banner-title {
             margin: 0;
             font-size: 28px;
             font-weight: 900;
@@ -352,7 +352,7 @@ export default function Disable2FAGuidePage() {
               height: 140px;
               padding: 24px;
             }
-            .guide-article-banner h1 {
+            .guide-article-banner .page-banner-title {
               font-size: 20px;
             }
             .guide-article-info-bar {
@@ -380,7 +380,7 @@ export default function Disable2FAGuidePage() {
             <span className="guide-article-banner-icon">🔑</span>
             <div className="guide-article-meta">
               <span className="guide-article-tag">راهنمای امنیتی</span>
-              <h1>غیرفعال‌سازی تایید دو مرحله‌ای (2FA)</h1>
+              <h2 className="page-banner-title">غیرفعال‌سازی تایید دو مرحله‌ای (2FA)</h2>
             </div>
           </div>
           
@@ -401,7 +401,7 @@ export default function Disable2FAGuidePage() {
 
           <div className="guide-article-content">
             <p className="guide-intro">
-              به منظور انجام سریع سفارشات و خرید موفق آیتم‌ها در اکانت شما، کارشناسان نوبیکس شاپ نیاز دارند وارد اکانت بازی شوند. فعال بودن تایید دو مرحله‌ای (2FA) موجب مسدود شدن روند ورود همکاران ما شده و تحویل سفارش شما را تا ۴۸ ساعت با تاخیر مواجه می‌کند. لذا خواهشمندیم قبل از خرید، 2FA خود را خاموش فرمایید.
+              برای تکمیل سریع سفارش و فعال‌سازی آیتم‌ها روی حساب شما، کارشناسان نوبیکس شاپ باید وارد اکانت بازی شوند. فعال بودن تایید دو مرحله‌ای (2FA) روند ورود تیم ما را متوقف کرده و ممکن است تحویل سفارش شما را تا ۴۸ ساعت به تعویق بیندازد. از این رو پیش از خرید، غیرفعال کردن 2FA را به شما توصیه می‌کنیم. مطمئن باشید تیم پشتیبانی نوبیکس تا لحظه تکمیل کامل سفارش در کنار شماست.
             </p>
 
             <div className="warning-banner">
@@ -411,7 +411,7 @@ export default function Disable2FAGuidePage() {
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               <div>
-                <strong>توجه بسیار مهم:</strong> فعال بودن رمز دو مرحله‌ای در حین خرید، سفارش را در وضعیت معلق قرار داده و انجام آن را تا زمان خاموش شدن و ارسال کد جدید با تاخیر چشمگیری مواجه می‌کند.
+                <strong>توجه مهم:</strong> فعال بودن تایید دو مرحله‌ای هنگام خرید، سفارش شما را در وضعیت معلق نگه می‌دارد و تا زمان غیرفعال شدن آن، تحویل سفارش با تاخیر قابل توجهی روبه‌رو خواهد شد.
               </div>
             </div>
 
@@ -429,16 +429,16 @@ export default function Disable2FAGuidePage() {
             </div>
 
             <div className="guide-content">
-              {activeTab === "epic" && (
-                <div className="guide-section">
-                  <h2>خاموش کردن 2FA در Epic Games</h2>
+              {(
+                <div className="guide-section" hidden={activeTab !== "epic"}>
+                  <h2>غیرفعال‌سازی 2FA در Epic Games</h2>
                   
                   <div className="step">
                     <div className="step-number">۱</div>
                     <div className="step-content">
                       <h3>ورود به حساب Epic Games</h3>
                       <p>
-                        به بخش تنظیمات امنیتی در سایت رسمی اپیک گیمز به آدرس{" "}
+                        به بخش تنظیمات امنیتی سایت رسمی اپیک گیمز به نشانی{" "}
                         <a href="https://www.epicgames.com/account/password" target="_blank" rel="noopener noreferrer">
                           epicgames.com/account/password
                         </a>{" "}
@@ -451,16 +451,16 @@ export default function Disable2FAGuidePage() {
                     <div className="step-number">۲</div>
                     <div className="step-content">
                       <h3>بخش Password & Security</h3>
-                      <p>پس از ورود، از منوی کاربری گزینه <strong>PASSWORD & SECURITY</strong> را انتخاب کنید.</p>
+                      <p>پس از ورود، از منوی کاربری، گزینه <strong>PASSWORD & SECURITY</strong> را انتخاب کنید.</p>
                     </div>
                   </div>
 
                   <div className="step">
                     <div className="step-number">۳</div>
                     <div className="step-content">
-                      <h3>خاموش کردن گزینه‌های تایید هویت</h3>
+                      <h3>غیرفعال کردن روش‌های تایید هویت</h3>
                       <p>
-                        در پایین صفحه به بخش <strong>TWO-FACTOR AUTHENTICATION</strong> رفته و تمام گزینه‌های روشن را به حالت غیرفعال (خاموش) تغییر دهید:
+                        در پایین صفحه به بخش <strong>TWO-FACTOR AUTHENTICATION</strong> بروید و تمام روش‌های فعال را غیرفعال کنید:
                       </p>
                       <ul>
                         <li>Authenticator App</li>
@@ -474,7 +474,7 @@ export default function Disable2FAGuidePage() {
                     <div className="step-number">۴</div>
                     <div className="step-content">
                       <h3>تایید تغییرات</h3>
-                      <p>در صورت ارسال کد امنیتی به ایمیل یا موبایل، کد را وارد کنید تا فرآیند غیرفعال‌سازی تکمیل گردد.</p>
+                      <p>در صورت ارسال کد امنیتی به ایمیل یا شماره موبایل، آن را وارد کنید تا فرآیند غیرفعال‌سازی تکمیل شود.</p>
                     </div>
                   </div>
 
@@ -484,14 +484,14 @@ export default function Disable2FAGuidePage() {
                       <path d="M12 16v-4"/>
                       <path d="M12 8h.01"/>
                     </svg>
-                    <p>پس از تحویل نهایی سفارش و شارژ محصولات، می‌توانید مجدداً تایید دو مرحله‌ای اکانت خود را فعال کنید.</p>
+                    <p>پس از تحویل نهایی سفارش و فعال‌سازی محصولات، می‌توانید تایید دو مرحله‌ای حساب خود را دوباره فعال کنید.</p>
                   </div>
                 </div>
               )}
 
-              {activeTab === "xbox" && (
-                <div className="guide-section">
-                  <h2>خاموش کردن 2FA در Xbox (مایکروسافت)</h2>
+              {(
+                <div className="guide-section" hidden={activeTab !== "xbox"}>
+                  <h2>غیرفعال‌سازی 2FA در Xbox (مایکروسافت)</h2>
 
                   <div className="step">
                     <div className="step-number">۱</div>
@@ -502,7 +502,7 @@ export default function Disable2FAGuidePage() {
                         <a href="https://account.microsoft.com/security" target="_blank" rel="noopener noreferrer">
                           account.microsoft.com/security
                         </a>{" "}
-                        مراجعه کنید و با حساب ایکس‌باکس خود لاگین کنید.
+                        مراجعه کنید و با حساب ایکس‌باکس خود وارد شوید.
                       </p>
                     </div>
                   </div>
@@ -511,7 +511,7 @@ export default function Disable2FAGuidePage() {
                     <div className="step-number">۲</div>
                     <div className="step-content">
                       <h3>بخش Advanced Security Options</h3>
-                      <p>بر روی کارت <strong>Advanced security options</strong> کلیک کنید تا گزینه‌های پیشرفته نمایش داده شوند.</p>
+                      <p>روی کارت <strong>Advanced security options</strong> کلیک کنید تا گزینه‌های امنیتی پیشرفته نمایش داده شوند.</p>
                     </div>
                   </div>
 
@@ -520,7 +520,7 @@ export default function Disable2FAGuidePage() {
                     <div className="step-content">
                       <h3>غیرفعال کردن Two-step verification</h3>
                       <p>
-                        به پایین اسکرول کرده و در قسمت <strong>Two-step verification</strong>، دکمه <strong>Turn off</strong> را زده و تایید کنید.
+                        صفحه را به پایین بکشید و در بخش <strong>Two-step verification</strong>، روی دکمه <strong>Turn off</strong> کلیک کرده و آن را تایید کنید.
                       </p>
                     </div>
                   </div>
@@ -530,7 +530,7 @@ export default function Disable2FAGuidePage() {
                     <div className="step-content">
                       <h3>حذف موقت Authenticator App</h3>
                       <p>
-                        اگر از نرم‌افزار Microsoft Authenticator استفاده می‌کنید، بهتر است موقتاً دسترسی آن را از بخش <strong>Ways to prove who you are</strong> حذف نمایید.
+                        اگر از اپلیکیشن Microsoft Authenticator استفاده می‌کنید، بهتر است دسترسی آن را به‌طور موقت از بخش <strong>Ways to prove who you are</strong> حذف کنید.
                       </p>
                     </div>
                   </div>
@@ -541,14 +541,14 @@ export default function Disable2FAGuidePage() {
                       <line x1="12" y1="9" x2="12" y2="13"/>
                       <line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
-                    <p>در صورتی که در حساب مایکروسافت خود Passkey فعال کرده‌اید، جهت جلوگیری از بلاک شدن لاگین، آن را نیز غیرفعال کنید.</p>
+                    <p>اگر روی حساب مایکروسافت خود Passkey فعال کرده‌اید، برای جلوگیری از مسدود شدن ورود، آن را نیز غیرفعال کنید.</p>
                   </div>
                 </div>
               )}
 
-              {activeTab === "playstation" && (
-                <div className="guide-section">
-                  <h2>خاموش کردن 2FA در PlayStation (PSN)</h2>
+              {(
+                <div className="guide-section" hidden={activeTab !== "playstation"}>
+                  <h2>غیرفعال‌سازی 2FA در PlayStation (PSN)</h2>
 
                   <div className="step">
                     <div className="step-number">۱</div>
@@ -559,7 +559,7 @@ export default function Disable2FAGuidePage() {
                         <a href="https://www.playstation.com/acct/security" target="_blank" rel="noopener noreferrer">
                           playstation.com/acct/security
                         </a>{" "}
-                        رفته و با مشخصات اکانت پی‌اس‌ان خود لاگین کنید.
+                        بروید و با مشخصات اکانت پی‌اس‌ان خود وارد شوید.
                       </p>
                     </div>
                   </div>
@@ -575,9 +575,9 @@ export default function Disable2FAGuidePage() {
                   <div className="step">
                     <div className="step-number">۳</div>
                     <div className="step-content">
-                      <h3>خاموش کردن 2-Step Verification</h3>
+                      <h3>غیرفعال کردن 2-Step Verification</h3>
                       <p>
-                        در بخش <strong>2-Step Verification</strong> بر روی دکمه Edit کلیک کرده و وضعیت (Status) را به <strong>Off</strong> تغییر دهید و آن را ذخیره کنید.
+                        در بخش <strong>2-Step Verification</strong> روی دکمه Edit کلیک کنید، وضعیت (Status) را به <strong>Off</strong> تغییر دهید و تغییرات را ذخیره کنید.
                       </p>
                     </div>
                   </div>
@@ -586,7 +586,7 @@ export default function Disable2FAGuidePage() {
                     <div className="step-number">۴</div>
                     <div className="step-content">
                       <h3>تایید تغییرات با کد پیامکی</h3>
-                      <p>در صورت درخواست کد پیامکی، کد ارسالی به تلفن را وارد کنید تا غیرفعال‌سازی تکمیل شود.</p>
+                      <p>در صورت درخواست کد پیامکی، کد ارسال‌شده به تلفن همراه خود را وارد کنید تا غیرفعال‌سازی تکمیل شود.</p>
                     </div>
                   </div>
 
@@ -596,20 +596,20 @@ export default function Disable2FAGuidePage() {
                       <path d="M12 16v-4"/>
                       <path d="M12 8h.01"/>
                     </svg>
-                    <p>پشتیبانی نوبیکس قویاً توصیه می‌کند پس از انجام و ثبت کامل خریدهای بازی، رمز دو مرحله‌ای را مجدداً فعال فرمایید.</p>
+                    <p>پشتیبانی نوبیکس توصیه می‌کند پس از تکمیل و تحویل کامل سفارش، تایید دو مرحله‌ای حساب خود را دوباره فعال کنید.</p>
                   </div>
                 </div>
               )}
             </div>
 
             <div className="guide-footer">
-              <h3>در خاموش کردن رمز دو مرحله‌ای مشکل دارید؟</h3>
-              <p>اگر با خطا مواجه شدید یا راهنمای فوق کارساز نبود، کارشناسان پشتیبانی آماده راهنمایی شما در تلگرام هستند.</p>
+              <h3>در غیرفعال کردن تایید دو مرحله‌ای به کمک نیاز دارید؟</h3>
+              <p>اگر با خطا مواجه شدید یا مراحل بالا نتیجه نداد، کارشناسان پشتیبانی نوبیکس در تلگرام تا تکمیل کامل سفارش همراه شما هستند.</p>
               <a href="https://t.me/Nubixsupport" target="_blank" rel="noopener noreferrer" className="support-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.242-1.865-.442-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.121.099.155.232.171.325.016.093.036.305.02.471z"/>
                 </svg>
-                ارتباط فوری با پشتیبان در تلگرام
+ارتباط با پشتیبانی نوبیکس در تلگرام
               </a>
             </div>
           </div>

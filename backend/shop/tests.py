@@ -10,8 +10,12 @@ from django.utils import timezone
 from .kavenegar_service import KavenegarService
 from .models import (
     Order,
+    DiscountCode,
     Product,
+    ProductComment,
     ProductVariant,
+    OrderItem,
+    PointsTransaction,
     ResellerPriceTier,
     ResellerProfile,
     ResellerWalletTxn,
@@ -27,6 +31,7 @@ from .reseller_views import (
 )
 from .views import (
     _admin_order_dict,
+    _build_cart_data,
     _collect_order_items_for_email,
     _get_customer_contact_info,
     _parse_tgju_currency_rates,
@@ -689,6 +694,35 @@ class KavenegarServiceTests(TestCase):
             timeout=10,
         )
 
+    @patch.object(KavenegarService, "API_KEY", "test-api-key")
+    @patch.object(KavenegarService, "_post")
+    def test_send_club_points_sms_posts_points_tokens(self, mock_post):
+        mock_response = Mock(status_code=200)
+        mock_response.json.return_value = {"return": {"status": 200}}
+        mock_post.return_value = mock_response
+
+        success, message = KavenegarService.send_club_points_sms(
+            phone_number="09120000000",
+            customer_name="Ali Reza",
+            points=75,
+            balance=125,
+        )
+
+        self.assertTrue(success, message)
+        self.assertEqual(message, "پیامک باشگاه ارسال شد")
+        mock_post.assert_called_once_with(
+            "https://api.kavenegar.com/v1/test-api-key/verify/lookup.json",
+            data={
+                "receptor": "09120000000",
+                "token": "Ali",
+                "token2": "75",
+                "token3": "125",
+                "template": "nubixshop-club-points",
+                "type": "sms",
+            },
+            timeout=10,
+        )
+
     def test_uploaded_cover_overrides_static_product_fallback(self):
         product = Product.objects.create(
             name_fa="Crew Pack",
@@ -717,6 +751,110 @@ class CurrencyRateParsingTests(TestCase):
         """
 
         self.assertEqual(_parse_tgju_currency_rates(html), {"usd": 1754200, "try": 38800})
+
+
+class CustomerEngagementRewardsTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="09123334444",
+            email="customer@example.com",
+            password="password123",
+            first_name="مشتری",
+        )
+        self.profile, _ = UserProfile.objects.get_or_create(
+            user=self.user,
+            defaults={"phone_number": "09123334444"},
+        )
+        self.profile.phone_number = "09123334444"
+        self.profile.save(update_fields=["phone_number"])
+        self.product = Product.objects.create(
+            name_fa="محصول تست باشگاه",
+            slug="club-test-product",
+            price=100000,
+            active=True,
+        )
+
+    def test_product_comment_awards_15_diamonds_once_per_product(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            f"/api/products/{self.product.slug}/comments",
+            data=json.dumps({
+                "author_name": "مشتری تست",
+                "rating": 5,
+                "text": "این محصول برای تست کامنت خیلی خوب بود.",
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201, response.content)
+        payload = response.json()
+        self.assertEqual(payload["points_awarded"], 15)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.points_balance, 15)
+        self.assertEqual(ProductComment.objects.filter(product=self.product, user=self.user).count(), 1)
+        self.assertTrue(
+            PointsTransaction.objects.filter(
+                user=self.user,
+                amount=15,
+                note=f"comment_reward:{self.product.id}",
+            ).exists()
+        )
+
+        second = self.client.post(
+            f"/api/products/{self.product.slug}/comments",
+            data=json.dumps({
+                "author_name": "مشتری تست",
+                "rating": 4,
+                "text": "نظر دوم برای همین محصول نباید جایزه تکراری بدهد.",
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(second.status_code, 201, second.content)
+        self.assertEqual(second.json()["points_awarded"], 0)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.points_balance, 15)
+
+    def test_profile_completion_awards_20_diamonds_after_avatar(self):
+        self.client.force_login(self.user)
+        image = SimpleUploadedFile("avatar.webp", b"RIFFxxxxWEBP", content_type="image/webp")
+
+        response = self.client.post("/api/me/avatar", data={"avatar": image})
+
+        self.assertEqual(response.status_code, 200, response.content)
+        payload = response.json()
+        self.assertEqual(payload["profile_completion_award"], 20)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.points_balance, 20)
+
+        update = self.client.post(
+            "/api/me/profile",
+            data=json.dumps({"name": "مشتری تست", "email": "customer@example.com"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(update.status_code, 200, update.content)
+        self.assertEqual(update.json()["profile_completion_award"], 0)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.points_balance, 20)
+
+    def test_purchase_points_default_to_all_products_and_are_idempotent(self):
+        order = Order.objects.create(
+            user=self.user,
+            status="paid",
+            epic_username="club@example.com",
+            phone="09123334444",
+            amount=100000,
+        )
+        order.items.create(product=self.product, name=self.product.name_fa, price=100000, quantity=2)
+
+        from .rewards import award_purchase_points
+
+        self.assertEqual(award_purchase_points(order), 40)
+        self.assertEqual(award_purchase_points(order), 0)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.points_balance, 40)
 
 
 class ResellerValidatorTests(TestCase):
@@ -813,6 +951,7 @@ class ResellerPriceTierTests(TestCase):
         ResellerPriceTier.objects.create(product=self.product, variant=None, min_quantity=10, price=449000, active=True)
         # نرخ لیر مرجع (۳۳۶۰) → کروپک لیر-محور: تک‌عدد ۴۷۹,۰۰۰ / ۱۰+ ۴۴۹,۰۰۰
         SiteSetting.objects.update_or_create(key="lira_rate", defaults={"value_text": "3360"})
+        SiteSetting.objects.update_or_create(key="reseller_behavior_pricing_enabled", defaults={"value_text": "false"})
 
     def tearDown(self):
         self.lira_patcher.stop()
@@ -837,7 +976,7 @@ class ResellerPriceTierTests(TestCase):
         for qty in [1, 5, 9]:
             res = self.client.post(
                 "/api/reseller/orders",
-                data=json.dumps({"quantity": qty, "account_email": "a@x.com", "account_password": "p"}),
+                data=json.dumps({"quantity": qty, "account_email": "a@x.com", "account_password": "p", "epic_rules_accepted": True}),
                 content_type="application/json",
             )
             self.assertEqual(res.status_code, 403, f"qty {qty} expected 403 (not verified)")
@@ -863,7 +1002,7 @@ class ResellerPriceTierTests(TestCase):
         # 5 تا = 5 × 459K = 2.295M (کروپک لیر-محور، نرخ ۳۳۶۰)
         res = self.client.post(
             "/api/reseller/orders",
-            data=json.dumps({"quantity": 5, "account_email": "a@x.com", "account_password": "p"}),
+            data=json.dumps({"quantity": 5, "account_email": "a@x.com", "account_password": "p", "epic_rules_accepted": True}),
             content_type="application/json",
         )
         self.assertEqual(res.status_code, 201)
@@ -872,7 +1011,7 @@ class ResellerPriceTierTests(TestCase):
         # 12 تا = 12 × 429K = 5.148M
         res = self.client.post(
             "/api/reseller/orders",
-            data=json.dumps({"quantity": 12, "account_email": "b@x.com", "account_password": "p"}),
+            data=json.dumps({"quantity": 12, "account_email": "b@x.com", "account_password": "p", "epic_rules_accepted": True}),
             content_type="application/json",
         )
         self.assertEqual(res.status_code, 201)
@@ -897,11 +1036,208 @@ class ResellerPriceTierTests(TestCase):
         )
         res = self.client.post(
             "/api/reseller/orders",
-            data=json.dumps({"quantity": 1, "account_email": "a@x.com", "account_password": "p"}),
+            data=json.dumps({"quantity": 1, "account_email": "a@x.com", "account_password": "p", "epic_rules_accepted": True}),
             content_type="application/json",
         )
         self.assertEqual(res.status_code, 400)
         self.assertEqual(res.json()["code"], "insufficient_balance")
+
+
+class ResellerPriceOverrideTests(TestCase):
+    """تست override قیمت اختصاصی همکار: fallback به عمومی، override ثابت (بدون اسکیل لیر)، پاک‌کردن override."""
+
+    def setUp(self):
+        self.lira_patcher = patch("shop.reseller_views._lira_rate", return_value=3360)
+        self.mock_lira_rate = self.lira_patcher.start()
+        self.addCleanup(self.lira_patcher.stop)
+
+        self.admin = User.objects.create_user(
+            username="admin_override_test", email="admin_ov@x.com", password="x", is_staff=True
+        )
+
+        self.plain_product = Product.objects.create(name_fa="Plain Test", slug="plain-test-product", price=100000)
+        ResellerPriceTier.objects.create(product=self.plain_product, variant=None, min_quantity=1, price=90000, active=True)
+        ResellerPriceTier.objects.create(product=self.plain_product, variant=None, min_quantity=10, price=80000, active=True)
+
+        self.crew_product = Product.objects.create(name_fa="Crew Test", slug="fortnite-crew-pack", price=649000)
+
+        def make_reseller(username, seller_code):
+            user = User.objects.create_user(username=username, email=f"{username}@x.com", password="x")
+            UserProfile.objects.create(user=user, tier="reseller")
+            return ResellerProfile.objects.create(
+                user=user,
+                seller_code=seller_code,
+                token_hash=_hash_token(f"{seller_code}1111111"[:16].ljust(16, "0")),
+                token_prefix=seller_code[:4],
+                status="verified",
+                wallet_balance=10_000_000,
+            )
+
+        self.reseller_a = make_reseller("r_override_a", "NS-OVA")
+        self.reseller_b = make_reseller("r_override_b", "NS-OVB")
+
+    def test_reseller_without_override_gets_global_price(self):
+        from .reseller_views import _price_for_quantity
+        price = _price_for_quantity(self.plain_product.id, 1, profile=self.reseller_a)
+        self.assertEqual(price, 90000)
+
+    def test_override_applies_only_to_that_reseller(self):
+        from .reseller_views import _price_for_quantity
+        ResellerPriceTier.objects.create(
+            product=self.plain_product, variant=None, reseller=self.reseller_a,
+            min_quantity=1, price=55000, active=True,
+        )
+        self.assertEqual(_price_for_quantity(self.plain_product.id, 1, profile=self.reseller_a), 55000)
+        # همکار دیگر همچنان قیمت عمومی می‌گیرد
+        self.assertEqual(_price_for_quantity(self.plain_product.id, 1, profile=self.reseller_b), 90000)
+
+    def test_override_replaces_global_entirely_not_merged(self):
+        from .reseller_views import _price_for_quantity
+        # override فقط پله ۱ دارد؛ چون override کل مجموعه‌ی عمومی را جایگزین می‌کند، پله ۱۰ عمومی برای
+        # این همکار دیگر در دسترس نیست.
+        ResellerPriceTier.objects.create(
+            product=self.plain_product, variant=None, reseller=self.reseller_a,
+            min_quantity=1, price=55000, active=True,
+        )
+        self.assertEqual(_price_for_quantity(self.plain_product.id, 10, profile=self.reseller_a), 55000)
+
+    def test_clear_override_reverts_to_global(self):
+        from .reseller_views import _price_for_quantity
+        override = ResellerPriceTier.objects.create(
+            product=self.plain_product, variant=None, reseller=self.reseller_a,
+            min_quantity=1, price=55000, active=True,
+        )
+        self.client.login(username="admin_override_test", password="x")
+        res = self.client.post(
+            "/api/admin/reseller-tiers/clear-override",
+            data=json.dumps({"product_id": self.plain_product.id, "reseller_id": self.reseller_a.id}),
+            content_type="application/json",
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertFalse(ResellerPriceTier.objects.filter(id=override.id).exists())
+        self.assertEqual(_price_for_quantity(self.plain_product.id, 1, profile=self.reseller_a), 90000)
+
+    def test_crew_override_is_fixed_and_ignores_lira_rate(self):
+        from .reseller_views import _price_for_quantity
+        ResellerPriceTier.objects.create(
+            product=self.crew_product, variant=None, reseller=self.reseller_a,
+            min_quantity=1, price=400000, active=True,
+        )
+        self.assertEqual(_price_for_quantity(self.crew_product.id, 1, profile=self.reseller_a), 400000)
+        # با تغییر نرخ لیر، قیمت override تغییر نمی‌کند
+        self.mock_lira_rate.return_value = 4200
+        self.assertEqual(_price_for_quantity(self.crew_product.id, 1, profile=self.reseller_a), 400000)
+        # همکار دیگر همچنان از فرمول لیر استفاده می‌کند
+        self.assertGreater(_price_for_quantity(self.crew_product.id, 1, profile=self.reseller_b), 0)
+
+    def test_vbucks_variant_global_tiers_are_fixed_toman(self):
+        from .reseller_views import _price_for_quantity
+        vbucks = Product.objects.create(name_fa="VBucks Test", slug="v-bucks", price=0, price_lira=190)
+        variant = ProductVariant.objects.create(
+            product=vbucks,
+            title="2400 V-Bucks",
+            original_price=485,
+            sort_order=1,
+        )
+        ResellerPriceTier.objects.create(
+            product=vbucks,
+            variant=None,
+            min_quantity=1,
+            price=715_000,
+            active=True,
+        )
+        ResellerPriceTier.objects.create(
+            product=vbucks,
+            variant=variant,
+            min_quantity=1,
+            price=1_980_000,
+            active=True,
+        )
+        ResellerPriceTier.objects.create(
+            product=vbucks,
+            variant=variant,
+            min_quantity=10,
+            price=1_949_000,
+            active=True,
+        )
+
+        self.mock_lira_rate.return_value = 4200
+
+        self.assertEqual(
+            _price_for_quantity(vbucks.id, 1, variant_id=variant.id, profile=self.reseller_a),
+            1_980_000,
+        )
+        self.assertEqual(
+            _price_for_quantity(vbucks.id, 10, variant_id=variant.id, profile=self.reseller_a),
+            1_949_000,
+        )
+
+        self.client.force_login(self.reseller_a.user)
+        res = self.client.get("/api/reseller/catalog")
+        self.assertEqual(res.status_code, 200)
+        product = next(p for p in res.json()["products"] if p["id"] == vbucks.id)
+        catalog_variant = product["variants"][0]
+        self.assertEqual(catalog_variant["tiers"][0]["price"], 1_980_000)
+        self.assertEqual(catalog_variant["tiers"][1]["price"], 1_949_000)
+
+    def test_admin_upsert_with_reseller_id_scopes_to_that_reseller(self):
+        self.client.login(username="admin_override_test", password="x")
+        res = self.client.post(
+            "/api/admin/reseller-tiers/upsert",
+            data=json.dumps({
+                "product_id": self.plain_product.id,
+                "reseller_id": self.reseller_a.id,
+                "tiers": [{"min_quantity": 1, "price": 55000, "active": True}],
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(
+            ResellerPriceTier.objects.filter(product=self.plain_product, reseller=self.reseller_a, price=55000).exists()
+        )
+        # پله‌های عمومی دست‌نخورده مانده‌اند
+        self.assertEqual(
+            ResellerPriceTier.objects.filter(product=self.plain_product, reseller__isnull=True).count(), 2
+        )
+
+    def test_overrides_summary_lists_product_ids(self):
+        ResellerPriceTier.objects.create(
+            product=self.plain_product, variant=None, reseller=self.reseller_a,
+            min_quantity=1, price=55000, active=True,
+        )
+        self.client.login(username="admin_override_test", password="x")
+        res = self.client.get(f"/api/admin/reseller-tiers/overrides-summary?reseller_id={self.reseller_a.id}")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["product_ids"], [self.plain_product.id])
+
+    def test_overrides_summary_by_product_lists_reseller_ids(self):
+        ResellerPriceTier.objects.create(
+            product=self.plain_product, variant=None, reseller=self.reseller_a,
+            min_quantity=1, price=55000, active=True,
+        )
+        self.client.login(username="admin_override_test", password="x")
+        res = self.client.get(f"/api/admin/reseller-tiers/overrides-summary?product_id={self.plain_product.id}")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["reseller_ids"], [self.reseller_a.id])
+
+    def test_non_admin_cannot_clear_override_or_view_summary(self):
+        res = self.client.post(
+            "/api/admin/reseller-tiers/clear-override",
+            data=json.dumps({"product_id": self.plain_product.id, "reseller_id": self.reseller_a.id}),
+            content_type="application/json",
+        )
+        self.assertEqual(res.status_code, 403)
+        res = self.client.get(f"/api/admin/reseller-tiers/overrides-summary?reseller_id={self.reseller_a.id}")
+        self.assertEqual(res.status_code, 403)
+
+    def test_admin_reseller_pricing_tour_ack(self):
+        self.client.login(username="admin_override_test", password="x")
+        res = self.client.get("/api/auth/me")
+        self.assertFalse(res.json()["reseller_pricing_tour_seen"])
+        res = self.client.post("/api/admin/reseller-pricing-tour/ack", data="{}", content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        res = self.client.get("/api/auth/me")
+        self.assertTrue(res.json()["reseller_pricing_tour_seen"])
 
 
 class ResellerAdminCreateTests(TestCase):
@@ -1209,4 +1545,121 @@ class ResellerReturnUnitTest(TestCase):
         self.assertEqual(self.profile.wallet_balance, 10_000_000 - 1437000 + 479000)
 
 
+class ZarinPalCartDataTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="09120000010",
+            email="cartdata@example.com",
+            password="password123",
+        )
+        self.product = Product.objects.create(
+            name_fa="محصول تستی",
+            slug="test-product",
+            price=250000,
+            active=True,
+        )
 
+    def test_build_cart_data_converts_toman_amounts_to_rial(self):
+        order = Order.objects.create(
+            user=self.user,
+            epic_username="cartdata@example.com",
+            phone="09120000010",
+            telegram="@cartdata",
+            status="pending",
+            amount=315000,
+            discount_amount=25000,
+            rush_order=True,
+            rush_fee=89000,
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=self.product,
+            name=self.product.name_fa,
+            price=250000,
+            quantity=1,
+        )
+
+        cart_data = _build_cart_data(order)
+
+        self.assertEqual(cart_data["items"][0]["item_amount"], "2500000")
+        self.assertEqual(cart_data["items"][0]["item_amount_sum"], "2500000")
+        self.assertEqual(cart_data["items"][1]["item_amount"], "890000")
+        self.assertEqual(cart_data["items"][1]["item_amount_sum"], "890000")
+        self.assertEqual(cart_data["deductions"]["discount"], "250000")
+
+
+class DiscountValidationGuardrailTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="09120000011",
+            email="discount@example.com",
+            password="password123",
+        )
+        self.product = Product.objects.create(
+            name_fa="محصول کم حاشیه",
+            slug="low-margin-product",
+            price=555000,
+            active=True,
+        )
+        self.discount = DiscountCode.objects.create(
+            code="LOWMARGIN",
+            percent=10,
+            amount=50000,
+            active=True,
+            source="manual",
+        )
+
+    def test_validate_applies_discount_and_reports_guardrail_warning(self):
+        response = self.client.post(
+            "/api/discounts/validate",
+            data=json.dumps({
+                "code": self.discount.code,
+                "items": [
+                    {
+                        "product_id": self.product.id,
+                        "slug": self.product.slug,
+                        "quantity": 1,
+                    }
+                ],
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        payload = response.json()
+        self.assertTrue(payload["previewed"])
+        self.assertTrue(payload["applicable"])
+        self.assertTrue(payload["guardrail_warning"])
+        self.assertEqual(payload["discount_amount"], 50000)
+
+    def test_order_applies_guardrail_warning_discount_and_consumes_code(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            "/api/orders",
+            data=json.dumps({
+                "items": [
+                    {
+                        "product_id": self.product.id,
+                        "slug": self.product.slug,
+                        "name": self.product.name_fa,
+                        "quantity": 1,
+                    }
+                ],
+                "contact": {
+                    "telegram": "@discount",
+                    "email": "discount@example.com",
+                },
+                "discount_code": self.discount.code,
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201, response.content)
+        order = Order.objects.get(tracking_code=response.json()["tracking_code"])
+        self.assertEqual(order.discount_code, self.discount.code)
+        self.assertEqual(order.discount_amount, 50000)
+        self.assertEqual(order.amount, 505000)
+        self.assertIn("هشدار سیستم", order.note)
+        self.discount.refresh_from_db()
+        self.assertEqual(self.discount.used_count, 1)

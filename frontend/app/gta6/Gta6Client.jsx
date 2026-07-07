@@ -40,7 +40,6 @@ export default function Gta6Client() {
   const [productId, setProductId] = useState(null);
   const [instantEnabled, setInstantEnabled] = useState(INSTANT_ENABLED);
   const [instantFee, setInstantFee] = useState(INSTANT_FEE);
-  const [instantProductId, setInstantProductId] = useState(null);
   const [instant, setInstant] = useState(false); // buyer's choice
 
   const [openFaqs, setOpenFaqs] = useState(() => []);
@@ -64,7 +63,6 @@ export default function Gta6Client() {
         if (data.product_id) setProductId(data.product_id);
         if (typeof data.instant_enabled === "boolean") setInstantEnabled(data.instant_enabled);
         if (typeof data.instant_fee === "number") setInstantFee(data.instant_fee);
-        if (data.instant_product_id) setInstantProductId(data.instant_product_id);
       } catch {
         /* keep static fallback */
       }
@@ -124,7 +122,7 @@ export default function Gta6Client() {
     },
   ];
   const canBuy = hasPrice && !!productId && !!variantId;
-  const showInstant = instantEnabled && Number(instantFee) > 0;
+  const showInstant = false;
   const instantOn = showInstant && instant;
   const totalToman = Number(price.toman) + (instantOn ? Number(instantFee) : 0);
 
@@ -143,17 +141,6 @@ export default function Gta6Client() {
       image: cover,
       category: "games",
     });
-    if (instantOn && instantProductId) {
-      addItem({
-        product_id: instantProductId,
-        name: "فعال‌سازی فوری GTA VI",
-        price: Number(instantFee),
-        quantity: 1,
-        slug: "gta6-instant",
-        image: cover,
-        category: "games",
-      });
-    }
     setAdded(true);
     if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("cart:add"));
     setTimeout(() => router.push("/checkout"), 350);
@@ -474,8 +461,8 @@ export default function Gta6Client() {
                     <span>{item.q}</span>
                     <span className="gta-faq-icon">▼</span>
                   </button>
-                  {isOpen && (
-                    <div className="gta-faq-a">
+                  {(
+                    <div className="gta-faq-a" hidden={!isOpen}>
                       {item.type === "intro" && <p>{item.content}</p>}
                       {item.type === "steps" && (
                         <ol className="gta-steps">
@@ -524,6 +511,20 @@ export default function Gta6Client() {
 
       <style jsx>{`
         .gta-root { --pink: #ff2d9b; --purple: #7c4dff; --teal: #19c37d; --cyan: #21d4fd; }
+        /* The hero and countdown are intentional dark "islands" (their inner text
+           is hardcoded light), so give them an explicit dark surface that holds in
+           BOTH themes. Everything else uses var(--card)/--text/--line and follows
+           the real theme, so the content sections are light in the light theme. */
+        .gta-root .gta-hero.card {
+          background: linear-gradient(135deg, #160a2e 0%, #0a0a1f 55%, #061018 100%);
+        }
+        .gta-root .gta-countdown-section.card {
+          background:
+            radial-gradient(circle at 20% 10%, rgba(255,45,155,0.28), transparent 55%),
+            radial-gradient(circle at 85% 90%, rgba(124,77,255,0.30), transparent 55%),
+            linear-gradient(135deg, #1a0b34 0%, #0a0a1f 100%);
+          border: 1px solid rgba(124,77,255,0.35);
+        }
         .gta-shell { padding: 20px 0 120px; display: grid; gap: 18px; }
 
         /* HERO */
@@ -757,15 +758,15 @@ export default function Gta6Client() {
         /* FAQ styles */
         .gta-faq-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
         .gta-faq-item {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          background: var(--bg);
+          border: 1px solid var(--line);
           border-radius: 12px;
           overflow: hidden;
           transition: all 0.3s ease;
         }
         .gta-faq-item.open {
           border-color: var(--accent);
-          background: rgba(255, 255, 255, 0.04);
+          background: color-mix(in srgb, var(--accent) 8%, var(--bg));
         }
         .gta-faq-q {
           width: 100%;
@@ -773,7 +774,7 @@ export default function Gta6Client() {
           padding: 16px 20px;
           background: transparent;
           border: none;
-          color: #fff;
+          color: var(--text);
           font-weight: 600;
           font-size: 1.05rem;
           display: flex;
@@ -786,7 +787,7 @@ export default function Gta6Client() {
         .gta-faq-icon {
           font-size: 0.9rem;
           transition: transform 0.3s ease;
-          color: rgba(255,255,255,0.4);
+          color: var(--muted);
         }
         .gta-faq-item.open .gta-faq-icon {
           transform: rotate(180deg);
@@ -794,7 +795,7 @@ export default function Gta6Client() {
         }
         .gta-faq-a {
           padding: 0 20px 20px;
-          color: rgba(255,255,255,0.8);
+          color: var(--muted);
           font-size: 0.95rem;
           line-height: 1.7;
         }

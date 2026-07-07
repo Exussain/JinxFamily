@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 const categoryData = {
   "فورتنایت": {
@@ -16,8 +16,8 @@ const categoryData = {
     icon: "/categories/category_giftcard.webp",
     gradient: "linear-gradient(135deg, #F59E0B, #EF4444)",
   },
-  "لیگ آف لجندز (لول)": {
-    icon: "/categories/category_lol.webp",
+  "بازی‌ها": {
+    icon: "/products/gta6/ps5-standard.webp",
     gradient: "linear-gradient(135deg, #10B981, #059669)",
   },
   "اشتراک‌ها": {
@@ -45,7 +45,7 @@ const categoryData = {
 export default function CategoriesSection({ categories = [] }) {
   const [open, setOpen] = useState(false);
   const sp = useSearchParams();
-  const router = useRouter();
+  const pathname = usePathname();
   const activeCat = (sp.get('cat') || '').trim();
 
   // Drag state for horizontal scrolling
@@ -173,27 +173,8 @@ export default function CategoriesSection({ categories = [] }) {
     return () => section.removeObserver ? section.removeObserver() : section.removeEventListener('wheel', handleWheel);
   }, []);
 
-  const scrollToProducts = () => {
-    const popularSection = document.getElementById('popular');
-    if (popularSection) {
-      const y = popularSection.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: y - 80, behavior: 'smooth' });
-    } else if (sectionRef.current) {
-      const y = sectionRef.current.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: y - 80, behavior: 'smooth' });
-    }
-  };
-
-  const handleNav = (cat) => {
-    if (cat) {
-      router.push(`/?cat=${encodeURIComponent(cat)}`, { scroll: false });
-    } else {
-      router.push('/', { scroll: false });
-    }
-    setOpen(false);
-    // Wait for the route change to apply filter, then scroll.
-    setTimeout(scrollToProducts, 40);
-  };
+  const categoryFilterHref = (cat) => `/?cat=${encodeURIComponent(cat)}`;
+  const isActiveCategory = (cat) => activeCat === cat;
 
   return (
     <>
@@ -208,8 +189,8 @@ export default function CategoriesSection({ categories = [] }) {
       >
         <div className="section-head">
           <div>
-            <p>دسته‌بندی‌های برتر</p>
-            <h2>محبوب‌ترین محصولات کاربران</h2>
+            <p>فورتنایت، هوش مصنوعی، گیفت کارت و بیشتر</p>
+            <h2>دسته‌بندی محصولات نوبیکس شاپ</h2>
           </div>
           <button 
             className="prominent-menu-btn" 
@@ -249,18 +230,15 @@ export default function CategoriesSection({ categories = [] }) {
             return (
               <Link
                 key={cat}
-                href={`/?cat=${encodeURIComponent(cat)}`}
+                href={categoryFilterHref(cat)}
                 scroll={false}
-                className={`chip modern-chip${activeCat === cat ? ' active' : ''}`}
+                className={`chip modern-chip${isActiveCategory(cat) ? ' active' : ''}`}
                 style={{ '--chip-gradient': catData.gradient }}
                 onClick={(e) => {
                   if (isDragging) {
                     e.preventDefault();
                     e.stopPropagation();
-                    return;
                   }
-                  e.preventDefault();
-                  handleNav(cat);
                 }}
               >
                 <span className="chip-icon-wrapper">
@@ -295,12 +273,8 @@ export default function CategoriesSection({ categories = [] }) {
               <div className="sidebar-category-list">
                 <Link
                   href="/"
-                  scroll={false}
-                  className={`sidebar-category-item${!activeCat ? ' active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNav('');
-                  }}
+                  className={`sidebar-category-item${pathname === "/" && !activeCat ? ' active' : ''}`}
+                  onClick={() => setOpen(false)}
                 >
                   <span className="category-icon-img-wrapper" style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -321,13 +295,10 @@ export default function CategoriesSection({ categories = [] }) {
                   return (
                     <Link
                       key={cat}
-                      href={`/?cat=${encodeURIComponent(cat)}`}
+                      href={categoryFilterHref(cat)}
                       scroll={false}
-                      className={`sidebar-category-item${activeCat === cat ? ' active' : ''}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleNav(cat);
-                      }}
+                      className={`sidebar-category-item${isActiveCategory(cat) ? ' active' : ''}`}
+                      onClick={() => setOpen(false)}
                     >
                       <span className="category-icon-img-wrapper" style={{ background: catData.gradient }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}

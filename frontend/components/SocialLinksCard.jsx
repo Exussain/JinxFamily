@@ -4,7 +4,7 @@ export default function SocialLinksCard() {
   return (
     <div className="mini-hero social-links-card">
       <div className="tag">شبکه‌های اجتماعی</div>
-      <h3>ما را دنبال کنید</h3>
+      <p className="social-links-heading">ما را دنبال کنید</p>
       <p>از تخفیف‌ها و جشنواره‌ها باخبر شوید</p>
       <div className="social-links-actions">
         <a

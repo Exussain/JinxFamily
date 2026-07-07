@@ -30,8 +30,8 @@ CATEGORY_INFO = {
     "GAMES": {
         "name": "بازی‌ها",
         "name_en": "Games",
-        "image": "/categories/category_lol.png",
-        "description": "League of Legends، Free Fire، Clash of Clans و سایر بازی‌ها",
+        "image": "/products/gta6/ps5-standard.webp",
+        "description": "پیش‌خرید GTA VI و سایر بازی‌های روز",
         "icon": "🎯",
         "order": 4
     },

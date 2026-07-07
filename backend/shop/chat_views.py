@@ -203,6 +203,34 @@ def chat_user_api(request):
 
             return JsonResponse({"status": "ok", "msg_id": msg.id})
 
+        # ۳. ثبت پیام ربات (bot_reply) — ارسال‌شده از طرف ویجت کاربر، نه ادمین واقعی
+        elif action == "bot_reply":
+            session_id = data.get("session_id")
+            text = data.get("text", "").strip()
+
+            if not session_id:
+                return JsonResponse({"error": "session_id الزامی است"}, status=400)
+            if not text:
+                return JsonResponse({"error": "متن پیام خالی است"}, status=400)
+
+            try:
+                session = LiveChatSession.objects.get(id=session_id)
+            except LiveChatSession.DoesNotExist:
+                return JsonResponse({"error": "سشن یافت نشد"}, status=404)
+
+            msg = LiveChatMessage.objects.create(
+                session=session,
+                sender="admin",
+                message_type="text",
+                text=text,
+                is_ai=True,
+            )
+            session.unread_user = max(0, (session.unread_user or 0))
+            session.updated_at = timezone.now()
+            session.save()
+
+            return JsonResponse({"status": "ok", "msg_id": msg.id, "created_at": msg.created_at.isoformat()})
+
         return JsonResponse({"error": "action نامعتبر"}, status=400)
 
     elif request.method == "GET":

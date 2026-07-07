@@ -143,7 +143,10 @@ export default function LiveChatWidget() {
   const [botMessages, setBotMessages] = useState([]);
   const [expectingTrackingCode, setExpectingTrackingCode] = useState(false);
 
-  const allMessages = [...messages, ...botMessages].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  // Deduplicate: remove local botMessages whose text is already in DB messages (is_ai=true, sender=admin)
+  const dbBotTexts = new Set(messages.filter(m => m.is_ai && m.sender === 'admin').map(m => m.text));
+  const filteredBotMessages = botMessages.filter(m => !dbBotTexts.has(m.text));
+  const allMessages = [...messages, ...filteredBotMessages].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   const [voiceCooldown, setVoiceCooldown] = useState(0); // seconds remaining in cooldown
   const [voiceToast, setVoiceToast] = useState('');    // short feedback message
 
@@ -157,6 +160,7 @@ export default function LiveChatWidget() {
   const animFrameRef = useRef(null);
 
   const messagesEndRef = useRef(null);
+  const chatMessagesRef = useRef(null);
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -199,19 +203,50 @@ export default function LiveChatWidget() {
   }, [isOpen, messages]);
 
   // ── Auto scroll ─────────────────────────────────────────────────────────────
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTo({
+        top: chatMessagesRef.current.scrollHeight,
+        behavior: smooth ? "smooth" : "auto"
+      });
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
   }, []);
 
   useEffect(() => {
-    if (isOpen) { scrollToBottom(); setUnreadCount(0); }
-  }, [messages, isOpen, scrollToBottom]);
+    if (isOpen) {
+      scrollToBottom(false);
+      setUnreadCount(0);
+      const t1 = setTimeout(() => scrollToBottom(true), 50);
+      const t2 = setTimeout(() => scrollToBottom(true), 200);
+      const t3 = setTimeout(() => scrollToBottom(true), 500);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
+    }
+  }, [allMessages.length, isOpen, scrollToBottom]);
 
-  // ── Session init ────────────────────────────────────────────────────────────
+  // ── Session init & botMessages persistence ───────────────────────────────────
   useEffect(() => {
     const stored = localStorage.getItem("liveChatSessionId");
     if (stored) setSessionId(stored);
+    try {
+      const storedBot = sessionStorage.getItem("liveChatBotMessages");
+      if (storedBot) {
+        setBotMessages(JSON.parse(storedBot));
+      }
+    } catch {}
   }, []);
+
+  useEffect(() => {
+    try {
+      if (botMessages.length > 0) {
+        sessionStorage.setItem("liveChatBotMessages", JSON.stringify(botMessages));
+      }
+    } catch {}
+  }, [botMessages]);
 
   const initChat = async () => {
     if (!apiBase) return;
@@ -269,6 +304,30 @@ export default function LiveChatWidget() {
     setShowGreeting(false);
     localStorage.setItem("liveChatGreetingDismissed", "true");
   };
+
+  // ── Bot reply helper — saves to DB (visible to admin) + shows locally ────────
+  const sendBotReply = useCallback(async (text, sid) => {
+    const currentSid = sid || sessionId;
+    // Optimistic: show immediately in local state
+    setBotMessages(prev => [...prev, {
+      id: `bot-${Date.now()}`,
+      sender: "admin",
+      message_type: "text",
+      text,
+      is_ai: true,
+      created_at: new Date().toISOString()
+    }]);
+    // Persist to DB so admin can see it
+    if (currentSid && apiBase) {
+      try {
+        await fetch(`${apiBase}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'bot_reply', session_id: currentSid, text }),
+        });
+      } catch (err) { /* fire-and-forget — local state already updated */ }
+    }
+  }, [sessionId, apiBase]);
 
   // ── Upload helper ───────────────────────────────────────────────────────────
   const uploadFile = async (file, currentSessionId) => {
@@ -340,30 +399,12 @@ export default function LiveChatWidget() {
                         `رمز ایکس‌باکس: ${data.created_xbox_pass}\n`;
           }
           
-          setBotMessages(prev => [...prev, {
-            id: `bot-${Date.now()}`,
-            sender: "admin",
-            message_type: "text",
-            text: msgText,
-            created_at: new Date().toISOString()
-          }]);
+          sendBotReply(msgText);
         } else {
-          setBotMessages(prev => [...prev, {
-            id: `bot-${Date.now()}`,
-            sender: "admin",
-            message_type: "text",
-            text: "سفارشی با این کد پیگیری پیدا نشد. لطفاً کد را مجدداً و به درستی وارد کنید یا منتظر پشتیبان بمانید.",
-            created_at: new Date().toISOString()
-          }]);
+          sendBotReply("سفارشی با این کد پیگیری پیدا نشد. لطفاً کد را مجدداً و به درستی وارد کنید یا منتظر پشتیبان بمانید.");
         }
       } catch (err) {
-        setBotMessages(prev => [...prev, {
-          id: `bot-${Date.now()}`,
-          sender: "admin",
-          message_type: "text",
-          text: "خطا در برقراری ارتباط. لطفاً بعداً تلاش کنید.",
-          created_at: new Date().toISOString()
-        }]);
+        sendBotReply("خطا در برقراری ارتباط. لطفاً بعداً تلاش کنید.");
       }
     }
     setIsLoading(false);
@@ -381,37 +422,13 @@ export default function LiveChatWidget() {
     if (type === "track") {
       await sendMessage({ text: "🔍 پیگیری وضعیت و زمان سفارش", message_type: "text" });
       setExpectingTrackingCode(true);
-      setTimeout(() => {
-        setBotMessages(prev => [...prev, {
-          id: `bot-${Date.now()}`,
-          sender: "admin",
-          message_type: "text",
-          text: "لطفاً کد پیگیری سفارش خود را وارد کنید (مثال: 123456):",
-          created_at: new Date().toISOString()
-        }]);
-      }, 600);
+      setTimeout(() => sendBotReply("لطفاً کد پیگیری سفارش خود را وارد کنید (مثال: 123456):", sid), 600);
     } else if (type === "2fa") {
       await sendMessage({ text: "❓ راهنمای غیرفعال‌سازی 2FA", message_type: "text" });
-      setTimeout(() => {
-        setBotMessages(prev => [...prev, {
-          id: `bot-${Date.now()}`,
-          sender: "admin",
-          message_type: "text",
-          text: "برای خاموش کردن تایید دو مرحله‌ای (2FA):\n۱. وارد سایت Epic Games یا اکانت خود شوید.\n۲. به بخش تنظیمات حساب (Account Settings) و سپس بخش رمز عبور و امنیت (Password & Security) بروید.\n۳. گزینه Two-Factor Authentication را خاموش کنید.",
-          created_at: new Date().toISOString()
-        }]);
-      }, 600);
+      setTimeout(() => sendBotReply("برای خاموش کردن تایید دو مرحله‌ای (2FA):\n۱. وارد سایت Epic Games یا اکانت خود شوید.\n۲. به بخش تنظیمات حساب (Account Settings) و سپس بخش رمز عبور و امنیت (Password & Security) بروید.\n۳. گزینه Two-Factor Authentication را خاموش کنید.", sid), 600);
     } else if (type === "hours") {
       await sendMessage({ text: "📞 ساعات کاری پشتیبانی", message_type: "text" });
-      setTimeout(() => {
-        setBotMessages(prev => [...prev, {
-          id: `bot-${Date.now()}`,
-          sender: "admin",
-          message_type: "text",
-          text: "ساعات کاری پشتیبانی تلفنی:\nشنبه تا چهارشنبه از ۱۱:۰۰ الی ۱۶:۰۰\nیکشنبه‌ها از ۱۳:۰۰ الی ۱۶:۰۰\n\nپشتیبانی تلگرام به صورت ۲۴ ساعته در آی‌دی @Nubixsupport پاسخگوی شماست.",
-          created_at: new Date().toISOString()
-        }]);
-      }, 600);
+      setTimeout(() => sendBotReply("ساعات کاری پشتیبانی تلفنی:\nشنبه تا چهارشنبه از ۱۱:۰۰ الی ۱۶:۰۰\nیکشنبه‌ها از ۱۳:۰۰ الی ۱۶:۰۰\n\nپشتیبانی تلگرام به صورت ۲۴ ساعته در آی‌دی @Nubixsupport پاسخگوی شماست.", sid), 600);
     }
   };
 
@@ -602,7 +619,7 @@ export default function LiveChatWidget() {
             </button>
           </div>
 
-          <div className="chat-messages">
+          <div className="chat-messages" ref={chatMessagesRef}>
             {allMessages.length === 0 ? (
               <div className="chat-bubble-wrapper is-user">
                 <div className="chat-bubble bubble-admin auto-message-bubble">

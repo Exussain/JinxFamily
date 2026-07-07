@@ -59,7 +59,12 @@ def _eligibility(user):
         pass
     profile, _ = UserProfile.objects.get_or_create(user=user)
     points = int(profile.points_balance or 0)
-    
+
+    # Admins can spin unlimited times (debugging/QA — need to see every prize outcome).
+    from .views import _is_admin_user
+    if _is_admin_user(user):
+        return True, "", False, 0, points
+
     last_spin = SpinResult.objects.filter(user=user).order_by("-created_at").first()
     if last_spin:
         now = timezone.now()
@@ -96,8 +101,10 @@ def spin_status(request):
             "code": last.discount_code.code if last.discount_code_id else None,
             "diamonds_credit": last.wallet_credit,
         }
+    from .views import _is_admin_user
     return JsonResponse({
         "signed_in": True,
+        "is_admin": _is_admin_user(user),
         "can_spin": can_spin,
         "reason": reason,
         "launch_active": launch_active,
@@ -142,17 +149,21 @@ def spin(request):
         now = timezone.now()
         days_since_wed = (now.weekday() - 2) % 7 # Wednesday is 2
         week_start = (now - timedelta(days=days_since_wed)).replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        already_won_this_week = SpinResult.objects.filter(
+
+        # Admin debug spins don't count against the real-customer weekly slot.
+        from .views import _is_admin_user
+        week_discount20_wins = SpinResult.objects.filter(
             segment_type="discount20",
-            created_at__gte=week_start
-        ).exists()
-        
+            created_at__gte=week_start,
+        ).select_related("user__profile")
+        already_won_this_week = any(not _is_admin_user(r.user) for r in week_discount20_wins)
+
         # Explicit lock: no 20% discount code can be won until July 9, 2026 at 16:18 UTC
+        # (admins are exempt so they can still debug the full prize range).
         lock_until = datetime(2026, 7, 9, 16, 18, 0, tzinfo=timezone.utc)
-        if now < lock_until:
+        if now < lock_until and not _is_admin_user(user):
             already_won_this_week = True
-            
+
         if already_won_this_week:
             # Fallback to 5% code (discount5)
             win_type = "discount5"
@@ -197,7 +208,9 @@ def spin(request):
     )
 
     # Promote meaningful wins to the Telegram channel (best-effort, never blocks).
-    if segment["type"] != "blank":
+    # Admin debug spins are excluded so they don't spam the public channel/feed.
+    from .views import _is_admin_user
+    if segment["type"] != "blank" and not _is_admin_user(user):
         try:
             from .spin_telegram import post_win_to_channel
             post_win_to_channel(result.public_name, prize_label)
@@ -223,9 +236,11 @@ def spin_recent_winners(request):
     """GET /api/spin/recent-winners — anonymised feed of recent meaningful wins."""
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
+    from .views import _is_admin_user
     rows = (
         SpinResult.objects.exclude(segment_type="blank")
-        .order_by("-created_at")[:15]
+        .select_related("user__profile")
+        .order_by("-created_at")[:60]
     )
     winners = [
         {
@@ -235,5 +250,6 @@ def spin_recent_winners(request):
             "at": r.created_at.isoformat(),
         }
         for r in rows
-    ]
+        if not _is_admin_user(r.user)
+    ][:15]
     return JsonResponse({"winners": winners})

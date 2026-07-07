@@ -4,18 +4,24 @@ from django.views.decorators.http import require_http_methods
 from .models import Article, BlogCategory
 
 def article_to_dict(article, request=None):
+    # Host-independent path: loopback fetches from the frontend would otherwise
+    # bake http://127.0.0.1:8001 into metadata/OG images.
     cover_url = ""
     if article.cover_image:
         try:
-            cover_url = request.build_absolute_uri(article.cover_image.url) if request else article.cover_image.url
+            cover_url = article.cover_image.url
         except:
             pass
-            
+
+    author_name = ""
+    if article.author:
+        author_name = article.author.get_full_name() or article.author.username
+
     return {
         "id": article.id,
         "title": article.title,
         "slug": article.slug,
-        "author": article.author.get_full_name() if article.author else "ناشناس",
+        "author": author_name or "تیم نوبیکس شاپ",
         "category": article.category.name if article.category else None,
         "category_slug": article.category.slug if article.category else None,
         "cover_image": cover_url,

@@ -176,6 +176,48 @@ class Order(models.Model):
         return f"Order {self.tracking_code}"
 
 
+class AbandonedCart(models.Model):
+    """ردپای سبد خرید رها‌شده. هر کاربر/سشن حداکثر یک ردیف فعال دارد."""
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                             related_name='abandoned_carts', db_index=True)
+    session_id = models.CharField(max_length=64, db_index=True,
+                                  help_text="برای مهمان: شناسه پایدار در localStorage")
+    phone = models.CharField(max_length=15, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    items = models.JSONField(default=list, blank=True)
+    item_count = models.PositiveSmallIntegerField(default=0)
+    total_value = models.PositiveIntegerField(default=0, help_text="تومان")
+    last_product_page = models.CharField(max_length=300, blank=True, default="")
+    last_seen_at = models.DateTimeField(auto_now=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    reminded_at = models.DateTimeField(null=True, blank=True)
+    reminder_count = models.PositiveSmallIntegerField(default=0)
+    converted_at = models.DateTimeField(null=True, blank=True,
+                                        help_text="وقتی کاربر نهایتاً سفارش ثبت کرد")
+    user_agent = models.CharField(max_length=240, blank=True, default="")
+    last_ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-last_seen_at"]
+        verbose_name = "سبد رها‌شده"
+        verbose_name_plural = "سبدهای رها‌شده"
+        indexes = [
+            models.Index(fields=["converted_at", "-last_seen_at"],
+                         name="shop_abncart_conv_lsa_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user"], condition=models.Q(user__isnull=False),
+                name="shop_abncart_user_unique",
+            ),
+        ]
+
+    def __str__(self):
+        who = self.user.username if self.user_id else f"مهمان:{self.session_id[:8]}"
+        return f"سبد رها‌شده {who} — {self.item_count} آیتم"
+
+
 class DiscountCode(models.Model):
     code = models.CharField(max_length=50, unique=True, db_index=True)
     percent = models.PositiveSmallIntegerField(
@@ -306,6 +348,9 @@ class UserProfile(models.Model):
         help_text="کاربری که این کاربر را معرفی کرده است."
     )
     spin_used = models.BooleanField(default=False, help_text="آیا کاربر از چرخش رایگان هفته‌ی لانچ استفاده کرده است؟")
+    reseller_pricing_tour_seen_at = models.DateTimeField(
+        null=True, blank=True, help_text="آخرین زمان مشاهده‌ی تور آموزشی قیمت‌گذاری همکاران توسط ادمین؛ null = هنوز دیده نشده"
+    )
 
     def __str__(self):
         return f"Profile for {self.user.username}"
@@ -872,10 +917,19 @@ class ResellerWalletTxn(models.Model):
 
 
 class ResellerPriceTier(models.Model):
-    """پله‌های قیمت‌گذاری پلکانی برای محصولات همکاران (فاز ۱ فقط کروپک)."""
+    """پله‌های قیمت‌گذاری پلکانی برای محصولات همکاران.
+
+    reseller=None یعنی پله‌ی «عمومی» (پیش‌فرض همه‌ی همکاران). اگر برای یک همکار خاص روی یک محصول
+    حداقل یک ردیف فعال با reseller ست‌شده وجود داشته باشد، کل پله‌های آن محصول برای آن همکار از این
+    ردیف‌ها خوانده می‌شود (بدون merge با عمومی)؛ در غیر این صورت آن همکار از پله‌های عمومی استفاده می‌کند.
+    """
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reseller_tiers")
     variant = models.ForeignKey(
         "ProductVariant", on_delete=models.CASCADE, null=True, blank=True, related_name="reseller_tiers"
+    )
+    reseller = models.ForeignKey(
+        "ResellerProfile", on_delete=models.CASCADE, null=True, blank=True, related_name="price_overrides",
+        help_text="خالی = پله‌ی عمومی؛ در غیر این صورت override اختصاصی همین همکار",
     )
     min_quantity = models.PositiveSmallIntegerField(default=1, help_text="حداقل تعداد برای فعال شدن این قیمت")
     price = models.PositiveIntegerField(help_text="قیمت به ازای هر واحد در این پله (تومان)")
@@ -884,19 +938,20 @@ class ResellerPriceTier(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["product_id", "variant_id", "min_quantity"]
+        ordering = ["product_id", "variant_id", "reseller_id", "min_quantity"]
         verbose_name = "پله قیمت همکار"
         verbose_name_plural = "پله‌های قیمت همکار"
         constraints = [
             models.UniqueConstraint(
-                fields=["product", "variant", "min_quantity"],
+                fields=["product", "variant", "min_quantity", "reseller"],
                 name="shop_reseller_tier_unique",
             ),
         ]
 
     def __str__(self):
         variant_label = f" / {self.variant.title}" if self.variant_id else ""
-        return f"{self.product.name_fa}{variant_label} ≥{self.min_quantity} = {self.price:,}"
+        scope = f" [{self.reseller.seller_code}]" if self.reseller_id else " [عمومی]"
+        return f"{self.product.name_fa}{variant_label}{scope} ≥{self.min_quantity} = {self.price:,}"
 
 
 class SubCategory(models.Model):
@@ -997,4 +1052,59 @@ class SiteNotificationRead(models.Model):
 
     def __str__(self):
         return f"{self.user.username} read {self.notification.id}"
+
+
+class ProductRequest(models.Model):
+    product_name = models.CharField(max_length=255, verbose_name="نام محصول درخواستی")
+    contact_info = models.CharField(max_length=255, verbose_name="اطلاعات تماس (ایمیل/تلفن)")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="کاربر ثبت‌کننده")
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("PENDING", "در انتظار بررسی"),
+            ("PROCESSED", "تهیه شده"),
+            ("REJECTED", "غیرقابل تهیه"),
+        ],
+        default="PENDING",
+        verbose_name="وضعیت"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت")
+    admin_note = models.TextField(blank=True, verbose_name="یادداشت مدیر")
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "درخواست محصول"
+        verbose_name_plural = "درخواست‌های محصولات"
+
+    def __str__(self):
+        return f"{self.product_name} - {self.contact_info}"
+
+
+class AccountingTransaction(models.Model):
+    TRANSACTION_TYPE_CHOICES = (
+        ('expense', 'خرجی (هزینه)'),
+        ('profit', 'سود متفرقه (درآمد)'),
+    )
+    CURRENCY_CHOICES = (
+        ('toman', 'تومان'),
+        ('usd', 'دلار (USD)'),
+    )
+
+    title = models.CharField(max_length=255, verbose_name="عنوان")
+    entry_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES, default='expense', verbose_name="نوع تراکنش")
+    currency = models.CharField(max_length=10, choices=CURRENCY_CHOICES, default='toman', verbose_name="واحد پولی")
+    amount = models.FloatField(default=0.0, verbose_name="مبلغ")
+    created_rate = models.IntegerField(default=0, verbose_name="نرخ دلار زمان ثبت (تومان)")
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="تاریخ ثبت")
+    note = models.TextField(blank=True, null=True, verbose_name="توضیحات")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "تراکنش حسابداری متفرقه"
+        verbose_name_plural = "تراکنش‌های حسابداری متفرقه"
+
+    def __str__(self):
+        return f"{self.title} - {self.get_entry_type_display()} ({self.amount} {self.currency})"
+
+
 

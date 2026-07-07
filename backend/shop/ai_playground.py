@@ -41,52 +41,40 @@ logger = logging.getLogger(__name__)
 
 # Curated chat-capable models (subset of the gateway catalog) shown when the
 # live /models probe fails. Label = friendly name, id = gateway model id.
-# This mirrors the Parspack AI-Studio pricing page the admin pasted, mapped to
-# the real ids returned by GET /api/aistudio/api/v1/models.
+# This mirrors the models available at https://ai.nubixshop.ir/v1/models.
 _CURATED_MODELS = [
+    {"id": "combo", "label": "Combo (auto-route)", "vendor": "combo", "cost_in": 0, "cost_out": 0, "tier": "standard"},
     # ── Budget / cheap ─────────────────────────────────────────────
-    {"id": "openai/gpt-4o-mini", "label": "GPT-4o mini", "vendor": "openai", "cost_in": 0.15, "cost_out": 0.60, "tier": "budget"},
-    {"id": "openai/gpt-5-mini", "label": "GPT-5 mini", "vendor": "openai", "cost_in": 0.15, "cost_out": 0.60, "tier": "budget"},
-    {"id": "google/gemini-2.5-flash", "label": "Gemini 2.5 Flash", "vendor": "google", "cost_in": 0.02, "cost_out": 0.08, "tier": "budget"},
-    {"id": "google/gemma-4-31b-it", "label": "Gemma 4 31B", "vendor": "google", "cost_in": 0.02, "cost_out": 0.08, "tier": "budget"},
-    {"id": "anthropic/claude-3-haiku", "label": "Claude 3 Haiku", "vendor": "anthropic", "cost_in": 0.25, "cost_out": 1.25, "tier": "budget"},
-    {"id": "x-ai/grok-4-fast", "label": "Grok 4 Fast", "vendor": "x-ai", "cost_in": 0.03, "cost_out": 0.15, "tier": "budget"},
-    {"id": "x-ai/grok-4.1-fast", "label": "Grok 4.1 Fast", "vendor": "x-ai", "cost_in": 0.03, "cost_out": 0.15, "tier": "budget"},
-    {"id": "openai/gpt-5-chat", "label": "GPT-5 Chat", "vendor": "openai", "cost_in": 0.02, "cost_out": 0.14, "tier": "budget"},
+    {"id": "ocg/deepseek-v4-flash-free", "label": "DeepSeek V4 Flash Free", "vendor": "ocg", "cost_in": 0, "cost_out": 0, "tier": "budget"},
+    {"id": "ocg/mimo-v2.5-free", "label": "Mimo V2.5 Free", "vendor": "ocg", "cost_in": 0, "cost_out": 0, "tier": "budget"},
+    {"id": "kc/kilo-auto/free", "label": "Kilo Auto Free", "vendor": "kc", "cost_in": 0, "cost_out": 0, "tier": "budget"},
+    {"id": "kc/openrouter/free", "label": "OpenRouter Free (KC)", "vendor": "kc", "cost_in": 0, "cost_out": 0, "tier": "budget"},
+    {"id": "openrouter/openrouter/free", "label": "OpenRouter Free", "vendor": "openrouter", "cost_in": 0, "cost_out": 0, "tier": "budget"},
+    {"id": "openrouter/google/gemma-4-31b-it:free", "label": "Gemma 4 31B Free", "vendor": "openrouter", "cost_in": 0, "cost_out": 0, "tier": "budget"},
+    {"id": "cf/@cf/zai-org/glm-4.7-flash", "label": "GLM 4.7 Flash", "vendor": "cf", "cost_in": 0, "cost_out": 0, "tier": "budget"},
+    {"id": "gemini/gemini-3.1-flash-lite-preview", "label": "Gemini 3.1 Flash Lite", "vendor": "gemini", "cost_in": 0, "cost_out": 0, "tier": "budget"},
+    {"id": "gemini/gemini-3-flash-preview", "label": "Gemini 3 Flash Preview", "vendor": "gemini", "cost_in": 0, "cost_out": 0, "tier": "budget"},
     # ── Standard ───────────────────────────────────────────────────
-    {"id": "openai/gpt-4o-audio-preview", "label": "GPT-4o Audio", "vendor": "openai", "cost_in": 0.03, "cost_out": 0.10, "tier": "standard"},
-    {"id": "openai/gpt-audio", "label": "GPT Audio", "vendor": "openai", "cost_in": 0.03, "cost_out": 0.10, "tier": "standard"},
-    {"id": "openai/gpt-audio-mini", "label": "GPT Audio Mini", "vendor": "openai", "cost_in": 0.03, "cost_out": 0.10, "tier": "standard"},
-    {"id": "openai/gpt-4o-2024-11-20", "label": "GPT-4o (2024-11-20)", "vendor": "openai", "cost_in": 0.03, "cost_out": 0.10, "tier": "standard"},
-    {"id": "openai/gpt-4o-search-preview", "label": "GPT-4o Search Preview", "vendor": "openai", "cost_in": 0.03, "cost_out": 0.10, "tier": "standard"},
-    {"id": "google/gemini-3.1-pro-preview-customtools", "label": "Gemini 3.1 Pro Preview Custom Tools", "vendor": "google", "cost_in": 0.02, "cost_out": 0.12, "tier": "standard"},
-    {"id": "google/gemini-3.1-pro-preview", "label": "Gemini 3.1 Pro Preview", "vendor": "google", "cost_in": 0.02, "cost_out": 0.12, "tier": "standard"},
-    {"id": "google/gemini-3-pro-image-preview", "label": "Nano Banana Pro (Gemini 3 Pro Image Preview)", "vendor": "google", "cost_in": 0.02, "cost_out": 0.12, "tier": "standard"},
-    {"id": "openai/gpt-5.3-codex", "label": "GPT-5.3-Codex", "vendor": "openai", "cost_in": 0.02, "cost_out": 0.14, "tier": "standard"},
-    {"id": "openai/gpt-5.3-chat", "label": "GPT-5.3 Chat", "vendor": "openai", "cost_in": 0.02, "cost_out": 0.14, "tier": "standard"},
-    {"id": "anthropic/claude-sonnet-4.6", "label": "Claude Sonnet 4.6 (current default)", "vendor": "anthropic", "cost_in": 0.03, "cost_out": 0.15, "tier": "standard"},
-    {"id": "x-ai/grok-4", "label": "Grok 4", "vendor": "x-ai", "cost_in": 0.03, "cost_out": 0.15, "tier": "standard"},
-    {"id": "x-ai/grok-3-beta", "label": "Grok 3 Beta", "vendor": "x-ai", "cost_in": 0.03, "cost_out": 0.15, "tier": "standard"},
-    {"id": "x-ai/grok-3", "label": "Grok 3", "vendor": "x-ai", "cost_in": 0.03, "cost_out": 0.15, "tier": "standard"},
-    {"id": "openai/gpt-5", "label": "GPT-5", "vendor": "openai", "cost_in": 0.03, "cost_out": 0.20, "tier": "standard"},
-    {"id": "anthropic/claude-opus-4.7", "label": "Claude Opus 4.7", "vendor": "anthropic", "cost_in": 0.05, "cost_out": 0.25, "tier": "standard"},
-    {"id": "anthropic/claude-opus-4.5", "label": "Claude Opus 4.5", "vendor": "anthropic", "cost_in": 0.05, "cost_out": 0.25, "tier": "standard"},
-    {"id": "openai/gpt-5.5", "label": "GPT-5.5", "vendor": "openai", "cost_in": 0.05, "cost_out": 0.30, "tier": "standard"},
-    {"id": "anthropic/claude-3.5-sonnet", "label": "Claude 3.5 Sonnet", "vendor": "anthropic", "cost_in": 0.06, "cost_out": 0.30, "tier": "standard"},
-    {"id": "openai/gpt-4-turbo", "label": "GPT-4 Turbo", "vendor": "openai", "cost_in": 0.10, "cost_out": 0.30, "tier": "standard"},
-    {"id": "openai/o1", "label": "o1", "vendor": "openai", "cost_in": 0.15, "cost_out": 0.60, "tier": "standard"},
-    {"id": "openai/gpt-4", "label": "GPT-4", "vendor": "openai", "cost_in": 0.30, "cost_out": 0.60, "tier": "standard"},
-    # ── Premium / Pro ──────────────────────────────────────────────
-    {"id": "openai/gpt-5-pro", "label": "GPT-5 Pro", "vendor": "openai", "cost_in": 0.15, "cost_out": 1.20, "tier": "premium"},
-    {"id": "openai/gpt-5.2-pro", "label": "GPT-5.2 Pro", "vendor": "openai", "cost_in": 0.21, "cost_out": 1.68, "tier": "premium"},
-    {"id": "openai/gpt-5.5-pro", "label": "GPT-5.5 Pro", "vendor": "openai", "cost_in": 0.30, "cost_out": 1.80, "tier": "premium"},
-    {"id": "openai/o1-pro", "label": "o1-pro", "vendor": "openai", "cost_in": 1.50, "cost_out": 6.00, "tier": "premium"},
+    {"id": "gemini/gemini-3.5-flash", "label": "Gemini 3.5 Flash", "vendor": "gemini", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "gemini/gemini-3.1-pro-preview", "label": "Gemini 3.1 Pro Preview", "vendor": "gemini", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "gemini/gemma-4-31b-it", "label": "Gemma 4 31B", "vendor": "gemini", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "cf/@cf/meta/llama-3.1-70b-instruct-fp8-fast", "label": "Llama 3.1 70B FP8 Fast", "vendor": "cf", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast", "label": "Llama 3.3 70B FP8 Fast", "vendor": "cf", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "cf/@cf/mistralai/mistral-small-3.1-24b-instruct", "label": "Mistral Small 3.1 24B", "vendor": "cf", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "cf/@cf/deepseek-ai/deepseek-r1-distill-qwen-32b", "label": "DeepSeek R1 Distill Qwen 32B", "vendor": "cf", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "cf/@cf/moonshotai/kimi-k2.5", "label": "Kimi K2.5", "vendor": "cf", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "cf/@cf/moonshotai/kimi-k2.6", "label": "Kimi K2.6", "vendor": "cf", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "cf/@cf/qwen/qwq-32b", "label": "QWQ 32B", "vendor": "cf", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "ocg/qwen3.6-plus", "label": "Qwen 3.6 Plus", "vendor": "ocg", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "ocg/mimo-v2.5", "label": "Mimo V2.5", "vendor": "ocg", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free", "label": "Nemotron 3 Ultra 550B Free", "vendor": "openrouter", "cost_in": 0, "cost_out": 0, "tier": "standard"},
+    {"id": "openrouter/tencent/hy3:free", "label": "Tencent Hy3 Free", "vendor": "openrouter", "cost_in": 0, "cost_out": 0, "tier": "standard"},
 ]
 
 # Models that are NOT text-chat capable — filtered out of the live list.
 _NON_CHAT_HINTS = (
     "embedding", "tts", "transcribe", "whisper", "sora", "lyria", "image",
-    "rerank", "audio", "nemotron", "gemma-3n", "gemma-3-", "gemma-4-26b",
+    "rerank", "audio", "gemma-3n", "gemma-3-", "gemma-4-26b",
     "qwen3-coder", "laguna", "owl-alpha", "gpt-oss",
 )
 
@@ -155,9 +143,7 @@ def _list_models(request):
     try:
         key = ai_support._load_api_key()
         if key:
-            url = ai_support.AI_BASE_URL.replace(
-                "/chat/completions", "/models"
-            )
+            url = ai_support.AI_BASE_URL.rstrip("/") + "/models"
             req = urllib.request.Request(
                 url,
                 headers={

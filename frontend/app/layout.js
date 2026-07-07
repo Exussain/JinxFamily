@@ -26,13 +26,13 @@ export const metadata = {
     siteName: SITE_NAME,
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: SITE_NAME }],
+    images: [{ url: '/og-image.webp', width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: {
     card: 'summary_large_image',
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: ['/og-image.png'],
+    images: ['/og-image.webp'],
   },
   robots: {
     index: true,
@@ -40,13 +40,21 @@ export const metadata = {
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
   },
   icons: [
-    { rel: 'icon', url: '/web_logo.webp', type: 'image/webp' },
-    { rel: 'apple-touch-icon', url: '/web_logo.webp' },
-    { rel: 'shortcut icon', url: '/web_logo.webp' }
+    { rel: 'icon', url: '/favicon.ico', sizes: '48x48' },
+    { rel: 'icon', url: '/icons/app/icon-192.png', type: 'image/png', sizes: '192x192' },
+    { rel: 'apple-touch-icon', url: '/icons/app/apple-icon-180.png', sizes: '180x180' },
+    { rel: 'shortcut icon', url: '/favicon.ico' }
   ],
   ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && {
     verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION },
   }),
+};
+
+export const viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#7c3aed' },
+    { media: '(prefers-color-scheme: dark)', color: '#a78bfa' },
+  ],
 };
 
 import './globals.css';

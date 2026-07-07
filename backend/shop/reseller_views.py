@@ -87,10 +87,16 @@ TELEGRAM_CHANNEL_HANDLE_RE = re.compile(r"@?([A-Za-z0-9_]{4,})")
 # نرخ مرجع و قیمت‌های پایه در SiteSetting قابل بازنویسی هستند.
 # -----------------------------------------------------------------------
 CREW_SLUG = "fortnite-crew-pack"
+VBUCKS_SLUG = "v-bucks"
 DEFAULT_LIRA_REF_RATE = 3360        # نرخ لیر مرجع (تومان) که قیمت‌های پایه روی آن تعریف شده‌اند
 DEFAULT_CREW_SINGLE_BASE = 459000   # قیمت پایه‌ی تک‌عددی در نرخ مرجع
 DEFAULT_CREW_TEN_BASE = 429000      # قیمت پایه‌ی ۱۰+ در نرخ مرجع
 DEFAULT_FLUCT_THRESHOLD = 5         # درصد مجاز نوسان لیر قبل از محاسبه ما‌به‌التفاوت
+DEFAULT_CREW_BEHAVIOR_MAX_SINGLE = 529_000   # بیش‌ترین قیمت تک‌عددی (حداقل تخفیف)
+DEFAULT_CREW_BEHAVIOR_MIN_SINGLE = 489_000   # کم‌ترین قیمت تک‌عددی (حداکثر تخفیف)
+DEFAULT_CREW_BEHAVIOR_MAX_TEN = 515_000
+DEFAULT_CREW_BEHAVIOR_MIN_TEN = 474_000
+BEHAVIOR_PRICING_ENABLED_DEFAULT = True
 
 
 def _setting_int(key: str, default: int) -> int:
@@ -232,6 +238,69 @@ def _lira_fluctuation(locked_rate: int, current_rate: int) -> dict:
         "exceeded": abs(pct) > threshold,
         "direction": "up" if pct > 0 else ("down" if pct < 0 else "none"),
         "threshold": threshold,
+    }
+
+
+# -----------------------------------------------------------------------
+# تخفیف رفتاری همکار (Behaviour-based dynamic pricing)
+# -----------------------------------------------------------------------
+def _compute_behavior_discount(profile: ResellerProfile) -> dict:
+    """محاسبه تخفیف رفتاری همکار بر اساس مجموع خرید، تعداد سفارش موفق، نرخ موفقیت و قدمت حساب.
+
+    خروجی شامل loyalty_score (0-100)، قیمت‌های کروپک تک‌عددی و ۱۰+عددی، و درصد تخفیف.
+    """
+    now = timezone.now()
+
+    spend_txn = ResellerWalletTxn.objects.filter(profile=profile, kind="order").aggregate(s=Sum("amount"))["s"] or 0
+    wallet_spend = abs(int(spend_txn))
+    orders_qs = Order.objects.filter(is_reseller_order=True, user_id=profile.user_id).exclude(
+        status__in=["wallet_topup"]
+    ).exclude(note__icontains="شارژ کیف پول")
+    wallet_order_ids = ResellerWalletTxn.objects.filter(
+        profile=profile, kind="order"
+    ).values_list("related_order_id", flat=True)
+    direct_order_ids = list(
+        orders_qs.filter(payments__status="verified")
+        .exclude(id__in=wallet_order_ids)
+        .values_list("id", flat=True)
+        .distinct()
+    )
+    direct_spend = Order.objects.filter(id__in=direct_order_ids).aggregate(s=Sum("amount"))["s"] or 0
+    total_spend = wallet_spend + int(direct_spend)
+
+    completed_statuses = ["paid", "registered", "processing", "completed"]
+    completed_orders = orders_qs.filter(status__in=completed_statuses).count()
+    total_orders = orders_qs.count()
+
+    success_rate = round((completed_orders / total_orders) * 100) if total_orders else 0
+
+    account_age_days = (now - profile.created_at).days if profile.created_at else 0
+
+    spend_score = min(40, int((total_spend / 50_000_000) * 40)) if total_spend > 0 else 0
+    order_score = min(30, int((completed_orders / 100) * 30)) if completed_orders > 0 else 0
+    sr_score = 0
+    if success_rate >= 90:
+        sr_score = min(20, int(((success_rate - 90) / 10) * 20))
+    age_score = min(10, int((account_age_days / 180) * 10)) if account_age_days > 0 else 0
+
+    loyalty_score = min(100, spend_score + order_score + sr_score + age_score)
+
+    max_single = _setting_int("reseller_behavior_max_single", DEFAULT_CREW_BEHAVIOR_MAX_SINGLE)
+    min_single = _setting_int("reseller_behavior_min_single", DEFAULT_CREW_BEHAVIOR_MIN_SINGLE)
+    max_ten = _setting_int("reseller_behavior_max_ten", DEFAULT_CREW_BEHAVIOR_MAX_TEN)
+    min_ten = _setting_int("reseller_behavior_min_ten", DEFAULT_CREW_BEHAVIOR_MIN_TEN)
+
+    crew_single = max_single - int((loyalty_score / 100) * (max_single - min_single))
+    crew_ten = max_ten - int((loyalty_score / 100) * (max_ten - min_ten))
+
+    crew_single = (crew_single // 1000) * 1000
+    crew_ten = (crew_ten // 1000) * 1000
+
+    return {
+        "loyalty_score": loyalty_score,
+        "crew_single": crew_single,
+        "crew_ten": crew_ten,
+        "discount_percent": loyalty_score,
     }
 
 
@@ -827,6 +896,37 @@ def reseller_profile_update(request):
 
 
 # -----------------------------------------------------------------------
+# PRICING (عمومی + override اختصاصی همکار)
+# -----------------------------------------------------------------------
+def _tiers_for_reseller(product_id: int, variant_id: int | None, profile) -> tuple[list, bool]:
+    """پله‌های مؤثر یک محصول برای یک همکار.
+
+    اگر همکار override اختصاصی فعال داشته باشد همان برمی‌گردد (قیمت‌های ثابت تومانی، بدون اسکیل نرخ
+    لیر)؛ وگرنه پله‌های عمومی (reseller=None) برمی‌گردد. خروجی: (لیست پله‌ها, آیا override بود).
+    """
+    reseller_id = getattr(profile, "id", None)
+    if reseller_id:
+        override = list(
+            ResellerPriceTier.objects.filter(
+                product_id=product_id, variant_id=variant_id, reseller_id=reseller_id, active=True,
+            ).order_by("min_quantity").values("min_quantity", "price", "active")
+        )
+        if override:
+            return override, True
+    global_tiers = list(
+        ResellerPriceTier.objects.filter(
+            product_id=product_id, variant_id=variant_id, reseller__isnull=True, active=True,
+        ).order_by("min_quantity").values("min_quantity", "price", "active")
+    )
+    return global_tiers, False
+
+
+def _uses_fixed_variant_tiers(product: Product | None, variant_id: int | None) -> bool:
+    """VBucks variant tiers are entered as final Toman prices, not lira-scaled raw prices."""
+    return bool(product and product.slug == VBUCKS_SLUG and variant_id)
+
+
+# -----------------------------------------------------------------------
 # CATALOG
 # -----------------------------------------------------------------------
 def reseller_catalog(request):
@@ -835,13 +935,15 @@ def reseller_catalog(request):
     if not _is_reseller_user(request.user):
         return JsonResponse({"detail": "احراز هویت همکار لازم است."}, status=401)
 
+    profile = _get_reseller_profile(request.user)
     cfg = _crew_pricing_config()
     lira_rate = cfg["lira_rate"]
 
-    # همه‌ی محصولاتی که حداقل یک پله فعال دارند (یا کروپک که لیر-محور است)
+    # همه‌ی محصولاتی که حداقل یک پله‌ی عمومی فعال دارند (یا کروپک که لیر-محور است).
+    # عضویت در کاتالوگ فقط از روی پله‌های عمومی تعیین می‌شود؛ override اختصاصی فقط قیمت را عوض می‌کند.
     crew = Product.objects.filter(slug=CREW_SLUG, active=True).first()
     product_ids_with_tiers = list(
-        ResellerPriceTier.objects.filter(active=True)
+        ResellerPriceTier.objects.filter(active=True, reseller__isnull=True)
         .values_list("product_id", flat=True)
         .distinct()
     )
@@ -865,31 +967,47 @@ def reseller_catalog(request):
     raw_products = []
     for product in Product.objects.filter(id__in=product_ids_with_tiers, active=True).prefetch_related("variants"):
         is_crew = (product.slug == CREW_SLUG)
+        crew_behavior = None
+        ref = cfg["ref_rate"] or 1
+
+        def _catalog_tiers_for_variant(variant_id: int) -> list:
+            variant_tiers, variant_override = _tiers_for_reseller(product.id, variant_id, profile)
+            if not variant_tiers:
+                return []
+            if product.price_lira > 0 and not variant_override and not _uses_fixed_variant_tiers(product, variant_id):
+                return [
+                    {
+                        "min_quantity": t["min_quantity"],
+                        "price": _round_toman(t["price"] * lira_rate / ref),
+                        "active": t["active"],
+                    }
+                    for t in variant_tiers
+                ]
+            return variant_tiers
+
         if is_crew:
-            tiers = _crew_tiers_for_rate(lira_rate, cfg)
+            crew_tiers, crew_override = _tiers_for_reseller(product.id, None, profile)
+            tiers = crew_tiers if crew_override else _crew_tiers_for_rate(lira_rate, cfg)
             lira_priced = True
+            behavior_enabled = _setting_bool("reseller_behavior_pricing_enabled", BEHAVIOR_PRICING_ENABLED_DEFAULT)
+            if behavior_enabled and profile is not None:
+                crew_behavior = _compute_behavior_discount(profile)
         elif product.price_lira > 0:
-            ref = cfg["ref_rate"] or 1
-            base_tiers = list(
-                ResellerPriceTier.objects.filter(product=product, variant=None, active=True)
-                .order_by("min_quantity")
-                .values("min_quantity", "price", "active")
-            )
-            tiers = []
-            for t in base_tiers:
-                scaled_price = _round_toman(t["price"] * lira_rate / ref)
-                tiers.append({
-                    "min_quantity": t["min_quantity"],
-                    "price": scaled_price,
-                    "active": t["active"],
-                })
+            base_tiers, is_override = _tiers_for_reseller(product.id, None, profile)
+            if is_override:
+                tiers = base_tiers  # قیمت دستی ثابت است، بدون اسکیل نرخ لیر
+            else:
+                tiers = [
+                    {
+                        "min_quantity": t["min_quantity"],
+                        "price": _round_toman(t["price"] * lira_rate / ref),
+                        "active": t["active"],
+                    }
+                    for t in base_tiers
+                ]
             lira_priced = True
         else:
-            tiers = list(
-                ResellerPriceTier.objects.filter(product=product, variant=None, active=True)
-                .order_by("min_quantity")
-                .values("min_quantity", "price", "active")
-            )
+            tiers, _is_override = _tiers_for_reseller(product.id, None, profile)
             lira_priced = False
         if not tiers:
             continue
@@ -920,6 +1038,7 @@ def reseller_catalog(request):
                 "subtitle": product.subtitle,
                 "image_url": product.image_url,
                 "base_price": base_price,
+                "original_price": product.price or int(base_price),
                 "tiers": tiers,
                 "sales_count": sales,
                 "lira_priced": lira_priced,
@@ -931,6 +1050,16 @@ def reseller_catalog(request):
                 "daily_order_limit": getattr(product, "daily_order_limit", 0),
                 "ordered_today_reseller": ordered_today_reseller,
                 "ordered_today_total": ordered_today_total,
+                "behavior_pricing": crew_behavior if is_crew else None,
+                "variants": [
+                    {
+                        "id": v.id,
+                        "title": v.title,
+                        "price_lira": v.original_price,
+                        "tiers": _catalog_tiers_for_variant(v.id),
+                    }
+                    for v in product.variants.all()
+                ] if product.variants.exists() else [],
             }
         )
 
@@ -958,17 +1087,35 @@ def reseller_catalog(request):
 # -----------------------------------------------------------------------
 # ORDERS (همکار)
 # -----------------------------------------------------------------------
-def _price_for_quantity(product_id: int, quantity: int, variant_id: int | None = None) -> int:
-    """قیمت واحد برای تعداد داده‌شده. برای کروپک و محصولات لیر-محور از فرمول لیر استفاده می‌کند."""
+def _price_for_quantity(product_id: int, quantity: int, variant_id: int | None = None, profile=None) -> int:
+    """قیمت واحد برای تعداد داده‌شده.
+
+    اگر همکار override اختصاصی داشته باشد، قیمت ثابت تومانی همان override برمی‌گردد (بدون اسکیل نرخ
+    لیر)؛ وگرنه رفتار عمومی قبلی: کروپک و محصولات لیر-محور از فرمول/اسکیل لیر استفاده می‌کنند.
+    """
     product = Product.objects.filter(id=product_id).first()
     if not product:
         return 0
+    override_tiers, is_override = _tiers_for_reseller(product_id, variant_id, profile)
+    if is_override:
+        matching = sorted(
+            [t for t in override_tiers if t["active"] and t["min_quantity"] <= quantity],
+            key=lambda t: -t["min_quantity"],
+        )
+        return int(matching[0]["price"]) if matching else 0
     if product.slug == CREW_SLUG:
+        behavior_enabled = _setting_bool("reseller_behavior_pricing_enabled", BEHAVIOR_PRICING_ENABLED_DEFAULT)
+        if behavior_enabled and profile is not None:
+            behavior = _compute_behavior_discount(profile)
+            if quantity >= 10:
+                return behavior["crew_ten"]
+            return behavior["crew_single"]
         return _crew_unit_price_for_quantity(quantity, _lira_rate())
     tier = (
         ResellerPriceTier.objects.filter(
             product_id=product_id,
             variant_id=variant_id,
+            reseller__isnull=True,
             active=True,
             min_quantity__lte=quantity,
         )
@@ -977,7 +1124,7 @@ def _price_for_quantity(product_id: int, quantity: int, variant_id: int | None =
     )
     if not tier:
         return 0
-    if product.price_lira > 0:
+    if product.price_lira > 0 and not _uses_fixed_variant_tiers(product, variant_id):
         cfg = _crew_pricing_config()
         ref = cfg["ref_rate"] or 1
         rate = _lira_rate() or ref
@@ -1119,7 +1266,7 @@ def _parse_reseller_order_payload(request, profile: ResellerProfile) -> dict:
         raise _OrderValidationError(JsonResponse({"message": "محصول یافت نشد."}, status=400))
 
     is_crew = (product.slug == CREW_SLUG)
-    if not is_crew and not ResellerPriceTier.objects.filter(product=product, active=True).exists():
+    if not is_crew and not ResellerPriceTier.objects.filter(product=product, reseller__isnull=True, active=True).exists():
         raise _OrderValidationError(JsonResponse(
             {"message": "این محصول برای همکاران فعال نیست."}, status=400
         ))
@@ -1178,7 +1325,7 @@ def _parse_reseller_order_payload(request, profile: ResellerProfile) -> dict:
         except (ProductVariant.DoesNotExist, ValueError, TypeError):
             raise _OrderValidationError(JsonResponse({"message": "واریانت نامعتبر است."}, status=400))
 
-    unit_price = _price_for_quantity(product.id, quantity, variant.id if variant else None)
+    unit_price = _price_for_quantity(product.id, quantity, variant.id if variant else None, profile=profile)
     if unit_price <= 0:
         raise _OrderValidationError(JsonResponse(
             {"message": "پله قیمتی برای این تعداد تعریف نشده. با ادمین تماس بگیرید."},
@@ -1252,6 +1399,8 @@ def _parse_reseller_order_payload(request, profile: ResellerProfile) -> dict:
     # نرخ لیر در زمان سفارش (برای کروپک و سایر محصولات لیر-محور)
     lira_rate = _lira_rate() if (is_crew or (product and product.price_lira > 0)) else 0
 
+    epic_rules_accepted = bool(payload.get("epic_rules_accepted"))
+
     # اولین اکانت برای فیلدهای legacy OrderItem/Order (back-compat با ادمین/ویو‌های قدیم)
     first = accounts[0] if accounts else {}
     legacy_email = first.get("account_email", "")
@@ -1270,6 +1419,7 @@ def _parse_reseller_order_payload(request, profile: ResellerProfile) -> dict:
         "accounts": accounts,
         "lira_rate_at_order": lira_rate,
         "is_crew": is_crew,
+        "epic_rules_accepted": epic_rules_accepted,
         # legacy (برای OrderItem/Order)
         "account_type": legacy_type,
         "account_email": legacy_email,
@@ -1338,6 +1488,19 @@ def _create_reseller_order(request, profile: ResellerProfile):
     except _OrderValidationError as e:
         return e.response
 
+    has_xbox_account = any(
+        acc.get("account_type") == "xbox" for acc in ctx["accounts"]
+    )
+    needs_epic_rules = ctx["is_crew"] or has_xbox_account
+    if needs_epic_rules and not ctx.get("epic_rules_accepted"):
+        return JsonResponse(
+            {
+                "code": "epic_rules_required",
+                "message": "برای ثبت سفارش محصولات وابسته به اپیک گیمز / ایکس باکس، باید قوانین را مطالعه و تأیید کنید.",
+            },
+            status=400,
+        )
+
     total = ctx["total"]
     if profile.wallet_balance < total:
         return JsonResponse(
@@ -1403,6 +1566,11 @@ def _reservation_diff(order: Order) -> dict:
     if not item:
         return {"applicable": False}
     qty = item.quantity
+    profile = _get_reseller_profile(order.user)
+    _tiers, is_override = _tiers_for_reseller(item.product_id, item.variant_id, profile)
+    if is_override:
+        # قیمت دستی همکار ثابت است و به نرخ لیر وابسته نیست؛ نوسان قابل اعمال نیست
+        return {"applicable": False, "locked_rate": locked, "current_rate": current}
     if item.product.slug == CREW_SLUG:
         locked_unit = _crew_unit_price_for_quantity(qty, locked)
         current_unit = _crew_unit_price_for_quantity(qty, current)
@@ -1411,6 +1579,7 @@ def _reservation_diff(order: Order) -> dict:
             ResellerPriceTier.objects.filter(
                 product=item.product,
                 variant=item.variant,
+                reseller__isnull=True,
                 active=True,
                 min_quantity__lte=qty,
             )
@@ -1789,6 +1958,19 @@ def reseller_order_checkout(request):
         ctx = _parse_reseller_order_payload(request, profile)
     except _OrderValidationError as e:
         return e.response
+
+    has_xbox_account = any(
+        acc.get("account_type") == "xbox" for acc in ctx["accounts"]
+    )
+    needs_epic_rules = ctx["is_crew"] or has_xbox_account
+    if needs_epic_rules and not ctx.get("epic_rules_accepted"):
+        return JsonResponse(
+            {
+                "code": "epic_rules_required",
+                "message": "برای ثبت سفارش محصولات وابسته به اپیک گیمز / ایکس باکس، باید قوانین را مطالعه و تأیید کنید.",
+            },
+            status=400,
+        )
 
     total = ctx["total"]
     description = f"خرید مستقیم همکار {profile.seller_code} — {ctx['product'].name_fa} ×{ctx['quantity']}"
@@ -2726,19 +2908,38 @@ def _parse_int_with_suffix(s: str) -> int:
 # -----------------------------------------------------------------------
 # ADMIN Reseller Tiers
 # -----------------------------------------------------------------------
+def _parse_optional_int(raw) -> int | None:
+    if raw in (None, "", "null", "0"):
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 def admin_reseller_tiers(request):
+    """GET: پله‌های عمومی (پیش‌فرض) یا override یک همکار خاص برای یک محصول.
+
+    query params: product_id (اختیاری), variant_id (اختیاری), reseller_id (اختیاری؛ غایب/۰ = پله‌های عمومی).
+    """
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
     if not _is_admin_user(request.user):
         return JsonResponse({"detail": "forbidden"}, status=403)
 
     product_id = request.GET.get("product_id")
-    qs = ResellerPriceTier.objects.select_related("product", "variant").order_by("product_id", "variant_id", "min_quantity")
+    variant_id = _parse_optional_int(request.GET.get("variant_id"))
+    reseller_id = _parse_optional_int(request.GET.get("reseller_id"))
+    qs = ResellerPriceTier.objects.select_related("product", "variant", "reseller").order_by(
+        "product_id", "variant_id", "min_quantity"
+    )
     if product_id:
         try:
             qs = qs.filter(product_id=int(product_id))
         except (TypeError, ValueError):
             pass
+    qs = qs.filter(variant_id=variant_id) if variant_id is not None else qs.filter(variant__isnull=True)
+    qs = qs.filter(reseller_id=reseller_id) if reseller_id else qs.filter(reseller__isnull=True)
 
     results = [
         {
@@ -2746,20 +2947,58 @@ def admin_reseller_tiers(request):
             "product_id": t.product_id,
             "product_name": t.product.name_fa,
             "product_slug": t.product.slug,
+            "product_price_lira": t.product.price_lira,
             "variant_id": t.variant_id,
             "variant_title": t.variant.title if t.variant_id else "",
+            "reseller_id": t.reseller_id,
             "min_quantity": t.min_quantity,
             "price": t.price,
             "active": t.active,
         }
         for t in qs
     ]
-    return JsonResponse({"results": results})
+    cfg = _crew_pricing_config()
+    response_data = {
+        "results": results,
+        "lira_rate": cfg["lira_rate"],
+        "ref_rate": cfg["ref_rate"],
+    }
+    if product_id:
+        product = get_object_or_404(Product, id=int(product_id))
+        variants_qs = ProductVariant.objects.filter(product=product).order_by("sort_order", "id")
+        response_data["variants"] = [
+            {
+                "id": v.id,
+                "title": v.title,
+                "price_lira": v.original_price,
+            }
+            for v in variants_qs
+        ]
+        price_lira_for_cost = product.price_lira
+        if variant_id is not None:
+            variant = variants_qs.filter(id=variant_id).first()
+            if variant and variant.original_price > 0:
+                price_lira_for_cost = variant.original_price
+        if price_lira_for_cost > 0 and cfg["lira_rate"] > 0:
+            cost_toman = price_lira_for_cost * cfg["lira_rate"]
+            ideal_min_price = int(round(cost_toman * 1.125 / 1000.0) * 1000)
+            response_data["product_price_lira"] = product.price_lira
+            response_data["cost_toman"] = cost_toman
+            response_data["ideal_min_price"] = ideal_min_price
+            response_data["profit_pct"] = 12.5
+            if variant_id is not None:
+                response_data["variant_price_lira"] = price_lira_for_cost
+    return JsonResponse(response_data)
 
 
 @csrf_exempt
 def admin_reseller_tiers_upsert(request):
-    """PUT: جایگزینی همه پله‌ها برای یک محصول. payload: {product_id, variant_id, tiers: [{min_quantity, price, active}]}"""
+    """PUT: جایگزینی پله‌های یک محصول (عمومی یا اختصاصی یک همکار).
+
+    payload: {product_id, variant_id, reseller_id (اختیاری), tiers: [{min_quantity, price, active}]}
+    reseller_id غایب/۰ = پله‌های عمومی؛ در غیر این صورت فقط override همان همکار جایگزین می‌شود (پله‌های
+    عمومی و سایر همکاران دست‌نخورده می‌مانند).
+    """
     if request.method not in ("PUT", "POST"):
         return HttpResponseNotAllowed(["PUT", "POST"])
     if not _is_admin_user(request.user):
@@ -2785,14 +3024,19 @@ def admin_reseller_tiers_upsert(request):
         except (TypeError, ValueError):
             return JsonResponse({"message": "variant_id نامعتبر."}, status=400)
 
+    reseller_id = _parse_optional_int(payload.get("reseller_id"))
+    reseller = None
+    if reseller_id:
+        reseller = get_object_or_404(ResellerProfile, id=reseller_id)
+
     tiers = payload.get("tiers") or []
     if not isinstance(tiers, list) or not tiers:
         return JsonResponse({"message": "tiers نمی‌تواند خالی باشد."}, status=400)
 
     with transaction.atomic():
-        # پاک کردن قبلی
+        # پاک کردن قبلی (فقط همین scope: عمومی یا همین همکار)
         ResellerPriceTier.objects.filter(
-            product_id=product_id, variant_id=variant_id
+            product_id=product_id, variant_id=variant_id, reseller_id=reseller_id
         ).delete()
         # ایجاد جدید
         for t in tiers:
@@ -2806,9 +3050,77 @@ def admin_reseller_tiers_upsert(request):
             ResellerPriceTier.objects.create(
                 product=product,
                 variant_id=variant_id,
+                reseller=reseller,
                 min_quantity=min_q,
                 price=price,
                 active=bool(t.get("active", True)),
             )
 
     return JsonResponse({"ok": True})
+
+
+@csrf_exempt
+def admin_reseller_tiers_clear_override(request):
+    """POST: حذف override اختصاصی یک همکار برای یک محصول (بازگشت به قیمت عمومی).
+
+    payload: {product_id, variant_id (اختیاری), reseller_id (الزامی)}
+    """
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        return JsonResponse({"message": "JSON نامعتبر"}, status=400)
+
+    reseller_id = _parse_optional_int(payload.get("reseller_id"))
+    if not reseller_id:
+        return JsonResponse({"message": "reseller_id الزامی است."}, status=400)
+
+    try:
+        product_id = int(payload.get("product_id") or 0)
+    except (TypeError, ValueError):
+        return JsonResponse({"message": "product_id نامعتبر."}, status=400)
+    if not product_id:
+        return JsonResponse({"message": "product_id الزامی است."}, status=400)
+
+    variant_id = payload.get("variant_id") or None
+    if variant_id:
+        try:
+            variant_id = int(variant_id)
+        except (TypeError, ValueError):
+            return JsonResponse({"message": "variant_id نامعتبر."}, status=400)
+
+    deleted, _ = ResellerPriceTier.objects.filter(
+        product_id=product_id, variant_id=variant_id, reseller_id=reseller_id
+    ).delete()
+    return JsonResponse({"ok": True, "deleted": deleted})
+
+
+def admin_reseller_price_overrides_summary(request):
+    """GET ?reseller_id=X: لیست product_id هایی که این همکار override فعال دارد.
+    GET ?product_id=Y&variant_id=V: لیست reseller_id هایی که برای این محصول/واریانت override فعال دارند.
+    """
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+
+    reseller_id = _parse_optional_int(request.GET.get("reseller_id"))
+    product_id = _parse_optional_int(request.GET.get("product_id"))
+    variant_id = _parse_optional_int(request.GET.get("variant_id"))
+    if not reseller_id and not product_id:
+        return JsonResponse({"message": "reseller_id یا product_id الزامی است."}, status=400)
+
+    if reseller_id:
+        qs = ResellerPriceTier.objects.filter(reseller_id=reseller_id, active=True)
+        qs = qs.filter(variant_id=variant_id) if variant_id is not None else qs.filter(variant__isnull=True)
+        product_ids = list(qs.values_list("product_id", flat=True).distinct())
+        return JsonResponse({"product_ids": product_ids})
+
+    qs = ResellerPriceTier.objects.filter(product_id=product_id, active=True, reseller__isnull=False)
+    qs = qs.filter(variant_id=variant_id) if variant_id is not None else qs.filter(variant__isnull=True)
+    reseller_ids = list(qs.values_list("reseller_id", flat=True).distinct())
+    return JsonResponse({"reseller_ids": reseller_ids})

@@ -1,0 +1,3 @@
+module.exports=[22086,a=>{"use strict";a.s(["default",0,function({children:a}){return a},"metadata",0,{title:"گردونه شانس نوبیکس | جایزه بگیر",description:"گردونه شانس نوبیکس شاپ: هر روز بچرخان و جایزه بگیر — تخفیف خرید وی باکس و کروپک فورتنایت، امتیاز و جوایز واقعی. شرکت رایگان است.",alternates:{canonical:"/spin"},openGraph:{title:"گردونه شانس نوبیکس شاپ",description:"هر روز بچرخان و جایزه بگیر — تخفیف، امتیاز و جوایز واقعی.",url:"https://nubixshop.ir/spin"}}])},78747,a=>{a.n(a.i(22086))}];
+
+//# sourceMappingURL=app_spin_layout_jsx_0b09afg._.js.map

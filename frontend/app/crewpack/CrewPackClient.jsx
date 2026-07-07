@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { Suspense, useCallback, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import PlatformSelector from "../../components/PlatformSelector";
@@ -10,6 +10,8 @@ import TelegramContact from "../../components/TelegramContact";
 import { getPlatformOption } from "../../lib/platforms";
 import { buildCrewpackPresentation } from "../../lib/crewpackDisplay";
 import { adminCacheBustHref } from "../../lib/adminUrl.mjs";
+import RelatedProducts from "../../components/RelatedProducts";
+import ReviewSection from "../../components/ReviewSection";
 
 const CREWPACK_FAQ_ITEMS = [
   {
@@ -34,7 +36,7 @@ const CREWPACK_FAQ_ITEMS = [
   },
 ];
 
-export default function CrewPackClient({ initialProduct }) {
+export default function CrewPackClient({ initialProduct, initialStats, initialProducts = [] }) {
   const router = useRouter();
   const { addItem } = useCart();
   const [accountEmail, setAccountEmail] = useState("");
@@ -42,20 +44,17 @@ export default function CrewPackClient({ initialProduct }) {
   const [accountType, setAccountType] = useState("epic");
   const [formError, setFormError] = useState("");
   const [showValidation, setShowValidation] = useState(false);
-  const [reviews, setReviews] = useState([]);
-  const [reviewStats, setReviewStats] = useState({ total: 0, rating: 0 });
-  const [reviewsLoading, setReviewsLoading] = useState(true);
-  const [reviewSubmitting, setReviewSubmitting] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [reviewName, setReviewName] = useState("");
-  const [reviewText, setReviewText] = useState("");
-  const [reviewRating, setReviewRating] = useState(5);
+  // Seeded from the server so the rating chip is in the SSR HTML instead of
+  // popping in after the client comments fetch (CLS).
+  const [reviewStats, setReviewStats] = useState(() =>
+    initialStats
+      ? {
+          total: Number(initialStats.total) || 0,
+          rating: Number(initialStats.average_rating) || 0,
+        }
+      : { total: 0, rating: 0 }
+  );
   const [activeTab, setActiveTab] = useState("description");
-  const [replyingToId, setReplyingToId] = useState(null);
-  const [replyText, setReplyText] = useState("");
-  const [replySubmitting, setReplySubmitting] = useState(false);
-  const [deletingCommentId, setDeletingCommentId] = useState(null);
-  const reviewsSectionRef = useRef(null);
   const [openFaqs, setOpenFaqs] = useState(() => []);
   const toggleFaq = useCallback((index) => {
     setOpenFaqs((prev) =>
@@ -64,16 +63,17 @@ export default function CrewPackClient({ initialProduct }) {
   }, []);
 
   const scrollToReviews = useCallback(() => {
-    reviewsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (typeof document === "undefined") return;
+    document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
   const [crewProduct, setCrewProduct] = useState(initialProduct || null);
+  const [products] = useState(initialProducts);
   const crewpackPresentation = useMemo(() => buildCrewpackPresentation(crewProduct), [crewProduct]);
   const [crewProductId, setCrewProductId] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState(crewpackPresentation.selectedVariantId);
   const options = crewpackPresentation.options;
 
-  const todayFa = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numeric", month: "long", timeZone: "Asia/Tehran" }).format(new Date());
   const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").trim();
 
   // Load product price from backend so admin panel controls it
@@ -106,166 +106,6 @@ export default function CrewPackClient({ initialProduct }) {
 
   // Epic capacity UI removed (instant activation offered at checkout)
 
-  useEffect(() => {
-    const loadReviews = async () => {
-      setReviewsLoading(true);
-      try {
-        const res = await fetch(`${apiBase}/api/products/fortnite-crew-pack/comments`, {
-          cache: "no-store",
-        });
-        if (!res.ok) {
-          setReviews([]);
-          setReviewStats({ total: 0, rating: 0, breakdown: {} });
-          return;
-        }
-        const data = await res.json();
-        if (data.success) {
-          const formattedReviews = (data.comments || []).map((comment) => ({
-            id: comment.id,
-            user: comment.author_name,
-            authorRole: comment.author_role || "user",
-            date: new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              timeZone: "Asia/Tehran",
-            }).format(new Date(comment.created_at)),
-            rating: comment.rating,
-            text: comment.text,
-            isVerified: comment.is_verified_purchase,
-            userId: comment.user_id,
-            phone: (comment.phone_mask || "").replace(/[^\x00-\x7F]+/g, ""),
-            avatarUrl: comment.avatar_url || "",
-            reply: comment.reply
-              ? {
-                  ...comment.reply,
-                  author: comment.reply.author,
-                  role: comment.reply.role || "user",
-                }
-              : null,
-          }));
-          setReviews(formattedReviews);
-          setReviewStats({
-            total: data.stats.total,
-            rating: data.stats.average_rating,
-            breakdown: data.stats.rating_counts,
-          });
-        }
-      } catch {
-        setReviews([]);
-        setReviewStats({ total: 0, rating: 0, breakdown: {} });
-      } finally {
-        setReviewsLoading(false);
-      }
-    };
-    loadReviews();
-  }, [apiBase]);
-
-  useEffect(() => {
-    const loadMe = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/auth/me`, { cache: "no-store", credentials: "include" });
-        if (!res.ok) return;
-        const data = await res.json();
-        setCurrentUser(data.user || data);
-        if (!reviewName) {
-          const preset = data.display_name || data.name || "";
-          if (preset) setReviewName(preset);
-        }
-      } catch {
-        // ignore
-      }
-    };
-    loadMe();
-  }, [apiBase, reviewName]);
-
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-    const name = reviewName.trim();
-    const text = reviewText.trim();
-    if (!name) {
-      alert("لطفاً نام خود را وارد کنید");
-      return;
-    }
-    if (!text || text.length < 10) {
-      alert("لطفاً نظر خود را با حداقل ۱۰ کاراکتر وارد کنید");
-      return;
-    }
-
-    const normalizedRating = Math.min(5, Math.max(1, Number(reviewRating) || 0));
-    setReviewSubmitting(true);
-    try {
-      const res = await fetch(`${apiBase}/api/products/fortnite-crew-pack/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          author_name: name,
-          rating: normalizedRating,
-          text,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        alert(data?.message || "خطا در ثبت نظر. دوباره تلاش کنید.");
-        return;
-      }
-      const newReview = {
-        id: data.comment.id,
-        user: data.comment.author_name,
-        date: new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          timeZone: "Asia/Tehran",
-        }).format(new Date(data.comment.created_at)),
-        rating: data.comment.rating,
-        text: data.comment.text,
-        isVerified: data.comment.is_verified_purchase,
-        reply: data.comment.reply || null,
-      };
-      setReviews((prev) => [newReview, ...prev]);
-      setReviewStats((prev) => {
-        const total = prev.total + 1;
-        const rating = ((prev.rating * prev.total) + normalizedRating) / total;
-        const newBreakdown = { ...(prev.breakdown || {}) };
-        newBreakdown[normalizedRating] = (newBreakdown[normalizedRating] || 0) + 1;
-        return { ...prev, total, rating, breakdown: newBreakdown };
-      });
-      setReviewName("");
-      setReviewText("");
-      setReviewRating(5);
-      alert("نظر شما با موفقیت ثبت شد!");
-    } catch (err) {
-      alert("خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.");
-    } finally {
-      setReviewSubmitting(false);
-    }
-  };
-
-  const renderTextWithBold = (text, keyPrefix) => {
-    const parts = text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
-    return parts.map((part, idx) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        return (
-          <strong key={`${keyPrefix}-${idx}`}>
-            {part.slice(2, -2)}
-          </strong>
-        );
-      }
-      return <span key={`${keyPrefix}-${idx}`}>{part}</span>;
-    });
-  };
-
-  const totalReviews = reviewStats.total;
-  const adminPhones = ["09339732325", "09123101634"];
-  const isAdminUser =
-    currentUser?.is_admin || adminPhones.includes(currentUser?.phone_number);
-  const canReplyToComments = !!currentUser;
 
   const emailIsValid = (val) => {
     const v = (val || "").trim();
@@ -347,6 +187,7 @@ export default function CrewPackClient({ initialProduct }) {
                 base={crewpackPresentation.imageBase}
                 alt="کروپک فورتنایت"
                 fit="contain"
+                eager
               />
             </div>
 
@@ -758,276 +599,14 @@ export default function CrewPackClient({ initialProduct }) {
         </section>
 
         <TelegramContact />
+        <RelatedProducts currentProduct={crewProduct} products={products} />
 
         {/* Reviews Section */}
-	        <section id="reviews" ref={reviewsSectionRef} className="card section" style={{ marginTop: 16, display: "grid", gap: 16 }}>
-          <div className="review-head">
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>
-              {totalReviews.toLocaleString("fa-IR")} دیدگاه برای کروپک فورتنایت
-            </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="review-stars" style={{ fontSize: 18 }}>{"★".repeat(Math.round(reviewStats.rating))}</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--primary)' }}>
-                  {reviewStats.rating?.toFixed(1)}
-                </span>
-              </div>
-              <span className="muted" style={{ fontSize: 12 }}>نمایش چند مورد از آخرین خریدها</span>
-            </div>
-          </div>
-          <div className="review-list">
-            {reviewsLoading ? (
-              <div style={{ textAlign: 'center', padding: '16px', color: 'var(--muted)' }}>
-                در حال بارگذاری دیدگاه‌ها...
-              </div>
-            ) : reviews.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '16px', color: 'var(--muted)' }}>
-                هنوز نظری ثبت نشده است. اولین نفر باشید!
-              </div>
-            ) : (
-              reviews.map((rev) => (
-                <article
-                  key={rev.id || `${rev.user}-${rev.date}-${rev.text.slice(0, 10)}`}
-                  className={`review-card ${rev.isReply ? "reply" : ""}`}
-                >
-                  <div className="review-top">
-                    <div className="review-avatar">
-                      {rev.avatarUrl ? (
-                        <img src={rev.avatarUrl} alt={rev.user} />
-                      ) : (
-                        <div className="avatar-fallback">
-                          {(rev.user || "?").trim().charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="review-header">
-                      <div className="review-header-main">
-	                        <div className="review-name-row">
-	                          <span className="review-name">{rev.user}</span>
-	                          {rev.isVerified && <span className="review-badge">✓ خریدار</span>}
-	                          {rev.authorRole === "admin" && (
-	                            <span className="review-badge admin" title="ادمین">ادمین</span>
-	                          )}
-	                          {rev.authorRole === "moderator" && (
-	                            <span className="review-badge moderator" title="مدیر">مدیر</span>
-	                          )}
-	                        </div>
-                        {rev.rating ? (
-                          <div className="review-stars" aria-label={`${rev.rating} از 5`}>
-                            {"★".repeat(Math.min(rev.rating, 5))}
-                          </div>
-                        ) : null}
-                      </div>
-                      {rev.phone ? (
-                        <div className="review-phone">
-                          <span>{rev.phone}</span>
-                        </div>
-                      ) : null}
-                      <div className="review-date">{rev.date}</div>
-                    </div>
-                  </div>
-                  <p className="review-text">{rev.text}</p>
-                  {(() => {
-                    const canDelete = isAdminUser || (currentUser && rev.userId === currentUser.id);
-                    if (!canReplyToComments && !canDelete) return null;
-                    return (
-                      <div className="review-actions">
-                        {canReplyToComments && (
-                          <button
-                            type="button"
-                            className="review-action-btn"
-                            onClick={() => {
-                              setReplyingToId(rev.id);
-                              setReplyText(rev.reply?.text || "");
-                            }}
-                          >
-                            {rev.reply?.text ? "ویرایش پاسخ" : "پاسخ"}
-                          </button>
-                        )}
-                        {canDelete && (
-                          <button
-                            type="button"
-                            className="review-action-btn danger"
-                            disabled={deletingCommentId === rev.id}
-                            onClick={async () => {
-                              if (!rev.id || !confirm("حذف این دیدگاه؟")) return;
-                              try {
-                                setDeletingCommentId(rev.id);
-                                const res = await fetch(`${apiBase}/api/comments/${rev.id}`, {
-                                  method: "DELETE",
-                                  credentials: "include",
-                                });
-                                if (!res.ok) {
-                                  const data = await res.json().catch(() => ({}));
-                                  alert(data.message || "خطا در حذف دیدگاه");
-                                  return;
-                                }
-                                setReviews((prev) => prev.filter((c) => c.id !== rev.id));
-                              } finally {
-                                setDeletingCommentId(null);
-                              }
-                            }}
-                          >
-                            حذف
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })()}
-                  {replyingToId === rev.id && canReplyToComments && (
-                    <div className="review-reply-editor">
-                      <textarea
-                        rows={2}
-                        placeholder="پاسخ خود را بنویسید..."
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                      />
-                      <div className="reply-editor-actions">
-                        <button
-                          type="button"
-                          className="btn primary-btn-sm"
-                          disabled={replySubmitting}
-                          onClick={async () => {
-                            const text = replyText.trim();
-                            if (!text) {
-                              alert("متن پاسخ نمی‌تواند خالی باشد.");
-                              return;
-                            }
-                            try {
-                              setReplySubmitting(true);
-                              const res = await fetch(`${apiBase}/api/comments/${rev.id}/reply`, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                credentials: "include",
-                                body: JSON.stringify({ reply_text: text }),
-                              });
-                              const data = await res.json().catch(() => ({}));
-                              if (!res.ok || !data.success) {
-                                alert(data.message || "خطا در ثبت پاسخ");
-                                return;
-                              }
-                              const updated = data.comment;
-                              setReviews((prev) =>
-                                prev.map((c) =>
-                                  c.id === rev.id ? { ...c, reply: updated.reply } : c
-                                )
-                              );
-                              setReplyingToId(null);
-                              setReplyText("");
-                            } finally {
-                              setReplySubmitting(false);
-                            }
-                          }}
-                        >
-                          {replySubmitting ? "در حال ارسال..." : "ارسال پاسخ"}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn ghost-btn-sm"
-                          onClick={() => {
-                            setReplyingToId(null);
-                            setReplyText("");
-                          }}
-                        >
-                          انصراف
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {rev.reply?.text ? (
-                    <div className="review-reply">
-                      <div className="reply-meta">
-                        <div className="reply-author-row">
-                          <span className="reply-author">{rev.reply.author || "پاسخ ادمین"}</span>
-                          {rev.reply.role === "admin" && (
-                            <span className="review-badge admin">ادمین</span>
-                          )}
-                          {rev.reply.role === "moderator" && (
-                            <span className="review-badge moderator">مدیر</span>
-                          )}
-                        </div>
-                        {rev.reply.created_at ? (
-                          <span className="reply-date">
-                            {new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              timeZone: "Asia/Tehran",
-                            }).format(new Date(rev.reply.created_at))}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="reply-text">{rev.reply.text}</p>
-                    </div>
-                  ) : null}
-                </article>
-              ))
-            )}
-          </div>
-          <div className="review-form-container">
-            <h4 className="form-title">نظر خود را بنویسید</h4>
-            {!currentUser && (
-              <div className="form-login-hint">
-                برای ثبت نظر باید وارد حساب کاربری شوید.
-                <button type="button" className="btn ghost-btn-sm" onClick={() => router.push("/login?from=reviews")}>
-                  ورود / ثبت‌نام
-                </button>
-              </div>
-            )}
-            <form className="review-form-modern" onSubmit={handleSubmitReview}>
-              <div className="form-group">
-                <label className="form-label">نام شما</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="نام و نام خانوادگی"
-                  value={reviewName}
-                  onChange={(e) => setReviewName(e.target.value)}
-                  required
-                  disabled={reviewSubmitting || !currentUser}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">امتیاز شما</label>
-                <div className="rating-choice" role="radiogroup" aria-label="امتیاز">
-                  {[5, 4, 3, 2, 1].map((r) => (
-                    <button
-                      type="button"
-                      key={r}
-                      className={`rating-pill ${reviewRating === r ? "active" : ""}`}
-                      onClick={() => setReviewRating(r)}
-                      aria-label={`${r} ستاره`}
-                      disabled={reviewSubmitting || !currentUser}
-                    >
-                      {r} ★
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">نظر شما</label>
-                <textarea
-                  rows={4}
-                  className="form-textarea"
-                  placeholder="تجربه خود را با ما و دیگران به اشتراک بگذارید..."
-                  value={reviewText}
-                  onChange={(e) => setReviewText(e.target.value)}
-                  required
-                  disabled={reviewSubmitting || !currentUser}
-                />
-              </div>
-              <button
-                type="submit"
-                className="submit-review-btn"
-                disabled={reviewSubmitting || !currentUser || reviewText.trim().length < 10}
-              >
-                {reviewSubmitting ? "در حال ارسال..." : "ثبت نظر"}
-              </button>
-            </form>
-          </div>
-        </section>
+        <ReviewSection
+          slug="fortnite-crew-pack"
+          initialStats={initialStats}
+          productTitle="کروپک فورتنایت (Fortnite Crew)"
+        />
       </main>
 
       <style jsx>{`
@@ -1495,346 +1074,11 @@ export default function CrewPackClient({ initialProduct }) {
           border-color: rgba(255,255,255,0.06);
         }
 
-        /* Reviews */
-        .review-head {
-          display: grid;
-          gap: 12px;
-        }
-        .review-list {
-          display: grid;
-          gap: 12px;
-        }
-        .review-card {
-          border: 1px solid var(--line);
-          border-radius: 14px;
-          padding: 12px 14px;
-          display: grid;
-          gap: 8px;
-          background: var(--card);
-          color: var(--text);
-          text-align: right;
-          direction: rtl;
-        }
-        .review-top {
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          gap: 10px;
-          flex-direction: row-reverse;
-        }
-        .crew-meta-summary {
-          margin-top: 8px;
-          padding: 8px 10px;
-          border-radius: 10px;
-          background: rgba(15,23,42,0.6);
-          border: 1px solid rgba(148,163,184,0.5);
-          font-size: 12px;
-          color: var(--muted);
-          display: grid;
-          gap: 4px;
-          text-align: right;
-        }
-        .review-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 999px;
-          overflow: hidden;
-          border: 1px solid var(--line);
-          background: radial-gradient(circle at 30% 20%, #38bdf8, #0f172a);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .review-avatar img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        .avatar-fallback {
-          font-weight: 900;
-          color: #e5e7eb;
-          font-size: 18px;
-        }
-        .review-header {
-          display: grid;
-          gap: 4px;
-          justify-items: flex-end;
-          flex: 1;
-        }
-	        .review-header-main {
-	          display: flex;
-	          align-items: center;
-	          justify-content: flex-end;
-	          gap: 8px;
-	          flex-direction: row-reverse;
-	        }
-        .review-name-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-weight: 800;
-          color: var(--primary);
-        }
-        .review-name { font-size: 14px; }
-	        .review-badge {
-	          font-size: 10px;
-	          background: #27ae60;
-	          color: #fff;
-	          padding: 2px 6px;
-	          border-radius: 4px;
-	          font-weight: 700;
-	        }
-	        .review-badge.admin {
-	          background: linear-gradient(120deg, #7c3aed, #3b82f6);
-	        }
-	        .review-badge.moderator {
-	          background: linear-gradient(120deg, #0ea5e9, #22c55e);
-	        }
-        .review-phone {
-          font-size: 12px;
-          color: var(--muted);
-          direction: ltr;
-          unicode-bidi: plaintext;
-        }
-        .review-date { font-size: 12px; color: var(--muted); font-weight: 700; }
-	        .review-stars { color: #f5b200; font-weight: 900; letter-spacing: 1px; min-width: auto; text-align: right; }
-	        .reply-author-row {
-	          display: inline-flex;
-	          align-items: center;
-	          gap: 6px;
-	          flex-direction: row-reverse;
-	        }
-        .review-text {
-          margin: 0;
-          font-size: 14px;
-          line-height: 1.7;
-        }
-        .review-reply {
-          margin-top: 6px;
-          padding: 10px 12px;
-          border-radius: 10px;
-          background: linear-gradient(135deg, rgba(59,130,246,0.14), rgba(59,130,246,0.04));
-          border: 1px solid rgba(59,130,246,0.2);
-        }
-        .reply-meta {
-          display: flex;
-          justify-content: space-between;
-          font-size: 12px;
-          color: var(--muted);
-          margin-bottom: 4px;
-        }
-        .reply-author { font-weight: 800; color: var(--text); }
-        .reply-text { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text); }
-        .review-actions {
-          display: flex;
-          gap: 8px;
-          justify-content: flex-start;
-          flex-direction: row-reverse;
-          margin-top: 4px;
-        }
-        .review-action-btn {
-          border-radius: 999px;
-          border: 1px solid var(--line);
-          padding: 4px 10px;
-          font-size: 11px;
-          background: var(--bg);
-          color: var(--text);
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-        }
-        .review-action-btn.danger {
-          border-color: rgba(239,68,68,0.4);
-          color: #ef4444;
-        }
-        .review-action-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .review-reply-editor {
-          margin-top: 6px;
-          padding: 8px 10px;
-          border-radius: 10px;
-          border: 1px dashed var(--line);
-          display: grid;
-          gap: 6px;
-        }
-        .review-reply-editor textarea {
-          width: 100%;
-          border-radius: 8px;
-          border: 1px solid var(--line);
-          background: var(--bg);
-          color: var(--text);
-          font-size: 12px;
-          padding: 8px 10px;
-          resize: vertical;
-        }
-        .reply-editor-actions {
-          display: flex;
-          justify-content: flex-start;
-          gap: 8px;
-          flex-direction: row-reverse;
-        }
-	        .platform-hint-pulse {
-	          width: 8px;
-	          height: 8px;
-	          border-radius: 999px;
-	          background: #f59e0b;
-	          box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
-	          animation: platformPulse 1.6s infinite;
-	          flex: 0 0 auto;
-	        }
-	        @keyframes platformPulse {
-	          0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.75); transform: scale(1); }
-	          70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); transform: scale(1.05); }
-	          100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); transform: scale(1); }
-	        }
-
-	        @media (max-width: 768px) {
-	          .product-hero {
-	            grid-template-columns: minmax(0, 1fr);
-	          }
-	        }
-        .review-form {
-          display: grid;
-          gap: 10px;
-          margin-top: 4px;
-          border-top: 1px solid var(--line);
-          padding-top: 12px;
-        }
-        .review-form .form-row {
-          display: grid;
-          gap: 8px;
-          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        }
-        .review-form input,
-        .review-form textarea {
-          border: 1px solid var(--line);
-          border-radius: 10px;
-          padding: 10px 12px;
-          background: var(--card);
-          font-family: inherit;
-          color: var(--text);
-        }
-        .review-form textarea { resize: vertical; min-height: 90px; }
-        .review-form .form-actions {
-          display: flex;
-          justify-content: flex-end;
-        }
-        .rating-choice {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          align-items: center;
-        }
-        .rating-pill {
-          border: 1px solid var(--line);
-          background: var(--card);
-          border-radius: 999px;
-          padding: 8px 10px;
-          cursor: pointer;
-          font-weight: 800;
-          color: var(--text);
-        }
-	        .rating-pill.active {
-	          border-color: var(--primary);
-	          color: var(--primary);
-	        }
-
-	        /* Modern Review Form */
-	        .review-form-container {
-	          padding: 20px;
-	          background: var(--card);
-	          border-radius: 16px;
-	          border: 1px solid var(--line);
-	          display: grid;
-	          gap: 14px;
-	        }
-	        .form-title {
-	          margin: 0;
-	          font-size: 16px;
-	          font-weight: 900;
-	          color: var(--text);
-	        }
-	        .review-form-modern {
-	          display: grid;
-	          gap: 14px;
-	        }
-	        .form-group {
-	          display: grid;
-	          gap: 8px;
-	        }
-	        .form-label {
-	          font-size: 13px;
-	          font-weight: 800;
-	          color: var(--text);
-	        }
-	        .form-input,
-	        .form-textarea {
-	          width: 100%;
-	          border: 2px solid var(--line);
-	          border-radius: 12px;
-	          padding: 12px 14px;
-	          background: var(--bg);
-	          font-family: inherit;
-	          font-size: 14px;
-	          color: var(--text);
-	          transition: all 0.2s ease;
-	        }
-	        .form-input:focus,
-	        .form-textarea:focus {
-	          outline: none;
-	          border-color: var(--primary);
-	          box-shadow: 0 0 0 4px rgba(44,75,255,0.1);
-	          background: var(--card);
-	        }
-	        .form-textarea {
-	          resize: vertical;
-	          min-height: 110px;
-	          line-height: 1.6;
-	        }
-	        .submit-review-btn {
-	          border: none;
-	          border-radius: 12px;
-	          padding: 12px 16px;
-	          font-size: 15px;
-	          font-weight: 900;
-	          cursor: pointer;
-	          background: linear-gradient(120deg, var(--primary), #22c55e);
-	          color: #fff;
-	          box-shadow: 0 10px 20px rgba(0,0,0,0.12);
-	          transition: transform 0.18s ease, box-shadow 0.18s ease;
-	        }
-	        .submit-review-btn:disabled {
-	          opacity: 0.6;
-	          cursor: not-allowed;
-	          transform: none;
-	          box-shadow: none;
-	        }
-	        .submit-review-btn:hover:not(:disabled) {
-	          transform: translateY(-1px);
-	          box-shadow: 0 14px 26px rgba(0,0,0,0.16);
-	        }
-	        .form-login-hint {
-	          display: flex;
-	          align-items: center;
-	          justify-content: space-between;
-	          gap: 10px;
-	          padding: 10px 12px;
-	          border-radius: 10px;
-	          background: rgba(245, 158, 11, 0.08);
-	          border: 1px dashed rgba(245, 158, 11, 0.5);
-	          font-size: 13px;
-	          font-weight: 700;
-	          color: var(--text);
-	        }
-
-	        @media (max-width: 960px) {
-	          .product-hero {
-	            grid-template-columns: 1fr;
-	            gap: 16px;
+        /* ── Mobile/tablet: stack hero and reorder sections ─────────── */
+        @media (max-width: 960px) {
+          .product-hero {
+            grid-template-columns: 1fr;
+            gap: 16px;
           }
           .image-stack,
           .details-stack {
@@ -1843,10 +1087,10 @@ export default function CrewPackClient({ initialProduct }) {
           .hero-image { order: 0; }
           .title-block { order: 1; }
           .price-row { order: 2; }
-          .product-options { order: 3; margin-top: 0 !important; }
-          .info-card { order: 4; margin-top: 0 !important; }
-          .product-highlights { order: 5; margin-top: 0 !important; }
-          .product-tabs { order: 6; margin-top: 0 !important; }
+          .product-options { order: 3; }
+          .info-card { order: 4; }
+          .product-highlights { order: 5; }
+          .product-tabs { order: 6; }
           .guides-card { order: 7; }
           .product-highlights {
             grid-template-columns: repeat(3, 1fr);
@@ -1871,20 +1115,65 @@ export default function CrewPackClient({ initialProduct }) {
           .highlight-desc {
             font-size: 10px;
           }
+          .tab-buttons {
+            grid-template-columns: 1fr;
+          }
+          .tab-btn {
+            border-left: none;
+            border-bottom: 1px solid var(--line);
+          }
+          .tab-btn:last-child {
+            border-bottom: none;
+          }
         }
+
+        /* ── Small mobile: tighter spacing and smaller text ─────────── */
         @media (max-width: 640px) {
           .product-hero {
             padding: 12px;
             gap: 12px;
           }
-          .option-header {
-            flex-wrap: wrap;
+          .image-stack {
             gap: 10px;
           }
-          .option-price {
-            width: 100%;
-            text-align: left;
-            margin-top: 8px;
+          .title-row {
+            font-size: 18px !important;
+            margin-bottom: 4px !important;
+          }
+          .subtitle-row {
+            font-size: 12px !important;
+          }
+          .price {
+            font-size: 20px !important;
+          }
+          .product-highlights {
+            padding: 8px 6px;
+            gap: 4px;
+          }
+          .tab-content {
+            padding: 14px;
+          }
+          .tab-btn {
+            padding: 12px;
+            font-size: 13px;
+          }
+          .delivery-step {
+            gap: 12px;
+          }
+          .step-number {
+            width: 32px;
+            height: 32px;
+            font-size: 15px;
+          }
+          .step-title {
+            font-size: 14px;
+          }
+          .step-desc {
+            font-size: 12px;
+          }
+          .guide-link-item {
+            padding: 9px 12px;
+            font-size: 12px;
           }
         }
       `}</style>

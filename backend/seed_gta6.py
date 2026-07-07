@@ -56,22 +56,6 @@ for edition in EDITIONS:
         )
         config_pricing[edition][cap] = {"toman": price, "originalToman": 0, "variant_id": v.id}
 
-# Hidden add-on product representing the optional instant-activation fee.
-# It is excluded from the product listing and only added to the cart when the
-# buyer opts into "فعال‌سازی فوری" on the GTA page.
-INSTANT_FEE_DEFAULT = 299000
-instant, _ = Product.objects.get_or_create(
-    slug="gta6-instant",
-    defaults={"name_fa": "فعال‌سازی فوری GTA VI", "category": "GAMES", "active": True},
-)
-instant.name_fa = "فعال‌سازی فوری GTA VI"
-instant.category = "GAMES"
-instant.active = True
-if instant.price <= 0:
-    instant.price = INSTANT_FEE_DEFAULT
-instant.save()
-
-# Preserve existing instant settings if the config already exists.
 prev = SiteSetting.objects.filter(key="gta6_config").first()
 prev_data = {}
 if prev and (prev.value_text or "").strip():
@@ -84,15 +68,13 @@ config = {
     "xbox_enabled": bool(prev_data.get("xbox_enabled", True)),
     "product_id": product.id,
     "pricing": config_pricing,
-    "instant_enabled": bool(prev_data.get("instant_enabled", False)),
-    "instant_fee": int(prev_data.get("instant_fee", instant.price) or instant.price),
-    "instant_product_id": instant.id,
+    "instant_enabled": False,
+    "instant_fee": 0,
+    "instant_product_id": None,
 }
 obj, _ = SiteSetting.objects.get_or_create(key="gta6_config", defaults={"value_text": ""})
 obj.value_text = json.dumps(config, ensure_ascii=False)
 obj.save()
-print("Instant add-on product id:", instant.id, "price:", instant.price)
-
 print("Seeded product id:", product.id)
 print("Variants:", list(product.variants.values_list("id", "title", "price")))
 print("Config:", obj.value_text)

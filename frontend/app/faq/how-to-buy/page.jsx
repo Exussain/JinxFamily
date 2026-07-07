@@ -4,7 +4,8 @@ import HelpfulnessWidget from "../HelpfulnessWidget";
 import { purchaseSteps } from "../data.jsx";
 
 export const metadata = {
-  title: "راهنمای خرید | نوبیکس شاپ",
+  title: "راهنمای خرید",
+  alternates: { canonical: "/faq/how-to-buy" },
   description: "راهنمای گام به گام و تصویری ثبت سفارش، پرداخت امن و تحویل محصولات در نوبیکس شاپ.",
 };
 
@@ -79,7 +80,7 @@ export default function FaqHowToBuyPage() {
             -webkit-backdrop-filter: blur(4px);
           }
           
-          .how-article-banner h1 {
+          .how-article-banner .page-banner-title {
             margin: 0;
             font-size: 28px;
             font-weight: 900;
@@ -239,7 +240,7 @@ export default function FaqHowToBuyPage() {
               height: 140px;
               padding: 24px;
             }
-            .how-article-banner h1 {
+            .how-article-banner .page-banner-title {
               font-size: 22px;
             }
             .how-article-info-bar {
@@ -270,7 +271,7 @@ export default function FaqHowToBuyPage() {
             <span className="how-article-banner-icon">🛒</span>
             <div className="how-article-meta">
               <span className="how-article-tag">راهنمای خریداران</span>
-              <h1>راهنمای گام به گام خرید از نوبیکس شاپ</h1>
+              <h2 className="page-banner-title">راهنمای گام به گام خرید از نوبیکس شاپ</h2>
             </div>
           </div>
           
@@ -285,13 +286,13 @@ export default function FaqHowToBuyPage() {
             </div>
             <div className="how-info-item">
               <span>⏱️</span>
-              <span>زمان مطالعه: ۴ دقیقه</span>
+              <span>زمان مطالعه: ۲ دقیقه</span>
             </div>
           </div>
 
           <div className="how-article-content">
             <p className="how-intro">
-              خرید در فروشگاه نوبیکس شاپ بسیار ساده، سریع و در بستری کاملاً امن انجام می‌شود. برای ثبت سفارش بدون خطا و تحویل در کوتاه‌ترین زمان ممکن، مراحل گام به گام زیر را دنبال فرمایید.
+              خرید از نوبیکس شاپ را تا حد ممکن ساده نگه داشته‌ایم؛ بدون ثبت‌نام‌های طولانی و مراحل خسته‌کننده. تنها با شماره تماس وارد می‌شوید، سفارش خود را ثبت می‌کنید و پرداخت را از طریق درگاه امن زرین‌پال انجام می‌دهید. از آن لحظه به بعد، پشتیبانی نوبیکس تا تحویل کامل سفارش در کنار شماست. کل مسیر خرید در سه گام زیر خلاصه می‌شود.
             </p>
 
             <div className="how-steps-timeline">

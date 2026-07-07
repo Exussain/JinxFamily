@@ -48,6 +48,8 @@ from .models import (
     Referral,
     PointsTransaction,
     SpinResult,
+    AccountingTransaction,
+    AbandonedCart,
 )
 from .zarinpal_service import ZarinPalService
 from .email_service import (
@@ -129,6 +131,99 @@ def _get_discount_code_status(code: str, user=None):
         return None, "این کد قبلاً استفاده شده است."
     return dc, None
 
+
+def _discount_nominal_amount(dc, gross_amount: int) -> tuple[int, int]:
+    discount_percent = dc.percent if dc.percent else 0
+    discount_amount = dc.amount if dc.amount else 0
+    if discount_amount > 0:
+        discount_amount = min(discount_amount, gross_amount)
+    elif discount_percent > 0:
+        discount_amount = int(gross_amount * discount_percent / 100)
+    return discount_percent, discount_amount
+
+
+def _discount_guardrail_warning(dc, line_items, gross_amount: int, discount_amount: int):
+    discount_amount = max(0, int(discount_amount or 0))
+    if dc.source == "milestone" or discount_amount <= 0:
+        return None
+    try:
+        from .rewards import cap_discount_for_profit
+        capped, total_cost, allowed = cap_discount_for_profit(line_items, gross_amount, discount_amount)
+        if capped < discount_amount:
+            return {
+                "discount_amount": discount_amount,
+                "safe_discount_amount": capped,
+                "gross_amount": int(gross_amount or 0),
+                "total_cost": total_cost,
+                "allowed_discount": allowed,
+            }
+    except Exception:
+        logger.exception("profit guardrail warning failed; discount still applied")
+    return None
+
+
+def _discount_preview_from_cart_payload(payload, dc):
+    items_payload = payload.get("items") or []
+    if not isinstance(items_payload, list) or not items_payload:
+        return None
+
+    gross_amount = 0
+    line_items = []
+    for item in items_payload:
+        if not isinstance(item, dict):
+            return None
+        product_id = item.get("product_id")
+        slug = (item.get("slug") or "").strip()
+        product = None
+        try:
+            if product_id is not None:
+                product = Product.objects.get(id=product_id, active=True)
+        except (Product.DoesNotExist, ValueError, TypeError):
+            product = None
+        if product is None and slug:
+            try:
+                product = Product.objects.get(slug=slug, active=True)
+            except Product.DoesNotExist:
+                return None
+        if product is None:
+            return None
+
+        variant = None
+        price = product.min_price or product.price
+        variant_id = item.get("variant_id")
+        if variant_id:
+            try:
+                variant = ProductVariant.objects.get(id=variant_id, product=product)
+                price = variant.price
+            except (ProductVariant.DoesNotExist, ValueError, TypeError):
+                return None
+        try:
+            qty = int(item.get("quantity") or 1)
+        except (TypeError, ValueError):
+            return None
+        if qty < 1:
+            return None
+        gross_amount += int(price or 0) * qty
+        line_items.append((product, variant, qty))
+
+    try:
+        rush_fee = int(payload.get("rush_fee") or 0)
+    except (TypeError, ValueError):
+        rush_fee = 0
+    if payload.get("rush_order") and rush_fee > 0:
+        gross_amount += rush_fee
+
+    discount_percent, nominal_discount = _discount_nominal_amount(dc, gross_amount)
+    warning = _discount_guardrail_warning(dc, line_items, gross_amount, nominal_discount)
+    return {
+        "gross_amount": gross_amount,
+        "percent": discount_percent,
+        "nominal_amount": nominal_discount,
+        "discount_amount": nominal_discount,
+        "guardrail_warning": bool(warning),
+        "guardrail": warning,
+    }
+
 # Canonical identifiers for Fortnite Crew pack (used across capacity / limits)
 CREW_SLUG = "fortnite-crew-pack"
 # Minimum fake stock at which Epic method should be blocked (configurable)
@@ -169,6 +264,7 @@ STATIC_IMAGE_MAP = {
     "گیفت-کارت-استیم": "/products/gift_steam.webp",
     "گیفت-کارت-گوگل-پلی": "/products/gift_google.webp",
     "گیفت-کارت-اپلآیتونز": "/products/gift_itunes.webp",
+    "change-region-turkey": "/products/change-region-turkey.webp",
 }
 
 logger = logging.getLogger(__name__)
@@ -286,8 +382,6 @@ def _resolve_product_image(p: Product):
         return STATIC_IMAGE_MAP.get("chatgpt-subscription", "")
     if "gemini" in slug or "جیمینی" in name:
         return STATIC_IMAGE_MAP.get("gemini-subscription", "")
-    if "league-of-legends" in slug or "riot" in name or "لیگ" in name:
-        return STATIC_IMAGE_MAP.get("league-of-legends-rp", "")
     if "playstation" in slug or "پلی" in name:
         return STATIC_IMAGE_MAP.get("گیفت-کارت-پلیاستیشن", "")
     if "xbox" in slug or "ایکس" in name:
@@ -589,7 +683,7 @@ SOLD_ORDER_STATUSES = ["paid", "registered", "processing", "completed"]
 def products_list(request):
     if request.method != 'GET':
         return HttpResponseNotAllowed(['GET'])
-    qs = Product.objects.filter(active=True).exclude(slug__in=['gift-battle-pass', 'gta6-instant'])
+    qs = Product.objects.filter(active=True).exclude(slug__in=['gift-battle-pass'])
 
     term = (request.GET.get('search') or request.GET.get('q') or '').strip()
     if term:
@@ -808,6 +902,33 @@ def _notify_customer_payment_success(order, ref_id="", include_sms=True, items_f
                 )
             except Exception:
                 logger.warning(f"Payment success SMS failed for {order.tracking_code}", exc_info=True)
+
+
+def _send_purchase_points_sms(order, points_awarded: int):
+    """Best-effort customer-club SMS after a paid order earns diamonds."""
+    if not order or not order.user or not points_awarded:
+        return False
+    if getattr(order, "is_reseller_order", False):
+        return False
+    phone_for_sms = _order_notify_phone(order)
+    if not phone_for_sms:
+        return False
+    try:
+        profile, _ = UserProfile.objects.get_or_create(user=order.user)
+        _email_unused, customer_name = _get_customer_contact_info(order)
+        customer_name = customer_name or order.user.get_full_name() or order.user.username or "مشتری نوبیکس"
+        ok, msg = KavenegarService.send_club_points_sms(
+            phone_number=phone_for_sms,
+            customer_name=customer_name,
+            points=int(points_awarded),
+            balance=int(profile.points_balance or 0),
+        )
+        if not ok:
+            logger.warning("Club points SMS failed for %s: %s", order.tracking_code, msg)
+        return bool(ok)
+    except Exception:
+        logger.warning("Club points SMS failed for %s", getattr(order, "tracking_code", ""), exc_info=True)
+        return False
 
 
 @csrf_exempt
@@ -1118,6 +1239,14 @@ def create_order(request):
     )
     order.save()
 
+    # mark any abandoned cart for this user as converted
+    try:
+        AbandonedCart.objects.filter(
+            user=user, converted_at__isnull=True
+        ).update(converted_at=timezone.now())
+    except Exception:
+        pass
+
     amount = 0
     discount_code_raw = (payload.get('discount_code') or '').strip()
     discount_percent = 0
@@ -1316,36 +1445,36 @@ def create_order(request):
         if discount_error:
             order.delete()
             return JsonResponse({"message": discount_error}, status=400)
-        discount_percent = dc.percent if dc.percent else 0
-        discount_amount = dc.amount if dc.amount else 0
-        if discount_amount > 0:
-            discount_amount = min(discount_amount, amount)
-        elif discount_percent > 0:
-            discount_amount = int(amount * discount_percent / 100)
-
-        # Profit guardrail: never let a discount push net profit below the floor.
-        # Loyalty/referral milestone rewards are deliberate giveaways and are exempt.
-        if dc.source != "milestone":
-            try:
-                from .rewards import line_items_cost
-                cost_lines = [
-                    (it.product, it.variant, it.quantity)
-                    for it in order.items.select_related("product", "variant").all()
-                ]
-                total_cost = line_items_cost(cost_lines)
-                if amount < 1000000:
-                    floor = max(170000, int(total_cost * 0.09))
-                else:
-                    floor = max(290000, int(total_cost * 0.09))
-                allowed = max(0, amount - total_cost - floor)
-                discount_amount = min(discount_amount, allowed)
-            except Exception:
-                logger.exception("profit guardrail failed; applying discount uncapped")
+        discount_percent, nominal_discount = _discount_nominal_amount(dc, amount)
+        cost_lines = [
+            (it.product, it.variant, it.quantity)
+            for it in order.items.select_related("product", "variant").all()
+        ]
+        discount_warning = _discount_guardrail_warning(dc, cost_lines, amount, nominal_discount)
+        discount_amount = nominal_discount
 
         amount = max(amount - discount_amount, 0)
         order.discount_code = dc.code
         order.discount_percent = discount_percent
         order.discount_amount = discount_amount
+        if discount_warning:
+            logger.warning(
+                "Discount guardrail warning: tracking=%s code=%s gross=%s discount=%s safe_discount=%s cost=%s allowed=%s",
+                order.tracking_code,
+                dc.code,
+                discount_warning["gross_amount"],
+                discount_warning["discount_amount"],
+                discount_warning["safe_discount_amount"],
+                discount_warning["total_cost"],
+                discount_warning["allowed_discount"],
+            )
+            order.note = (
+                f"{order.note}\n\n" if order.note else ""
+            ) + (
+                "هشدار سیستم: این کد تخفیف از کف سود عبور کرده اما طبق تنظیم فعلی اعمال شده است. "
+                f"تخفیف اعمال‌شده: {discount_warning['discount_amount']:,} تومان؛ "
+                f"تخفیف پیشنهادی سیستم: {discount_warning['safe_discount_amount']:,} تومان."
+            )
         # Consume one use of the code.
         dc.used_count = (dc.used_count or 0) + 1
         dc.save(update_fields=["used_count"])
@@ -1562,29 +1691,10 @@ def order_status(request, tracking):
     # Estimate time remaining
     estimated_time = ""
     if order.status in ["paid", "registered", "processing"]:
-        has_xbox = bool(order.xbox_create_account or order.items.filter(account_type="xbox").exists())
         if order.rush_order:
-            total_mins = 45
-        elif has_xbox:
-            total_mins = 2880  # 48 hours
+            estimated_time = "تحویل در ساعت کاری (فوری)"
         else:
-            total_mins = 180   # 3 hours
-            
-        elapsed = timezone.now() - order.created_at
-        elapsed_mins = int(elapsed.total_seconds() / 60)
-        remaining_mins = total_mins - elapsed_mins
-        if remaining_mins > 0:
-            if remaining_mins > 60:
-                hours = remaining_mins // 60
-                mins = remaining_mins % 60
-                if mins > 0:
-                    estimated_time = f"حدود {hours} ساعت و {mins} دقیقه دیگر"
-                else:
-                    estimated_time = f"حدود {hours} ساعت دیگر"
-            else:
-                estimated_time = f"حدود {remaining_mins} دقیقه دیگر"
-        else:
-            estimated_time = "در اولویت انجام (به زودی)"
+            estimated_time = "تحویل در ساعت کاری"
     elif order.status in ["needs_2fa", "invalid_info", "needs_tr_region"]:
         estimated_time = "متوقف شده (نیاز به اقدام کاربر برای رفع مشکل اکانت)"
     elif order.status == "pending":
@@ -1775,17 +1885,21 @@ def me(request):
     # Determine phone_number from profile or username
     phone_num = profile.phone_number if profile.phone_number else (user.username if user.username.startswith('09') else "")
 
-    return JsonResponse({
+    is_admin = _is_admin_user(user)
+    data = {
         "id": user.id,
         "name": user.get_full_name() or user.username,
         "email": user.email,
         "phone_number": phone_num,
         "phone": phone_num,
-        "is_admin": _is_admin_user(user),
+        "is_admin": is_admin,
         "wallet_balance": profile.wallet_balance,
         "points_balance": profile.points_balance,
         "avatar_url": avatar_url,
-    })
+    }
+    if is_admin:
+        data["reseller_pricing_tour_seen"] = profile.reseller_pricing_tour_seen_at is not None
+    return JsonResponse(data)
 
 
 @csrf_exempt
@@ -1890,6 +2004,13 @@ def update_profile(request):
 
     user.save()
     profile.save()
+    profile_completion_award = 0
+    try:
+        from .rewards import award_profile_completion_points
+        profile_completion_award = award_profile_completion_points(user)
+        profile.refresh_from_db(fields=["points_balance"])
+    except Exception:
+        logger.exception("profile completion points failed for user %s", user.id)
 
     avatar_url = ""
     if getattr(profile, "avatar", None):
@@ -1906,7 +2027,9 @@ def update_profile(request):
         "email": user.email,
         "is_admin": profile.tier == "admin" or user.is_staff,
         "wallet_balance": profile.wallet_balance,
+        "points_balance": profile.points_balance,
         "avatar_url": avatar_url,
+        "profile_completion_award": profile_completion_award,
     })
 
 
@@ -1941,6 +2064,13 @@ def upload_avatar(request):
 
     profile.avatar = file
     profile.save()
+    profile_completion_award = 0
+    try:
+        from .rewards import award_profile_completion_points
+        profile_completion_award = award_profile_completion_points(user)
+        profile.refresh_from_db(fields=["points_balance"])
+    except Exception:
+        logger.exception("profile completion points failed for user %s", user.id)
 
     avatar_url = ""
     if getattr(profile, "avatar", None):
@@ -1951,7 +2081,22 @@ def upload_avatar(request):
 
     return JsonResponse({
         "avatar_url": avatar_url,
+        "points_balance": profile.points_balance,
+        "profile_completion_award": profile_completion_award,
     })
+
+
+@csrf_exempt
+def admin_reseller_pricing_tour_ack(request):
+    """POST: ثبت این‌که ادمین تور آموزشی قیمت‌گذاری همکاران را دیده (فقط یک‌بار نمایش داده می‌شود)."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    if not request.user.is_authenticated or not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    profile.reseller_pricing_tour_seen_at = timezone.now()
+    profile.save(update_fields=["reseller_pricing_tour_seen_at"])
+    return JsonResponse({"ok": True})
 
 
 def _is_admin_user(user):
@@ -2003,6 +2148,12 @@ def _bot_token_ok(request) -> bool:
         return False
     provided = request.headers.get("X-Bot-Token") or request.META.get("HTTP_X_BOT_TOKEN") or ""
     return hmac.compare_digest(provided.strip(), expected.strip())
+
+
+def _is_admin_or_token_ok(request) -> bool:
+    if _is_admin_user(request.user):
+        return True
+    return _bot_token_ok(request)
 
 
 def _parse_iso_dt(value):
@@ -2162,19 +2313,23 @@ def discord_bot_outbox(request):
 
     limit = int(request.GET.get("limit") or 20)
     limit = max(1, min(limit, 100))
-    queued = (
-        DiscordTicketMessage.objects.filter(direction="outbound", delivery_status="queued")
-        .order_by("created_at")[:limit]
-    )
+    with transaction.atomic():
+        queued = (
+            DiscordTicketMessage.objects.select_for_update()
+            .filter(direction="outbound", delivery_status="queued")
+            .order_by("created_at")[:limit]
+        )
 
-    data = [
-        {
-            "id": m.id,
-            "channel_id": m.channel.channel_id,
-            "content": m.content,
-        }
-        for m in queued
-    ]
+        data = []
+        for m in queued:
+            m.delivery_status = "sending"
+            m.save(update_fields=["delivery_status"])
+            data.append({
+                "id": m.id,
+                "channel_id": str(m.channel.channel_id),
+                "content": m.content,
+            })
+
     return JsonResponse({"results": data})
 
 
@@ -2190,11 +2345,11 @@ def discord_bot_outbox_ack(request):
     except Exception:
         return JsonResponse({"message": "invalid_json"}, status=400)
 
-    message_id = payload.get("id")
+    message_id = payload.get("id") or payload.get("message_id")
     if not message_id:
         return JsonResponse({"message": "missing_id"}, status=400)
 
-    status = (payload.get("status") or "").strip().lower()
+    status = (payload.get("status") or "sent").strip().lower()
     if status not in {"sent", "failed"}:
         return JsonResponse({"message": "invalid_status"}, status=400)
 
@@ -2216,11 +2371,71 @@ def discord_bot_outbox_ack(request):
     return JsonResponse({"success": True})
 
 
+RESOLVED_USERS_CACHE = {}
+
+def _get_username_by_id(user_id):
+    if user_id in RESOLVED_USERS_CACHE:
+        return RESOLVED_USERS_CACHE[user_id]
+
+    # Check database first
+    name = DiscordTicketMessage.objects.filter(author_id=user_id).values_list('author_name', flat=True).first()
+    if name:
+        RESOLVED_USERS_CACHE[user_id] = name
+        return name
+
+    # Check Discord API
+    token = os.environ.get("NUBIX_BOT_WEBHOOK_TOKEN")
+    if token:
+        try:
+            proxies = {
+                'http': 'socks5h://127.0.0.1:10808',
+                'https': 'socks5h://127.0.0.1:10808'
+            }
+            headers = {
+                'Authorization': token,
+                'User-Agent': 'Mozilla/5.0'
+            }
+            resp = requests.get(f"https://discord.com/api/v10/users/{user_id}", headers=headers, proxies=proxies, timeout=3)
+            if resp.status_code == 200:
+                name = resp.json().get("username")
+                if name:
+                    RESOLVED_USERS_CACHE[user_id] = name
+                    return name
+        except Exception:
+            pass
+
+    return None
+
+def _resolve_discord_mentions(content):
+    if not content:
+        return ""
+
+    # Resolve user mentions <@ID> or <@!ID>
+    matches = re.findall(r'<@!?(\d+)>', content)
+    for user_id in matches:
+        name = _get_username_by_id(user_id)
+        if name:
+            content = content.replace(f"<@{user_id}>", f"@{name}").replace(f"<@!{user_id}>", f"@{name}")
+        else:
+            content = content.replace(f"<@{user_id}>", f"@{user_id}").replace(f"<@!{user_id}>", f"@{user_id}")
+
+    # Resolve channel mentions <#ID>
+    chan_matches = re.findall(r'<#(\d+)>', content)
+    for chan_id in chan_matches:
+        try:
+            chan_name = DiscordTicketChannel.objects.get(channel_id=chan_id).name
+            content = content.replace(f"<#{chan_id}>", f"#{chan_name}")
+        except Exception:
+            pass
+
+    return content
+
+
 @csrf_exempt
 def discord_admin_channels(request):
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
-    if not _is_admin_user(request.user):
+    if not _is_admin_or_token_ok(request):
         return JsonResponse({"message": "forbidden"}, status=403)
 
     limit = int(request.GET.get("limit") or 200)
@@ -2228,28 +2443,34 @@ def discord_admin_channels(request):
 
     channels = (
         DiscordTicketChannel.objects.filter(is_archived=False)
-        .order_by("-priority_score", "-last_message_at", "-updated_at")[:limit]
+        .order_by("-last_message_at", "-updated_at")[:limit]
     )
 
-    data = [
-        {
-            "channel_id": c.channel_id,
-            "guild_id": c.guild_id,
-            "category_id": c.category_id,
+    data = []
+    for c in channels:
+        # Get the latest customer message for user profile details
+        cust_msg = c.messages.filter(author_is_bot=False).order_by('-created_at').first()
+        if not cust_msg:
+            cust_msg = c.messages.order_by('-created_at').first()
+
+        data.append({
+            "channel_id": str(c.channel_id),
+            "guild_id": str(c.guild_id),
+            "category_id": str(c.category_id),
             "name": c.name,
             "topic": c.topic,
             "last_message_id": c.last_message_id,
             "last_message_at": c.last_message_at.isoformat() if c.last_message_at else None,
-            "last_message_excerpt": c.last_message_excerpt,
+            "last_message_excerpt": _resolve_discord_mentions(c.last_message_excerpt),
             "priority_score": c.priority_score,
             "priority_label": c.priority_label,
             "needs_2fa": c.needs_2fa,
             "needs_sync": c.needs_sync,
             "last_ai_summary": c.last_ai_summary,
             "last_ai_at": c.last_ai_at.isoformat() if c.last_ai_at else None,
-        }
-        for c in channels
-    ]
+            "user_name": cust_msg.author_name if cust_msg else c.name,
+            "user_avatar": cust_msg.author_avatar if cust_msg else "",
+        })
     return JsonResponse({"results": data})
 
 
@@ -2257,14 +2478,79 @@ def discord_admin_channels(request):
 def discord_admin_messages(request, channel_id: int):
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
-    if not _is_admin_user(request.user):
+    if not _is_admin_or_token_ok(request):
         return JsonResponse({"message": "forbidden"}, status=403)
 
     limit = int(request.GET.get("limit") or 200)
     limit = max(1, min(limit, 500))
 
+    try:
+        channel = DiscordTicketChannel.objects.get(channel_id=channel_id)
+    except DiscordTicketChannel.DoesNotExist:
+        return JsonResponse({"message": "channel_not_found"}, status=404)
+
+    # Fetch fresh messages from Discord on-demand to ensure we have the full history (up to 50 messages)
+    token = os.environ.get("NUBIX_BOT_WEBHOOK_TOKEN")
+    if token:
+        try:
+            proxies = {
+                'http': 'socks5h://127.0.0.1:10808',
+                'https': 'socks5h://127.0.0.1:10808'
+            }
+            headers = {
+                'Authorization': token,
+                'User-Agent': 'Mozilla/5.0'
+            }
+            # Fetch the latest 50 messages from Discord
+            resp = requests.get(
+                f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=50",
+                headers=headers,
+                proxies=proxies,
+                timeout=4
+            )
+            if resp.status_code == 200:
+                from django.utils.dateparse import parse_datetime
+                raw_messages = resp.json()
+                for m in raw_messages:
+                    author = m.get("author", {})
+                    author_id = author.get("id", "")
+                    author_name = author.get("username", "")
+
+                    avatar_hash = author.get("avatar")
+                    if avatar_hash:
+                        author_avatar = f"https://cdn.discordapp.com/avatars/{author_id}/{avatar_hash}.png"
+                    else:
+                        author_avatar = ""
+
+                    content = m.get("content", "")
+                    msg_id = m.get("id", "")
+                    timestamp_str = m.get("timestamp", "")
+                    created_at = parse_datetime(timestamp_str)
+
+                    # Direction
+                    my_id = "543475404665520128" # Self bot user ID
+                    direction = "outbound" if author_id == my_id else "inbound"
+
+                    # update_or_create to sync DB
+                    DiscordTicketMessage.objects.update_or_create(
+                        channel=channel,
+                        message_id=msg_id,
+                        defaults={
+                            "author_id": author_id,
+                            "author_name": author_name,
+                            "author_avatar": author_avatar,
+                            "author_is_bot": author.get("bot", False),
+                            "content": content,
+                            "direction": direction,
+                            "delivery_status": "sent",
+                            "created_at": created_at,
+                        }
+                    )
+        except Exception as e:
+            print(f"Error fetching on-demand messages from Discord: {e}")
+
     messages = (
-        DiscordTicketMessage.objects.filter(channel_id=channel_id)
+        DiscordTicketMessage.objects.filter(channel=channel)
         .order_by("-created_at")[:limit]
     )
     data = [
@@ -2275,7 +2561,7 @@ def discord_admin_messages(request, channel_id: int):
             "author_name": m.author_name,
             "author_avatar": m.author_avatar,
             "author_is_bot": m.author_is_bot,
-            "content": m.content,
+            "content": _resolve_discord_mentions(m.content),
             "direction": m.direction,
             "delivery_status": m.delivery_status,
             "created_at": m.created_at.isoformat(),
@@ -2289,7 +2575,7 @@ def discord_admin_messages(request, channel_id: int):
 def discord_admin_send(request, channel_id: int):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    if not _is_admin_user(request.user):
+    if not _is_admin_or_token_ok(request):
         return JsonResponse({"message": "forbidden"}, status=403)
 
     try:
@@ -2337,22 +2623,28 @@ def _build_cart_data(order):
     Returns:
         dict: داده‌های سبد خرید
     """
+    # Our order/pricing model stores amounts in toman, but ZarinPal cart_data
+    # expects rial values. Convert everything here so the checkout view shows
+    # the same discounted total that we actually charge.
+    def to_rial(amount):
+        return int(amount or 0) * 10
+
     items = []
     for order_item in order.items.all():
         items.append({
             "item_name": order_item.name,
-            "item_amount": str(order_item.price),
+            "item_amount": str(to_rial(order_item.price)),
             "item_count": str(order_item.quantity),
-            "item_amount_sum": str(order_item.line_total())
+            "item_amount_sum": str(to_rial(order_item.line_total()))
         })
 
     # اضافه کردن هزینه فوری به عنوان آیتم جداگانه
     if order.rush_order and order.rush_fee > 0:
         items.append({
             "item_name": "تحویل فوری (۱۵ تا ۴۵ دقیقه)",
-            "item_amount": str(order.rush_fee),
+            "item_amount": str(to_rial(order.rush_fee)),
             "item_count": "1",
-            "item_amount_sum": str(order.rush_fee)
+            "item_amount_sum": str(to_rial(order.rush_fee))
         })
 
     cart_data = {
@@ -2371,7 +2663,7 @@ def _build_cart_data(order):
 
     if total_deductions > 0:
         cart_data["deductions"] = {
-            "discount": str(total_deductions)
+            "discount": str(to_rial(total_deductions))
         }
 
     return cart_data
@@ -2960,25 +3252,43 @@ def _to_jalali_approx(dt):
 def public_testimonials(request):
     """
     GET /api/testimonials
-    Returns the 20 most recent approved ProductComments for the homepage slider.
+    Returns the 20 most relevant approved ProductComments for the homepage
+    slider. Ordering: real user reviews first, then any seed-marked rows,
+    and within each group, 5★ → 1★, then by date desc. The "[seed]" prefix
+    on `author_name` is stripped before returning so the UI never shows it.
     Each entry includes product slug so the frontend can deep-link to the review.
     """
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
 
+    from django.db.models import Case, When, Value, IntegerField
+
     comments = (
         ProductComment.objects
         .filter(is_approved=True)
+        .annotate(
+            _seed_rank=Case(
+                When(author_name__startswith="[seed]", then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            ),
+        )
         .select_related("product", "user", "user__profile")
-        .order_by("-created_at")[:20]
+        .order_by("_seed_rank", "-rating", "-created_at")[:20]
     )
 
     results = []
     for c in comments:
         day_str, month_name = _to_jalali_approx(c.created_at)
+        # Strip the internal "[seed]" marker so it never leaks to the UI.
+        display_name = c.author_name
+        if display_name.startswith("[seed] "):
+            display_name = display_name[len("[seed] "):]
+        elif display_name.startswith("[seed]"):
+            display_name = display_name[len("[seed]"):].lstrip()
         results.append({
             "id": c.id,
-            "author_name": c.author_name,
+            "author_name": display_name,
             "product_name": c.product.name_fa,
             "product_slug": c.product.slug,
             "text": c.text,
@@ -3687,6 +3997,232 @@ def admin_delete_order(request, tracking):
     order = get_object_or_404(Order, tracking_code=tracking)
     order.delete()
     return JsonResponse({"success": True, "message": "سفارش حذف شد"})
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Abandoned cart tracking (سبدهای رها‌شده)
+# ──────────────────────────────────────────────────────────────────────────
+
+def _abandoned_cart_dict(c):
+    user_obj = c.user
+    user_username = user_obj.username if user_obj else ""
+    phone_val = c.phone or ""
+    if not phone_val and user_obj and hasattr(user_obj, "profile"):
+        try:
+            phone_val = user_obj.profile.phone_number or ""
+        except Exception:
+            phone_val = ""
+    email_val = c.email or (user_obj.email if user_obj else "")
+    return {
+        "id": c.id,
+        "user_id": c.user_id,
+        "user_email": user_obj.email if user_obj else "",
+        "user_username": user_username,
+        "phone": phone_val,
+        "email": email_val,
+        "items": c.items,
+        "item_count": c.item_count,
+        "total_value": c.total_value,
+        "last_product_page": c.last_product_page,
+        "last_seen_at": c.last_seen_at.isoformat() if c.last_seen_at else None,
+        "created_at": c.created_at.isoformat() if c.created_at else None,
+        "reminded_at": c.reminded_at.isoformat() if c.reminded_at else None,
+        "reminder_count": c.reminder_count,
+        "converted_at": c.converted_at.isoformat() if c.converted_at else None,
+    }
+
+
+@csrf_exempt
+def cart_sync(request):
+    """عمومی — کلاینت سبدش را با debounce اینجا می‌فرستد."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    try:
+        body = json.loads(request.body or b"{}")
+    except Exception:
+        return JsonResponse({"detail": "invalid json"}, status=400)
+
+    items = body.get("items") or []
+    session_id = (body.get("session_id") or "").strip()[:64]
+    if not session_id:
+        return JsonResponse({"detail": "session_id required"}, status=400)
+
+    clean, total = [], 0
+    for raw in items:
+        if not isinstance(raw, dict):
+            continue
+        pid = raw.get("product_id")
+        if not pid:
+            continue
+        try:
+            qty = max(0, int(raw.get("quantity") or 0))
+        except (TypeError, ValueError):
+            continue
+        if qty <= 0:
+            continue
+        try:
+            price = max(0, int(raw.get("price") or 0))
+        except (TypeError, ValueError):
+            price = 0
+        clean.append({
+            "product_id": int(pid),
+            "variant_id": raw.get("variant_id") or None,
+            "slug": (raw.get("slug") or "")[:220],
+            "name": (raw.get("name") or "")[:200],
+            "image": (raw.get("image") or "")[:500],
+            "price": price,
+            "quantity": qty,
+        })
+        total += price * qty
+
+    user = request.user if request.user.is_authenticated else None
+    phone = (body.get("phone") or "").strip()[:15]
+    email = (body.get("email") or "").strip()[:254]
+
+    qs = AbandonedCart.objects.all()
+    if user:
+        qs = qs.filter(user=user)
+    else:
+        qs = qs.filter(user__isnull=True, session_id=session_id)
+    cart = qs.first()
+
+    if not clean:
+        if cart:
+            cart.delete()
+        return JsonResponse({"ok": True, "deleted": bool(cart)})
+
+    if cart is None:
+        cart = AbandonedCart(user=user if user else None, session_id=session_id)
+
+    cart.user = user if user else None
+    if not user:
+        cart.session_id = session_id
+    if phone:
+        cart.phone = phone
+    if email:
+        cart.email = email
+    cart.items = clean
+    cart.item_count = sum(i["quantity"] for i in clean)
+    cart.total_value = total
+    if body.get("last_product_page"):
+        cart.last_product_page = str(body["last_product_page"])[:300]
+    if request.META.get("HTTP_USER_AGENT"):
+        cart.user_agent = request.META["HTTP_USER_AGENT"][:240]
+    if request.META.get("REMOTE_ADDR"):
+        try:
+            cart.last_ip = request.META["REMOTE_ADDR"]
+        except Exception:
+            pass
+    if cart.converted_at:
+        return JsonResponse({"ok": True, "cart_id": cart.id, "already_converted": True})
+    cart.save()
+    return JsonResponse({"ok": True, "cart_id": cart.id})
+
+
+@csrf_exempt
+def admin_abandoned_carts(request):
+    if not request.user.is_authenticated or not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+
+    only_active = (request.GET.get("only_active") or "1") == "1"
+    qs = AbandonedCart.objects.all()
+    if only_active:
+        qs = qs.filter(converted_at__isnull=True)
+
+    search = (request.GET.get("q") or "").strip()
+    if search:
+        qs = qs.filter(
+            Q(phone__icontains=search)
+            | Q(email__icontains=search)
+            | Q(user__username__icontains=search)
+            | Q(user__email__icontains=search)
+        )
+
+    total = qs.count()
+    try:
+        limit = max(1, min(int(request.GET.get("limit") or 200), 1000))
+    except ValueError:
+        limit = 200
+    rows = qs.select_related("user").order_by("-last_seen_at")[:limit]
+    return JsonResponse({
+        "results": [_abandoned_cart_dict(r) for r in rows],
+        "count": total,
+    })
+
+
+@csrf_exempt
+def admin_abandoned_cart_remind(request, cart_id):
+    if not request.user.is_authenticated or not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    cart = get_object_or_404(AbandonedCart, id=cart_id)
+    if cart.converted_at:
+        return JsonResponse(
+            {"ok": False, "message": "این سبد قبلاً به سفارش تبدیل شده."},
+            status=400,
+        )
+    if cart.reminded_at:
+        return JsonResponse(
+            {"ok": False, "message": "برای این سبد قبلاً یادآوری ارسال شده."},
+            status=429,
+        )
+
+    # resolve phone/email/name
+    phone = (cart.phone or "").strip()
+    if not phone and cart.user and hasattr(cart.user, "profile"):
+        try:
+            phone = (cart.user.profile.phone_number or "").strip()
+        except Exception:
+            phone = ""
+    email = (cart.email or "").strip() or (cart.user.email if cart.user else "")
+
+    if not phone and not email:
+        return JsonResponse(
+            {"ok": False, "message": "شماره و ایمیل هیچ‌کدام موجود نیست."},
+            status=400,
+        )
+
+    site_url = getattr(settings, "SITE_URL", "https://nubixshop.ir")
+
+    name = ""
+    if cart.user:
+        name = (getattr(cart.user, "first_name", "") or "").strip()
+        if not name:
+            name = (getattr(cart.user, "username", "") or "").strip()
+
+    sent = {"sms": False, "email": False, "sms_msg": "", "email_msg": ""}
+
+    if phone:
+        ok, msg = KavenegarService.send_abandoned_cart_sms(phone, name)
+        sent["sms"] = ok
+        sent["sms_msg"] = msg
+
+    if email:
+        ok = email_service.send_abandoned_cart_email(
+            email, cart.items, cart.total_value, site_url
+        )
+        sent["email"] = bool(ok)
+        sent["email_msg"] = "ارسال شد" if ok else "ناموفق"
+
+    cart.reminded_at = timezone.now()
+    cart.reminder_count = (cart.reminder_count or 0) + 1
+    cart.save(update_fields=["reminded_at", "reminder_count"])
+
+    return JsonResponse({"ok": True, **sent})
+
+
+@csrf_exempt
+def admin_abandoned_cart_delete(request, cart_id):
+    if not request.user.is_authenticated or not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method not in ("DELETE", "POST"):
+        return HttpResponseNotAllowed(["DELETE", "POST"])
+    get_object_or_404(AbandonedCart, id=cart_id).delete()
+    return JsonResponse({"ok": True})
 
 
 @csrf_exempt
@@ -4747,6 +5283,13 @@ def admin_update_order_status(request, tracking):
             _notify_customer_payment_success(order, ref_id="")
         except Exception as notify_err:
             logger.error(f"Failed to notify customer after admin paid update: {notify_err}")
+        points_awarded = 0
+        try:
+            from .rewards import award_purchase_points
+            points_awarded = award_purchase_points(order)
+        except Exception:
+            logger.exception("purchase points failed for %s", order.tracking_code)
+        _send_purchase_points_sms(order, points_awarded)
 
     if send_email:
         customer_email = ""
@@ -5296,7 +5839,25 @@ def discount_validate(request):
         if error == "کد تخفیف نامعتبر است.":
             status_code = 404
         return JsonResponse({"message": error}, status=status_code)
-    return JsonResponse({"code": dc.code, "percent": dc.percent, "amount": dc.amount, "expires_at": dc.expires_at.isoformat() if dc.expires_at else None})
+    response = {
+        "code": dc.code,
+        "percent": dc.percent,
+        "amount": dc.amount,
+        "expires_at": dc.expires_at.isoformat() if dc.expires_at else None,
+    }
+    preview = _discount_preview_from_cart_payload(payload, dc)
+    if preview is not None:
+        response.update({
+            "previewed": True,
+            "gross_amount": preview["gross_amount"],
+            "nominal_amount": preview["nominal_amount"],
+            "discount_amount": preview["discount_amount"],
+            "capped": False,
+            "guardrail_warning": preview["guardrail_warning"],
+            "guardrail": preview["guardrail"],
+        })
+        response["applicable"] = preview["discount_amount"] > 0
+    return JsonResponse(response)
 
 
 @csrf_exempt
@@ -5476,11 +6037,13 @@ def payment_verify(request, tracking):
         # تغییر وضعیت سفارش به پرداخت شده
         order.status = 'paid'
         order.save()
+        points_awarded = 0
         try:
             from .rewards import award_purchase_points
-            award_purchase_points(order)
+            points_awarded = award_purchase_points(order)
         except Exception:
             logger.exception("purchase points failed for %s", order.tracking_code)
+        _send_purchase_points_sms(order, points_awarded)
 
         # ایمیل اطلاع‌رسانی پرداخت موفق
         try:
@@ -6255,9 +6818,14 @@ def product_comments(request, slug):
                     avatar_url = request.build_absolute_uri(comment.user.profile.avatar.url)
                 except Exception:
                     avatar_url = ""
+            display_name = comment.author_name
+            if display_name.startswith("[seed] "):
+                display_name = display_name[len("[seed] "):]
+            elif display_name.startswith("[seed]"):
+                display_name = display_name[len("[seed]"):].lstrip()
             comments_data.append({
                 "id": comment.id,
-                "author_name": comment.author_name,
+                "author_name": display_name,
                 "author_role": author_role,
                 "rating": comment.rating,
                 "text": comment.text,
@@ -6325,6 +6893,7 @@ def product_comments(request, slug):
         if not request.user.is_authenticated:
             return JsonResponse({"success": False, "message": "برای ثبت نظر باید وارد حساب کاربری شوید"}, status=401)
         user = request.user
+        had_comment_for_product = ProductComment.objects.filter(product=product, user=user).exists()
 
         # Create the comment
         # Model has max_length=100; accept longer inputs but truncate safely.
@@ -6338,10 +6907,22 @@ def product_comments(request, slug):
             text=text,
             is_approved=True,  # Auto-approve for now, can add moderation later
         )
+        points_awarded = 0
+        points_balance = None
+        if not had_comment_for_product:
+            try:
+                from .rewards import award_comment_points
+                points_awarded = award_comment_points(user, product)
+                profile, _ = UserProfile.objects.get_or_create(user=user)
+                points_balance = profile.points_balance
+            except Exception:
+                logger.exception("comment points failed for user %s product %s", user.id, product.id)
 
         return JsonResponse({
             "success": True,
             "message": "نظر شما با موفقیت ثبت شد",
+            "points_awarded": points_awarded,
+            "points_balance": points_balance,
             "comment": {
                 "id": comment.id,
                 "author_name": comment.author_name,
@@ -6766,6 +7347,45 @@ def admin_xbox_account_detail(request, account_id: int):
     return HttpResponseNotAllowed(['PATCH', 'DELETE'])
 
 
+def _get_usd_rate_toman():
+    # 1. Try cache
+    last_good = cache.get("currency_rates:last_good")
+    if last_good and "usd" in last_good:
+        try:
+            return int(last_good["usd"]) // 10
+        except Exception:
+            pass
+
+    # 2. If not in cache, let's scrape tgju
+    try:
+        session = requests.Session()
+        session.trust_env = False
+        session.proxies = {"http": "", "https": ""}
+        response = session.get(
+            TGJU_CURRENCY_URL,
+            timeout=4,
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; NubixShop/1.0)",
+                "Accept": "text/html,application/xhtml+xml",
+            },
+        )
+        response.raise_for_status()
+        rates = _parse_tgju_currency_rates(response.text)
+        if rates and "usd" in rates:
+            rates.update({
+                "source": TGJU_CURRENCY_URL,
+                "fetchedAt": timezone.now().isoformat(),
+                "stale": False,
+            })
+            cache.set("currency_rates:last_good", rates, 86400)
+            cache.set("currency_rates:fresh", True, 600)
+            return int(rates["usd"]) // 10
+    except Exception:
+        pass
+
+    return 65000  # Fallback Toman rate if everything fails
+
+
 def admin_accounting(request):
     """
     API برای گزارش حسابداری سفارشات تکمیل شده در بازه زمانی مشخص
@@ -6956,6 +7576,64 @@ def admin_accounting(request):
             "units": units,
         })
 
+    # Fetch and calculate custom transactions for the same period
+    usd_rate = _get_usd_rate_toman()
+    txns = AccountingTransaction.objects.filter(created_at__gte=from_date, created_at__lte=to_date)
+
+    total_expenses_toman_created = 0
+    total_expenses_toman_current = 0
+    total_profits_toman_created = 0
+    total_profits_toman_current = 0
+    total_expenses_usd = 0.0
+    total_profits_usd = 0.0
+
+    txns_list = []
+    for t in txns:
+        toman_amount_created = 0
+        toman_amount_current = 0
+        toman_diff = 0
+
+        if t.currency == "usd":
+            toman_amount_created = int(t.amount * t.created_rate)
+            toman_amount_current = int(t.amount * usd_rate)
+            toman_diff = toman_amount_current - toman_amount_created
+
+            if t.entry_type == 'expense':
+                total_expenses_usd += float(t.amount)
+                total_expenses_toman_created += toman_amount_created
+                total_expenses_toman_current += toman_amount_current
+            else:
+                total_profits_usd += float(t.amount)
+                total_profits_toman_created += toman_amount_created
+                total_profits_toman_current += toman_amount_current
+        else:
+            toman_amount_created = int(t.amount)
+            toman_amount_current = int(t.amount)
+            toman_diff = 0
+
+            if t.entry_type == 'expense':
+                total_expenses_toman_created += toman_amount_created
+                total_expenses_toman_current += toman_amount_current
+            else:
+                total_profits_toman_created += toman_amount_created
+                total_profits_toman_current += toman_amount_current
+
+        txns_list.append({
+            "id": t.id,
+            "title": t.title,
+            "entry_type": t.entry_type,
+            "entry_type_fa": dict(AccountingTransaction.TRANSACTION_TYPE_CHOICES).get(t.entry_type, t.entry_type),
+            "currency": t.currency,
+            "amount": float(t.amount),
+            "created_rate": t.created_rate,
+            "current_rate": usd_rate if t.currency == "usd" else 0,
+            "toman_amount_created": toman_amount_created,
+            "toman_amount_current": toman_amount_current,
+            "toman_diff": toman_diff,
+            "created_at": t.created_at.isoformat(),
+            "note": t.note or "",
+        })
+
     return JsonResponse({
         "summary": {
             "order_count": order_count,
@@ -6967,11 +7645,161 @@ def admin_accounting(request):
             "original_amount": original_amount,
             "net_revenue": net_revenue,
         },
+        "custom_summary": {
+            "total_expenses_toman_created": total_expenses_toman_created,
+            "total_expenses_toman_current": total_expenses_toman_current,
+            "total_profits_toman_created": total_profits_toman_created,
+            "total_profits_toman_current": total_profits_toman_current,
+            "total_expenses_usd": total_expenses_usd,
+            "total_profits_usd": total_profits_usd,
+            "current_usd_rate": usd_rate,
+        },
+        "custom_transactions": txns_list,
         "from_date": from_date.isoformat(),
         "to_date": to_date.isoformat(),
         "status_filter": status_filter,
         "orders": orders_data
     })
+
+
+@csrf_exempt
+def admin_accounting_transactions(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+
+    if request.method == "GET":
+        from_date_str = request.GET.get("from_date")
+        to_date_str = request.GET.get("to_date")
+
+        txns = AccountingTransaction.objects.all()
+
+        if from_date_str and to_date_str:
+            try:
+                # Same parsing logic as admin_accounting
+                if "T" in from_date_str:
+                    from_date = datetime.fromisoformat(from_date_str.replace("Z", "+00:00"))
+                else:
+                    from_date = datetime.strptime(from_date_str, "%Y-%m-%d")
+
+                if "T" in to_date_str:
+                    to_date = datetime.fromisoformat(to_date_str.replace("Z", "+00:00"))
+                else:
+                    to_date = datetime.strptime(to_date_str, "%Y-%m-%d")
+                    to_date = to_date.replace(hour=23, minute=59, second=59)
+
+                if from_date.tzinfo is None:
+                    from_date = timezone.make_aware(from_date)
+                if to_date.tzinfo is None:
+                    to_date = timezone.make_aware(to_date)
+
+                txns = txns.filter(created_at__gte=from_date, created_at__lte=to_date)
+            except Exception as e:
+                return JsonResponse({"detail": f"فرمت تاریخ نامعتبر است: {str(e)}"}, status=400)
+
+        usd_rate = _get_usd_rate_toman()
+
+        txns_list = []
+        for t in txns:
+            toman_amount_created = 0
+            toman_amount_current = 0
+            toman_diff = 0
+
+            if t.currency == "usd":
+                toman_amount_created = int(t.amount * t.created_rate)
+                toman_amount_current = int(t.amount * usd_rate)
+                toman_diff = toman_amount_current - toman_amount_created
+            else:
+                toman_amount_created = int(t.amount)
+                toman_amount_current = int(t.amount)
+                toman_diff = 0
+
+            txns_list.append({
+                "id": t.id,
+                "title": t.title,
+                "entry_type": t.entry_type,
+                "entry_type_fa": dict(AccountingTransaction.TRANSACTION_TYPE_CHOICES).get(t.entry_type, t.entry_type),
+                "currency": t.currency,
+                "amount": float(t.amount),
+                "created_rate": t.created_rate,
+                "current_rate": usd_rate if t.currency == "usd" else 0,
+                "toman_amount_created": toman_amount_created,
+                "toman_amount_current": toman_amount_current,
+                "toman_diff": toman_diff,
+                "created_at": t.created_at.isoformat(),
+                "note": t.note or "",
+            })
+
+        return JsonResponse({"transactions": txns_list, "current_usd_rate": usd_rate})
+
+    elif request.method == "POST":
+        try:
+            payload = json.loads(request.body)
+        except Exception:
+            return JsonResponse({"detail": "invalid json"}, status=400)
+
+        title = payload.get("title")
+        entry_type = payload.get("entry_type")
+        currency = payload.get("currency")
+        amount = payload.get("amount")
+        created_rate_override = payload.get("created_rate")
+        note = payload.get("note", "")
+
+        if not title or not entry_type or not currency or amount is None:
+            return JsonResponse({"detail": "تمامی فیلدها الزامی هستند"}, status=400)
+
+        try:
+            amount = float(amount)
+        except ValueError:
+            return JsonResponse({"detail": "مبلغ نامعتبر است"}, status=400)
+
+        if entry_type not in ['expense', 'profit']:
+            return JsonResponse({"detail": "نوع تراکنش نامعتبر است"}, status=400)
+
+        if currency not in ['toman', 'usd']:
+            return JsonResponse({"detail": "واحد پولی نامعتبر است"}, status=400)
+
+        usd_rate = _get_usd_rate_toman()
+        created_rate = usd_rate
+        if currency == "usd" and created_rate_override is not None:
+            try:
+                created_rate = int(created_rate_override)
+            except ValueError:
+                pass
+
+        txn = AccountingTransaction.objects.create(
+            title=title,
+            entry_type=entry_type,
+            currency=currency,
+            amount=amount,
+            created_rate=created_rate if currency == "usd" else 0,
+            note=note
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "تراکنش با موفقیت ثبت شد",
+            "transaction_id": txn.id
+        })
+
+    return HttpResponseNotAllowed(['GET', 'POST'])
+
+
+@csrf_exempt
+def admin_accounting_transaction_detail(request, txn_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+
+    txn = get_object_or_404(AccountingTransaction, id=txn_id)
+
+    if request.method == "DELETE":
+        txn.delete()
+        return JsonResponse({"success": True, "message": "تراکنش حذف شد"})
+
+    return HttpResponseNotAllowed(['DELETE'])
 
 
 @csrf_exempt
@@ -7486,4 +8314,3 @@ def admin_product_requests(request):
             return JsonResponse({"error": str(e)}, status=500)
             
     return HttpResponseNotAllowed(['GET', 'POST', 'DELETE'])
-

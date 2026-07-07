@@ -21,7 +21,7 @@ const fallbackProducts = [
     slug: "gta6",
     name_fa: "پیش‌خرید GTA VI (Grand Theft Auto VI)",
     subtitle: "نسخه استاندارد و آلتیمیت — PS5 و Xbox",
-    image_url: "/products/gta6/ps5-ultimate.jpg",
+    image_url: "/products/gta6/ps5-ultimate.webp",
     price: 5258000,
     original_price: 6199000,
     discount_override: 15
@@ -31,7 +31,7 @@ const fallbackProducts = [
     slug: "starterpack",
     name_fa: "استارتر پک The Ace فورتنایت",
     subtitle: "The Ace Pack | اسکین انحصاری + ۸۰۰ ویباکس",
-    image_url: "/media/products/starterpack-20260611201541.jpg",
+    image_url: "/media/products/starterpack-20260611201541.webp",
     price: 769000,
     original_price: 1100000,
     discount_override: 30
@@ -41,7 +41,7 @@ const fallbackProducts = [
     slug: "spotify-subscription",
     name_fa: "اشتراک اسپاتیفای پریمیوم",
     subtitle: "پریمیوم بدون قطعی",
-    image_url: "/media/products/spotify-subscription-20260611210226.jpg",
+    image_url: "/media/products/spotify-subscription-20260611210226.webp",
     price: 159000,
     original_price: 250000,
     discount_override: 36
@@ -123,9 +123,9 @@ export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1
         <div className="discount-badge-alert">
           ⚡ آفر طلایی امروز (فرصت محدود)
         </div>
-        <h2 className="discount-title">
-          تخفیفات ویژه را از دست ندهید!
-        </h2>
+        <h1 className="discount-title">
+          تخفیف ویژه خرید وی باکس، کروپک فورتنایت و گیفت کارت
+        </h1>
         <p className="discount-subtitle">
           تخفیفات داغ و روزانه نوبیکس شاپ؛ هر روز ۴ آفر ویژه با قیمت‌های استثنایی که فقط تا پایان امروز اعتبار دارند!
         </p>
@@ -149,7 +149,7 @@ export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1
 
       {/* Product cards container */}
       <div className="discount-products-grid">
-        {products.map(p => {
+        {products.map((p, heroIdx) => {
           const price = Number(p.price) > 0 ? Number(p.price) : (Number(p.min_price) > 0 ? Number(p.min_price) : 0);
           const original = Number(p.original_price) > 0 ? Number(p.original_price) : Math.round(price * 1.15);
           
@@ -164,10 +164,22 @@ export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1
 
           return (
             <div key={p.slug} className="discount-product-card">
-              <Link href={`/product/${p.slug}`} className="card-link-overlay" aria-label={p.name_fa} />
+              <Link
+                href={
+                  { 'fortnite-crew-pack': '/crewpack', 'gta6': '/gta6', 'v-bucks': '/vbucks', 'gemini-subscription': '/gemini', 'lego-starter-pack': '/lego' }[p.slug]
+                  || `/product/${p.slug}`
+                }
+                className="card-link-overlay"
+                aria-label={p.name_fa}
+              />
               
               <div className="product-card-img-wrapper">
-                <img src={imageSrc} alt={p.name_fa} loading="lazy" />
+                <img
+                  src={imageSrc}
+                  alt={p.name_fa}
+                  decoding="async"
+                  {...(heroIdx === 0 ? { fetchPriority: 'high' } : {})}
+                />
               </div>
 
               <div className="product-card-info">

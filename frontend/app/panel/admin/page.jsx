@@ -1134,6 +1134,9 @@ export default function AdminPanelPage() {
   const [announcementError, setAnnouncementError] = useState("");
   const [announcementSuccess, setAnnouncementSuccess] = useState("");
   const [xboxAccounts, setXboxAccounts] = useState([]);
+  const [abandonedCarts, setAbandonedCarts] = useState([]);
+  const [abandonedLoading, setAbandonedLoading] = useState(false);
+  const [abandonedSearch, setAbandonedSearch] = useState("");
   const [subcategories, setSubcategories] = useState([]);
   const [newSubcategory, setNewSubcategory] = useState({ key: "", label: "", category: "GIFTCARDS", display_order: 0 });
   const [xboxSearch, setXboxSearch] = useState("");
@@ -1171,13 +1174,12 @@ export default function AdminPanelPage() {
   const [resellerCreatedToken, setResellerCreatedToken] = useState(null);
   const [resellerBusy, setResellerBusy] = useState({});
   const [resellerTiers, setResellerTiers] = useState([]);
-  const [resellerTierEditing, setResellerTierEditing] = useState([]);
-  const [resellerTierSaved, setResellerTierSaved] = useState(false);
   const [resellerOrdersList, setResellerOrdersList] = useState([]);
   const [resellerOrderFilter, setResellerOrderFilter] = useState("active");
   const [resellerAdjustAmount, setResellerAdjustAmount] = useState({});
   const [report, setReport] = useState(null);
   const [notificationTotalCount, setNotificationTotalCount] = useState(0);
+  const [productRequests, setProductRequests] = useState([]);
 
   // Articles state
   const [articles, setArticles] = useState([]);
@@ -1300,6 +1302,15 @@ export default function AdminPanelPage() {
   });
   const [accountingStatus, setAccountingStatus] = useState("unsettled");
   const [accountingOldestDate, setAccountingOldestDate] = useState(null);
+  // Custom accounting transaction states
+  const [txnTitle, setTxnTitle] = useState("");
+  const [txnType, setTxnType] = useState("expense");
+  const [txnCurrency, setTxnCurrency] = useState("toman");
+  const [txnAmount, setTxnAmount] = useState("");
+  const [txnRate, setTxnRate] = useState("");
+  const [txnNote, setTxnNote] = useState("");
+  const [txnSubmitting, setTxnSubmitting] = useState(false);
+
   const [settlementHistory, setSettlementHistory] = useState([]);
   const [settlementHistoryLoading, setSettlementHistoryLoading] = useState(false);
 
@@ -1544,7 +1555,7 @@ export default function AdminPanelPage() {
       setUser(normalizedUser);
 
       const orderTypeParam = orderTypeFilter && orderTypeFilter !== "all" ? `&type=${orderTypeFilter}` : "";
-      const [ordersRes, prevRes, refundedRes, canceledRes, usersRes, discountsRes, productsRes, settingsRes, xboxRes, resellersRes, tiersRes, subcatRes] = await Promise.all([
+      const [ordersRes, prevRes, refundedRes, canceledRes, usersRes, discountsRes, productsRes, settingsRes, xboxRes, resellersRes, tiersRes, subcatRes, reqsRes] = await Promise.all([
         fetch(`${apiBase}/api/admin/orders?limit=200${orderTypeParam}`, { cache: "no-store", credentials: "include" }),
         fetch(`${apiBase}/api/admin/orders/previous?limit=200`, { cache: "no-store", credentials: "include" }),
         fetch(`${apiBase}/api/admin/orders/refunded?limit=200`, { cache: "no-store", credentials: "include" }),
@@ -1557,6 +1568,7 @@ export default function AdminPanelPage() {
         fetch(`${apiBase}/api/admin/resellers`, { cache: "no-store", credentials: "include" }),
         fetch(`${apiBase}/api/admin/reseller-tiers`, { cache: "no-store", credentials: "include" }),
         fetch(`${apiBase}/api/admin/subcategories`, { cache: "no-store", credentials: "include" }),
+        fetch(`${apiBase}/api/admin/product-requests`, { cache: "no-store", credentials: "include" }),
       ]);
 
       if (ordersRes.ok) {
@@ -1612,6 +1624,10 @@ export default function AdminPanelPage() {
       if (subcatRes.ok) {
         const data = await subcatRes.json();
         setSubcategories(data.results || []);
+      }
+      if (reqsRes.ok) {
+        const data = await reqsRes.json();
+        setProductRequests(data.requests || []);
       }
       try {
         const artRes = await fetch(`${apiBase}/api/blog/articles?page=1`, { cache: "no-store" });
@@ -1745,6 +1761,74 @@ export default function AdminPanelPage() {
     }
   };
 
+  const loadAbandonedCarts = async () => {
+    setAbandonedLoading(true);
+    try {
+      const url = `${apiBase}/api/admin/abandoned-carts?only_active=1${abandonedSearch ? `&q=${encodeURIComponent(abandonedSearch)}` : ""}`;
+      const res = await fetch(url, { cache: "no-store", credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setAbandonedCarts(data.results || []);
+      }
+    } catch (e) {
+      console.error("Failed to load abandoned carts", e);
+    } finally {
+      setAbandonedLoading(false);
+    }
+  };
+
+  const loadProductRequests = async () => {
+    try {
+      const res = await fetch(`${apiBase}/api/admin/product-requests`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProductRequests(data.requests || []);
+      }
+    } catch (e) {
+      console.error("Failed to load product requests", e);
+    }
+  };
+
+  const updateProductRequest = async (id, status, adminNote) => {
+    try {
+      const res = await fetch(`${apiBase}/api/admin/product-requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status, admin_note: adminNote }),
+        credentials: "include",
+      });
+      if (res.ok) {
+        loadProductRequests();
+      } else {
+        alert("خطا در بروزرسانی درخواست");
+      }
+    } catch (e) {
+      console.error("Failed to update product request", e);
+    }
+  };
+
+  const deleteProductRequest = async (id) => {
+    if (!confirm("آیا از حذف این درخواست مطمئن هستید؟")) return;
+    try {
+      const res = await fetch(`${apiBase}/api/admin/product-requests`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+        credentials: "include",
+      });
+      if (res.ok) {
+        loadProductRequests();
+      } else {
+        alert("خطا در حذف درخواست");
+      }
+    } catch (e) {
+      console.error("Failed to delete product request", e);
+    }
+  };
+
   // Fetch accounting data
   const fetchAccountingData = async () => {
     setAccountingLoading(true);
@@ -1770,6 +1854,71 @@ export default function AdminPanelPage() {
       setReport({ kind: "error", title: "خطا در اتصال به سرور" });
     } finally {
       setAccountingLoading(false);
+    }
+  };
+
+  const handleAddTxn = async (e) => {
+    e.preventDefault();
+    if (!txnTitle.trim() || !txnAmount) {
+      alert("لطفا عنوان و مبلغ را وارد کنید.");
+      return;
+    }
+    setTxnSubmitting(true);
+    try {
+      const payload = {
+        title: txnTitle,
+        entry_type: txnType,
+        currency: txnCurrency,
+        amount: parseFloat(txnAmount),
+        note: txnNote,
+      };
+      if (txnCurrency === "usd" && txnRate) {
+        payload.created_rate = parseInt(txnRate, 10);
+      }
+      const res = await fetch(`${apiBase}/api/admin/accounting/transactions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTxnTitle("");
+        setTxnAmount("");
+        setTxnRate("");
+        setTxnNote("");
+        alert(data.message || "تراکنش با موفقیت ثبت شد");
+        fetchAccountingData();
+      } else {
+        alert(data.detail || "خطا در ثبت تراکنش");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("خطا در ارتباط با سرور");
+    } finally {
+      setTxnSubmitting(false);
+    }
+  };
+
+  const handleDeleteTxn = async (txnId) => {
+    if (!confirm("آیا از حذف این تراکنش مطمئن هستید؟")) return;
+    try {
+      const res = await fetch(`${apiBase}/api/admin/accounting/transactions/${txnId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(data.message || "تراکنش حذف شد");
+        fetchAccountingData();
+      } else {
+        alert(data.detail || "خطا در حذف تراکنش");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("خطا در ارتباط با سرور");
     }
   };
 
@@ -3961,6 +4110,19 @@ export default function AdminPanelPage() {
               <span className="tab-ic">📝</span>
               <span className="tab-text">مقالات و وبلاگ</span>
               <span className="tab-count">{articles.length}</span>
+            </button>
+            <button className={`tab ${activeTab === "productRequests" ? "active" : ""}`} onClick={() => { setActiveTab("productRequests"); loadProductRequests(); }}>
+              <span className="tab-ic">🛒</span>
+              <span className="tab-text">درخواستی‌ها</span>
+              <span className="tab-count">{productRequests.length}</span>
+            </button>
+            <button
+              className={`tab ${activeTab === "abandoned" ? "active" : ""}`}
+              onClick={() => { setActiveTab("abandoned"); loadAbandonedCarts(); }}
+            >
+              <span className="tab-ic">🛍️</span>
+              <span className="tab-text">سبدهای رها‌شده</span>
+              <span className="tab-count">{abandonedCarts.length}</span>
             </button>
             <button className="tab" onClick={() => { window.location.href = "/panel/admin/gta6"; }}>
               <span className="tab-ic">🎮</span>
@@ -6177,6 +6339,99 @@ export default function AdminPanelPage() {
             </div>
           )}
 
+          {!loading && activeTab === "abandoned" && (
+            <div className="orders-content">
+              <div className="section-card">
+                <div className="section-header">
+                  <h3>سبدهای رها‌شده (۷ روز اخیر، تبدیل‌نشده)</h3>
+                  <div className="muted">{abandonedCarts.length} سبد</div>
+                  <input
+                    type="search"
+                    placeholder="جستجو: شماره، ایمیل، نام کاربری…"
+                    value={abandonedSearch}
+                    onChange={(e) => setAbandonedSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && loadAbandonedCarts()}
+                    className="order-search-input"
+                    style={{ maxWidth: 300 }}
+                  />
+                  <button className="ghost-btn-sm" onClick={loadAbandonedCarts}>بروزرسانی</button>
+                </div>
+                {abandonedLoading && <div className="muted">در حال بارگذاری…</div>}
+                {!abandonedLoading && abandonedCarts.length === 0 && (
+                  <div className="empty-state">سبد رها‌شده‌ای یافت نشد.</div>
+                )}
+                {!abandonedLoading && abandonedCarts.map((c) => (
+                  <div key={c.id} className="order-item">
+                    <div className="order-item-header">
+                      <div>
+                        <div className="order-name">
+                          {c.user_username || `مهمان (${(c.session_id || "").slice(0, 8)})`}
+                          {c.user_email && ` — ${c.user_email}`}
+                        </div>
+                        <div className="order-time">آخرین بازدید: {formatDateTime(c.last_seen_at)}</div>
+                      </div>
+                      <div className="order-price">{(c.total_value || 0).toLocaleString("fa-IR")} تومان</div>
+                    </div>
+                    <div className="order-item-details">
+                      <div className="detail-row">
+                        <span className="detail-label">تلفن:</span>
+                        <span className="detail-value">{c.phone || "—"}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">ایمیل:</span>
+                        <span className="detail-value">{c.email || "—"}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">تعداد آیتم:</span>
+                        <span className="detail-value">{c.item_count}</span>
+                      </div>
+                      {c.last_product_page && (
+                        <div className="detail-row">
+                          <span className="detail-label">آخرین صفحه:</span>
+                          <span className="detail-value" style={{ direction: "ltr" }}>{c.last_product_page}</span>
+                        </div>
+                      )}
+                      {c.reminded_at && (
+                        <div className="detail-row">
+                          <span className="detail-label">یادآوری ارسال‌شده:</span>
+                          <span className="detail-value">{formatDateTime(c.reminded_at)}</span>
+                        </div>
+                      )}
+                    </div>
+                    <details style={{ marginTop: 8 }}>
+                      <summary>اقلام سبد ({(c.items || []).length})</summary>
+                      <ul style={{ marginTop: 8, paddingRight: 20 }}>
+                        {(c.items || []).map((i, idx) => (
+                          <li key={idx}>
+                            {i.name} × {i.quantity} — {Number(i.price || 0).toLocaleString("fa-IR")} تومان
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                    <div className="order-actions">
+                      <div className="muted-small" style={{ marginLeft: "auto" }}>
+                        یادآوری این سبد به‌صورت خودکار ۳۰ دقیقه پس از ترک سایت ارسال می‌شود.
+                      </div>
+                      <button
+                        className="btn danger-btn-sm"
+                        onClick={async () => {
+                          if (!confirm("حذف این سبد؟")) return;
+                          await fetch(`${apiBase}/api/admin/abandoned-carts/${c.id}/delete`, {
+                            method: "DELETE",
+                            credentials: "include",
+                          });
+                          loadAbandonedCarts();
+                        }}
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {!loading && activeTab === "products" && (
             <div className="orders-content">
               <div className="section-card">
@@ -7346,16 +7601,39 @@ export default function AdminPanelPage() {
                     ? accountingData.orders.filter(o => !o.settled && o.status !== 'refunded')
                     : accountingData.orders;
 
+                  const customSum = accountingData.custom_summary || {
+                    total_expenses_toman_created: 0,
+                    total_expenses_toman_current: 0,
+                    total_profits_toman_created: 0,
+                    total_profits_toman_current: 0,
+                    total_expenses_usd: 0,
+                    total_profits_usd: 0,
+                    current_usd_rate: 0
+                  };
+                  const grandTotalProfit = totalProfit - customSum.total_expenses_toman_current + customSum.total_profits_toman_current;
+
                   return (
                   <div className="accounting-results">
                     <div className="accounting-summary">
-                      <div className="summary-card summary-main">
+                      <div className="summary-card highlight" style={{ background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)", border: "none" }}>
+                        <div className="summary-label" style={{ color: "rgba(255,255,255,0.9)", fontWeight: "bold" }}>سود نهایی دوره (با کسر مخارج)</div>
+                        <div className="summary-value" style={{ color: "white", fontWeight: "bold" }}>{grandTotalProfit.toLocaleString("fa-IR")} تومان</div>
+                      </div>
+                      <div className="summary-card" style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)" }}>
+                        <div className="summary-label" style={{ color: "#10b981", fontWeight: "bold" }}>سود سفارشات دوره</div>
+                        <div className="summary-value" style={{ color: "#10b981", fontWeight: "bold" }}>{totalProfit.toLocaleString("fa-IR")} تومان</div>
+                      </div>
+                      <div className="summary-card" style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.25)" }}>
+                        <div className="summary-label" style={{ color: "#ef4444", fontWeight: "bold" }}>مخارج متفرقه دوره</div>
+                        <div className="summary-value" style={{ color: "#ef4444", fontWeight: "bold" }}>{customSum.total_expenses_toman_current.toLocaleString("fa-IR")} تومان</div>
+                      </div>
+                      <div className="summary-card" style={{ background: "rgba(16, 185, 129, 0.05)", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
+                        <div className="summary-label" style={{ color: "#10b981" }}>سود متفرقه دوره</div>
+                        <div className="summary-value" style={{ color: "#10b981", fontWeight: "bold" }}>{customSum.total_profits_toman_current.toLocaleString("fa-IR")} تومان</div>
+                      </div>
+                      <div className="summary-card">
                         <div className="summary-label">تعداد سفارشات</div>
                         <div className="summary-value">{accountingData.summary.order_count.toLocaleString("fa-IR")}</div>
-                      </div>
-                      <div className="summary-card highlight" style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)" }}>
-                        <div className="summary-label" style={{ color: "#10b981", fontWeight: "bold" }}>سود کل دوره</div>
-                        <div className="summary-value" style={{ color: "#10b981", fontWeight: "bold" }}>{totalProfit.toLocaleString("fa-IR")} تومان</div>
                       </div>
                       <div className="summary-card" style={{ background: "rgba(52, 211, 153, 0.05)", border: "1px solid rgba(52, 211, 153, 0.15)" }}>
                         <div className="summary-label" style={{ color: "#34d399" }}>لیر کل دوره</div>
@@ -7419,6 +7697,201 @@ export default function AdminPanelPage() {
                         </button>
                       </div>
                     )}
+
+                    {/* Custom Accounting Transactions Section */}
+                    <div className="custom-accounting-section" style={{ marginTop: "32px", marginBottom: "32px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                        <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>تراکنش‌های متفرقه (مخارج و سودهای متفرقه)</h4>
+                        {customSum.current_usd_rate > 0 && (
+                          <div style={{ fontSize: "13px", color: "var(--muted)", background: "rgba(59, 130, 246, 0.1)", padding: "6px 12px", borderRadius: "8px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+                            💵 نرخ لحظه‌ای دلار: <strong style={{ color: "#3b82f6" }}>{customSum.current_usd_rate.toLocaleString("fa-IR")} تومان</strong>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Add Transaction Form */}
+                      <form onSubmit={handleAddTxn} className="txn-form" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "14px", padding: "20px", marginBottom: "20px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px", marginBottom: "16px" }}>
+                          <div>
+                            <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "6px", color: "var(--muted)" }}>عنوان تراکنش</label>
+                            <input
+                              type="text"
+                              value={txnTitle}
+                              onChange={(e) => setTxnTitle(e.target.value)}
+                              placeholder="مثلا: خرید لیر، هزینه سرور، سود متفرقه..."
+                              style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--bg)", color: "var(--text)" }}
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "6px", color: "var(--muted)" }}>نوع تراکنش</label>
+                            <select
+                              value={txnType}
+                              onChange={(e) => setTxnType(e.target.value)}
+                              style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--bg)", color: "var(--text)" }}
+                            >
+                              <option value="expense">خرجی / هزینه (منفی)</option>
+                              <option value="profit">سود متفرقه (مثبت)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "6px", color: "var(--muted)" }}>واحد پولی</label>
+                            <select
+                              value={txnCurrency}
+                              onChange={(e) => {
+                                setTxnCurrency(e.target.value);
+                                if (e.target.value === 'toman') setTxnRate("");
+                              }}
+                              style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--bg)", color: "var(--text)" }}
+                            >
+                              <option value="toman">تومان</option>
+                              <option value="usd">دلار (USD)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "6px", color: "var(--muted)" }}>مبلغ ({txnCurrency === "usd" ? "دلار" : "تومان"})</label>
+                            <input
+                              type="number"
+                              step="any"
+                              value={txnAmount}
+                              onChange={(e) => setTxnAmount(e.target.value)}
+                              placeholder={txnCurrency === "usd" ? "150.50" : "500000"}
+                              style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--bg)", color: "var(--text)" }}
+                              required
+                            />
+                          </div>
+
+                          {txnCurrency === "usd" && (
+                            <div>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "6px", color: "var(--muted)" }}>نرخ خرید دلار (تومان) - اختیاری</label>
+                              <input
+                                type="number"
+                                value={txnRate}
+                                onChange={(e) => setTxnRate(e.target.value)}
+                                placeholder={customSum.current_usd_rate ? String(customSum.current_usd_rate) : "65000"}
+                                style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--bg)", color: "var(--text)" }}
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "16px", alignItems: "flex-end" }}>
+                          <div>
+                            <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "6px", color: "var(--muted)" }}>توضیحات (اختیاری)</label>
+                            <input
+                              type="text"
+                              value={txnNote}
+                              onChange={(e) => setTxnNote(e.target.value)}
+                              placeholder="توضیحات بیشتر..."
+                              style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--bg)", color: "var(--text)" }}
+                            />
+                          </div>
+                          <button type="submit" className="btn primary" disabled={txnSubmitting} style={{ padding: "10px 24px", height: "42px" }}>
+                            {txnSubmitting ? "در حال ثبت..." : "ثبت تراکنش"}
+                          </button>
+                        </div>
+                      </form>
+
+                      {/* Transaction List */}
+                      {(!accountingData.custom_transactions || accountingData.custom_transactions.length === 0) ? (
+                        <div className="empty-state" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "14px", padding: "20px", textAlign: "center", color: "var(--muted)", fontSize: "14px" }}>
+                          تراکنش متفرقه‌ای در این بازه یافت نشد.
+                        </div>
+                      ) : (
+                        <div className="accounting-table-wrapper" style={{ maxHeight: "400px", overflowY: "auto" }}>
+                          <table className="accounting-table">
+                            <thead>
+                              <tr>
+                                <th>عنوان</th>
+                                <th>نوع</th>
+                                <th>مبلغ ارزی</th>
+                                <th>ارزش ثبت شده</th>
+                                <th>ارزش فعلی</th>
+                                <th>نوسان ارز</th>
+                                <th>توضیحات</th>
+                                <th>تاریخ</th>
+                                <th>عملیات</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {accountingData.custom_transactions.map((txn) => {
+                                const isUsd = txn.currency === "usd";
+                                const isExpense = txn.entry_type === "expense";
+                                return (
+                                  <tr key={txn.id}>
+                                    <td style={{ fontWeight: "600" }}>{txn.title}</td>
+                                    <td>
+                                      <span style={{
+                                        padding: "4px 8px",
+                                        borderRadius: "6px",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        background: isExpense ? "rgba(239, 68, 68, 0.12)" : "rgba(16, 185, 129, 0.12)",
+                                        color: isExpense ? "#ef4444" : "#10b981"
+                                      }}>
+                                        {txn.entry_type_fa}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      {isUsd ? (
+                                        <span style={{ color: "#3b82f6", fontWeight: "bold" }}>${txn.amount.toLocaleString()}</span>
+                                      ) : (
+                                        <span style={{ color: "var(--muted)" }}>-</span>
+                                      )}
+                                    </td>
+                                    <td>
+                                      <span>{txn.toman_amount_created.toLocaleString("fa-IR")} تومان</span>
+                                      {isUsd && (
+                                        <div style={{ fontSize: "10px", color: "var(--muted)" }}>با نرخ {txn.created_rate.toLocaleString("fa-IR")}</div>
+                                      )}
+                                    </td>
+                                    <td style={{ fontWeight: isUsd ? "bold" : "normal" }}>
+                                      <span>{txn.toman_amount_current.toLocaleString("fa-IR")} تومان</span>
+                                      {isUsd && (
+                                        <div style={{ fontSize: "10px", color: "#3b82f6" }}>با نرخ {txn.current_rate.toLocaleString("fa-IR")}</div>
+                                      )}
+                                    </td>
+                                    <td>
+                                      {isUsd ? (
+                                        <span style={{
+                                          color: txn.toman_diff >= 0 ? (isExpense ? "#ef4444" : "#10b981") : (isExpense ? "#10b981" : "#ef4444"),
+                                          fontWeight: "bold"
+                                        }}>
+                                          {txn.toman_diff >= 0 ? "+" : ""}{txn.toman_diff.toLocaleString("fa-IR")} تومان
+                                        </span>
+                                      ) : (
+                                        <span style={{ color: "var(--muted)" }}>-</span>
+                                      )}
+                                    </td>
+                                    <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={txn.note}>
+                                      {txn.note || <span style={{ color: "var(--muted)", fontSize: "12px" }}>بدون توضیح</span>}
+                                    </td>
+                                    <td style={{ fontSize: "12px", color: "var(--muted)" }}>
+                                      {new Date(txn.created_at).toLocaleDateString("fa-IR", {
+                                        hour: "2-digit",
+                                        minute: "2-digit"
+                                      })}
+                                    </td>
+                                    <td>
+                                      <button
+                                        onClick={() => handleDeleteTxn(txn.id)}
+                                        style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", padding: "4px", fontSize: "16px" }}
+                                        title="حذف تراکنش"
+                                      >
+                                        🗑️
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="accounting-orders">
                       <h4>لیست سفارشات ({displayOrders.length})</h4>
@@ -12756,11 +13229,8 @@ export default function AdminPanelPage() {
             setResellerCreatedToken={setResellerCreatedToken}
             resellerBusy={resellerBusy}
             setResellerBusy={setResellerBusy}
+            products={products}
             resellerTiers={resellerTiers}
-            resellerTierEditing={resellerTierEditing}
-            setResellerTierEditing={setResellerTierEditing}
-            resellerTierSaved={resellerTierSaved}
-            setResellerTierSaved={setResellerTierSaved}
             resellerOrdersList={resellerOrdersList}
             setResellerOrdersList={setResellerOrdersList}
             resellerOrderFilter={resellerOrderFilter}
@@ -13082,6 +13552,103 @@ export default function AdminPanelPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {!loading && activeTab === "productRequests" && (
+          <div className="product-requests-content" style={{ direction: "rtl" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>📋 لیست درخواست‌های تهیه محصول جدید</h2>
+              <button type="button" className="btn primary" onClick={loadProductRequests}>🔄 بروزرسانی</button>
+            </div>
+            
+            <div className="card" style={{ padding: "20px", borderRadius: "16px", background: "var(--card)", border: "1px solid var(--line)" }}>
+              {productRequests.length === 0 ? (
+                <p style={{ textAlign: "center", color: "var(--muted)", padding: "20px" }}>هیچ درخواستی ثبت نشده است.</p>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "right" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid var(--line)" }}>
+                        <th style={{ padding: "12px 8px", color: "var(--text)" }}>محصول درخواستی</th>
+                        <th style={{ padding: "12px 8px", color: "var(--text)" }}>اطلاعات تماس</th>
+                        <th style={{ padding: "12px 8px", color: "var(--text)" }}>کاربر ثبت‌کننده</th>
+                        <th style={{ padding: "12px 8px", color: "var(--text)" }}>تاریخ ثبت</th>
+                        <th style={{ padding: "12px 8px", color: "var(--text)" }}>وضعیت</th>
+                        <th style={{ padding: "12px 8px", color: "var(--text)" }}>یادداشت مدیریت</th>
+                        <th style={{ padding: "12px 8px", color: "var(--text)" }}>عملیات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {productRequests.map((req) => (
+                        <tr key={req.id} style={{ borderBottom: "1px solid var(--line)" }}>
+                          <td style={{ padding: "12px 8px", color: "var(--text)", fontWeight: "bold" }}>{req.product_name}</td>
+                          <td style={{ padding: "12px 8px", color: "var(--text)", direction: "ltr", textAlign: "right" }}>{req.contact_info}</td>
+                          <td style={{ padding: "12px 8px", color: "var(--text)" }}>{req.username}</td>
+                          <td style={{ padding: "12px 8px", color: "var(--muted)" }}>
+                            {new Date(req.created_at).toLocaleDateString("fa-IR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </td>
+                          <td style={{ padding: "12px 8px" }}>
+                            <select
+                              value={req.status}
+                              onChange={(e) => updateProductRequest(req.id, e.target.value, req.admin_note)}
+                              style={{
+                                padding: "6px 12px",
+                                borderRadius: "8px",
+                                border: "1.5px solid var(--line)",
+                                background: req.status === "PENDING" ? "rgba(245, 158, 11, 0.15)" : req.status === "PROCESSED" ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                                color: req.status === "PENDING" ? "#d97706" : req.status === "PROCESSED" ? "#059669" : "#dc2626",
+                                fontWeight: "bold",
+                                outline: "none",
+                                cursor: "pointer"
+                              }}
+                            >
+                              <option value="PENDING">⏳ در انتظار بررسی</option>
+                              <option value="PROCESSED">✅ تهیه شده</option>
+                              <option value="REJECTED">❌ غیرقابل تهیه</option>
+                            </select>
+                          </td>
+                          <td style={{ padding: "12px 8px" }}>
+                            <input
+                              type="text"
+                              placeholder="یادداشت مدیر..."
+                              defaultValue={req.admin_note}
+                              onBlur={(e) => {
+                                if (e.target.value !== req.admin_note) {
+                                  updateProductRequest(req.id, req.status, e.target.value);
+                                }
+                              }}
+                              style={{
+                                padding: "6px 10px",
+                                borderRadius: "8px",
+                                border: "1px solid var(--line)",
+                                background: "rgba(99, 102, 241, 0.02)",
+                                color: "var(--text)",
+                                width: "180px",
+                                fontSize: "13px"
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "12px 8px" }}>
+                            <button
+                              type="button"
+                              className="btn danger small"
+                              onClick={() => deleteProductRequest(req.id)}
+                              style={{ padding: "6px 12px" }}
+                            >
+                              🗑️ حذف
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

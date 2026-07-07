@@ -158,49 +158,5 @@
     "model": "shop.productvariant",
     "pk": 20,
     "fields": { "product": 3, "title": "13,500 V-Bucks", "price": 5950000 }
-  },
-  {
-    "model": "shop.product",
-    "pk": 11,
-    "fields": {
-      "name_fa": "پوینت های لیگ آف لجندز (RP)",
-      "slug": "league-of-legends-rp",
-      "subtitle": "Riot Points برای LoL - منطقه ترکیه",
-      "category": "GAMES",
-      "image_url": "",
-      "created_at": "2024-01-01T00:00:00Z",
-      "price": 0,
-      "active": true
-    }
-  },
-  {
-    "model": "shop.productvariant",
-    "pk": 14,
-    "fields": { "product": 11, "title": "460 RP", "price": 374220 }
-  },
-  {
-    "model": "shop.productvariant",
-    "pk": 15,
-    "fields": { "product": 11, "title": "1005 RP", "price": 779625 }
-  },
-  {
-    "model": "shop.productvariant",
-    "pk": 16,
-    "fields": { "product": 11, "title": "2105 RP", "price": 1559250 }
-  },
-  {
-    "model": "shop.productvariant",
-    "pk": 17,
-    "fields": { "product": 11, "title": "3625 RP", "price": 2650725 }
-  },
-  {
-    "model": "shop.productvariant",
-    "pk": 18,
-    "fields": { "product": 11, "title": "5295 RP", "price": 3835755 }
-  },
-  {
-    "model": "shop.productvariant",
-    "pk": 19,
-    "fields": { "product": 11, "title": "10875 RP", "price": 7640325 }
   }
 ]

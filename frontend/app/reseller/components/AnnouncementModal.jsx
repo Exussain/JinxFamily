@@ -38,7 +38,7 @@ export default function AnnouncementModal() {
           maxWidth: 500,
           background: "linear-gradient(135deg, var(--card) 0%, rgba(20, 20, 30, 0.95) 100%)",
           border: "1px solid rgba(255, 255, 255, 0.08)",
-          boxShadow: "0 25px 80px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.15)",
+          boxShadow: "0 25px 80px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.15)",
           position: "relative",
           overflow: "hidden",
         }}
@@ -67,14 +67,14 @@ export default function AnnouncementModal() {
               width: 56,
               height: 56,
               borderRadius: "50%",
-              background: "rgba(99, 102, 241, 0.15)",
-              border: "1px solid rgba(99, 102, 241, 0.25)",
+              background: "rgba(59, 130, 246, 0.15)",
+              border: "1px solid rgba(59, 130, 246, 0.25)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: 28,
               margin: "0 auto 12px",
-              boxShadow: "0 0 15px rgba(99, 102, 241, 0.2)",
+              boxShadow: "0 0 15px rgba(59, 130, 246, 0.2)",
             }}
           >
             🚀
@@ -94,12 +94,12 @@ export default function AnnouncementModal() {
           <span
             style={{
               fontSize: 12,
-              background: "rgba(99, 102, 241, 0.2)",
+              background: "rgba(59, 130, 246, 0.2)",
               color: "#a5b4fc",
               padding: "3px 10px",
               borderRadius: 20,
               fontWeight: 700,
-              border: "1px solid rgba(99, 102, 241, 0.3)",
+              border: "1px solid rgba(59, 130, 246, 0.3)",
               display: "inline-block",
             }}
           >
@@ -162,13 +162,13 @@ export default function AnnouncementModal() {
             style={{
               width: "100%",
               fontWeight: 700,
-              background: "linear-gradient(90deg, var(--accent-primary) 0%, #4f46e5 100%)",
+              background: "linear-gradient(90deg, var(--accent-primary) 0%, #1d4ed8 100%)",
               border: "none",
               color: "#fff",
               padding: "12px 24px",
               borderRadius: 8,
               cursor: "pointer",
-              boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
+              boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)",
               transition: "transform 0.15s ease",
             }}
             onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}

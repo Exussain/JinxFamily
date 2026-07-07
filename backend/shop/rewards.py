@@ -258,6 +258,9 @@ PURCHASE_POINT_RULES = [
     ("vbucks", 50),
     ("v_bucks", 50),
 ]
+DEFAULT_PURCHASE_POINTS = 20
+COMMENT_REWARD_POINTS = 15
+PROFILE_COMPLETION_POINTS = 20
 
 
 def purchase_points_for_item(slug: str, name: str, qty: int) -> int:
@@ -265,7 +268,7 @@ def purchase_points_for_item(slug: str, name: str, qty: int) -> int:
     for needle, pts in PURCHASE_POINT_RULES:
         if needle in hay:
             return pts * max(1, int(qty or 1))
-    return 0
+    return DEFAULT_PURCHASE_POINTS * max(1, int(qty or 1))
 
 
 def award_purchase_points(order) -> int:
@@ -281,6 +284,34 @@ def award_purchase_points(order) -> int:
     if total > 0:
         award_points(order.user, total, "purchase", related_order=order, note="امتیاز خرید")
     return total
+
+
+def award_comment_points(user, product) -> int:
+    """Award once per user/product for leaving a product comment."""
+    if not user or not product:
+        return 0
+    note = f"comment_reward:{product.id}"
+    if PointsTransaction.objects.filter(user=user, reason="adjust", note=note).exists():
+        return 0
+    award_points(user, COMMENT_REWARD_POINTS, "adjust", note=note)
+    return COMMENT_REWARD_POINTS
+
+
+def award_profile_completion_points(user) -> int:
+    """Award once when name, email and avatar are all present."""
+    if not user:
+        return 0
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    has_name = bool((user.get_full_name() or user.first_name or "").strip())
+    has_email = bool((user.email or "").strip())
+    has_avatar = bool(getattr(profile, "avatar", None))
+    if not (has_name and has_email and has_avatar):
+        return 0
+    note = "profile_completion"
+    if PointsTransaction.objects.filter(user=user, reason="adjust", note=note).exists():
+        return 0
+    award_points(user, PROFILE_COMPLETION_POINTS, "adjust", note=note)
+    return PROFILE_COMPLETION_POINTS
 
 
 def process_referral(new_user, ref_code: str):

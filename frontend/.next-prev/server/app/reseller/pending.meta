@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/reseller/layout,_N_T_/reseller/pending/layout,_N_T_/reseller/pending/page,_N_T_/reseller/pending"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/reseller/pending/__PAGE__",
+    "/reseller/pending",
+    "/reseller",
+    "/_index",
+    "/_head"
+  ]
+}

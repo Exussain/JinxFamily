@@ -1,31 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
 import { PLATFORM_OPTIONS } from "../lib/platforms";
 
+// Both controls are always in the DOM and CSS media queries pick one
+// (globals.css, 680px breakpoint). The previous matchMedia/useState approach
+// SSR'd the desktop grid on mobile and swapped it for the compact <select>
+// after hydration, shifting everything below it (CLS).
 export default function PlatformSelector({ value, onChange, className }) {
-  const [isCompact, setIsCompact] = useState(false);
   const selected = value;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    const media = window.matchMedia("(max-width: 680px)");
-    const handle = () => setIsCompact(media.matches);
-    handle();
-    if (media.addEventListener) {
-      media.addEventListener("change", handle);
-      return () => media.removeEventListener("change", handle);
-    }
-    media.addListener(handle);
-    return () => media.removeListener(handle);
-  }, []);
 
   const setPlatform = (key) => {
     if (!onChange) return;
     onChange(key);
   };
 
-  if (isCompact) {
-    return (
+  return (
+    <>
       <select
         className={`platform-select-dropdown ${className || ""}`}
         value={selected || ""}
@@ -38,29 +27,26 @@ export default function PlatformSelector({ value, onChange, className }) {
           </option>
         ))}
       </select>
-    );
-  }
-
-  return (
-    <div className={`platform-selector ${className || ""}`}>
-      {Object.values(PLATFORM_OPTIONS).map((option) => {
-        const isActive = selected === option.key;
-        return (
-          <button
-            key={option.key}
-            type="button"
-            className={`platform-select-option ${isActive ? "active" : ""}`}
-            onClick={() => setPlatform(option.key)}
-            aria-pressed={isActive}
-          >
-            <span className="platform-select-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={option.icon} alt={option.iconAlt} loading="lazy" />
-            </span>
-            <span className="platform-select-label">{option.shortLabel}</span>
-          </button>
-        );
-      })}
-    </div>
+      <div className={`platform-selector ${className || ""}`}>
+        {Object.values(PLATFORM_OPTIONS).map((option) => {
+          const isActive = selected === option.key;
+          return (
+            <button
+              key={option.key}
+              type="button"
+              className={`platform-select-option ${isActive ? "active" : ""}`}
+              onClick={() => setPlatform(option.key)}
+              aria-pressed={isActive}
+            >
+              <span className="platform-select-icon">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={option.icon} alt={option.iconAlt} loading="lazy" />
+              </span>
+              <span className="platform-select-label">{option.shortLabel}</span>
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }

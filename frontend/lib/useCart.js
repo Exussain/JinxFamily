@@ -1,9 +1,22 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 const CartContext = createContext(null);
 const STORAGE_KEY = "nubix_cart_v1";
+const SESSION_KEY = "nubix_cart_session_v1";
+const SYNC_DEBOUNCE_MS = 2000;
+
+function ensureSessionId() {
+  if (typeof window === "undefined") return "";
+  let sid = localStorage.getItem(SESSION_KEY);
+  if (!sid) {
+    sid = (typeof crypto !== "undefined" && crypto.randomUUID && crypto.randomUUID()) ||
+          `s-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(SESSION_KEY, sid);
+  }
+  return sid;
+}
 
 function safeParse(json) {
   try {
@@ -17,6 +30,7 @@ function normalizeItem(raw) {
   if (!raw || typeof raw !== "object") return null;
   const product_id = Number(raw.product_id);
   if (!Number.isFinite(product_id)) return null;
+  if ((raw.slug || "").toString().toLowerCase() === "gta6-instant") return null;
   const quantity = Math.max(0, Number(raw.quantity) || 0);
   if (!quantity) return null;
   const price = Math.max(0, Number(raw.price) || 0);
@@ -41,6 +55,33 @@ export function CartProvider({ children }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
+
+  // Debounced sync of cart state to server (for abandoned-cart tracking)
+  const skipNextSyncRef = useRef(true);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const t = setTimeout(() => { skipNextSyncRef.current = false; }, 800);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (skipNextSyncRef.current) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const sid = ensureSessionId();
+      if (!sid) return;
+      fetch("/api/cart/sync", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sid, items }),
+      }).catch(() => { /* silent — telemetry only */ });
+    }, SYNC_DEBOUNCE_MS);
+    return () => debounceRef.current && clearTimeout(debounceRef.current);
   }, [items]);
 
   const addItem = useCallback((item) => {

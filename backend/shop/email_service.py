@@ -963,3 +963,81 @@ def send_xbox_account_email(customer_email, customer_name, order_tracking, xbox_
     except Exception as e:
         logger.error(f"Failed to send Xbox account email to {customer_email}: {str(e)}")
         return False
+
+
+def send_abandoned_cart_email(customer_email, items, total_value, site_url):
+    """ایمیل یادآوری سبد رها‌شده با لیست کوتاه محصولات و لینک ادامه خرید."""
+    try:
+        rows = ""
+        for it in (items or []):
+            name = (it.get("name") or "محصول")[:120]
+            qty = int(it.get("quantity") or 1)
+            price = int(it.get("price") or 0)
+            rows += f"""
+                <tr>
+                    <td style='padding:10px 12px;border-bottom:1px solid #e5e7eb'>{name}</td>
+                    <td style='padding:10px 12px;text-align:center;border-bottom:1px solid #e5e7eb'>{qty}</td>
+                    <td style='padding:10px 12px;text-align:left;border-bottom:1px solid #e5e7eb;font-weight:700'>{price:,} تومان</td>
+                </tr>"""
+
+        html_content = f"""
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {{ font-family: Tahoma, Arial, sans-serif; background: #f1f5f9; margin: 0; padding: 32px 16px; }}
+        .card {{ max-width: 600px; margin: auto; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.08); }}
+        .header {{ background: linear-gradient(135deg, #6c5ce7, #a855f7); color: #fff; padding: 28px 24px; text-align: center; }}
+        .header h1 {{ margin: 0; font-size: 22px; }}
+        .content {{ padding: 24px; }}
+        table {{ width: 100%; border-collapse: collapse; background: #f8fafc; border-radius: 10px; overflow: hidden; margin-top: 8px; }}
+        th {{ padding: 12px; background: #6c5ce7; color: #fff; font-size: 13px; }}
+        th:first-child {{ text-align: right; }}
+        th:nth-child(2) {{ text-align: center; }}
+        th:last-child {{ text-align: left; }}
+        .total {{ margin-top: 16px; padding: 16px; background: #faf5ff; border: 2px solid #c4b5fd; border-radius: 12px; font-size: 16px; }}
+        .total strong {{ color: #6c5ce7; font-size: 20px; }}
+        .cta {{ display: block; padding: 14px 24px; background: linear-gradient(135deg, #6c5ce7, #a855f7); color: #fff; text-decoration: none; border-radius: 12px; font-size: 15px; font-weight: 800; text-align: center; margin-top: 16px; }}
+        .note {{ color: #94a3b8; font-size: 12px; margin-top: 20px; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h1>🛒 سبد خریدت منتظره!</h1>
+        </div>
+        <div class="content">
+            <p>این محصولات رو به سبدت اضافه کردی، ولی خرید رو کامل نکردی:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>محصول</th>
+                        <th>تعداد</th>
+                        <th>قیمت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+            <div class="total">مبلغ کل: <strong>{int(total_value):,} تومان</strong></div>
+            <a class="cta" href="{site_url}/checkout">تکمیل خرید</a>
+            <p class="note">اگر این ایمیل برات ناشناسه، نادیده‌اش بگیر.</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+        sent = _send_email(
+            [customer_email],
+            "🛒 سبد خریدت در نوبیکس شاپ منتظره",
+            html_content,
+        )
+        if sent:
+            logger.info(f"Abandoned cart reminder email sent to {customer_email}")
+        return sent
+    except Exception as e:
+        logger.error(f"Failed to send abandoned cart email: {e}")
+        return False

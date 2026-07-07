@@ -1,0 +1,18 @@
+export default function manifest() {
+  return {
+    name: 'نوبیکس شاپ',
+    short_name: 'نوبیکس',
+    description:
+      'خرید و فعال‌سازی قانونی محصولات دیجیتال: وی باکس و کروپک فورتنایت، اشتراک ChatGPT و Gemini، گیفت کارت و اشتراک‌های آنلاین',
+    start_url: '/',
+    display: 'standalone',
+    dir: 'rtl',
+    lang: 'fa-IR',
+    background_color: '#ffffff',
+    theme_color: '#7c3aed',
+    icons: [
+      { src: '/icons/app/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: '/icons/app/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+  };
+}

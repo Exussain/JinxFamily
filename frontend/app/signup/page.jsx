@@ -82,6 +82,11 @@ export default function SignupPage() {
   if (isMobile) {
     return (
       <div className="mobile-login-container">
+        {/* Subtle decorative orbs (clipped, pointer-events:none) for a
+            little life without distracting from the form. */}
+        <div className="mobile-login-orb mobile-login-orb-1" aria-hidden="true" />
+        <div className="mobile-login-orb mobile-login-orb-2" aria-hidden="true" />
+
         {/* Close Button */}
         <button type="button" className="login-mobile-close" onClick={handleClose} aria-label="بستن">
           ✕
@@ -89,13 +94,25 @@ export default function SignupPage() {
 
         {/* Content */}
         <div className="login-mobile-content">
-          <h1 className="login-mobile-title">ثبت‌نام</h1>
-          <p className="login-mobile-subtitle" style={{ marginBottom: "20px" }}>شماره موبایل خود را وارد کنید تا کد تایید برای شما ارسال شود</p>
+          <div className="login-mobile-header">
+            <div className="login-mobile-icon-badge" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+              </svg>
+            </div>
+            <h1 className="login-mobile-title">ثبت‌نام</h1>
+            <p className="login-mobile-subtitle">شماره موبایل خود را وارد کنید تا کد تایید برای شما ارسال شود</p>
+          </div>
 
-          <OTPLogin mode="signup" />
+          <div className="login-mobile-card">
+            <OTPLogin mode="signup" />
+          </div>
 
           {/* Login Link */}
-          <div className="login-mobile-signup-row" style={{ marginTop: "20px" }}>
+          <div className="login-mobile-signup-row">
             <span>قبلاً ثبت نام کرده اید؟</span>
             <a href="/login" className="login-mobile-signup-link">
               وارد شوید

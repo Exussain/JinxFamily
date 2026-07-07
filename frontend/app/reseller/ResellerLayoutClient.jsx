@@ -6,7 +6,7 @@ import Sidebar from "./components/Sidebar";
 import AnnouncementModal from "./components/AnnouncementModal";
 import "./reseller.css";
 
-export default function ResellerLayout({ children }) {
+export default function ResellerLayoutClient({ children }) {
   const router = useRouter();
   const pathname = usePathname() || "";
   const [me, setMe] = useState(null);

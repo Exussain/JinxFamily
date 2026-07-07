@@ -14,10 +14,52 @@ import SocialLinksCard from "../components/SocialLinksCard";
 import HotProductsSection from "../components/HotProductsSection";
 import { placeholderFeatured } from "../lib/placeholderFeatured";
 import { dedupeProducts } from "../lib/dedupeProducts";
+import { productHref } from "../lib/productUrls.mjs";
 
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Disable all caching, fetch fresh data on every request
+
+// Homepage-only canonical: the root layout intentionally does NOT set a
+// sitewide canonical (it would be inherited by every child route).
+export async function generateMetadata({ searchParams }) {
+  const resolved = await searchParams;
+  const hasFilterParam = ["q", "cat", "sub", "openCatSidebar"].some((key) => {
+    const value = resolved?.[key];
+    return Array.isArray(value) ? value.length > 0 : Boolean(value);
+  });
+
+  return {
+    alternates: { canonical: '/' },
+    ...(hasFilterParam && {
+      robots: { index: false, follow: true },
+    }),
+  };
+}
+
+// Homepage FAQ — server-rendered (crawlable) and mirrored in FAQPage JSON-LD.
+const homeFaq = [
+  {
+    q: 'خرید وی باکس فورتنایت از نوبیکس شاپ چگونه انجام می‌شود؟',
+    a: 'بعد از ثبت سفارش وی باکس، شارژ به‌صورت قانونی و مستقیم روی اکانت فورتنایت شما (کنسول، پی‌سی یا موبایل) انجام می‌شود و نیازی به ارسال رمز عبور نیست. تحویل معمولاً در کمتر از چند ساعت انجام می‌شود.',
+  },
+  {
+    q: 'کروپک فورتنایت (Fortnite Crew) شامل چه چیزهایی است؟',
+    a: 'اشتراک کروپک فورتنایت شامل اسکین انحصاری ماهانه، ۱۰۰۰ وی باکس و دسترسی به بتل پس است و در نوبیکس شاپ به‌صورت قانونی روی اکانت شما فعال می‌شود.',
+  },
+  {
+    q: 'آیا خرید اشتراک ChatGPT و Gemini در نوبیکس شاپ قانونی است؟',
+    a: 'بله؛ اشتراک‌های هوش مصنوعی مثل ChatGPT و Google Gemini به‌صورت رسمی روی اکانت شخصی شما فعال می‌شوند و در طول دوره اشتراک پشتیبانی کامل دارند.',
+  },
+  {
+    q: 'پرداخت در نوبیکس شاپ چقدر امن است؟',
+    a: 'پرداخت‌ها از طریق درگاه رسمی زرین‌پال و شبکه شاپرک با رمز پویا انجام می‌شود و فروشگاه دارای نماد اعتماد الکترونیکی (اینماد) است.',
+  },
+  {
+    q: 'اگر هنگام خرید یا فعال‌سازی مشکلی پیش بیاید چه کنم؟',
+    a: 'پشتیبانی نوبیکس شاپ به‌صورت ۲۴ ساعته از طریق چت آنلاین سایت و تلگرام پاسخگو است و تا تحویل کامل سفارش همراه شماست.',
+  },
+];
 
 function getApiBases() {
   const internal = (process.env.INTERNAL_API_BASE_URL || "").trim();
@@ -149,11 +191,7 @@ export default async function Page(props) {
     "هوش مصنوعی",
     "اشتراک‌ها",
     "گیفت کارت‌ها",
-    "لیگ آف لجندز (لول)",
-    "کلش آف کلنز",
-    "کلش رویال",
-    "کالاف دیوتی",
-    "بتلفیلد"
+    "بازی‌ها"
   ];
 
   // Static placeholders with categories (shared with navbar live search)
@@ -192,7 +230,6 @@ export default async function Page(props) {
   const otherPrioritySlugs = [
     "gemini-subscription",
     "chatgpt-subscription",
-    "league-of-legends-rp",
     "clash-of-clans-gems",
     "clash-royale-gems",
     "call-of-duty-points",
@@ -332,7 +369,6 @@ export default async function Page(props) {
     if (catFa.includes('بتلف')) return 'battlefield';
     if (catFa.includes('اشتراک')) return 'subscriptions';
     if (catFa.includes('هوش')) return 'ai';
-    if (catFa.includes('لیگ') || catFa.includes('لول')) return 'games';
     if (catFa.includes('گیفت')) return 'giftcards';
     return 'unknown';
   })();
@@ -352,13 +388,43 @@ export default async function Page(props) {
     return featuredProducts;
   })();
 
+  // Structured data: the featured-products list as an ItemList, plus the
+  // homepage FAQ section below as a FAQPage — both server-rendered.
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: featuredProducts
+      .filter((p) => p.slug)
+      .slice(0, 16)
+      .map((p, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: p.name_fa,
+        url: `https://nubixshop.ir${productHref(p.slug)}`,
+      })),
+  };
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: homeFaq.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  };
+
   return (
     <>
       <Navbar />
       <main className="container home-shell home-index">
-        <h1 className="sr-only">
-          نوبیکس | سریعترین و ارزان ترین تحویل :) 💜
-        </h1>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
         <section className="hero-grid">
             <HeroSlider
               trustCount={completedCount}
@@ -392,7 +458,7 @@ export default async function Page(props) {
             <article key={perk.title} className="perk">
               <div className="perk-head">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={perk.icon} alt={perk.title} className="perk-icon" />
+                <img src={perk.icon} alt={perk.title} className="perk-icon" loading="lazy" decoding="async" />
                 <h3>{perk.title}</h3>
               </div>
               <p>{perk.desc}</p>
@@ -439,6 +505,31 @@ export default async function Page(props) {
             <a href="#trust-badges" className="perks-trust-link">دارای نماد و مجوز رسمی</a>{" "}
             است؛ مجوزها در انتهای صفحه قابل مشاهده و استعلام هستند.
           </p>
+        </section>
+
+        {/* SEO: crawlable intro + FAQ (mirrored in FAQPage JSON-LD above) */}
+        <section className="home-seo-section" aria-labelledby="home-seo-title">
+          <h2 id="home-seo-title">خرید وی باکس، کروپک فورتنایت و اشتراک‌های قانونی از نوبیکس شاپ</h2>
+          <p>
+            نوبیکس شاپ مرجع <a href="/vbucks">خرید وی باکس فورتنایت</a> و{' '}
+            <a href="/crewpack">خرید کروپک فورتنایت</a> با فعال‌سازی قانونی و مستقیم روی اکانت شماست.
+            علاوه بر محصولات فورتنایت مثل <a href="/product/fortnite-battle-pass">بتل پس</a> و{' '}
+            <a href="/lego">پک لگو فورتنایت</a>، می‌توانید{' '}
+            <a href="/product/chatgpt-subscription">اشتراک ChatGPT</a>،{' '}
+            <a href="/gemini">اشتراک Google Gemini</a>، انواع گیفت کارت و{' '}
+            <a href="/gta6">پیش‌خرید GTA 6</a> را هم با تحویل سریع، پرداخت امن زرین‌پال و
+            پشتیبانی ۲۴ ساعته سفارش دهید. برای آشنایی بیشتر با روند خرید،{' '}
+            <a href="/faq/how-to-buy">راهنمای خرید</a> و <a href="/blog">وبلاگ نوبیکس شاپ</a> را ببینید.
+          </p>
+          <div className="home-seo-faq">
+            <h2>سوالات متداول خرید از نوبیکس شاپ</h2>
+            {homeFaq.map(({ q, a }) => (
+              <details key={q} className="home-seo-faq-item">
+                <summary>{q}</summary>
+                <p>{a}</p>
+              </details>
+            ))}
+          </div>
         </section>
 
         {/* Mobile-only: social links at the end of the page, above the footer */}

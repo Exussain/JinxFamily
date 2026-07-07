@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import PasswordInput from '../../components/PasswordInput';
 import Navbar from "../../components/Navbar";
@@ -13,6 +13,8 @@ import EnamadBadge from "../../components/EnamadBadge";
 import ZarinpalBadge from "../../components/ZarinpalBadge";
 import { resolveProductImage } from "../../lib/productImageHelpers";
 import { adminCacheBustHref } from "../../lib/adminUrl.mjs";
+import RelatedProducts from "../../components/RelatedProducts";
+import ReviewSection from "../../components/ReviewSection";
 
 const vbucksOptions = [
   {
@@ -56,7 +58,7 @@ const vbucksOptions = [
   },
 ];
 
-export default function VBucksClient({ initialProductData }) {
+export default function VBucksClient({ initialProductData, initialProducts = [], initialStats = null }) {
   const router = useRouter();
   const { addItem } = useCart();
   
@@ -74,19 +76,25 @@ export default function VBucksClient({ initialProductData }) {
   const [options, setOptions] = useState(getInitialOptions());
   const [selectedVariantId, setSelectedVariantId] = useState(vbucksOptions[1].variant_id); // Default to 2400
   const [productData, setProductData] = useState(initialProductData || null);
+  const [products] = useState(initialProducts);
   const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
   const [accountType, setAccountType] = useState("epic");
   const [formError, setFormError] = useState("");
   const [showValidation, setShowValidation] = useState(false);
-  const [reviews, setReviews] = useState([]);
-  const [reviewStats, setReviewStats] = useState({ total: 0, rating: 0 });
-  const [currentUser, setCurrentUser] = useState(null);
-  const [reviewName, setReviewName] = useState("");
-  const [reviewText, setReviewText] = useState("");
-  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewStats, setReviewStats] = useState(() =>
+    initialStats
+      ? {
+          total: Number(initialStats.total) || 0,
+          rating: Number(initialStats.average_rating) || 0,
+        }
+      : { total: 0, rating: 0 }
+  );
+  const scrollToReviews = useCallback(() => {
+    if (typeof document === "undefined") return;
+    document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
   const [activeTab, setActiveTab] = useState("description");
-  const todayFa = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numeric", month: "long", timeZone: "Asia/Tehran" }).format(new Date());
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
   const productImage = useMemo(
@@ -95,129 +103,23 @@ export default function VBucksClient({ initialProductData }) {
   );
   const productId = Number(productData?.id) || 3;
 
-  useEffect(() => {
-    const loadReviews = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/products/v-bucks/comments`, { cache: "no-store" });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!data.success) return;
-        const formatted = data.comments.map((comment) => ({
-          id: comment.id,
-          user: comment.author_name,
-          date: new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-            timeZone: "Asia/Tehran",
-          }).format(new Date(comment.created_at)),
-          rating: comment.rating,
-          text: comment.text,
-          isVerified: comment.is_verified_purchase,
-          avatarUrl: comment.avatar_url || "",
-          userId: comment.user_id,
-        }));
-        setReviews(formatted);
-        setReviewStats({
-          total: data.stats.total,
-          rating: data.stats.average_rating,
-          breakdown: data.stats.rating_counts,
-        });
-      } catch {
-        // keep empty reviews on failure
-      }
-    };
-    loadReviews();
-  }, [apiBase]);
-
-  // Load V-Bucks product prices/variants from backend so admin edits reflect here.
-  useEffect(() => {
-    if (!apiBase) return;
-    let cancelled = false;
-    const loadProduct = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/products/v-bucks`, { cache: "no-store" });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!cancelled) setProductData(data);
-        const variants = Array.isArray(data?.variants) ? data.variants : [];
-        if (!variants.length || cancelled) return;
-        const updated = vbucksOptions.map((opt) => {
-          const v = variants.find((vv) => vv.id === opt.variant_id) ||
-            variants.find((vv) => (vv.title || "").includes(String(opt.amount)));
-          return v ? { ...opt, price: v.price || 0, title: v.title || opt.name_fa } : opt;
-        });
-        if (!cancelled) {
-          setOptions(updated);
-          if (!updated.some((o) => o.variant_id === selectedVariantId)) {
-            const fallback = updated[1] || updated[0];
-            if (fallback) setSelectedVariantId(fallback.variant_id);
-          }
-        }
-      } catch {
-        // ignore, keep defaults
-      }
-    };
-    loadProduct();
-    return () => { cancelled = true; };
-  }, [apiBase, selectedVariantId]);
-
-  useEffect(() => {
-    const loadMe = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/auth/me`, { cache: "no-store", credentials: "include" });
-        if (!res.ok) return;
-        const data = await res.json();
-        setCurrentUser(data.user || data);
-        if (!reviewName) {
-          const preset = data.display_name || data.name || "";
-          if (preset) setReviewName(preset);
-        }
-      } catch {
-        // ignore
-      }
-    };
-    loadMe();
-  }, [apiBase, reviewName]);
-
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-    const name = reviewName.trim();
-    const text = reviewText.trim();
-    if (!name || !text) return;
-    const normalizedRating = Math.min(5, Math.max(1, Number(reviewRating) || 5));
-    try {
-      const res = await fetch(`${apiBase}/api/products/v-bucks/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ author_name: name, rating: normalizedRating, text }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        alert(data.message || "خطا در ثبت نظر. لطفاً دوباره تلاش کنید.");
-        return;
-      }
-      const newReview = {
-        id: data.comment?.id,
-        user: name,
-        date: todayFa,
-        rating: normalizedRating,
-        text,
-      };
-      setReviews((prev) => [newReview, ...prev]);
-      setReviewStats((prev) => {
-        const total = prev.total + 1;
-        const rating = ((prev.rating * prev.total) + normalizedRating) / total;
-        return { ...prev, total, rating };
-      });
-      setReviewName("");
-      setReviewText("");
-      setReviewRating(5);
-    } catch {
-      alert("خطا در ثبت نظر. لطفاً دوباره تلاش کنید.");
-    }
+  const emailIsValid = (val) => {
+    const v = (val || "").trim();
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
   };
+
+  const currentPlatform = getPlatformOption(accountType);
+
+  const selectedOption = useMemo(
+    () => options.find((o) => o.variant_id === selectedVariantId) || options[1] || options[0],
+    [options, selectedVariantId]
+  );
+
+  const descriptionData = getProductDescriptionData("v-bucks");
+  const productDescription = descriptionData.description || "";
+  const conversionDescription = descriptionData.conversion || "";
+  const descriptionLines = productDescription.split("\n").filter((line) => line.trim().length > 0);
+  const conversionLines = conversionDescription.split("\n").filter((line) => line.trim().length > 0);
 
   const renderTextWithBold = (text, keyPrefix) => {
     const parts = text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
@@ -232,28 +134,6 @@ export default function VBucksClient({ initialProductData }) {
       return <span key={`${keyPrefix}-${idx}`}>{part}</span>;
     });
   };
-
-  const descriptionData = getProductDescriptionData("v-bucks");
-  const productDescription = descriptionData.description || "";
-  const conversionDescription = descriptionData.conversion || "";
-  const descriptionLines = productDescription.split("\n").filter((line) => line.trim().length > 0);
-  const conversionLines = conversionDescription.split("\n").filter((line) => line.trim().length > 0);
-  const totalReviews = reviewStats.total;
-  const adminPhones = ["09339732325", "09123101634"];
-  const isAdminUser =
-    currentUser?.is_admin || adminPhones.includes(currentUser?.phone_number);
-
-  const emailIsValid = (val) => {
-    const v = (val || "").trim();
-    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
-  };
-
-  const currentPlatform = getPlatformOption(accountType);
-
-  const selectedOption = useMemo(
-    () => options.find((o) => o.variant_id === selectedVariantId) || options[1] || options[0],
-    [options, selectedVariantId]
-  );
 
   const handleAdd = () => {
     if (!selectedOption) return;
@@ -315,6 +195,7 @@ export default function VBucksClient({ initialProductData }) {
                 base={productImage.imageBase}
                 alt="V-Bucks فورتنایت"
                 fit="contain"
+                eager
               />
             </div>
 
@@ -412,8 +293,8 @@ export default function VBucksClient({ initialProductData }) {
                 </button>
               </div>
             </div>
-            {/* Guides and Tutorials Card */}
-            <div className="guides-card">
+            {/* Guides Card - LEFT col: shown at 960-1280px when right col has more space */}
+            <div className="guides-card guides-card-left">
               <div className="guides-title">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -479,15 +360,19 @@ export default function VBucksClient({ initialProductData }) {
 
               {/* Rating Summary */}
               {reviewStats.total > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ color: '#f5b200', fontSize: 18 }}>★</span>
-                    <span style={{ fontWeight: 800, fontSize: 16 }}>{reviewStats.rating.toFixed(1)}</span>
-                  </div>
-                  <span className="muted" style={{ fontSize: 13 }}>
+                <button
+                  type="button"
+                  className="rating-summary-chip"
+                  onClick={scrollToReviews}
+                  title="مشاهده دیدگاه‌ها"
+                >
+                  <span className="rating-summary-star">★</span>
+                  <span className="rating-summary-score">{reviewStats.rating.toFixed(1)}</span>
+                  <span className="rating-summary-count">
                     ({reviewStats.total.toLocaleString("fa-IR")} نظر)
                   </span>
-                </div>
+                  <span className="rating-summary-cta">مشاهده دیدگاه‌ها</span>
+                </button>
               )}
             </div>
 
@@ -615,8 +500,8 @@ export default function VBucksClient({ initialProductData }) {
                     <div className="delivery-step">
                       <div className="step-number">۱</div>
                       <div>
-                        <div className="step-title">ثبت سفارش</div>
-                        <div className="step-desc">مقدار V-Bucks را انتخاب کرده و اطلاعات حساب را وارد کنید</div>
+                        <div className="step-title">وارد کردن اطلاعات حساب</div>
+                        <div className="step-desc">پلتفرم، ایمیل و رمز حساب خود را وارد کنید</div>
                       </div>
                     </div>
                     <div className="delivery-step">
@@ -629,14 +514,63 @@ export default function VBucksClient({ initialProductData }) {
                     <div className="delivery-step">
                       <div className="step-number">۳</div>
                       <div>
-                        <div className="step-title">فعال‌سازی</div>
+                        <div className="step-title">فعال‌سازی قانونی</div>
                         <div className="step-desc">
-                          تیم ما طی {accountType === 'xbox' ? "۳۰ دقیقه الی ۴۸ ساعت" : "۱۵ دقیقه تا ۸ ساعت کاری"} V-Bucks را به اکانت شما اضافه می‌کند
+                          {accountType === 'xbox'
+                            ? "تیم ما طی ۳۰ دقیقه الی ۴۸ ساعت V-Bucks را به اکانت شما اضافه می‌کند"
+                            : "با کارت‌های فروشگاه خرید انجام و نتیجه به شما اعلام می‌شود"}
                         </div>
+                      </div>
+                    </div>
+                    <div className="delivery-step">
+                      <div className="step-number">۴</div>
+                      <div>
+                        <div className="step-title">تحویل و پشتیبانی</div>
+                        <div className="step-desc">در صورت نیاز، تا تکمیل سفارش همراهتان هستیم</div>
                       </div>
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Guides Card - RIGHT col: shown at >1280px when left col has more space */}
+            <div className="guides-card guides-card-right">
+              <div className="guides-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+                صفحات مرتبط
+              </div>
+              <div style={{ display: "grid", gap: 10 }}>
+                <a href="/guides/disable-2fa" target="_blank" rel="noopener noreferrer" className="guide-link-item">
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14 }}>🛡️</span>
+                    آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
+                  </span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                </a>
+                <a href="/guides/link-unlink" target="_blank" rel="noopener noreferrer" className="guide-link-item">
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14 }}>🔗</span>
+                    آموزش اتصال و لینک کردن اکانت
+                  </span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                </a>
+                <a href="/guides/remove-restriction" target="_blank" rel="noopener noreferrer" className="guide-link-item">
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14 }}>⚠️</span>
+                    آموزش رفع محدودیت و ریستریکت اکانت
+                  </span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                </a>
               </div>
             </div>
 
@@ -681,110 +615,14 @@ export default function VBucksClient({ initialProductData }) {
         </section>
 
         <TelegramContact />
+        <RelatedProducts currentProduct={productData} products={products} />
 
         {/* Reviews Section */}
-        <section className="card section" style={{ marginTop: 16, display: "grid", gap: 16 }}>
-          <div className="review-head">
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>
-              {totalReviews.toLocaleString("fa-IR")} دیدگاه برای خرید V-Bucks فورتنایت
-            </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="review-stars" style={{ fontSize: 18 }}>{"★".repeat(Math.round(reviewStats.rating))}</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--primary)' }}>
-                  {reviewStats.rating?.toFixed(1)}
-                </span>
-              </div>
-              <span className="muted" style={{ fontSize: 12 }}>نمایش چند مورد از آخرین خریدها</span>
-            </div>
-          </div>
-          {reviewStats.breakdown && (
-            <div className="rating-breakdown">
-              {[5, 4, 3, 2, 1].map((star) => {
-                const count = reviewStats.breakdown[star] || 0;
-                const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-                return (
-                  <div key={star} className="rating-bar-row">
-                    <span className="star-label">{star} ⭐</span>
-                    <div className="rating-bar-bg">
-                      <div
-                        className="rating-bar-fill"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <span className="rating-count">{count.toLocaleString("fa-IR")}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          <div className="review-list">
-            {reviews.map((rev) => (
-              <article
-                key={`${rev.user}-${rev.date}-${rev.text.slice(0, 10)}`}
-                className={`review-card ${rev.isReply ? "reply" : ""}`}
-              >
-                <div className="review-top">
-                  <div className="review-avatar">
-                    {rev.avatarUrl ? (
-                      <img src={rev.avatarUrl} alt={rev.user} />
-                    ) : (
-                      <div className="avatar-fallback">
-                        {(rev.user || "?").trim().charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="review-header">
-                    <div className="review-header-main">
-                      <div className="review-user">
-                        <span className="review-name">{rev.user}</span>
-                      </div>
-                      {rev.rating ? (
-                        <div className="review-stars" aria-label={`${rev.rating} از 5`}>
-                          {"★".repeat(Math.min(rev.rating, 5))}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="review-date">{rev.date}</div>
-                  </div>
-                </div>
-                <p className="review-text">{rev.text}</p>
-              </article>
-            ))}
-          </div>
-          <form className="review-form" onSubmit={handleSubmitReview}>
-            <div className="form-row">
-              <input
-                type="text"
-                placeholder="نام شما"
-                value={reviewName}
-                onChange={(e) => setReviewName(e.target.value)}
-              />
-              <div className="rating-choice" role="radiogroup" aria-label="امتیاز">
-                {[5, 4, 3, 2, 1].map((r) => (
-                  <button
-                    type="button"
-                    key={r}
-                    className={`rating-pill ${reviewRating === r ? "active" : ""}`}
-                    onClick={() => setReviewRating(r)}
-                    aria-label={`${r} ستاره`}
-                  >
-                    {r} ★
-                  </button>
-                ))}
-              </div>
-            </div>
-            <textarea
-              rows={3}
-              placeholder="تجربه خود را بنویسید..."
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-            />
-            <div className="form-actions">
-              <button type="submit" className="btn primary">ثبت نظر</button>
-            </div>
-          </form>
-        </section>
+        <ReviewSection
+          slug="v-bucks"
+          initialStats={initialStats}
+          productTitle="وی‌باکس فورتنایت (V-Bucks)"
+        />
       </main>
 
       <style jsx>{`
@@ -1381,6 +1219,20 @@ export default function VBucksClient({ initialProductData }) {
             grid-template-columns: 1fr;
           }
         }
+        /* ── Responsive guides-card placement ──────────────────────────
+           >1280px  : left col spacious   → show in RIGHT col (under product-tabs)
+           960-1280px: right col has more space → show in LEFT col (under info-card)
+        ──────────────────────────────────────────────────────────────── */
+        @media (min-width: 961px) {
+          /* Default (wide): left col spacious — show right, hide left */
+          .guides-card-left  { display: none !important; }
+          .guides-card-right { display: grid; }
+        }
+        @media (min-width: 961px) and (max-width: 1280px) {
+          /* Medium-wide: right col has more space — show left, hide right */
+          .guides-card-left  { display: grid !important; }
+          .guides-card-right { display: none !important; }
+        }
         @media (max-width: 640px) {
           .product-hero {
             padding: 12px;
@@ -1416,192 +1268,22 @@ export default function VBucksClient({ initialProductData }) {
             padding: 12px;
             font-size: 13px;
           }
+          .delivery-step {
+            gap: 12px;
+          }
+          .step-number {
+            width: 32px;
+            height: 32px;
+            font-size: 15px;
+          }
+          .step-title {
+            font-size: 14px;
+          }
+          .step-desc {
+            font-size: 12px;
+          }
         }
 
-        .review-head {
-          display: grid;
-          gap: 12px;
-        }
-        .rating-breakdown {
-          display: grid;
-          gap: 8px;
-          padding: 12px;
-          background: var(--card);
-          border-radius: 12px;
-          border: 1px solid var(--line);
-        }
-        :root[data-theme="dark"] .rating-breakdown {
-          background: #13112c;
-          border-color: #373169;
-        }
-        .rating-bar-row {
-          display: grid;
-          grid-template-columns: 60px 1fr 50px;
-          align-items: center;
-          gap: 10px;
-        }
-        .star-label {
-          font-size: 13px;
-          font-weight: 800;
-          color: var(--text);
-        }
-        .rating-bar-bg {
-          height: 8px;
-          background: var(--hover);
-          border-radius: 999px;
-          overflow: hidden;
-          position: relative;
-        }
-        :root[data-theme="dark"] .rating-bar-bg {
-          background: #373169;
-        }
-        .rating-bar-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #f5b200, #ffb025);
-          border-radius: 999px;
-          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .rating-count {
-          font-size: 12px;
-          font-weight: 700;
-          color: var(--muted);
-          text-align: left;
-        }
-        .review-list {
-          display: grid;
-          gap: 12px;
-        }
-        .review-card {
-          border: 1px solid var(--line);
-          border-radius: 14px;
-          padding: 12px 14px;
-          display: grid;
-          gap: 8px;
-          background: var(--card);
-          color: var(--text);
-          text-align: right;
-          direction: rtl;
-        }
-        .review-card.reply {
-          margin-inline-end: 16px;
-          background: linear-gradient(135deg, rgba(59,130,246,0.14), rgba(59,130,246,0.04));
-          border-color: rgba(59,130,246,0.2);
-        }
-        .review-top {
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          gap: 10px;
-          flex-direction: row-reverse;
-        }
-        .review-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 999px;
-          overflow: hidden;
-          border: 1px solid var(--line);
-          background: radial-gradient(circle at 30% 20%, #38bdf8, #1d1a3f);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .review-avatar img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        .avatar-fallback {
-          font-weight: 900;
-          color: #e5e7eb;
-          font-size: 18px;
-        }
-        .review-header {
-          display: grid;
-          gap: 4px;
-          justify-items: flex-end;
-          flex: 1;
-        }
-        .review-header-main {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-          flex-direction: row-reverse;
-        }
-        .review-user {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-weight: 800;
-          color: var(--primary);
-        }
-        .review-name { font-size: 14px; }
-        .review-date { font-size: 12px; color: var(--muted); font-weight: 700; }
-        .review-user { display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--primary); }
-        .review-stars { color: #f5b200; font-weight: 900; letter-spacing: 1px; min-width: 80px; text-align: left; }
-        .review-text {
-          margin: 0;
-          font-size: 14px;
-          line-height: 1.7;
-        }
-        .review-form {
-          display: grid;
-          gap: 10px;
-          margin-top: 4px;
-          border-top: 1px solid var(--line);
-          padding-top: 12px;
-        }
-        .review-form .form-row {
-          display: grid;
-          gap: 8px;
-          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        }
-        .review-form input,
-        .review-form select,
-        .review-form textarea {
-          border: 1px solid var(--line);
-          border-radius: 10px;
-          padding: 10px 12px;
-          background: var(--card);
-          font-family: inherit;
-          color: var(--text);
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        .review-form input:focus,
-        .review-form select:focus,
-        .review-form textarea:focus {
-          outline: none;
-          border-color: var(--primary);
-          box-shadow: 0 0 0 2px rgba(44,75,255,0.12);
-        }
-        .review-form textarea { resize: vertical; min-height: 90px; }
-        .review-form .form-actions {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-        }
-        .rating-choice {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          align-items: center;
-        }
-        .rating-pill {
-          border: 1px solid var(--line);
-          background: var(--card);
-          border-radius: 999px;
-          padding: 8px 10px;
-          cursor: pointer;
-          font-weight: 800;
-          color: var(--text);
-        }
-        .rating-pill.active {
-          border-color: var(--primary);
-          color: var(--primary);
-          box-shadow: 0 0 0 2px rgba(44,75,255,0.12);
         }
       `}</style>
     </div>

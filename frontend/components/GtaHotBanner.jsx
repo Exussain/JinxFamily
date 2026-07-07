@@ -15,7 +15,7 @@ export default function GtaHotBanner() {
       <div className="gta-banner-inner">
         <div className="gta-banner-art">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/products/gta6/ps5-ultimate.jpg" alt="Grand Theft Auto VI" loading="lazy" decoding="async" />
+          <img src="/products/gta6/ps5-ultimate.webp" alt="Grand Theft Auto VI" loading="lazy" decoding="async" />
           <span className="gta-banner-glow" aria-hidden="true" />
         </div>
         <div className="gta-banner-copy">

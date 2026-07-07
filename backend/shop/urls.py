@@ -63,6 +63,8 @@ urlpatterns = [
     path('admin/xbox-accounts', views.admin_xbox_accounts),
     path('admin/xbox-accounts/<int:account_id>', views.admin_xbox_account_detail),
     path('admin/accounting', views.admin_accounting),
+    path('admin/accounting/transactions', views.admin_accounting_transactions),
+    path('admin/accounting/transactions/<int:txn_id>', views.admin_accounting_transaction_detail),
     path('admin/accounting/settlements', views.admin_settlement_history),
     path('admin/accounting/settlements/<int:batch_id>', views.admin_delete_settlement_batch),
     path('admin/orders/<str:tracking>/settle', views.admin_settle_order),
@@ -100,6 +102,10 @@ urlpatterns = [
     path('discord/channels/<int:channel_id>/messages', views.discord_admin_messages),
     path('discord/channels/<int:channel_id>/send', views.discord_admin_send),
 
+    # ---- Product Request endpoints ----
+    path('product-requests', views.create_product_request),
+    path('admin/product-requests', views.admin_product_requests),
+
     # ---- Reseller (همکار) endpoints ----
     path('reseller/signup', reseller_views.reseller_signup),
     path('reseller/auth/token', reseller_views.reseller_auth_token),
@@ -133,4 +139,13 @@ urlpatterns = [
     path('admin/resellers/<int:reseller_id>/channel-check', reseller_views.admin_reseller_channel_check),
     path('admin/reseller-tiers', reseller_views.admin_reseller_tiers),
     path('admin/reseller-tiers/upsert', reseller_views.admin_reseller_tiers_upsert),
+    path('admin/reseller-tiers/clear-override', reseller_views.admin_reseller_tiers_clear_override),
+    path('admin/reseller-tiers/overrides-summary', reseller_views.admin_reseller_price_overrides_summary),
+    path('admin/reseller-pricing-tour/ack', views.admin_reseller_pricing_tour_ack),
+
+    # ---- Abandoned cart (سبدهای رها‌شده) ----
+    path('cart/sync', views.cart_sync),
+    path('admin/abandoned-carts', views.admin_abandoned_carts),
+    path('admin/abandoned-carts/<int:cart_id>/remind', views.admin_abandoned_cart_remind),
+    path('admin/abandoned-carts/<int:cart_id>/delete', views.admin_abandoned_cart_delete),
 ]

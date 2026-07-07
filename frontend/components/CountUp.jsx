@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 
 export default function CountUp({ to = 0, duration = 3000, prefix = "", suffix = "" }) {
-  const [val, setVal] = useState(0);
+  // SSR/first paint shows the real value (crawlers never run the animation);
+  // the count-up restarts from 0 only after hydration.
+  const [val, setVal] = useState(to);
   const raf = useRef();
   const timer = useRef();
   useEffect(() => {
@@ -11,6 +13,7 @@ export default function CountUp({ to = 0, duration = 3000, prefix = "", suffix =
       setVal(to);
       return;
     }
+    setVal(0);
 
     const start = performance.now();
     const ease = (t) => 1 - Math.pow(1 - t, 3); // easeOutCubic

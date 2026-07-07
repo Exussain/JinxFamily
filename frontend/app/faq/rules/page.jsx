@@ -3,7 +3,8 @@ import HelpfulnessWidget from "../HelpfulnessWidget";
 import { rules } from "../data.jsx";
 
 export const metadata = {
-  title: "قوانین و مقررات | نوبیکس شاپ",
+  title: "قوانین و مقررات",
+  alternates: { canonical: "/faq/rules" },
   description: "دستورالعمل‌های اصلی و قوانین رسمی ثبت سفارش و استفاده از خدمات فروشگاه نوبیکس شاپ.",
 };
 
@@ -78,7 +79,7 @@ export default function FaqRulesPage() {
             -webkit-backdrop-filter: blur(4px);
           }
           
-          .rules-article-banner h1 {
+          .rules-article-banner .page-banner-title {
             margin: 0;
             font-size: 28px;
             font-weight: 900;
@@ -181,7 +182,7 @@ export default function FaqRulesPage() {
               height: 140px;
               padding: 24px;
             }
-            .rules-article-banner h1 {
+            .rules-article-banner .page-banner-title {
               font-size: 22px;
             }
             .rules-article-info-bar {
@@ -205,7 +206,7 @@ export default function FaqRulesPage() {
             <span className="rules-article-banner-icon">⚖️</span>
             <div className="rules-article-meta">
               <span className="rules-article-tag">اسناد رسمی</span>
-              <h1>قوانین و مقررات استفاده از نوبیکس شاپ</h1>
+              <h2 className="page-banner-title">قوانین و مقررات استفاده از نوبیکس شاپ</h2>
             </div>
           </div>
           

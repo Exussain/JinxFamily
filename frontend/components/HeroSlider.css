@@ -2326,17 +2326,28 @@
   .discount-products-grid {
     overflow-x: auto !important;
     justify-content: flex-start !important;
-    padding-bottom: 8px !important;
+    padding-bottom: 12px !important;
     scroll-snap-type: x mandatory !important;
-    scrollbar-width: none !important;
+    scrollbar-width: auto !important;
+    gap: 12px !important;
+    padding-left: 16px !important;
   }
   .discount-products-grid::-webkit-scrollbar {
-    display: none !important;
+    display: block !important;
+    height: 3px !important;
+  }
+  .discount-products-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 10px !important;
+  }
+  .discount-products-grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25) !important;
+    border-radius: 10px !important;
   }
   .discount-product-card {
-    flex: 0 0 calc(50% - 8px) !important;
+    flex: 0 0 44% !important;
     scroll-snap-align: start !important;
-    min-width: 145px !important;
+    min-width: 135px !important;
     max-width: none !important;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
   }

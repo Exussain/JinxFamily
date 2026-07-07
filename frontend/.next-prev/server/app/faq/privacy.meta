@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/faq/layout,_N_T_/faq/privacy/layout,_N_T_/faq/privacy/page,_N_T_/faq/privacy"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/faq/privacy/__PAGE__",
+    "/faq/privacy",
+    "/faq",
+    "/_index",
+    "/_head"
+  ]
+}

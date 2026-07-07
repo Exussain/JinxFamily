@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import CountUp from "./CountUp";
+import { productHref } from "../lib/productUrls.mjs";
 
 const FALLBACK_TESTIMONIALS = [
   {
@@ -155,7 +156,7 @@ export default function TestimonialsSlider() {
         <div className="tm-track">
           {/* Testimonial Cards */}
           {testimonials.map((t, idx) => {
-            const href = t.productSlug ? `/product/${t.productSlug}#comment-${t.id}` : null;
+            const href = t.productSlug ? productHref(t.productSlug, `#comment-${t.id}`) : null;
             const Card = (
               <div className="tm-card" key={idx}>
                 <div className="tm-card-header">

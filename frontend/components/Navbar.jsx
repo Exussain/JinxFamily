@@ -7,8 +7,11 @@ import { adminCacheBustHref } from '../lib/adminUrl.mjs';
 import { placeholderFeatured } from '../lib/placeholderFeatured';
 import { resolveProductImage } from '../lib/productImageHelpers';
 import { dedupeProducts } from '../lib/dedupeProducts';
+import { productHref } from '../lib/productUrls.mjs';
 import SmartImage from './SmartImage';
 import { useTheme } from './ThemeProvider';
+import ProductRequestModal from './ProductRequestModal';
+
 
 export default function Navbar() {
   const [q, setQ] = useState('');
@@ -28,6 +31,7 @@ export default function Navbar() {
   const [mobileSearchResults, setMobileSearchResults] = useState([]);
   const [mobileSearchLoading, setMobileSearchLoading] = useState(false);
   const [showSearchMobileOverlay, setShowSearchMobileOverlay] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   
   // Notification center states
   const [showNotifMenu, setShowNotifMenu] = useState(false);
@@ -50,7 +54,7 @@ export default function Navbar() {
   const searchListRef = useRef(null);
   const router = useRouter();
   const params = useSearchParams();
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+  const apiBase = '';
   const { items, total, addItem, setQty, removeItem } = useCart();
   const { theme, toggleTheme } = useTheme();
   const [showNightPrompt, setShowNightPrompt] = useState(false);
@@ -311,7 +315,7 @@ export default function Navbar() {
   const handleProductClick = (slug) => {
     if (!slug) return;
     setShowSearchResults(false);
-    router.push(`/product/${slug}`);
+    router.push(productHref(slug));
   };
 
   // Auto-open cart when any component dispatches "cart:add" event
@@ -397,6 +401,7 @@ export default function Navbar() {
   useEffect(() => {
     const formatToday = () =>
       new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+        weekday: 'long',
         day: 'numeric',
         month: 'long',
         timeZone: 'Asia/Tehran',
@@ -573,24 +578,12 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
-              {user ? (
+              {user && (
                 <Link
                   href={user.is_admin ? "/panel/admin" : "/panel/user"}
                   className="icon-btn nav-user-shortcut-btn"
                   aria-label="داشبورد"
                   title="داشبورد"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                </Link>
-              ) : (
-                <Link
-                  href="/login"
-                  className="icon-btn nav-user-shortcut-btn"
-                  aria-label="ورود به حساب"
-                  title="ورود به حساب"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -679,13 +672,12 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <div className="nav-user-menu nav-auth-menu" ref={authMenuRef}>
-                    <button
-                      type="button"
+                    <Link
+                      href="/login"
                       className="nav-user-btn-pill guest-btn"
-                      onClick={() => {
-                        if (typeof window !== "undefined" && window.innerWidth <= 768) {
-                          router.push("/login");
-                        } else {
+                      onClick={(e) => {
+                        if (typeof window !== "undefined" && window.innerWidth > 768) {
+                          e.preventDefault();
                           setShowAuthMenu((v) => !v);
                         }
                       }}
@@ -698,7 +690,7 @@ export default function Navbar() {
                         </svg>
                       </span>
                       <span className="user-btn-text">ورود / عضویت</span>
-                    </button>
+                    </Link>
                     {showAuthMenu && (
                       <div className="user-menu auth-menu">
                         <Link href="/login" className="ghost-btn user-menu-item">
@@ -737,7 +729,6 @@ export default function Navbar() {
                   ×
                 </button>
               )}
-              <button className="search-submit-btn" onClick={doSearch} aria-label="جستجو">جستجو</button>
               {showSearchResults && (
                 <div className="search-preview">
                   {searchLoading && (
@@ -747,7 +738,31 @@ export default function Navbar() {
                     </div>
                   )}
                   {!searchLoading && searchResults.length === 0 && (
-                    <div className="search-preview-empty muted">محصولی یافت نشد.</div>
+                    <div className="search-preview-empty muted" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px' }}>
+                      <span>محصولی یافت نشد.</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSearchResults(false);
+                          setIsRequestModalOpen(true);
+                        }}
+                        style={{
+                          background: 'rgba(99, 102, 241, 0.1)',
+                          color: '#6366f1',
+                          border: '1px dashed #6366f1',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          width: '100%',
+                          textAlign: 'center',
+                          marginTop: '4px'
+                        }}
+                      >
+                        درخواست تهیه این محصول توسط نوبیکس شاپ
+                      </button>
+                    </div>
                   )}
                   {!searchLoading && searchResults.length > 0 && (
                     <>
@@ -880,12 +895,18 @@ export default function Navbar() {
                   </div>
                 </Link>
               ) : (
-                <div className="mobile-menu-brand">
-                  <picture>
-                    <img src="/web_logo.webp" alt="Nubix Logo" width="32" height="32" className="mobile-menu-logo-img" />
-                  </picture>
-                  <span className="mobile-menu-brand-text">نوبیکس شاپ</span>
-                </div>
+                <Link href="/login" onClick={() => setShowMobileMenu(false)} className="mobile-menu-user-card guest-card" style={{ textDecoration: "none" }}>
+                  <span className="mobile-menu-user-avatar guest-avatar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </span>
+                  <div className="mobile-menu-user-info">
+                    <span className="mobile-menu-user-name">ورود / عضویت</span>
+                    <span className="mobile-menu-user-pill">وارد حساب کاربری خود شوید</span>
+                  </div>
+                </Link>
               )}
               <button className="mobile-menu-close" onClick={() => setShowMobileMenu(false)} aria-label="بستن منو">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -903,7 +924,7 @@ export default function Navbar() {
                 </Link>
               </li>
               <li>
-                <Link href="/?cat=فورتنایت" onClick={() => setShowMobileMenu(false)}>
+                <Link href="/vbucks" onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M12 12h.01"></path><path d="M17 12h.01"></path><path d="M7 12h2"></path><path d="M8 11v2"></path></svg>
                   <span>محصولات</span>
                 </Link>
@@ -929,7 +950,7 @@ export default function Navbar() {
                 </Link>
               </li>
               <li>
-                <Link href="/contact" onClick={() => setShowMobileMenu(false)}>
+                <Link href="/faq/contact" onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                   <span>تماس با ما</span>
                 </Link>
@@ -1074,7 +1095,7 @@ export default function Navbar() {
                     type="button"
                     className="mobile-search-result-item"
                     onClick={() => {
-                      router.push(`/product/${p.slug}`);
+                      router.push(productHref(p.slug));
                       setShowSearchMobileOverlay(false);
                     }}
                   >
@@ -1087,8 +1108,39 @@ export default function Navbar() {
               })}
             </div>
           )}
+          {!mobileSearchLoading && mobileQ && mobileSearchResults.length === 0 && (
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '8px' }}>محصولی یافت نشد.</div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSearchMobileOverlay(false);
+                  setIsRequestModalOpen(true);
+                }}
+                style={{
+                  background: 'rgba(99, 102, 241, 0.1)',
+                  color: '#6366f1',
+                  border: '1px dashed #6366f1',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  width: '100%',
+                  textAlign: 'center'
+                }}
+              >
+                درخواست تهیه این محصول توسط نوبیکس شاپ
+              </button>
+            </div>
+          )}
         </div>
       )}
+      <ProductRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        initialProductName={q || mobileQ}
+      />
     </>
   );
 }

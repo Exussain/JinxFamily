@@ -8,8 +8,6 @@ const CAT_MAP = [
   { prefix: "اشتراک", code: "SUBSCRIPTIONS" },
   { prefix: "هوش", code: "AI" },
   { prefix: "گیفت", code: "GIFTCARDS" },
-  { prefix: "لیگ", code: "GAMES" },
-  { prefix: "لول", code: "GAMES" },
   { prefix: "کلش", code: "" },
   { prefix: "کالاف", code: "" },
   { prefix: "بتلف", code: "" },

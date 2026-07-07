@@ -150,6 +150,7 @@ export default function AdminLiveChatWidget() {
   const animFrameRef = useRef(null);
 
   const messagesEndRef = useRef(null);
+  const chatMessagesRef = useRef(null);
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -158,9 +159,30 @@ export default function AdminLiveChatWidget() {
 
   const totalUnread = sessions.reduce((acc, s) => acc + (s.unread || 0), 0);
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTo({
+        top: chatMessagesRef.current.scrollHeight,
+        behavior: smooth ? "smooth" : "auto"
+      });
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
   }, []);
+
+  const lastMsgId = messages[messages.length - 1]?.id;
+  useEffect(() => {
+    if (isOpen && activeSessionId) {
+      scrollToBottom(false);
+      const t1 = setTimeout(() => scrollToBottom(true), 50);
+      const t2 = setTimeout(() => scrollToBottom(true), 200);
+      const t3 = setTimeout(() => scrollToBottom(true), 500);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
+    }
+  }, [messages.length, lastMsgId, activeSessionId, isOpen, scrollToBottom]);
 
   // ── Poll sessions ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -200,9 +222,6 @@ export default function AdminLiveChatWidget() {
               )
             );
             const combined = [...serverMsgs, ...pendingTemp].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-            if (combined.length > prev.length && isOpen) {
-              setTimeout(scrollToBottom, 100);
-            }
             return combined;
           });
         }
@@ -211,7 +230,7 @@ export default function AdminLiveChatWidget() {
     fetchMessages();
     intervalId = setInterval(fetchMessages, 3000);
     return () => clearInterval(intervalId);
-  }, [activeSessionId, apiBase, isOpen, scrollToBottom]);
+  }, [activeSessionId, apiBase]);
 
   const handleSelectSession = (id) => {
     setActiveSessionId(id);
@@ -500,7 +519,7 @@ export default function AdminLiveChatWidget() {
                 </div>
               </div>
 
-              <div className="chat-messages">
+              <div className="chat-messages" ref={chatMessagesRef}>
                 {messages.length === 0 ? (
                   <div className="chat-empty"><p>در حال بارگذاری گفتگو...</p></div>
                 ) : (

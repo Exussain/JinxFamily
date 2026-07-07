@@ -1,0 +1,766 @@
+- generic [ref=e2]:
+  - banner:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - button "حالت تاریک" [ref=e7]:
+            - img [ref=e8]
+          - button "سبد خرید" [ref=e11]:
+            - img [ref=e12]
+          - link "ورود به حساب" [ref=e14] [cursor=pointer]:
+            - /url: /login
+            - img [ref=e15]
+          - button "ورود یا ثبت‌نام" [ref=e20] [cursor=pointer]:
+            - img [ref=e22]
+            - generic [ref=e25]: ورود / عضویت
+        - generic [ref=e26]:
+          - img [ref=e27]
+          - textbox "دنبال چی میگردی؟ جستجو در محصولات…" [ref=e29]
+        - link "نوبیکس" [ref=e30] [cursor=pointer]:
+          - /url: /
+          - img "Nubix Logo" [ref=e32]
+          - generic [ref=e33]: فروشگاه نوبیکس
+    - generic [ref=e34]:
+      - list [ref=e36]:
+        - listitem [ref=e37]:
+          - link "صفحه اصلی" [ref=e38] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=e39]:
+          - link "محصولات" [ref=e40] [cursor=pointer]:
+            - /url: /vbucks
+        - listitem [ref=e41]:
+          - link "همکاری با ما" [ref=e42] [cursor=pointer]:
+            - /url: /reseller
+        - listitem [ref=e43]:
+          - link "وبلاگ و مقالات" [ref=e44] [cursor=pointer]:
+            - /url: /blog
+        - listitem [ref=e45]:
+          - link "سوالات متداول" [ref=e46] [cursor=pointer]:
+            - /url: /faq
+        - listitem [ref=e47]:
+          - link "تماس با ما" [ref=e48] [cursor=pointer]:
+            - /url: /faq/contact
+      - generic [ref=e50]:
+        - generic [ref=e51]: ✓
+        - generic [ref=e52]: فروشگاه آماده خدمت‌رسانی
+        - generic [ref=e53]: •
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - generic [ref=e59]: ⚡ آفر طلایی امروز (فرصت محدود)
+          - heading "تخفیف ویژه خرید وی باکس، کروپک فورتنایت و گیفت کارت" [level=1] [ref=e60]
+          - paragraph [ref=e61]: تخفیفات داغ و روزانه نوبیکس شاپ؛ هر روز ۴ آفر ویژه با قیمت‌های استثنایی که فقط تا پایان امروز اعتبار دارند!
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - generic [ref=e64]: ۰۰
+            - generic [ref=e65]: ثانیه
+          - generic [ref=e66]:
+            - generic [ref=e67]: ۰۰
+            - generic [ref=e68]: دقیقه
+          - generic [ref=e69]:
+            - generic [ref=e70]: ۰۰
+            - generic [ref=e71]: ساعت
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - link "کروپک فورتنایت" [ref=e74] [cursor=pointer]:
+              - /url: /crewpack
+            - img "کروپک فورتنایت" [ref=e76]
+            - generic [ref=e77]:
+              - heading "کروپک فورتنایت" [level=3] [ref=e78]
+              - generic [ref=e80]: "فوق ویژه: ۲۶٪ تخفیف"
+              - generic [ref=e81]:
+                - generic [ref=e82]:
+                  - generic [ref=e83]: ۷۷۰٬۰۰۰ تومان
+                  - generic [ref=e84]: ۵۵۵٬۰۰۰ تومان
+                - button "افزودن به سبد خرید" [ref=e85] [cursor=pointer]:
+                  - img [ref=e86]
+          - generic [ref=e90]:
+            - link "پیش‌خرید GTA VI (Grand Theft Auto VI)" [ref=e91] [cursor=pointer]:
+              - /url: /gta6
+            - img "پیش‌خرید GTA VI (Grand Theft Auto VI)" [ref=e93]
+            - generic [ref=e94]:
+              - heading "پیش‌خرید GTA VI (Grand Theft Auto VI)" [level=3] [ref=e95]
+              - generic [ref=e97]: "فوق ویژه: ۱۵٪ تخفیف"
+              - generic [ref=e98]:
+                - generic [ref=e99]:
+                  - generic [ref=e100]: ۶٬۱۹۹٬۰۰۰ تومان
+                  - generic [ref=e101]: ۵٬۲۵۸٬۰۰۰ تومان
+                - button "افزودن به سبد خرید" [ref=e102] [cursor=pointer]:
+                  - img [ref=e103]
+          - generic [ref=e107]:
+            - link "استارتر پک The Ace" [ref=e108] [cursor=pointer]:
+              - /url: /product/starterpack
+            - img "استارتر پک The Ace" [ref=e110]
+            - generic [ref=e111]:
+              - heading "استارتر پک The Ace" [level=3] [ref=e112]
+              - generic [ref=e114]: "فوق ویژه: ۳۰٪ تخفیف"
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - generic [ref=e117]: ۱٬۱۰۰٬۰۰۰ تومان
+                  - generic [ref=e118]: ۸۴۵٬۰۰۰ تومان
+                - button "افزودن به سبد خرید" [ref=e119] [cursor=pointer]:
+                  - img [ref=e120]
+          - generic [ref=e124]:
+            - link "اشتراک اسپاتیفای (Spotify)" [ref=e125] [cursor=pointer]:
+              - /url: /product/spotify-subscription
+            - img "اشتراک اسپاتیفای (Spotify)" [ref=e127]
+            - generic [ref=e128]:
+              - heading "اشتراک اسپاتیفای (Spotify)" [level=3] [ref=e129]
+              - generic [ref=e131]: "فوق ویژه: ۳۶٪ تخفیف"
+              - generic [ref=e132]:
+                - generic [ref=e133]:
+                  - generic [ref=e134]: ۲۵۰٬۰۰۰ تومان
+                  - generic [ref=e135]: ۴۴۹٬۰۰۰ تومان
+                - button "افزودن به سبد خرید" [ref=e136] [cursor=pointer]:
+                  - img [ref=e137]
+      - complementary [ref=e141]:
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - generic [ref=e144]:
+              - paragraph [ref=e145]:
+                - text: ۱٬۴۴۳
+                - generic [ref=e146]: سفارش‌های موفق
+              - generic [ref=e147]: هر روز درحال افزایش
+            - img "پشتیبانی نوبیکس شاپ" [ref=e149]
+          - generic [ref=e151]:
+            - link "ر رادمان پیرا کروپک فورتنایت ★★★★★ \"عالی کیفیت سفارش عالی\" ✓ خرید تایید شده 8 تیر" [ref=e152] [cursor=pointer]:
+              - /url: /crewpack#comment-1
+              - generic [ref=e153]:
+                - generic [ref=e154]:
+                  - generic [ref=e155]:
+                    - generic [ref=e156]: ر
+                    - generic [ref=e157]:
+                      - generic [ref=e158]: رادمان پیرا
+                      - generic "کروپک فورتنایت" [ref=e159]
+                  - generic [ref=e160]: ★★★★★
+                - generic [ref=e161]: "\"عالی کیفیت سفارش عالی\""
+                - generic [ref=e162]:
+                  - generic [ref=e163]: ✓ خرید تایید شده
+                  - generic [ref=e164]: 8 تیر
+            - link "S Sleepy ODi کروپک فورتنایت ★★★★★ \"همیشه سریع عالی و بهترین قیمت\" ✓ خرید تایید شده 6 تیر":
+              - /url: /crewpack#comment-2
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: S
+                    - generic:
+                      - generic: Sleepy ODi
+                      - generic "کروپک فورتنایت"
+                  - generic: ★★★★★
+                - generic: "\"همیشه سریع عالی و بهترین قیمت\""
+                - generic:
+                  - generic: ✓ خرید تایید شده
+                  - generic: 6 تیر
+            - link "S Sleepy ODi پیشخرید GTA VI (Grand Theft Auto VI) ★★★★★ \"مثل همیشه عالی پشتیبانی عالی تر کارتون درسته\" ✓ خرید تایید شده 6 تیر":
+              - /url: /gta6#comment-3
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: S
+                    - generic:
+                      - generic: Sleepy ODi
+                      - generic "پیشخرید GTA VI (Grand Theft Auto VI)"
+                  - generic: ★★★★★
+                - generic: "\"مثل همیشه عالی پشتیبانی عالی تر کارتون درسته\""
+                - generic:
+                  - generic: ✓ خرید تایید شده
+                  - generic: 6 تیر
+            - link "A Arian夜ツ کروپک فورتنایت ★★★★★ \"پشتیبانی عالی اصلا هرچی بگم کمه الان برام اومد\" ✓ خرید تایید شده 5 تیر":
+              - /url: /crewpack#comment-4
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: A
+                    - generic:
+                      - generic: Arian夜ツ
+                      - generic "کروپک فورتنایت"
+                  - generic: ★★★★★
+                - generic: "\"پشتیبانی عالی اصلا هرچی بگم کمه الان برام اومد\""
+                - generic:
+                  - generic: ✓ خرید تایید شده
+                  - generic: 5 تیر
+            - link "ب برسام زینی کروپک فورتنایت ★★★★★ \"عالی و سریع ممنون از نوبیکس شاپ❤️🔥\" ✓ خرید تایید شده 5 تیر":
+              - /url: /crewpack#comment-5
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: ب
+                    - generic:
+                      - generic: برسام زینی
+                      - generic "کروپک فورتنایت"
+                  - generic: ★★★★★
+                - generic: "\"عالی و سریع ممنون از نوبیکس شاپ❤️🔥\""
+                - generic:
+                  - generic: ✓ خرید تایید شده
+                  - generic: 5 تیر
+            - link "F Fenrirexe کروپک فورتنایت ★★★★★ \"مناسب ترین قیمت بهترین پشتیبانی سریعترین فعالسازی واقعا عالیه\" ✓ خرید تایید شده 4 تیر":
+              - /url: /crewpack#comment-6
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: F
+                    - generic:
+                      - generic: Fenrirexe
+                      - generic "کروپک فورتنایت"
+                  - generic: ★★★★★
+                - generic: "\"مناسب ترین قیمت بهترین پشتیبانی سریعترین فعالسازی واقعا عالیه\""
+                - generic:
+                  - generic: ✓ خرید تایید شده
+                  - generic: 4 تیر
+            - link "ع علیرضا پیشخرید GTA VI (Grand Theft Auto VI) ★★★★★ \"مرسی از نوبیکس، امیدوارم هر چه سریعتر به دستم برسه\" ✓ خرید تایید شده 4 تیر":
+              - /url: /gta6#comment-7
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: ع
+                    - generic:
+                      - generic: علیرضا
+                      - generic "پیشخرید GTA VI (Grand Theft Auto VI)"
+                  - generic: ★★★★★
+                - generic: "\"مرسی از نوبیکس، امیدوارم هر چه سریعتر به دستم برسه\""
+                - generic:
+                  - generic: ✓ خرید تایید شده
+                  - generic: 4 تیر
+        - generic [ref=e165]:
+          - generic [ref=e166]: شبکه‌های اجتماعی
+          - paragraph [ref=e167]: ما را دنبال کنید
+          - paragraph [ref=e168]: از تخفیف‌ها و جشنواره‌ها باخبر شوید
+          - generic [ref=e169]:
+            - link "تلگرام" [ref=e170] [cursor=pointer]:
+              - /url: https://t.me/NubixShopIR
+              - img [ref=e171]
+              - text: تلگرام
+            - link "اینستاگرام" [ref=e173] [cursor=pointer]:
+              - /url: https://instagram.com/NubixShop.ir
+              - img [ref=e174]
+              - text: اینستاگرام
+      - generic [ref=e176]:
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - paragraph [ref=e179]: فورتنایت، هوش مصنوعی، گیفت کارت و بیشتر
+            - heading "دسته‌بندی محصولات نوبیکس شاپ" [level=2] [ref=e180]
+          - button "نمایش همه دسته‌بندی‌ها" [ref=e181] [cursor=pointer]:
+            - img [ref=e183]
+            - generic [ref=e188]:
+              - strong [ref=e189]: مشاهده همه دسته‌بندی‌ها
+              - generic [ref=e190]: کلیک کنید تا منوی کامل را ببینید
+            - img [ref=e191]
+        - generic [ref=e193]:
+          - link "فورتنایت فورتنایت" [ref=e194] [cursor=pointer]:
+            - /url: /category/fortnite
+            - img "فورتنایت" [ref=e196]
+            - generic [ref=e197]: فورتنایت
+          - link "هوش مصنوعی هوش مصنوعی" [ref=e198] [cursor=pointer]:
+            - /url: /category/ai
+            - img "هوش مصنوعی" [ref=e200]
+            - generic [ref=e201]: هوش مصنوعی
+          - link "اشتراک‌ها اشتراک‌ها" [ref=e202] [cursor=pointer]:
+            - /url: /category/subscriptions
+            - img "اشتراک‌ها" [ref=e204]
+            - generic [ref=e205]: اشتراک‌ها
+          - link "گیفت کارت‌ها گیفت کارت‌ها" [ref=e206] [cursor=pointer]:
+            - /url: /category/giftcards
+            - img "گیفت کارت‌ها" [ref=e208]
+            - generic [ref=e209]: گیفت کارت‌ها
+          - link "بازی‌ها بازی‌ها" [ref=e210] [cursor=pointer]:
+            - /url: /category/games
+            - img "بازی‌ها" [ref=e212]
+            - generic [ref=e213]: بازی‌ها
+    - link "🎡 چهارشنبه‌های طلایی نوبیکس گردونه شانس رو بچرخون! هر هفته بچرخان، تا ۲۰٪ تخفیف یا اعتبار رایگان کیف پول برنده شو. بچرخون! 🚀 صندوقچه شانس نوبیکس" [ref=e215] [cursor=pointer]:
+      - /url: /spin
+      - generic [ref=e216]:
+        - generic [ref=e217]:
+          - generic [ref=e218]: 🎡 چهارشنبه‌های طلایی نوبیکس
+          - generic [ref=e219]:
+            - strong [ref=e220]: گردونه شانس رو بچرخون!
+            - generic [ref=e221]: هر هفته بچرخان، تا ۲۰٪ تخفیف یا اعتبار رایگان کیف پول برنده شو.
+        - generic [ref=e223]: بچرخون! 🚀
+        - generic:
+          - img "صندوقچه شانس نوبیکس"
+    - generic [ref=e224]:
+      - generic [ref=e225]:
+        - generic [ref=e226]:
+          - paragraph [ref=e227]: محصولات پرفروش
+          - heading "محصولات نوبیکس شاپ" [level=2] [ref=e228]
+        - link "سبد خرید" [ref=e229] [cursor=pointer]:
+          - /url: /checkout
+      - generic [ref=e230]:
+        - generic [ref=e231]:
+          - link "پیش‌خرید GTA VI (Grand Theft Auto VI)" [ref=e232] [cursor=pointer]:
+            - /url: /gta6
+          - generic:
+            - img "پیش‌خرید GTA VI (Grand Theft Auto VI)"
+            - button "افزودن به سبد خرید" [ref=e234] [cursor=pointer]:
+              - img [ref=e235]
+          - generic:
+            - generic:
+              - generic: پیش‌خرید GTA VI (Grand Theft Auto VI)
+            - generic: نسخه استاندارد و آلتیمیت
+            - generic:
+              - generic:
+                - generic:
+                  - generic: از
+                  - text: ۵٬۲۵۸٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e239]:
+          - link "کروپک فورتنایت" [ref=e240] [cursor=pointer]:
+            - /url: /crewpack
+          - generic:
+            - img "کروپک فورتنایت"
+            - generic: 28٪
+            - button "افزودن به سبد خرید" [ref=e242] [cursor=pointer]:
+              - img [ref=e243]
+          - generic:
+            - generic:
+              - generic: کروپک فورتنایت
+            - generic: اشتراک ماهانه + فعال‌سازی فوری
+            - generic:
+              - generic:
+                - generic: ۷۷۰٬۰۰۰
+                - generic:
+                  - generic: از
+                  - text: ۵۵۵٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e247]:
+          - link "استارتر پک The Ace" [ref=e248] [cursor=pointer]:
+            - /url: /product/starterpack
+          - generic:
+            - img "استارتر پک The Ace"
+            - generic: 23٪
+            - button "افزودن به سبد خرید" [ref=e250] [cursor=pointer]:
+              - img [ref=e251]
+          - generic:
+            - generic:
+              - generic: استارتر پک The Ace
+            - generic: اسکین انحصاری + ۸۰۰ ویباکس
+            - generic:
+              - generic:
+                - generic: ۱٬۱۰۰٬۰۰۰
+                - generic:
+                  - text: ۸۴۵٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e255]:
+          - link "ویباکس فورتنایت" [ref=e256] [cursor=pointer]:
+            - /url: /vbucks
+          - generic:
+            - img "ویباکس فورتنایت"
+            - link "مشاهده گزینه‌ها" [ref=e258] [cursor=pointer]:
+              - /url: /vbucks
+              - img [ref=e259]
+          - generic:
+            - generic:
+              - generic: ویباکس فورتنایت
+            - generic: V-Bucks با قیمت اقتصادی
+            - generic:
+              - generic:
+                - generic:
+                  - generic: از
+                  - text: ۸۵۴٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e263]:
+          - link "پک Summer Legends" [ref=e264] [cursor=pointer]:
+            - /url: /product/summer-legends
+          - generic:
+            - img "پک Summer Legends"
+            - generic: 20٪
+            - button "افزودن به سبد خرید" [ref=e266] [cursor=pointer]:
+              - img [ref=e267]
+          - generic:
+            - generic:
+              - generic: پک Summer Legends
+            - generic: فعال‌سازی قانونی روی اکانت
+            - generic:
+              - generic:
+                - generic: ۲٬۲۴۹٬۰۰۰
+                - generic:
+                  - text: ۱٬۸۱۰٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e271]:
+          - link "پک مینتی لجندز" [ref=e272] [cursor=pointer]:
+            - /url: /product/minty-legends-pack
+          - generic:
+            - img "پک مینتی لجندز"
+            - generic: 16٪
+            - button "افزودن به سبد خرید" [ref=e274] [cursor=pointer]:
+              - img [ref=e275]
+          - generic:
+            - generic:
+              - generic: پک مینتی لجندز
+            - generic: ۳ اسکین + ۱۰۰۰ ویباکس
+            - generic:
+              - generic:
+                - generic: ۳٬۱۹۹٬۰۰۰
+                - generic:
+                  - text: ۲٬۶۸۹٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e279]:
+          - link "بتل پس سیزن جدید فورتنایت" [ref=e280] [cursor=pointer]:
+            - /url: /product/fortnite-battle-pass
+          - generic:
+            - img "بتل پس سیزن جدید فورتنایت"
+            - generic: 23٪
+            - button "افزودن به سبد خرید" [ref=e282] [cursor=pointer]:
+              - img [ref=e283]
+          - generic:
+            - generic:
+              - generic: بتل پس سیزن جدید فورتنایت
+            - generic: Battle Pass
+            - generic:
+              - generic:
+                - generic: ۱٬۰۹۹٬۰۰۰
+                - generic:
+                  - text: ۸۴۹٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e287]:
+          - link "پک Operation Brite" [ref=e288] [cursor=pointer]:
+            - /url: /lego
+          - generic:
+            - img "پک Operation Brite"
+            - generic: 22٪
+            - button "افزودن به سبد خرید" [ref=e290] [cursor=pointer]:
+              - img [ref=e291]
+          - generic:
+            - generic:
+              - generic: پک Operation Brite
+            - generic: فعال‌سازی قانونی روی اکانت
+            - generic:
+              - generic:
+                - generic: ۶۰۰٬۰۰۰
+                - generic:
+                  - text: ۴۶۷٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e295]:
+          - link "تغییر ریجن به ترکیه" [ref=e296] [cursor=pointer]:
+            - /url: /product/change-region-turkey
+          - generic:
+            - img "تغییر ریجن به ترکیه"
+            - button "افزودن به سبد خرید" [ref=e298] [cursor=pointer]:
+              - img [ref=e299]
+          - generic:
+            - generic:
+              - generic: تغییر ریجن به ترکیه
+            - generic: Change Region to Turkey
+            - generic:
+              - generic:
+                - generic:
+                  - text: ۴۹٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e303]:
+          - link "اشتراک اسپاتیفای (Spotify)" [ref=e304] [cursor=pointer]:
+            - /url: /product/spotify-subscription
+          - generic:
+            - img "اشتراک اسپاتیفای (Spotify)"
+            - button "افزودن به سبد خرید" [ref=e306] [cursor=pointer]:
+              - img [ref=e307]
+          - generic:
+            - generic:
+              - generic: اشتراک اسپاتیفای (Spotify)
+            - generic: اشتراک قانونی اسپاتیفای پریمیوم
+            - generic:
+              - generic:
+                - generic:
+                  - generic: از
+                  - text: ۴۴۹٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e311]:
+          - link "اشتراک جمینای (Gemini)" [ref=e312] [cursor=pointer]:
+            - /url: /gemini
+          - generic:
+            - img "اشتراک جمینای (Gemini)"
+            - button "افزودن به سبد خرید" [ref=e314] [cursor=pointer]:
+              - img [ref=e315]
+          - generic:
+            - generic:
+              - generic: اشتراک جمینای (Gemini)
+            - generic: ماهانه قانونی روی ایمیل شما
+            - generic:
+              - generic:
+                - generic:
+                  - text: ۹۹۰٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e319]:
+          - link "اشتراک چت‌جی‌پی‌تی (ChatGPT)" [ref=e320] [cursor=pointer]:
+            - /url: /product/chatgpt-subscription
+          - generic:
+            - img "اشتراک چت‌جی‌پی‌تی (ChatGPT)"
+            - generic: 37٪
+            - button "افزودن به سبد خرید" [ref=e322] [cursor=pointer]:
+              - img [ref=e323]
+          - generic:
+            - generic:
+              - generic: اشتراک چت‌جی‌پی‌تی (ChatGPT)
+            - generic: ماهانه قانونی روی ایمیل شما
+            - generic:
+              - generic:
+                - generic: ۲٬۴۹۰٬۰۰۰
+                - generic:
+                  - generic: از
+                  - text: ۱٬۵۶۰٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e327]:
+          - link "گیفت کارت گوگل پلی" [ref=e328] [cursor=pointer]:
+            - /url: /product/%DA%AF%DB%8C%D9%81%D8%AA-%DA%A9%D8%A7%D8%B1%D8%AA-%DA%AF%D9%88%DA%AF%D9%84-%D9%BE%D9%84%DB%8C
+          - generic:
+            - img "گیفت کارت گوگل پلی"
+            - button "افزودن به سبد خرید" [ref=e330] [cursor=pointer]:
+              - img [ref=e331]
+          - generic:
+            - generic:
+              - generic: گیفت کارت گوگل پلی
+            - generic: تحویل فوری کد دیجیتال
+            - generic:
+              - generic:
+                - generic:
+                  - generic: از
+                  - text: ۲۳۱٬۴۰۰
+                  - generic: تومان
+        - generic [ref=e335]:
+          - link "گیفت کارت اپل/آیتونز" [ref=e336] [cursor=pointer]:
+            - /url: /product/%DA%AF%DB%8C%D9%81%D8%AA-%DA%A9%D8%A7%D8%B1%D8%AA-%D8%A7%D9%BE%D9%84%D8%A2%DB%8C%D8%AA%D9%88%D9%86%D8%B2
+          - generic:
+            - img "گیفت کارت اپل/آیتونز"
+            - button "افزودن به سبد خرید" [ref=e338] [cursor=pointer]:
+              - img [ref=e339]
+          - generic:
+            - generic:
+              - generic: گیفت کارت اپل/آیتونز
+            - generic: تحویل فوری کد دیجیتال
+            - generic:
+              - generic:
+                - generic:
+                  - text: ۵۰۰٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e343]:
+          - link "گیفت کارت پلی‌استیشن" [ref=e344] [cursor=pointer]:
+            - /url: /product/%DA%AF%DB%8C%D9%81%D8%AA-%DA%A9%D8%A7%D8%B1%D8%AA-%D9%BE%D9%84%DB%8C%D8%A7%D8%B3%D8%AA%DB%8C%D8%B4%D9%86
+          - generic:
+            - img "گیفت کارت پلی‌استیشن"
+            - button "افزودن به سبد خرید" [ref=e346] [cursor=pointer]:
+              - img [ref=e347]
+          - generic:
+            - generic:
+              - generic: گیفت کارت پلی‌استیشن
+            - generic: تحویل فوری کد دیجیتال
+            - generic:
+              - generic:
+                - generic:
+                  - text: ۵۰۰٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e351]:
+          - link "گیفت کارت ایکس‌باکس" [ref=e352] [cursor=pointer]:
+            - /url: /product/%DA%AF%DB%8C%D9%81%D8%AA-%DA%A9%D8%A7%D8%B1%D8%AA-%D8%A7%DB%8C%DA%A9%D8%B3%D8%A8%D8%A7%DA%A9%D8%B3
+          - generic:
+            - img "گیفت کارت ایکس‌باکس"
+            - button "افزودن به سبد خرید" [ref=e354] [cursor=pointer]:
+              - img [ref=e355]
+          - generic:
+            - generic:
+              - generic: گیفت کارت ایکس‌باکس
+            - generic: تحویل فوری کد دیجیتال
+            - generic:
+              - generic:
+                - generic:
+                  - generic: از
+                  - text: ۱۹۹٬۰۰۰
+                  - generic: تومان
+        - generic [ref=e359]:
+          - link "گیفت کارت استیم" [ref=e360] [cursor=pointer]:
+            - /url: /product/%DA%AF%DB%8C%D9%81%D8%AA-%DA%A9%D8%A7%D8%B1%D8%AA-%D8%A7%D8%B3%D8%AA%DB%8C%D9%85
+          - generic:
+            - img "گیفت کارت استیم"
+            - button "افزودن به سبد خرید" [ref=e362] [cursor=pointer]:
+              - img [ref=e363]
+          - generic:
+            - generic:
+              - generic: گیفت کارت استیم
+            - generic: تحویل فوری کد دیجیتال
+            - generic:
+              - generic:
+                - generic:
+                  - text: ۵۰۰٬۰۰۰
+                  - generic: تومان
+    - generic [ref=e367]:
+      - article [ref=e368]:
+        - generic [ref=e369]:
+          - img "گارانتی قانونی" [ref=e370]
+          - heading "گارانتی قانونی" [level=3] [ref=e371]
+        - paragraph [ref=e372]: سرویس‌ها مستقیم روی اکانت شما فعال می‌شوند.
+        - link "نماد اعتماد الکترونیکی" [ref=e373] [cursor=pointer]:
+          - /url: https://trustseal.enamad.ir/?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2
+          - img "نماد اعتماد الکترونیکی" [ref=e374]
+          - generic [ref=e375]: نماد اعتماد الکترونیکی
+          - text: ✓
+      - article [ref=e376]:
+        - generic [ref=e377]:
+          - img "پرداخت امن" [ref=e378]
+          - heading "پرداخت امن" [level=3] [ref=e379]
+        - paragraph [ref=e380]: اتصال مستقیم به درگاه شاپرک و رمز پویا
+        - link "درگاه پرداخت زرین‌پال" [ref=e381] [cursor=pointer]:
+          - /url: https://www.zarinpal.com/trustPage/nubixshop.ir
+          - img "درگاه پرداخت زرین‌پال" [ref=e382]
+          - generic [ref=e383]: درگاه پرداخت زرین‌پال
+          - text: ✓
+      - article [ref=e384]:
+        - generic [ref=e385]:
+          - img "تنوع محصول" [ref=e386]
+          - heading "تنوع محصول" [level=3] [ref=e387]
+        - paragraph [ref=e388]: از بتل‌پس تا گیفت کارت و کوین بازی‌های محبوب
+      - paragraph [ref=e389]:
+        - text: نوبیکس
+        - link "دارای نماد و مجوز رسمی" [ref=e390] [cursor=pointer]:
+          - /url: "#trust-badges"
+        - text: است؛ مجوزها در انتهای صفحه قابل مشاهده و استعلام هستند.
+    - region "خرید وی باکس، کروپک فورتنایت و اشتراک‌های قانونی از نوبیکس شاپ" [ref=e391]:
+      - heading "خرید وی باکس، کروپک فورتنایت و اشتراک‌های قانونی از نوبیکس شاپ" [level=2] [ref=e392]
+      - paragraph [ref=e393]:
+        - text: نوبیکس شاپ مرجع
+        - link "خرید وی باکس فورتنایت" [ref=e394] [cursor=pointer]:
+          - /url: /vbucks
+        - text: و
+        - link "خرید کروپک فورتنایت" [ref=e395] [cursor=pointer]:
+          - /url: /crewpack
+        - text: با فعال‌سازی قانونی و مستقیم روی اکانت شماست. علاوه بر محصولات فورتنایت مثل
+        - link "بتل پس" [ref=e396] [cursor=pointer]:
+          - /url: /product/fortnite-battle-pass
+        - text: و
+        - link "پک لگو فورتنایت" [ref=e397] [cursor=pointer]:
+          - /url: /lego
+        - text: ، می‌توانید
+        - link "اشتراک ChatGPT" [ref=e398] [cursor=pointer]:
+          - /url: /product/chatgpt-subscription
+        - text: ،
+        - link "اشتراک Google Gemini" [ref=e399] [cursor=pointer]:
+          - /url: /gemini
+        - text: ، انواع گیفت کارت و
+        - link "پیش‌خرید GTA 6" [ref=e400] [cursor=pointer]:
+          - /url: /gta6
+        - text: را هم با تحویل سریع، پرداخت امن زرین‌پال و پشتیبانی ۲۴ ساعته سفارش دهید. برای آشنایی بیشتر با روند خرید،
+        - link "راهنمای خرید" [ref=e401] [cursor=pointer]:
+          - /url: /faq/how-to-buy
+        - text: و
+        - link "وبلاگ نوبیکس شاپ" [ref=e402] [cursor=pointer]:
+          - /url: /blog
+        - text: را ببینید.
+      - generic [ref=e403]:
+        - heading "سوالات متداول خرید از نوبیکس شاپ" [level=2] [ref=e404]
+        - group [ref=e405]:
+          - generic "خرید وی باکس فورتنایت از نوبیکس شاپ چگونه انجام می‌شود؟" [ref=e406] [cursor=pointer]
+        - group [ref=e407]:
+          - generic "کروپک فورتنایت (Fortnite Crew) شامل چه چیزهایی است؟" [ref=e408] [cursor=pointer]
+        - group [ref=e409]:
+          - generic "آیا خرید اشتراک ChatGPT و Gemini در نوبیکس شاپ قانونی است؟" [ref=e410] [cursor=pointer]
+        - group [ref=e411]:
+          - generic "پرداخت در نوبیکس شاپ چقدر امن است؟" [ref=e412] [cursor=pointer]
+        - group [ref=e413]:
+          - generic "اگر هنگام خرید یا فعال‌سازی مشکلی پیش بیاید چه کنم؟" [ref=e414] [cursor=pointer]
+  - contentinfo [ref=e415]:
+    - button "بازگشت به بالا" [ref=e417] [cursor=pointer]:
+      - img [ref=e418]
+    - generic [ref=e421]:
+      - generic [ref=e422]:
+        - generic [ref=e423]:
+          - generic [ref=e424]:
+            - img "نوبیکس" [ref=e425]
+            - generic [ref=e426]: فروشگاه نوبیکس
+          - paragraph [ref=e427]: نوبیکس، مرجع تخصصی فعال‌سازی محصولات دیجیتال؛ از گیم‌پس، اشتراک‌های هوش مصنوعی تا گیفت‌کارت و وی‌باکس فورتنایت، با بیش از ۴ سال سابقه. ما متعهد به ارائه بهترین خدمات با قیمت مناسب و تحویل سریع هستیم.
+          - generic [ref=e428]:
+            - link "support@nubixshop.ir" [ref=e429] [cursor=pointer]:
+              - /url: mailto:support@nubixshop.ir
+              - img [ref=e430]
+              - generic [ref=e433]: support@nubixshop.ir
+            - link "۰۲۱-۹۱۶۹۴۷۵۹" [ref=e434] [cursor=pointer]:
+              - /url: tel:+982191694759
+              - img [ref=e435]
+              - generic [ref=e437]: ۰۲۱-۹۱۶۹۴۷۵۹
+          - generic [ref=e438]:
+            - textbox "ایمیل خود را وارد کنید..." [ref=e439]
+            - button "عضو شوید" [ref=e440] [cursor=pointer]
+        - generic [ref=e441]:
+          - heading "دسترسی سریع" [level=4] [ref=e442]
+          - list [ref=e443]:
+            - listitem [ref=e444]:
+              - link "• خرید وی باکس فورتنایت" [ref=e445] [cursor=pointer]:
+                - /url: /vbucks
+            - listitem [ref=e446]:
+              - link "• خرید کروپک فورتنایت" [ref=e447] [cursor=pointer]:
+                - /url: /crewpack
+            - listitem [ref=e448]:
+              - link "• خرید اشتراک ChatGPT" [ref=e449] [cursor=pointer]:
+                - /url: /product/chatgpt-subscription
+            - listitem [ref=e450]:
+              - link "• خرید اشتراک Gemini" [ref=e451] [cursor=pointer]:
+                - /url: /gemini
+            - listitem [ref=e452]:
+              - link "• پیش‌خرید GTA 6" [ref=e453] [cursor=pointer]:
+                - /url: /gta6
+            - listitem [ref=e454]:
+              - link "• محصولات فورتنایت" [ref=e455] [cursor=pointer]:
+                - /url: /category/fortnite
+            - listitem [ref=e456]:
+              - link "• گیفت کارت‌ها" [ref=e457] [cursor=pointer]:
+                - /url: /category/giftcards
+            - listitem [ref=e458]:
+              - link "• پیگیری سفارش" [ref=e459] [cursor=pointer]:
+                - /url: /faq/track-my-order
+        - generic [ref=e460]:
+          - heading "خدمات مشتریان" [level=4] [ref=e461]
+          - list [ref=e462]:
+            - listitem [ref=e463]:
+              - link "• سوالات متداول" [ref=e464] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e465]:
+              - link "• درباره نوبیکس" [ref=e466] [cursor=pointer]:
+                - /url: /faq/about
+            - listitem [ref=e467]:
+              - link "• راهنمای خرید" [ref=e468] [cursor=pointer]:
+                - /url: /faq/how-to-buy
+            - listitem [ref=e469]:
+              - link "• وبلاگ و مقالات" [ref=e470] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e471]:
+              - link "• آموزش غیرفعال‌سازی 2FA" [ref=e472] [cursor=pointer]:
+                - /url: /guides/disable-2fa
+            - listitem [ref=e473]:
+              - link "• قوانین و مقررات" [ref=e474] [cursor=pointer]:
+                - /url: /faq/rules
+            - listitem [ref=e475]:
+              - link "• حریم خصوصی" [ref=e476] [cursor=pointer]:
+                - /url: /faq/privacy
+            - listitem [ref=e477]:
+              - link "• تماس با ما" [ref=e478] [cursor=pointer]:
+                - /url: /faq/contact
+        - generic [ref=e479]:
+          - heading "مجوزهای ما" [level=4] [ref=e480]
+          - generic [ref=e481]:
+            - link "نماد اعتماد الکترونیکی" [ref=e482] [cursor=pointer]:
+              - /url: https://trustseal.enamad.ir/?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2
+              - img "نماد اعتماد الکترونیکی"
+            - link "ساماندهی" [ref=e483] [cursor=pointer]:
+              - /url: https://samandehi.ir
+              - img "ساماندهی"
+            - link "زرین‌پال" [ref=e484] [cursor=pointer]:
+              - /url: https://www.zarinpal.com/trustPage/nubixshop.ir
+              - img "درگاه پرداخت زرین‌پال"
+            - generic "پرداخت امن شاپرک" [ref=e485] [cursor=pointer]:
+              - img "پرداخت امن شاپرک"
+          - heading "شبکه‌های اجتماعی" [level=4] [ref=e486]
+          - generic [ref=e487]:
+            - link "کانال تلگرام" [ref=e488] [cursor=pointer]:
+              - /url: https://t.me/NubixShopIR
+              - img [ref=e489]
+            - link "اینستاگرام" [ref=e491] [cursor=pointer]:
+              - /url: https://instagram.com/NubixShop.ir
+              - img [ref=e492]
+            - link "پشتیبانی تلگرام" [ref=e495] [cursor=pointer]:
+              - /url: https://t.me/Nubixsupport
+              - img [ref=e496]
+      - generic [ref=e498]:
+        - generic [ref=e499]:
+          - text: تمامی حقوق مادی و معنوی این سایت متعلق به
+          - strong [ref=e500]: فروشگاه نوبیکس
+          - text: می‌باشد.
+        - generic [ref=e501]:
+          - text: طراحی و توسعه با ❤️ توسط
+          - link "تیم مورتال" [ref=e502] [cursor=pointer]:
+            - /url: https://t.me/MortalCompanyIR

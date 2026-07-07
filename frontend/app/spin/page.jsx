@@ -25,8 +25,14 @@ function SpinPageInner() {
 
   const types = (status?.segments && status.segments.map((s) => s.type)) || FALLBACK_TYPES;
   const signedIn = !!status?.signed_in;
+  const isAdmin = !!status?.is_admin;
   const alreadyWon = !!result;
   const canSpin = !!status?.can_spin && !alreadyWon;
+
+  const handleSpinAgain = () => {
+    setResult(null);
+    setError(null);
+  };
 
   const loadStatus = () => {
     fetch("/api/spin/status", { credentials: "include", cache: "no-store" })
@@ -116,13 +122,18 @@ function SpinPageInner() {
 
             {alreadyWon ? (
               <div className="sp-result">
-                <span className="sp-result-emoji">{result.type !== "blank" ? "🎉" : "🙁"}</span>
-                <strong>{result.label}</strong>
-                {result.code && (
+                <span className="sp-result-emoji">{result?.type !== "blank" ? "🎉" : "🙁"}</span>
+                <strong>{result?.label}</strong>
+                {result?.code && (
                   <div className="sp-code"><span>کد تخفیف (مخصوص حساب شما):</span><code>{result.code}</code></div>
                 )}
-                {result.diamonds_credit > 0 && (
+                {result?.diamonds_credit > 0 && (
                   <p className="sp-muted">{Number(result.diamonds_credit).toLocaleString("fa-IR")} الماس به حساب شما اضافه شد.</p>
+                )}
+                {isAdmin && (
+                  <button type="button" className="sp-btn" onClick={handleSpinAgain} style={{ marginTop: 6 }}>
+                    چرخش مجدد (حالت دیباگ ادمین)
+                  </button>
                 )}
               </div>
             ) : !signedIn ? (

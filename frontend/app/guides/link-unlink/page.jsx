@@ -12,7 +12,7 @@ export default function LinkUnlinkGuidePage() {
   return (
     <FaqSectionLayout
       title="راهنمای لینک و آنلینک کردن اکانت‌ها"
-      subtitle="نحوه اتصال و قطع اتصال حساب‌های Epic Games، Xbox و PlayStation به یکدیگر جهت همگام‌سازی بازی‌ها"
+      subtitle="آموزش گام‌به‌گام اتصال و قطع اتصال حساب‌های Epic Games، Xbox و PlayStation برای همگام‌سازی بازی‌ها و آیتم‌ها"
       activeSection="link-unlink"
     >
       <div className="guide-article-container">
@@ -79,7 +79,7 @@ export default function LinkUnlinkGuidePage() {
             -webkit-backdrop-filter: blur(4px);
           }
           
-          .guide-article-banner h1 {
+          .guide-article-banner .page-banner-title {
             margin: 0;
             font-size: 28px;
             font-weight: 900;
@@ -375,7 +375,7 @@ export default function LinkUnlinkGuidePage() {
               height: 140px;
               padding: 24px;
             }
-            .guide-article-banner h1 {
+            .guide-article-banner .page-banner-title {
               font-size: 20px;
             }
             .guide-article-info-bar {
@@ -400,7 +400,7 @@ export default function LinkUnlinkGuidePage() {
             <span className="guide-article-banner-icon">🔗</span>
             <div className="guide-article-meta">
               <span className="guide-article-tag">راهنمای اکانت‌ها</span>
-              <h1>راهنمای لینک و آنلینک کردن حساب‌های بازی</h1>
+              <h2 className="page-banner-title">راهنمای لینک و آنلینک کردن حساب‌های بازی</h2>
             </div>
           </div>
           
@@ -421,7 +421,7 @@ export default function LinkUnlinkGuidePage() {
 
           <div className="guide-article-content">
             <p className="guide-intro">
-              برای هماهنگ‌سازی و انتقال محصولات درون‌برنامه‌ای خریداری شده (مانند ویباکس و پک‌های فورتنایت) به کنسول‌های ایکس‌باکس یا پلی‌استیشن، حتماً باید اکانت اپیک گیمز خود را به حساب کنسول مورد نظرتان متصل (لینک) کنید. در این مقاله به آموزش گام به گام نحوه اتصال و یا لغو اتصال (آنلینک) اکانت‌ها می‌پردازیم.
+              برای همگام‌سازی و انتقال محصولات درون‌بازی خریداری‌شده (مانند وی‌باکس و پک‌های فورتنایت) به کنسول‌های ایکس‌باکس یا پلی‌استیشن، باید اکانت اپیک گیمز خود را به حساب کنسول مورد نظر متصل (لینک) کنید. در این راهنما، مراحل اتصال و قطع اتصال (آنلینک) حساب‌ها را گام‌به‌گام توضیح می‌دهیم.
             </p>
 
             <div className="info-banner">
@@ -432,7 +432,7 @@ export default function LinkUnlinkGuidePage() {
               </svg>
               <div>
                 <strong>چرا لینک کردن مهم است؟</strong>
-                <p>خرید محصولات فورتنایت نوبیکس شاپ بر روی ریجن‌ها و پلتفرم‌های ارزان‌ قیمت‌تر انجام می‌شود. با لینک بودن اکانت اپیک‌ گیمز به پی‌اس‌ان یا ایکس‌باکس خود، محصولات خریداری شده به صورت خودکار روی کنسول شخصی شما نیز فعال و قابل استفاده خواهند شد.</p>
+                <p>خرید محصولات فورتنایت در نوبیکس شاپ روی ریجن‌ها و پلتفرم‌های مقرون‌به‌صرفه‌تر انجام می‌شود. با لینک بودن اکانت اپیک گیمز به حساب پی‌اس‌ان یا ایکس‌باکس شما، محصولات خریداری‌شده به‌صورت خودکار روی کنسول شخصی‌تان نیز فعال و قابل استفاده خواهند بود.</p>
               </div>
             </div>
 
@@ -461,8 +461,8 @@ export default function LinkUnlinkGuidePage() {
             </div>
 
             <div className="guide-content">
-              {activeTab === "link" && (
-                <div className="guide-section">
+              {(
+                <div className="guide-section" hidden={activeTab !== "link"}>
                   <h2>نحوه اتصال (Link) حساب‌ها به Epic Games</h2>
 
                   <div className="step">
@@ -474,7 +474,7 @@ export default function LinkUnlinkGuidePage() {
                         <a href="https://www.epicgames.com/account/connections" target="_blank" rel="noopener noreferrer">
                           epicgames.com/account/connections
                         </a>{" "}
-                        مراجعه کرده و با اکانت اپیک گیمز خود لاگین کنید.
+                        مراجعه کرده و با اکانت اپیک گیمز خود وارد شوید.
                       </p>
                     </div>
                   </div>
@@ -483,7 +483,7 @@ export default function LinkUnlinkGuidePage() {
                     <div className="step-number">۲</div>
                     <div className="step-content">
                       <h3>تب Accounts و انتخاب پلتفرم</h3>
-                      <p>به تب <strong>Accounts</strong> رفته و پلتفرمی که می‌خواهید به اپیک گیمز متصل کنید را بیابید (مانند Xbox یا PlayStation Network).</p>
+                      <p>به تب <strong>Accounts</strong> بروید و پلتفرمی را که می‌خواهید به اپیک گیمز متصل کنید انتخاب کنید (مانند Xbox یا PlayStation Network).</p>
                     </div>
                   </div>
 
@@ -491,7 +491,7 @@ export default function LinkUnlinkGuidePage() {
                     <div className="step-number">۳</div>
                     <div className="step-content">
                       <h3>کلیک بر روی Connect</h3>
-                      <p>روی دکمه خاکستری‌رنگ <strong>Connect</strong> زیر نام پلتفرم انتخابی کلیک کنید.</p>
+                      <p>روی دکمه خاکستری‌رنگ <strong>Connect</strong> زیر نام پلتفرم مورد نظر کلیک کنید.</p>
                     </div>
                   </div>
 
@@ -499,7 +499,7 @@ export default function LinkUnlinkGuidePage() {
                     <div className="step-number">۴</div>
                     <div className="step-content">
                       <h3>ورود به اکانت کنسول و تایید نهایی</h3>
-                      <p>به صفحه ورود رسمی مایکروسافت/سونی هدایت خواهید شد. ایمیل و رمز اکانت کنسول خود را وارد کرده و اجازه اتصال دسترسی را تایید نمایید.</p>
+                      <p>به صفحه ورود رسمی مایکروسافت یا سونی هدایت می‌شوید. ایمیل و رمز اکانت کنسول خود را وارد کرده و اجازه اتصال را تایید کنید.</p>
                     </div>
                   </div>
 
@@ -508,13 +508,13 @@ export default function LinkUnlinkGuidePage() {
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                       <polyline points="22 4 12 14.01 9 11.01"/>
                     </svg>
-                    <p>پس از انجام موفق اتصال، پیامی مبنی بر موفقیت‌آمیز بودن اتصال اکانت نمایش داده خواهد شد و آیتم‌های فورتنایت بلافاصله همگام می‌شوند.</p>
+                    <p>پس از اتصال موفق، پیام تایید نمایش داده می‌شود و آیتم‌های فورتنایت شما بلافاصله همگام‌سازی می‌شوند.</p>
                   </div>
                 </div>
               )}
 
-              {activeTab === "unlink" && (
-                <div className="guide-section">
+              {(
+                <div className="guide-section" hidden={activeTab !== "unlink"}>
                   <h2>نحوه قطع اتصال (Unlink) حساب‌ها از Epic Games</h2>
 
                   <div className="warning-box">
@@ -524,8 +524,8 @@ export default function LinkUnlinkGuidePage() {
                       <line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
                     <div>
-                      <strong>هشدار بسیار مهم اپیک گیمز:</strong>
-                      <p>طبق قوانین شرکت Epic Games، پس از قطع اتصال هر حساب کنسولی، شما تا <strong>یک سال کامل (۳۶۵ روز)</strong> قادر نخواهید بود هیچ حساب دیگری از همان پلتفرم را به حساب اپیک گیمز خود متصل کنید! پس در انجام آن کمال دقت را داشته باشید.</p>
+                      <strong>هشدار مهم اپیک گیمز:</strong>
+                      <p>طبق قوانین شرکت Epic Games، پس از قطع اتصال هر حساب کنسولی، تا <strong>یک سال کامل (۳۶۵ روز)</strong> امکان اتصال حساب دیگری از همان پلتفرم به اکانت اپیک گیمز شما وجود نخواهد داشت. بنابراین پیش از انجام این کار نهایت دقت را داشته باشید.</p>
                     </div>
                   </div>
 
@@ -547,7 +547,7 @@ export default function LinkUnlinkGuidePage() {
                     <div className="step-number">۲</div>
                     <div className="step-content">
                       <h3>یافتن پلتفرم متصل شده</h3>
-                      <p>در تب Accounts، پلتفرمی که متصل است را پیدا کنید (دکمه زیر آن به صورت Disconnect نمایش داده می‌شود).</p>
+                      <p>در تب Accounts، پلتفرم متصل‌شده را پیدا کنید؛ دکمه زیر آن به‌صورت Disconnect نمایش داده می‌شود.</p>
                     </div>
                   </div>
 
@@ -555,15 +555,15 @@ export default function LinkUnlinkGuidePage() {
                     <div className="step-number">۳</div>
                     <div className="step-content">
                       <h3>کلیک بر روی Disconnect و تایید هشدارها</h3>
-                      <p>روی دکمه <strong>Disconnect</strong> کلیک کرده، تمامی ۴ تیک شروط هشدار را فعال نموده و دکمه قرمز Unlink را بزنید.</p>
+                      <p>روی دکمه <strong>Disconnect</strong> کلیک کنید، هر ۴ گزینه تایید هشدار را فعال کرده و سپس دکمه قرمز Unlink را بزنید.</p>
                     </div>
                   </div>
 
                   <div className="step">
                     <div className="step-number">۴</div>
                     <div className="step-content">
-                      <h3>تایید نهایی با رمز عبور</h3>
-                      <p>کد تایید امنیتی فرستاده شده به ایمیل خود را وارد کرده تا اتصال با موفقیت قطع گردد.</p>
+                      <h3>تایید نهایی</h3>
+                      <p>کد تایید امنیتی ارسال‌شده به ایمیل خود را وارد کنید تا اتصال با موفقیت قطع شود.</p>
                     </div>
                   </div>
 
@@ -573,20 +573,20 @@ export default function LinkUnlinkGuidePage() {
                       <path d="M12 16v-4"/>
                       <path d="M12 8h.01"/>
                     </svg>
-                    <p>قطع اتصال اکانت، اطلاعات و خریدهای قبلی شما را حذف نمی‌کند؛ اطلاعات فورتنایت همچنان در سرور اپیک گیمز محفوظ است.</p>
+                    <p>قطع اتصال حساب، اطلاعات و خریدهای قبلی شما را حذف نمی‌کند؛ تمام اطلاعات فورتنایت همچنان روی سرور اپیک گیمز محفوظ می‌ماند.</p>
                   </div>
                 </div>
               )}
             </div>
 
             <div className="guide-footer">
-              <h3>در فرآیند لینک و آنلینک با خطا مواجه شده‌اید؟</h3>
-              <p>اگر با هشدارهایی نظیر "This account is already linked to another Epic Games account" مواجه شدید، پشتیبانی ما آماده رفع مشکل شماست.</p>
+              <h3>در فرآیند لینک یا آنلینک با خطا مواجه شده‌اید؟</h3>
+              <p>اگر با پیام‌هایی مانند «This account is already linked to another Epic Games account» روبه‌رو شدید، کارشناسان پشتیبانی نوبیکس تا رفع کامل مشکل و تکمیل سفارش در کنار شما هستند.</p>
               <a href="https://t.me/Nubixsupport" target="_blank" rel="noopener noreferrer" className="support-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.242-1.865-.442-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.121.099.155.232.171.325.016.093.036.305.02.471z"/>
                 </svg>
-                ارسال تیکت پشتیبانی در تلگرام
+ارتباط با پشتیبانی نوبیکس در تلگرام
               </a>
             </div>
           </div>

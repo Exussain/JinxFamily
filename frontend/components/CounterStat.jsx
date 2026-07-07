@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import CountUp from "./CountUp";
+import { productHref } from "../lib/productUrls.mjs";
 import "./CounterStat.css";
 
 const FALLBACK_TESTIMONIALS = [
@@ -118,10 +119,10 @@ export default function CounterStat({ to = 0, label = "سفارش‌های مو�
       {/* Header Info */}
       <div className="stat-card-header">
         <div className="stat-info-group">
-          <h3 className="stat-count-title">
+          <p className="stat-count-title">
             <CountUp to={to || 1417} duration={2500} />
             <span className="stat-label"> {label}</span>
-          </h3>
+          </p>
           <span className="stat-growth-text">هر روز درحال افزایش</span>
         </div>
         
@@ -138,7 +139,7 @@ export default function CounterStat({ to = 0, label = "سفارش‌های مو�
       <div className="compact-tm-wrapper">
         <div className="compact-tm-carousel-body">
           {testimonials.map((t, idx) => {
-            const href = t.productSlug ? `/product/${t.productSlug}#comment-${t.id}` : null;
+            const href = t.productSlug ? productHref(t.productSlug, `#comment-${t.id}`) : null;
             const CardContent = (
               <>
                 <div className="compact-tm-card-header">

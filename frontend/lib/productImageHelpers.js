@@ -18,7 +18,7 @@ const STATIC_IMAGE_MAP = {
   "spotify-subscription": "/products/spotify.webp",
   "chatgpt-subscription": "/products/chatgpt.webp",
   "gemini-subscription": "/products/gemini.webp",
-  "league-of-legends-rp": "/products/lol_rp.webp",
+  "change-region-turkey": "/products/change-region-turkey.webp",
 };
 
 function stripExt(path) {

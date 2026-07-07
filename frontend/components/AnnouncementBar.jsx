@@ -33,6 +33,15 @@ export default function AnnouncementBar() {
   }, [versionKey]);
 
   if (hidden) return null;
+  if (!data) {
+    return (
+      <div
+        className="announcement-shell announcement-placeholder"
+        aria-hidden="true"
+        style={{ minHeight: 44 }}
+      />
+    );
+  }
   const bar = data?.announcement_bar;
   if (!bar || !bar.enabled || !bar.text) return null;
 

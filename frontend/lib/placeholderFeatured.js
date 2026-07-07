@@ -109,15 +109,4 @@ export const placeholderFeatured = [
     image_base: "/products/gemini",
     price_from: true,
   },
-  {
-    id: 11,
-    slug: "league-of-legends-rp",
-    name_fa: "پوینت لیگ آف لجندز (RP)",
-    subtitle: "League of Legends RP",
-    category: "games",
-    category_title: "بازی‌ها",
-    image_url: "/products/lol_rp.webp",
-    image_base: "/products/lol_rp",
-    price_from: true,
-  },
 ];

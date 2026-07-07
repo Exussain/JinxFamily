@@ -456,6 +456,128 @@ class KavenegarService:
             return False, f"خطای غیرمنتظره در ارسال پیامک: {str(e)}"
 
     @classmethod
+    def send_club_points_sms(
+        cls,
+        phone_number: str,
+        customer_name: str,
+        points: int,
+        balance: int,
+        template_name: Optional[str] = "nubixshop-club-points",
+    ) -> Tuple[bool, str]:
+        """
+        ارسال پیامک باشگاه مشتریان بعد از خرید.
+        Template پیشنهادی کاوه‌نگار:
+        token = نام، token2 = الماس دریافتی، token3 = موجودی الماس
+        """
+        if not phone_number:
+            return False, "شماره تلفن خالی است"
+
+        ok, normalized = cls.validate_phone_number(phone_number)
+        if not ok:
+            return False, normalized
+
+        template = template_name or "nubixshop-club-points"
+        if not cls.API_KEY:
+            if cls._is_debug_mode():
+                logger.info(
+                    "MOCK SMS (No API Key): club points SMS to %s [+%s balance=%s]",
+                    normalized,
+                    points,
+                    balance,
+                )
+                return True, "پیامک باشگاه به صورت شبیه‌سازی شده ارسال شد"
+            logger.error("Kavenegar API key is missing in production")
+            log_notification(
+                "sms",
+                normalized,
+                template=template,
+                success=False,
+                message="Kavenegar API key is missing",
+                context={"status": "missing_api_key", "points": points, "balance": balance},
+            )
+            return False, "Kavenegar API key is not configured"
+
+        def _clean_token(val: str) -> str:
+            s = (val or "").strip()
+            return re.sub(r"[\s_\-\u200c\u200d\u200e\u200f,،]+", "", s)
+
+        name_raw = (customer_name or "").strip()
+        first_name = re.split(r"\s+", name_raw)[0] if name_raw else "مشتری"
+        payload = {
+            "receptor": normalized,
+            "token": _clean_token(first_name),
+            "token2": _clean_token(str(max(0, int(points or 0)))),
+            "token3": _clean_token(str(max(0, int(balance or 0)))),
+            "template": template,
+            "type": "sms",
+        }
+
+        try:
+            logger.info("Sending club points SMS to %s using template %s", normalized, template)
+            response = cls._post(cls._verify_lookup_url(), data=payload, timeout=10)
+            if response.status_code == cls.STATUS_SUCCESS:
+                data = response.json()
+                if data.get("return", {}).get("status") == 200:
+                    log_notification(
+                        "sms",
+                        normalized,
+                        template=template,
+                        success=True,
+                        message="پیامک باشگاه ارسال شد",
+                        context={"response": data, "payload": payload},
+                    )
+                    return True, "پیامک باشگاه ارسال شد"
+                error = data.get("return", {}).get("message", "خطای نامشخص")
+                log_notification(
+                    "sms",
+                    normalized,
+                    template=template,
+                    success=False,
+                    message=error,
+                    context={"response": data, "payload": payload},
+                )
+                return False, error
+            log_notification(
+                "sms",
+                normalized,
+                template=template,
+                success=False,
+                message=f"خطای ناشناخته: {response.status_code}",
+                context={"status_code": response.status_code, "payload": payload},
+            )
+            return False, f"خطای ناشناخته: {response.status_code}"
+        except requests.exceptions.Timeout:
+            log_notification(
+                "sms",
+                normalized,
+                template=template,
+                success=False,
+                message="Timeout اتصال به کاوه‌نگار",
+                context={"status": "timeout", "payload": payload},
+            )
+            return False, "Timeout اتصال به کاوه‌نگار"
+        except requests.exceptions.RequestException as e:
+            log_notification(
+                "sms",
+                normalized,
+                template=template,
+                success=False,
+                message=str(e),
+                context={"status": "request_exception", "payload": payload},
+            )
+            return False, f"خطا در اتصال به کاوه‌نگار: {str(e)}"
+        except Exception as e:
+            log_notification(
+                "sms",
+                normalized,
+                template=template,
+                success=False,
+                message=str(e),
+                context={"status": "unexpected_error", "payload": payload},
+            )
+            return False, f"خطای غیرمنتظره در ارسال پیامک: {str(e)}"
+
+    @classmethod
     def send_refund_sms(
         cls,
         phone_number: str,
@@ -586,3 +708,134 @@ class KavenegarService:
             return False, "شماره تلفن فقط باید شامل اعداد باشد"
 
         return True, phone_number
+
+    @classmethod
+    def send_abandoned_cart_sms(
+        cls,
+        phone_number: str,
+        customer_name: str = "",
+    ) -> Tuple[bool, str]:
+        """یادآوری سبد رها‌شده از قالب nubixshop-cart-reminder.
+
+        قالب در پنل کاوه‌نگار:
+            %token عزیز،
+            لطفاً سفارش خود را از طریق لینک https://nubixshop.ir/checkout تکمیل فرمایید.
+            با توجه به حجم بالای سفارشات، در صورت عدم تکمیل، سفارش به‌صورت
+            خودکار لغو خواهد شد. سپاس از همراهی شما
+
+            نوبیکس شاپ
+        token = نام کوچک مشتری (مثلاً «علی»). اگر خالی باشد، «مشتری» استفاده می‌شود.
+        """
+        ok, normalized = cls.validate_phone_number(phone_number)
+        if not ok:
+            return False, normalized
+
+        name_raw = (customer_name or "").strip()
+        parts = re.split(r"\s+", name_raw) if name_raw else []
+        first_name = parts[0] if parts else "مشتری"
+
+        if not cls.API_KEY:
+            if cls._is_debug_mode():
+                logger.info(
+                    "MOCK SMS (No API Key): cart reminder to %s [name=%s]",
+                    normalized, first_name,
+                )
+                return True, "پیامک یادآوری به صورت شبیه‌سازی شده ارسال شد"
+            logger.error("Kavenegar API key is missing in production")
+            log_notification(
+                "sms",
+                normalized,
+                template="nubixshop-cart-reminder",
+                success=False,
+                message="Kavenegar API key is missing",
+            )
+            return False, "Kavenegar API key is not configured"
+
+        def _clean(val: str) -> str:
+            s = (str(val) if val is not None else "").strip()
+            return re.sub(r"[\s_\-\u200c\u200d\u200e\u200f,،]+", "", s)
+
+        payload = {
+            "receptor": normalized,
+            "token": _clean(first_name),
+            "template": "nubixshop-cart-reminder",
+            "type": "sms",
+        }
+
+        try:
+            logger.info(
+                "Sending cart reminder SMS to %s [name=%s]",
+                normalized, first_name,
+            )
+            response = cls._post(cls._verify_lookup_url(), data=payload, timeout=10)
+            if response.status_code == cls.STATUS_SUCCESS:
+                data = response.json()
+                if data.get("return", {}).get("status") == 200:
+                    log_notification(
+                        "sms",
+                        normalized,
+                        template="nubixshop-cart-reminder",
+                        success=True,
+                        message="یادآوری سبد ارسال شد",
+                        context={"response": data, "payload": payload},
+                    )
+                    return True, "یادآوری سبد ارسال شد"
+                error = data.get("return", {}).get("message", "خطای نامشخص")
+                log_notification(
+                    "sms",
+                    normalized,
+                    template="nubixshop-cart-reminder",
+                    success=False,
+                    message=error,
+                    context={"response": data, "payload": payload},
+                )
+                return False, error
+            if response.status_code == cls.STATUS_TEMPLATE_NOT_FOUND:
+                log_notification(
+                    "sms",
+                    normalized,
+                    template="nubixshop-cart-reminder",
+                    success=False,
+                    message="الگوی 'nubixshop-cart-reminder' یافت نشد",
+                    context={"status_code": response.status_code, "payload": payload},
+                )
+                return False, "الگوی 'nubixshop-cart-reminder' یافت نشد"
+            log_notification(
+                "sms",
+                normalized,
+                template="nubixshop-cart-reminder",
+                success=False,
+                message=f"خطای ناشناخته: {response.status_code}",
+                context={"status_code": response.status_code, "payload": payload},
+            )
+            return False, f"خطای ناشناخته: {response.status_code}"
+        except requests.exceptions.Timeout:
+            log_notification(
+                "sms",
+                normalized,
+                template="nubixshop-cart-reminder",
+                success=False,
+                message="Timeout اتصال به کاوه‌نگار",
+                context={"status": "timeout"},
+            )
+            return False, "Timeout اتصال به کاوه‌نگار"
+        except requests.exceptions.RequestException as e:
+            log_notification(
+                "sms",
+                normalized,
+                template="nubixshop-cart-reminder",
+                success=False,
+                message=str(e),
+                context={"status": "request_exception"},
+            )
+            return False, f"خطا در اتصال به کاوه‌نگار: {str(e)}"
+        except Exception as e:
+            log_notification(
+                "sms",
+                normalized,
+                template="nubixshop-cart-reminder",
+                success=False,
+                message=str(e),
+                context={"status": "unexpected_error"},
+            )
+            return False, f"خطای غیرمنتظره در ارسال یادآوری: {str(e)}"

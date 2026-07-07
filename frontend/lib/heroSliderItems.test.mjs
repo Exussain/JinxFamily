@@ -62,7 +62,7 @@ test("buildGamingHeroItems mixes gaming categories, shuffled deterministically b
   const products = [
     { slug: "fortnite-crew-pack", name_fa: "کروپک", active: true, category: "FORTNITE" },
     { slug: "v-bucks", name_fa: "ویباکس", active: true, category: "FORTNITE" },
-    { slug: "league-of-legends-rp", name_fa: "آرپی", active: true, category: "GAMES" },
+    { slug: "gta6", name_fa: "جی‌تی‌ای ۶", active: true, category: "GAMES", image_url: "/products/gta6/ps5-standard.webp" },
     { slug: "fortnite-starter-pack", name_fa: "استارتر پک", active: true, category: "GIFTCARDS" },
     { slug: "gemini-subscription", name_fa: "جیمینی", active: true, category: "AI" },
   ];
@@ -73,7 +73,7 @@ test("buildGamingHeroItems mixes gaming categories, shuffled deterministically b
   assert.deepEqual(itemsA, itemsB, "same seed must give the same order");
   assert.deepEqual(
     itemsA.map((item) => item.slug).sort(),
-    ["fortnite-crew-pack", "fortnite-starter-pack", "league-of-legends-rp", "v-bucks"],
+    ["fortnite-crew-pack", "fortnite-starter-pack", "gta6", "v-bucks"],
     "includes FORTNITE/GAMES/GIFTCARDS and excludes AI"
   );
 });

@@ -1,39 +1,96 @@
 import Link from 'next/link';
 import Navbar from '../../components/Navbar';
-
-export const metadata = {
-  title: 'وبلاگ نوبیکس شاپ - مقالات و اخبار گیمینگ',
-  description: 'آخرین اخبار، آموزش‌ها و مقالات جذاب دنیای بازی‌های ویدیویی را در بلاگ نوبیکس شاپ بخوانید.',
-};
+import { fetchApiJson } from '../../lib/serverFetch.mjs';
 
 export const dynamic = 'force-dynamic';
 
+const CANONICAL_ARTICLE_PATHS = {
+  'remove-restriction': '/guides/remove-restriction',
+  'link-unlink': '/guides/link-unlink',
+  'disable-2fa': '/guides/disable-2fa',
+};
+
+function articleHref(slug) {
+  return CANONICAL_ARTICLE_PATHS[slug] || `/blog/${slug}`;
+}
+
+export async function generateMetadata({ searchParams }) {
+  const resolved = await searchParams;
+  const category = (resolved?.category || '').trim();
+  const page = Number(resolved?.page) > 1 ? Number(resolved.page) : 1;
+
+  // Each filter/page combination gets its own self-referencing canonical so
+  // parameter URLs don't collapse into (or duplicate) the main listing.
+  let canonical = '/blog';
+  if (category) canonical = `/blog?category=${encodeURIComponent(category)}`;
+  else if (page > 1) canonical = `/blog?page=${page}`;
+
+  let title = 'وبلاگ نوبیکس شاپ؛ مقالات و آموزش‌های گیمینگ';
+  if (category) {
+    const catData = await fetchApiJson('/api/blog/categories');
+    const cat = (catData?.results || []).find((c) => c.slug === category);
+    if (cat?.name) title = `مقالات ${cat.name} | وبلاگ`;
+  } else if (page > 1) {
+    title = `وبلاگ نوبیکس شاپ — صفحه ${page}`;
+  }
+
+  return {
+    title,
+    description:
+      'آخرین اخبار، آموزش‌ها و راهنمای خرید وی باکس، کروپک فورتنایت، اشتراک ChatGPT و دنیای گیم را در وبلاگ نوبیکس شاپ بخوانید.',
+    alternates: {
+      canonical,
+      types: { 'application/rss+xml': `${'https://nubixshop.ir'}/blog/feed.xml` },
+    },
+    openGraph: {
+      title,
+      description: 'مقالات و آموزش‌های دنیای گیم و محصولات دیجیتال در وبلاگ نوبیکس شاپ.',
+      url: `https://nubixshop.ir${canonical}`,
+      type: 'website',
+      locale: 'fa_IR',
+      images: [
+        {
+          url: 'https://nubixshop.ir/og-image.webp',
+          alt: 'وبلاگ نوبیکس شاپ',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description: 'مقالات و آموزش‌های دنیای گیم و محصولات دیجیتال در وبلاگ نوبیکس شاپ.',
+      images: ['https://nubixshop.ir/og-image.webp'],
+    },
+  };
+}
+
 export default async function BlogPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
   const category = resolvedSearchParams?.category || '';
-  const page = resolvedSearchParams?.page || 1;
-  
+  const page = Number(resolvedSearchParams?.page) > 1 ? Number(resolvedSearchParams.page) : 1;
+
   let articles = [];
   let categories = [];
   let totalPages = 1;
-  
-  try {
-    const res = await fetch(`${apiBase}/api/blog/articles?category=${category}&page=${page}`, { next: { revalidate: 60 } });
-    if (res.ok) {
-      const data = await res.json();
-      articles = data.results || [];
-      totalPages = data.pages || 1;
-    }
-    
-    const catRes = await fetch(`${apiBase}/api/blog/categories`, { next: { revalidate: 600 } });
-    if (catRes.ok) {
-      const catData = await catRes.json();
-      categories = catData.results || [];
-    }
-  } catch (e) {
-    console.error("Failed to fetch blog data:", e);
+
+  const data = await fetchApiJson(
+    `/api/blog/articles?category=${encodeURIComponent(category)}&page=${page}`,
+    { next: { revalidate: 60 } }
+  );
+  if (data) {
+    articles = data.results || [];
+    totalPages = Number(data.pages) || 1;
   }
+  const catData = await fetchApiJson('/api/blog/categories', { next: { revalidate: 600 } });
+  if (catData) categories = catData.results || [];
+
+  const pageHref = (n) => {
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (n > 1) params.set('page', String(n));
+    const qs = params.toString();
+    return qs ? `/blog?${qs}` : '/blog';
+  };
 
   return (
     <>
@@ -116,7 +173,7 @@ export default async function BlogPage({ searchParams }) {
               }
             `}</style>
             {articles.map(article => (
-              <Link href={`/blog/${article.slug}`} key={article.id} style={{ textDecoration: 'none' }}>
+              <Link href={articleHref(article.slug)} key={article.id} style={{ textDecoration: 'none' }}>
                 <div className="article-card">
                   {article.cover_image ? (
                     <div style={{ height: '180px', width: '100%', backgroundImage: `url(${article.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
@@ -146,6 +203,31 @@ export default async function BlogPage({ searchParams }) {
               </Link>
             ))}
           </div>
+        )}
+
+        {/* Pagination — server-rendered links so every page is crawlable */}
+        {totalPages > 1 && (
+          <nav
+            aria-label="صفحه‌بندی مقالات"
+            style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center', margin: '40px 0 16px', flexWrap: 'wrap' }}
+          >
+            {page > 1 && (
+              <Link href={pageHref(page - 1)} className="blog-category-link">← قبلی</Link>
+            )}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+              <Link
+                key={n}
+                href={pageHref(n)}
+                className={`blog-category-link ${n === page ? 'active' : ''}`}
+                aria-current={n === page ? 'page' : undefined}
+              >
+                {n.toLocaleString('fa-IR')}
+              </Link>
+            ))}
+            {page < totalPages && (
+              <Link href={pageHref(page + 1)} className="blog-category-link">بعدی →</Link>
+            )}
+          </nav>
         )}
       </main>
     </>

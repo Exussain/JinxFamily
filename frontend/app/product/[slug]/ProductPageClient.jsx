@@ -8,51 +8,35 @@ import { useCart } from "../../../lib/useCart";
 import { resolveProductImage } from "../../../lib/productImageHelpers";
 import TelegramContact from "../../../components/TelegramContact";
 import { adminCacheBustHref } from "../../../lib/adminUrl.mjs";
+import RelatedProducts from "../../../components/RelatedProducts";
+import ReviewSection from "../../../components/ReviewSection";
 
-function normalizePhoneMask(mask) {
-  if (!mask) return "";
-  // keep only ASCII characters (English digits, *, +, spaces, etc.)
-  return mask.replace(/[^\x00-\x7F]/g, "");
-}
-
-export default function ProductPage() {
-  const { slug } = useParams();
+export default function ProductPageClient({ slug: slugProp, initialProduct = null, initialProducts = [], initialStats = null }) {
+  const params = useParams();
+  const slug = slugProp || params?.slug;
   const router = useRouter();
   const { addItem } = useCart();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Redirect crewpack to dedicated page
-  useEffect(() => {
-    if (slug === 'fortnite-crew-pack') {
-      router.replace('/crewpack');
-    } else if (slug === 'gta6') {
-      router.replace('/gta6');
-    }
-  }, [slug, router]);
+  // Server page pre-fetches the product so the first HTML paint (and what
+  // crawlers see) already contains the full product content.
+  const [product, setProduct] = useState(initialProduct);
+  const [products, setProducts] = useState(initialProducts);
+  const [loading, setLoading] = useState(!initialProduct);
   const [error, setError] = useState("");
   const [customFieldValues, setCustomFieldValues] = useState({});
   const [formError, setFormError] = useState("");
   const [showValidation, setShowValidation] = useState(false);
-  const [reviews, setReviews] = useState([]);
-  const [reviewStats, setReviewStats] = useState({ total: 0, rating: 0 });
+  const [reviewStats, setReviewStats] = useState(() =>
+    initialStats
+      ? {
+          total: Number(initialStats.total) || 0,
+          rating: Number(initialStats.average_rating) || 0,
+        }
+      : { total: 0, rating: 0 }
+  );
   const [activeTab, setActiveTab] = useState("description");
-  const [reviewsLoading, setReviewsLoading] = useState(true);
-  const [reviewSubmitting, setReviewSubmitting] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [replyingToId, setReplyingToId] = useState(null);
-  const [replyText, setReplyText] = useState("");
-  const [replySubmitting, setReplySubmitting] = useState(false);
-  const [deletingCommentId, setDeletingCommentId] = useState(null);
-
-  const [reviewName, setReviewName] = useState("");
-  const [reviewText, setReviewText] = useState("");
-  const [reviewRating, setReviewRating] = useState(5);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState(null);
-  const reviewsSectionRef = useRef(null);
-  const reviewTextareaRef = useRef(null);
   const todayFa = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numeric", month: "long", timeZone: "Asia/Tehran" }).format(new Date());
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -67,69 +51,17 @@ export default function ProductPage() {
 
   useEffect(() => {
     if (!slug) return;
-    const loadReviews = async () => {
-      setReviewsLoading(true);
-      try {
-        const res = await fetch(`${apiBase}/api/products/${slug}/comments`, {
-          cache: "no-store",
-        });
-        if (!res.ok) {
-          setReviews([]);
-          setReviewStats({ total: 0, rating: 0, breakdown: {} });
-          return;
-        }
-        const data = await res.json();
-        if (data.success) {
-          const formattedReviews = data.comments.map(comment => ({
-            id: comment.id,
-            user: comment.author_name,
-            authorRole: comment.author_role || "user",
-            date: new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              timeZone: "Asia/Tehran",
-            }).format(new Date(comment.created_at)),
-            rating: comment.rating,
-            text: comment.text,
-            isVerified: comment.is_verified_purchase,
-            userId: comment.user_id,
-            phone: normalizePhoneMask(comment.phone_mask || ""),
-            avatarUrl: comment.avatar_url || "",
-            reply: comment.reply
-              ? {
-                  ...comment.reply,
-                  author: comment.reply.author,
-                  role: comment.reply.role || "user",
-                }
-              : null,
-          }));
-          setReviews(formattedReviews);
-          setReviewStats({
-            total: data.stats.total,
-            rating: data.stats.average_rating,
-            breakdown: data.stats.rating_counts,
-          });
-        }
-      } catch (error) {
-        setReviews([]);
-        setReviewStats({ total: 0, rating: 0, breakdown: {} });
-      } finally {
-        setReviewsLoading(false);
-      }
-    };
-    loadReviews();
-  }, [slug, apiBase]);
-
-  useEffect(() => {
-    if (!slug) return;
+    // Server already provided the product — just sync dependent state and
+    // skip the redundant client fetch (prices stay fresh via no-store SSR).
+    if (initialProduct) {
+      setSelectedVariantId(initialProduct?.variants?.[0]?.id ?? null);
+      return;
+    }
     const load = async () => {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(`${apiBase}/api/products/${slug}`, {
+        const res = await fetch(`${apiBase}/api/products/${encodeURIComponent(slug)}`, {
           cache: "no-store",
         });
         if (!res.ok) {
@@ -148,101 +80,23 @@ export default function ProductPage() {
       }
     };
     load();
-  }, [slug, apiBase]);
+  }, [slug, apiBase, initialProduct]);
 
   useEffect(() => {
-    const loadMe = async () => {
+    if (products.length) return;
+    const loadProducts = async () => {
       try {
-        const res = await fetch(`${apiBase}/api/auth/me`, { cache: "no-store", credentials: "include" });
+        const res = await fetch(`${apiBase}/api/products`, { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
-        setCurrentUser(data.user || data);
-        if (!reviewName) {
-          const preset = data.display_name || data.name || "";
-          if (preset) setReviewName(preset);
-        }
+        setProducts(Array.isArray(data?.results) ? data.results : []);
       } catch {
-        // ignore
+        // Related products are progressive enhancement; ignore failures.
       }
     };
-    loadMe();
-  }, [apiBase, reviewName]);
+    loadProducts();
+  }, [apiBase, products.length]);
 
-
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-    const name = reviewName.trim();
-    const text = reviewText.trim();
-
-    if (!name) {
-      alert("لطفاً نام خود را وارد کنید");
-      return;
-    }
-
-    if (!text || text.length < 10) {
-      alert("لطفاً نظر خود را با حداقل ۱۰ کاراکتر وارد کنید");
-      return;
-    }
-
-    const normalizedRating = Math.min(5, Math.max(1, Number(reviewRating) || 5));
-
-    setReviewSubmitting(true);
-
-    try {
-      const res = await fetch(`${apiBase}/api/products/${slug}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          author_name: name,
-          rating: normalizedRating,
-          text: text,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        alert(data.message || "خطا در ثبت نظر. لطفاً دوباره تلاش کنید.");
-        return;
-      }
-
-      const newReview = {
-        id: data.comment.id,
-        user: data.comment.author_name,
-        date: new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        }).format(new Date(data.comment.created_at)),
-        rating: data.comment.rating,
-        text: data.comment.text,
-        isVerified: data.comment.is_verified_purchase,
-      };
-
-      setReviews((prev) => [newReview, ...prev]);
-      setReviewStats((prev) => {
-        const total = prev.total + 1;
-        const rating = ((prev.rating * prev.total) + normalizedRating) / total;
-        const newBreakdown = { ...(prev.breakdown || {}) };
-        newBreakdown[normalizedRating] = (newBreakdown[normalizedRating] || 0) + 1;
-        return { total, rating, breakdown: newBreakdown };
-      });
-
-      setReviewName("");
-      setReviewText("");
-      setReviewRating(5);
-
-      alert("نظر شما با موفقیت ثبت شد!");
-
-    } catch (error) {
-      alert("خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.");
-    } finally {
-      setReviewSubmitting(false);
-    }
-  };
 
   const renderTextWithBold = (text, keyPrefix) => {
     const parts = text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
@@ -300,11 +154,6 @@ export default function ProductPage() {
     : (product?.original_price || 0);
   const displayPrice = Number(selectedVariant?.price ?? product?.price ?? product?.min_price ?? 0);
   const hasPrice = displayPrice > 0;
-  const totalReviews = reviewStats.total;
-  const adminPhones = ["09339732325", "09123101634"];
-  const isAdminUser =
-    currentUser?.is_admin || adminPhones.includes(currentUser?.phone_number);
-  const canReplyToComments = !!currentUser;
 
   const isFieldRequired = (field) => field.required === true;
 
@@ -383,43 +232,24 @@ export default function ProductPage() {
       typeof window !== "undefined" && window.location.hash === "#reviews";
     if (!shouldScrollToReviews) return;
     const timer = setTimeout(() => {
-      reviewsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      reviewTextareaRef.current?.focus({ preventScroll: true });
+      document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 400);
     return () => clearTimeout(timer);
   }, [loading, product]);
 
-  useEffect(() => {
-    if (reviewsLoading || typeof window === "undefined") return;
-    const hash = window.location.hash;
-    if (hash && hash.startsWith("#comment-")) {
-      const id = hash.replace("#comment-", "");
-      const element = document.getElementById(`comment-${id}`);
-      if (element) {
-        const timer = setTimeout(() => {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-          element.style.transition = "all 0.5s ease";
-          element.style.boxShadow = "0 0 25px rgba(139, 92, 246, 0.45)";
-          element.style.borderColor = "var(--primary)";
-          setTimeout(() => {
-            element.style.boxShadow = "";
-            element.style.borderColor = "";
-          }, 3500);
-        }, 400);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [reviewsLoading]);
-
   const scrollToReviews = useCallback(() => {
-    reviewsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (typeof document === "undefined") return;
+    document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
   return (
     <div>
       <Navbar />
       <main className="container" style={{ padding: "24px 0 40px" }}>
-        {loading && <div className="muted">در حال بارگذاری محصول…</div>}
+        {/* minHeight keeps the fallback shell viewport-sized so the swap to
+            real content on client fetch scores ~0 CLS (only hit when the
+            server-side prefetch failed, e.g. backend restart). */}
+        {loading && <div className="muted" style={{ minHeight: "100vh" }}>در حال بارگذاری محصول…</div>}
         {!loading && error && (
           <div className="muted" style={{ color: "var(--danger)" }}>
             {error}
@@ -433,6 +263,11 @@ export default function ProductPage() {
                 <div
                   className="hero-image"
                   style={{
+                    // aspect-ratio reserves the image box before the file
+                    // decodes — without it the img painted at 0px and pushed
+                    // the whole viewport down once loaded (CLS 1.0 on mobile).
+                    // Same reserved-square + contain pattern as /crewpack.
+                    aspectRatio: "1/1",
                     borderRadius: 18,
                     overflow: "hidden",
                     display: "flex",
@@ -443,7 +278,9 @@ export default function ProductPage() {
                   <img
                     src={imageSrc}
                     alt={product.name_fa}
-                    style={{ width: "100%", height: "auto", display: "block" }}
+                    fetchPriority="high"
+                    decoding="async"
+                    style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                     draggable="false"
                   />
                 </div>
@@ -614,6 +451,47 @@ export default function ProductPage() {
                       >
                         افزودن به سبد خرید
                       </button>
+                    </div>
+                  </div>
+                )}
+                {/* Guides Card - LEFT column copy: shown at medium-wide screens (960-1280px) when right col has more space */}
+                {productCategory === 'fortnite' && (
+                  <div className="guides-card guides-card-left hide-mobile" style={{ marginTop: 0 }}>
+                    <div className="guides-title">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                      </svg>
+                      صفحات مرتبط
+                    </div>
+                    <div style={{ display: "grid", gap: 10 }}>
+                      <a href="/guides/disable-2fa" target="_blank" rel="noopener noreferrer" className="guide-link-item">
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>🛡️</span>
+                          آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      </a>
+                      <a href="/guides/link-unlink" target="_blank" rel="noopener noreferrer" className="guide-link-item">
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>🔗</span>
+                          آموزش اتصال و لینک کردن اکانت
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      </a>
+                      <a href="/guides/remove-restriction" target="_blank" rel="noopener noreferrer" className="guide-link-item">
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>⚠️</span>
+                          آموزش رفع محدودیت و ریستریکت اکانت
+                        </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      </a>
                     </div>
                   </div>
                 )}
@@ -810,11 +688,11 @@ export default function ProductPage() {
                       این محصول در حال حاضر در دسترس نیست
                     </div>
                   )}
-                  {originalPrice && hasPrice && originalPrice > displayPrice && (
+                  {originalPrice && hasPrice && originalPrice > displayPrice ? (
                     <span className="price-discount-percent">
                       {Math.round((1 - (displayPrice / originalPrice)) * 100).toLocaleString("fa-IR")}٪ تخفیف ویژه
                     </span>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Buy Button for Products Without Account Form */}
@@ -869,62 +747,29 @@ export default function ProductPage() {
                   </div>
                 </div>
 
-                {/* Simple Description for Mobile */}
+                {/* Expandable Description Accordion (all viewports).
+                    Full text stays mounted so crawlers index it; collapsed state
+                    only clamps height via CSS, never removes content from the DOM. */}
                 {descriptionLines.length > 0 && (
-                  <div className="mobile-description show-mobile">
-                    <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 8 }}>درباره محصول</div>
-                    <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text)' }}>
-                      {showFullDescription
-                        ? descriptionLines.map((line, i) => {
-                            if (line.trim().startsWith('•')) {
-                              return <div key={i} style={{ marginBottom: '6px' }}>{renderTextWithBold(line, `m-bullet-${i}`)}</div>;
-                            }
-                            return <div key={i} style={{ marginBottom: '4px' }}>{renderTextWithBold(line, `m-line-${i}`)}</div>;
-                          })
-                        : descriptionLines.slice(0, 2).join(' ').substring(0, 140) + '...'
-                      }
-                    </div>
+                  <div className={`desc-accordion${showFullDescription ? ' open' : ''}`}>
                     <button
+                      type="button"
+                      className="desc-accordion-head"
                       onClick={() => setShowFullDescription(!showFullDescription)}
-                      style={{
-                        marginTop: 10,
-                        padding: '8px 14px',
-                        background: 'transparent',
-                        border: '1px solid var(--primary)',
-                        borderRadius: 8,
-                        color: 'var(--primary)',
-                        fontWeight: 700,
-                        fontSize: 12,
-                        cursor: 'pointer',
-                        width: '100%'
-                      }}
+                      aria-expanded={showFullDescription}
                     >
-                      {showFullDescription ? 'بستن' : 'مشاهده توضیحات کامل'}
+                      <span className="desc-accordion-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
+                        توضیحات محصول
+                      </span>
+                      <svg className="desc-accordion-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
                     </button>
-                  </div>
-                )}
-
-                {/* Tabs for Description and Delivery */}
-                <div className="product-tabs hide-mobile">
-                  <div className="tab-buttons">
-                    {descriptionLines.length > 0 && (
-                      <button
-                        className={`tab-btn ${effectiveTab === 'description' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('description')}
-                      >
-                        توضیحات
-                      </button>
-                    )}
-                    <button
-                      className={`tab-btn ${effectiveTab === 'delivery' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('delivery')}
-                    >
-                      نحوه تحویل
-                    </button>
-                  </div>
-
-                  <div className="tab-content">
-                    {effectiveTab === 'description' && descriptionLines.length > 0 && (
+                    <div className="desc-accordion-body">
                       <div className="description-box">
                         {descriptionLines.map((line, i) => {
                           if (line.trim().startsWith('•')) {
@@ -933,10 +778,26 @@ export default function ProductPage() {
                           return <div key={i} style={{ marginBottom: '6px' }}>{renderTextWithBold(line, `d-line-${i}`)}</div>;
                         })}
                       </div>
-                    )}
+                      <div className="desc-accordion-fade" aria-hidden="true" />
+                    </div>
+                  </div>
+                )}
 
-                    {effectiveTab === 'delivery' && (
-                      <div className="delivery-info">
+                {/* Delivery section */}
+                <div className="product-tabs hide-mobile">
+                  <div className="delivery-header">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="3" width="15" height="13" />
+                      <path d="M16 8h4l3 3v5h-7V8z" />
+                      <circle cx="5.5" cy="18.5" r="2.5" />
+                      <circle cx="18.5" cy="18.5" r="2.5" />
+                    </svg>
+                    نحوه تحویل
+                  </div>
+
+                  <div className="tab-content">
+                    {(
+                      <div className="delivery-info" hidden={effectiveTab !== 'delivery'}>
                         {deliveryLines.length > 0 ? (
                           deliveryLines.map((line, i) => {
                             const parsed = parseDeliveryLine(line);
@@ -961,8 +822,8 @@ export default function ProductPage() {
                             <div className="delivery-step">
                               <div className="step-number">۱</div>
                               <div className="step-content-card">
-                                <div className="step-title">ثبت سفارش</div>
-                                <div className="step-desc">سفارش خود را ثبت کرده و اطلاعات حساب را وارد کنید</div>
+                                <div className="step-title">وارد کردن اطلاعات حساب</div>
+                                <div className="step-desc">پلتفرم، ایمیل و رمز حساب خود را وارد کنید</div>
                               </div>
                             </div>
                             <div className="delivery-step">
@@ -975,8 +836,15 @@ export default function ProductPage() {
                             <div className="delivery-step">
                               <div className="step-number">۳</div>
                               <div className="step-content-card">
-                                <div className="step-title">فعال‌سازی</div>
-                                <div className="step-desc">تیم ما طی ۱۵ دقیقه تا ۸ ساعت کاری اشتراک را فعال می‌کند</div>
+                                <div className="step-title">فعال‌سازی قانونی</div>
+                                <div className="step-desc">با کارت‌های فروشگاه خرید انجام و نتیجه به شما اعلام می‌شود</div>
+                              </div>
+                            </div>
+                            <div className="delivery-step">
+                              <div className="step-number">۴</div>
+                              <div className="step-content-card">
+                                <div className="step-title">تحویل و پشتیبانی</div>
+                                <div className="step-desc">در صورت نیاز، تا تکمیل سفارش همراهتان هستیم</div>
                               </div>
                             </div>
                           </>
@@ -986,9 +854,9 @@ export default function ProductPage() {
                   </div>
                 </div>
 
-                {/* Guides and Tutorials Card (Desktop Only - Fortnite Only) */}
+                {/* Guides and Tutorials Card (Desktop - RIGHT col) - shown at >1280px when left col has more space */}
                 {productCategory === 'fortnite' && (
-                  <div className="guides-card hide-mobile" style={{ marginTop: 16 }}>
+                  <div className="guides-card guides-card-right hide-mobile" style={{ marginTop: 16 }}>
                     <div className="guides-title">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -1063,369 +931,13 @@ export default function ProductPage() {
               </section>
             )}
 
+            <RelatedProducts currentProduct={product} products={products} />
             <TelegramContact />
-      <section id="reviews" ref={reviewsSectionRef} className="reviews-section card section" style={{ marginTop: 16 }}>
-              <div className="reviews-header">
-                <div className="reviews-title-row">
-                  <h3 className="reviews-title">
-                    <svg className="reviews-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                    </svg>
-                    نظرات کاربران
-                  </h3>
-                  {totalReviews > 0 && (
-                    <div className="reviews-summary">
-                      <div className="rating-display">
-                        <span className="rating-number">{reviewStats.rating?.toFixed(1)}</span>
-                        <div className="rating-stars-large">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <svg key={star} className={`star-svg ${star <= Math.round(reviewStats.rating) ? 'filled' : ''}`} viewBox="0 0 24 24">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                          ))}
-                        </div>
-                      </div>
-                      <span className="review-count-badge">{totalReviews.toLocaleString("fa-IR")} نظر</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {reviewStats.breakdown && totalReviews > 0 && (
-                <div className="rating-breakdown-modern">
-                  {[5, 4, 3, 2, 1].map((star) => {
-                    const count = reviewStats.breakdown[star] || 0;
-                    const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-                    return (
-                      <div key={star} className="rating-row-modern">
-                        <div className="rating-row-stars">
-                          {[...Array(star)].map((_, i) => (
-                            <svg key={i} className="star-mini filled" viewBox="0 0 24 24">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                          ))}
-                        </div>
-                        <div className="rating-bar-track">
-                          <div className="rating-bar-progress" style={{ width: `${percentage}%` }} />
-                        </div>
-                        <span className="rating-row-count">{count.toLocaleString("fa-IR")}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              <div className="review-list">
-                {reviewsLoading ? (
-                  <div style={{ textAlign: 'center', padding: '20px', color: '#95a5a6' }}>
-                    در حال بارگذاری نظرات...
-                  </div>
-                ) : reviews.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '20px', color: '#95a5a6' }}>
-                    هنوز نظری ثبت نشده است. اولین نفر باشید!
-                  </div>
-                ) : (
-                  reviews.map((rev) => (
-                    <article
-                      id={`comment-${rev.id}`}
-                      key={rev.id || `${rev.user}-${rev.date}-${(rev.text || "").slice(0, 10)}`}
-                      className={`review-card ${rev.isReply ? "reply" : ""}`}
-                    >
-                      <div className="review-top">
-                        <div className="review-avatar">
-                          {rev.avatarUrl ? (
-                            <img src={rev.avatarUrl} alt={rev.user} />
-                          ) : (
-                            <div className="avatar-fallback">
-                              {(rev.user || "?").trim().charAt(0)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="review-header">
-                          <div className="review-header-main">
-                            <div className="review-user">
-                              <span className="review-name">{rev.user}</span>
-                              {rev.isVerified && (
-                                <span
-                                  className="review-badge"
-                                  title="خریدار واقعی"
-                                >
-                                  ✓ خریدار
-                                </span>
-                              )}
-                              {rev.authorRole === "admin" && (
-                                <span className="review-badge admin" title="ادمین">
-                                  ادمین
-                                </span>
-                              )}
-                              {rev.authorRole === "moderator" && (
-                                <span className="review-badge moderator" title="مدیر">
-                                  مدیر
-                                </span>
-                              )}
-                            </div>
-                            {rev.rating ? (
-                              <div className="review-stars" aria-label={`${rev.rating} از 5`}>
-                                {"★".repeat(Math.min(rev.rating, 5))}
-                              </div>
-                            ) : null}
-                          </div>
-                          {rev.phone ? (
-                            <div className="review-phone">
-                              <span>{rev.phone}</span>
-                            </div>
-                          ) : null}
-                          <div className="review-date">
-                            {rev.date}
-                          </div>
-                        </div>
-                      </div>
-                      <p className="review-text">{rev.text}</p>
-                      {(() => {
-                        const canDelete = isAdminUser || (currentUser && rev.userId === currentUser.id);
-                        if (!canReplyToComments && !canDelete) return null;
-                        return (
-                          <div className="review-actions">
-                            {canReplyToComments && (
-                              <button
-                                type="button"
-                                className="review-action-btn"
-                                onClick={() => {
-                                  setReplyingToId(rev.id);
-                                  setReplyText(rev.reply?.text || "");
-                                  if (reviewTextareaRef.current) {
-                                    reviewTextareaRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-                                  }
-                                }}
-                              >
-                                {rev.reply?.text ? "ویرایش پاسخ" : "پاسخ"}
-                              </button>
-                            )}
-                            {canDelete && (
-                              <button
-                                type="button"
-                                className="review-action-btn danger"
-                                disabled={deletingCommentId === rev.id}
-                                onClick={async () => {
-                                  if (!rev.id || !confirm("حذف این دیدگاه؟")) return;
-                                  try {
-                                    setDeletingCommentId(rev.id);
-                                    const res = await fetch(`${apiBase}/api/comments/${rev.id}`, {
-                                      method: "DELETE",
-                                      credentials: "include",
-                                    });
-                                    if (!res.ok) {
-                                      const data = await res.json().catch(() => ({}));
-                                      alert(data.message || "خطا در حذف دیدگاه");
-                                      return;
-                                    }
-                                    setReviews((prev) => prev.filter((c) => c.id !== rev.id));
-                                  } finally {
-                                    setDeletingCommentId(null);
-                                  }
-                                }}
-                              >
-                                حذف
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })()}
-                      {replyingToId === rev.id && canReplyToComments && (
-                        <div className="review-reply-editor">
-                          <textarea
-                            rows={2}
-                            placeholder="پاسخ خود را بنویسید..."
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                          />
-                          <div className="reply-editor-actions">
-                            <button
-                              type="button"
-                              className="btn primary-btn-sm"
-                              disabled={replySubmitting}
-                              onClick={async () => {
-                                const text = replyText.trim();
-                                if (!text) {
-                                  alert("متن پاسخ نمی‌تواند خالی باشد");
-                                  return;
-                                }
-                                try {
-                                  setReplySubmitting(true);
-                                  const res = await fetch(`${apiBase}/api/comments/${rev.id}/reply`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    credentials: "include",
-                                    body: JSON.stringify({ reply_text: text }),
-                                  });
-                                  const data = await res.json().catch(() => ({}));
-                                  if (!res.ok || !data.success) {
-                                    alert(data.message || "خطا در ثبت پاسخ");
-                                    return;
-                                  }
-                                  const updated = data.comment;
-                                  setReviews((prev) =>
-                                    prev.map((c) =>
-                                      c.id === rev.id ? { ...c, reply: updated.reply } : c
-                                    )
-                                  );
-                                  setReplyingToId(null);
-                                  setReplyText("");
-                                } finally {
-                                  setReplySubmitting(false);
-                                }
-                              }}
-                            >
-                              {replySubmitting ? "در حال ارسال..." : "ارسال پاسخ"}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn ghost-btn-sm"
-                              onClick={() => {
-                                setReplyingToId(null);
-                                setReplyText("");
-                              }}
-                            >
-                              انصراف
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                      {rev.reply?.text ? (
-                        <div className="review-reply">
-                          <div className="reply-meta">
-                            <div className="reply-author-row">
-                              <span className="reply-author">{rev.reply.author || "پاسخ ادمین"}</span>
-                              {rev.reply.role === "admin" && (
-                                <span className="review-badge admin">ادمین</span>
-                              )}
-                              {rev.reply.role === "moderator" && (
-                                <span className="review-badge moderator">مدیر</span>
-                              )}
-                            </div>
-                            {rev.reply.created_at ? (
-                              <span className="reply-date">
-                                {new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
-                                  day: "numeric",
-                                  month: "long",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  timeZone: "Asia/Tehran",
-                                }).format(new Date(rev.reply.created_at))}
-                              </span>
-                            ) : null}
-                          </div>
-                          <p className="reply-text">{rev.reply.text}</p>
-                        </div>
-                      ) : null}
-                    </article>
-                  ))
-                )}
-              </div>
-              <div className="review-form-container">
-                <h4 className="form-title">
-                  <svg className="form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
-                  نظر خود را بنویسید
-                </h4>
-                {!currentUser && (
-                  <div className="form-login-hint">
-                    برای ثبت نظر باید وارد حساب کاربری شوید.
-                    <button type="button" className="btn ghost-btn-sm" onClick={() => router.push("/login?from=reviews")}>
-                      ورود / ثبت‌نام
-                    </button>
-                  </div>
-                )}
-                <form className="review-form-modern" onSubmit={handleSubmitReview}>
-                  <div className="form-group">
-                    <label className="form-label">نام شما</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="نام و نام خانوادگی"
-                      value={reviewName}
-                      onChange={(e) => setReviewName(e.target.value)}
-                      required
-                      disabled={reviewSubmitting || !currentUser}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">امتیاز شما</label>
-                    <div className="rating-selector">
-                      <div className="rating-stars-input">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            type="button"
-                            key={star}
-                            className={`rating-star-btn ${reviewRating >= star ? "filled" : ""}`}
-                            onClick={() => setReviewRating(star)}
-                            aria-label={`${star} ستاره`}
-                            disabled={reviewSubmitting}
-                          >
-                            <svg className="star-icon" viewBox="0 0 24 24">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                          </button>
-                        ))}
-                      </div>
-                      <span className="rating-label">
-                        {reviewRating.toLocaleString("fa-IR")} از ۵
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">نظر شما</label>
-                    <textarea
-                      ref={reviewTextareaRef}
-                      className="form-textarea"
-                      rows={4}
-                      placeholder="تجربه خود را با ما و دیگران به اشتراک بگذارید..."
-                      value={reviewText}
-                      onChange={(e) => setReviewText(e.target.value)}
-                      maxLength={2000}
-                      required
-                      disabled={reviewSubmitting || !currentUser}
-                    />
-                    <div className="char-counter">
-                      <span className={reviewText.length < 10 ? 'text-danger' : reviewText.length > 1900 ? 'text-warning' : ''}>
-                        {reviewText.length.toLocaleString('fa-IR')} / ۲۰۰۰
-                      </span>
-                      {reviewText.length < 10 && reviewText.length > 0 && (
-                        <span className="text-muted"> • حداقل ۱۰ کاراکتر</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="submit-review-btn"
-                    disabled={reviewSubmitting || !currentUser || !reviewName.trim() || reviewText.trim().length < 10}
-                  >
-                    {reviewSubmitting ? (
-                      <>
-                        <svg className="spinner" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25"/>
-                          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round"/>
-                        </svg>
-                        در حال ارسال...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="22" y1="2" x2="11" y2="13"></line>
-                          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                        </svg>
-                        ثبت نظر
-                      </>
-                    )}
-                  </button>
-                </form>
-              </div>
-            </section>
+            <ReviewSection
+              slug={slug}
+              initialStats={initialStats}
+              productTitle={product?.name_fa}
+            />
             <style jsx>{`
               .nubix-fomo-badge {
                 display: inline-flex;
@@ -1815,6 +1327,96 @@ export default function ProductPage() {
                 line-height: 1.9;
               }
 
+              /* Expandable description accordion */
+              .desc-accordion {
+                border: 1px solid var(--line);
+                border-radius: 16px;
+                overflow: hidden;
+                background: var(--card);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+              }
+              :root[data-theme="dark"] .desc-accordion {
+                border-color: #373169;
+                box-shadow: 0 8px 26px rgba(0,0,0,0.35);
+              }
+              .desc-accordion-head {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 16px 18px;
+                border: none;
+                background: linear-gradient(135deg, rgba(0,213,255,0.08), rgba(108,92,231,0.08));
+                font-family: inherit;
+                cursor: pointer;
+                color: var(--text);
+              }
+              :root[data-theme="dark"] .desc-accordion-head {
+                background: linear-gradient(135deg, rgba(0,213,255,0.12), rgba(108,92,231,0.14));
+              }
+              .desc-accordion-title {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 900;
+                font-size: 15px;
+                color: var(--primary);
+              }
+              .desc-accordion-chevron {
+                color: var(--muted);
+                transition: transform 0.3s ease;
+                flex-shrink: 0;
+              }
+              .desc-accordion.open .desc-accordion-chevron {
+                transform: rotate(180deg);
+              }
+              .desc-accordion-body {
+                position: relative;
+                max-height: 116px;
+                overflow: hidden;
+                padding: 0 18px;
+                transition: max-height 0.4s ease;
+              }
+              .desc-accordion.open .desc-accordion-body {
+                max-height: 4000px;
+                padding-bottom: 18px;
+              }
+              .desc-accordion-body .description-box {
+                padding-top: 14px;
+              }
+              /* Fade hint over the clamped preview, hidden once expanded */
+              .desc-accordion-fade {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 56px;
+                pointer-events: none;
+                background: linear-gradient(to bottom, rgba(255,255,255,0), var(--card));
+                transition: opacity 0.3s ease;
+              }
+              .desc-accordion.open .desc-accordion-fade {
+                opacity: 0;
+              }
+
+              /* Delivery section header (replaces old tab buttons) */
+              .delivery-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 14px 18px;
+                font-weight: 900;
+                font-size: 15px;
+                color: var(--primary);
+                background: #f8f9fd;
+                border-bottom: 1px solid var(--line);
+              }
+              :root[data-theme="dark"] .delivery-header {
+                background: #1d1a3f;
+                border-color: #373169;
+              }
+
               /* Delivery Info */
               .delivery-info {
                 display: grid;
@@ -2007,7 +1609,7 @@ export default function ProductPage() {
                 .details-buy-btn { order: 5; margin-top: 0 !important; }
                 .info-card { order: 6; }
                 .product-highlights { order: 7; }
-                .mobile-description { order: 8; }
+                .desc-accordion { order: 8; }
                 .product-tabs { order: 9; }
                 .guides-card { order: 10; }
                 .details-stack h1 {
@@ -2052,6 +1654,20 @@ export default function ProductPage() {
                 .highlight-desc {
                   font-size: 10px;
                 }
+              }
+              /* ── Responsive guides-card placement ──────────────────────────
+                 >1280px  : left col is spacious   → show in RIGHT col (under product-tabs)
+                 960-1280px: right col has more space → show in LEFT col (under info-card)
+              ──────────────────────────────────────────────────────────────── */
+              @media (min-width: 961px) {
+                /* Default (wide): left col spacious — show right, hide left */
+                .guides-card-left  { display: none !important; }
+                .guides-card-right { display: grid; }
+              }
+              @media (min-width: 961px) and (max-width: 1280px) {
+                /* Medium-wide: right col has more space — show left, hide right */
+                .guides-card-left  { display: grid !important; }
+                .guides-card-right { display: none !important; }
               }
               @media (max-width: 640px) {
                 .hide-mobile {
@@ -2177,491 +1793,6 @@ export default function ProductPage() {
                   font-size: 13px;
                 }
               }
-              /* Modern Reviews Section */
-              .reviews-section {
-                display: grid;
-                gap: 24px;
-              }
-              .reviews-header {
-                padding-bottom: 16px;
-                border-bottom: 2px solid var(--line);
-              }
-              .reviews-title-row {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 16px;
-                flex-wrap: wrap;
-              }
-              .reviews-title {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin: 0;
-                font-size: 20px;
-                font-weight: 900;
-                color: var(--text);
-              }
-              .reviews-icon {
-                width: 24px;
-                height: 24px;
-                color: var(--primary);
-              }
-              .reviews-summary {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-              }
-              .rating-display {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-              }
-              .rating-number {
-                font-size: 32px;
-                font-weight: 900;
-                color: var(--primary);
-                line-height: 1;
-              }
-              .rating-stars-large {
-                display: flex;
-                gap: 3px;
-              }
-              .star-svg {
-                width: 20px;
-                height: 20px;
-                fill: var(--line);
-                transition: fill 0.2s;
-              }
-              .star-svg.filled {
-                fill: #fbbf24;
-              }
-              .review-count-badge {
-                padding: 6px 14px;
-                background: var(--primary);
-                color: white;
-                border-radius: 20px;
-                font-size: 13px;
-                font-weight: 700;
-              }
-              .rating-breakdown-modern {
-                display: grid;
-                gap: 10px;
-                padding: 20px;
-                background: var(--card);
-                border-radius: 16px;
-                border: 1px solid var(--line);
-              }
-              .rating-row-modern {
-                display: grid;
-                grid-template-columns: 80px 1fr 50px;
-                align-items: center;
-                gap: 12px;
-              }
-              .rating-row-stars {
-                display: flex;
-                gap: 2px;
-              }
-              .star-mini {
-                width: 14px;
-                height: 14px;
-                fill: var(--line);
-              }
-              .star-mini.filled {
-                fill: #fbbf24;
-              }
-              .rating-bar-track {
-                height: 10px;
-                background: var(--hover);
-                border-radius: 999px;
-                overflow: hidden;
-                position: relative;
-              }
-              :root[data-theme="dark"] .rating-bar-track {
-                background: #373169;
-              }
-              .rating-bar-progress {
-                height: 100%;
-                background: linear-gradient(90deg, #fbbf24, #f59e0b);
-                border-radius: 999px;
-                transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-              }
-              .rating-row-count {
-                font-size: 14px;
-                font-weight: 700;
-                color: var(--muted);
-                text-align: left;
-              }
-              .review-list {
-                display: grid;
-                gap: 12px;
-              }
-              .review-card {
-                border: 1px solid var(--line);
-                border-radius: 14px;
-                padding: 12px 14px;
-                display: grid;
-                gap: 8px;
-                background: var(--card);
-                color: var(--text);
-                text-align: right;
-                direction: rtl;
-              }
-              .review-card.reply {
-                margin-inline-end: 16px;
-                background: linear-gradient(135deg, rgba(59,130,246,0.14), rgba(59,130,246,0.04));
-                border-color: rgba(59,130,246,0.2);
-              }
-              .review-top {
-                display: flex;
-                align-items: center;
-                justify-content: flex-start;
-                gap: 10px;
-                flex-direction: row-reverse;
-              }
-              .review-avatar {
-                width: 40px;
-                height: 40px;
-                border-radius: 999px;
-                overflow: hidden;
-                border: 1px solid var(--line);
-                background: radial-gradient(circle at 30% 20%, #38bdf8, #1d1a3f);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
-              }
-              .review-avatar img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-              }
-              .avatar-fallback {
-                font-weight: 900;
-                color: #e5e7eb;
-                font-size: 18px;
-              }
-              .review-header {
-                display: grid;
-                gap: 4px;
-                justify-items: flex-end;
-                flex: 1;
-              }
-              .review-header-main {
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                gap: 8px;
-                flex-direction: row-reverse;
-              }
-              .review-user {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-weight: 800;
-                color: var(--primary);
-              }
-              .review-name { font-size: 14px; }
-              .review-badge {
-                font-size: 10px;
-                background: #27ae60;
-                color: #fff;
-                padding: 2px 6px;
-                border-radius: 4px;
-                font-weight: 700;
-              }
-              .review-badge.admin {
-                background: linear-gradient(120deg, #7c3aed, #3b82f6);
-              }
-              .review-badge.moderator {
-                background: linear-gradient(120deg, #0ea5e9, #22c55e);
-              }
-              .review-phone {
-                font-size: 12px;
-                color: var(--muted);
-                align-self: end;
-              }
-              .review-phone span {
-                direction: ltr;
-                unicode-bidi: plaintext;
-                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-              }
-              .review-date {
-                font-size: 12px;
-                color: var(--muted);
-                font-weight: 700;
-              }
-              .review-stars { color: #f5b200; font-weight: 900; letter-spacing: 1px; min-width: auto; text-align: right; }
-              .reply-author-row {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                flex-direction: row-reverse;
-              }
-              .review-text {
-                margin: 0;
-                font-size: 14px;
-                line-height: 1.7;
-              }
-              .review-reply {
-                margin-top: 12px;
-                padding: 10px 12px;
-                border-radius: 10px;
-                background: rgba(0, 173, 181, 0.08);
-                border: 1px solid rgba(0, 173, 181, 0.2);
-              }
-              .reply-meta {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-size: 12px;
-                color: var(--muted);
-                margin-bottom: 6px;
-              }
-              .reply-author {
-                font-weight: 700;
-                color: var(--primary);
-              }
-              .reply-text {
-                margin: 0;
-                font-size: 13px;
-                line-height: 1.6;
-                color: var(--text);
-              }
-              .review-actions {
-                display: flex;
-                gap: 8px;
-                justify-content: flex-start;
-                flex-direction: row-reverse;
-                margin-top: 4px;
-              }
-              .review-action-btn {
-                border-radius: 999px;
-                border: 1px solid var(--line);
-                padding: 4px 10px;
-                font-size: 11px;
-                background: var(--bg);
-                color: var(--text);
-                cursor: pointer;
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-              }
-              .review-action-btn.danger {
-                border-color: rgba(239,68,68,0.4);
-                color: #ef4444;
-              }
-              .review-action-btn:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-              }
-              .review-reply-editor {
-                margin-top: 6px;
-                padding: 8px 10px;
-                border-radius: 10px;
-                border: 1px dashed var(--line);
-                display: grid;
-                gap: 6px;
-              }
-              .review-reply-editor textarea {
-                width: 100%;
-                border-radius: 8px;
-                border: 1px solid var(--line);
-                background: var(--bg);
-                color: var(--text);
-                font-size: 12px;
-                padding: 8px 10px;
-                resize: vertical;
-              }
-              .reply-editor-actions {
-                display: flex;
-                justify-content: flex-start;
-                gap: 8px;
-                flex-direction: row-reverse;
-              }
-              /* Modern Review Form */
-              .review-form-container {
-                padding: 24px;
-                background: var(--card);
-                border-radius: 16px;
-                border: 1px solid var(--line);
-              }
-              .form-title {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin: 0 0 20px 0;
-                font-size: 18px;
-                font-weight: 800;
-                color: var(--text);
-              }
-              .form-icon {
-                width: 22px;
-                height: 22px;
-                color: var(--primary);
-              }
-              .review-form-modern {
-                display: grid;
-                gap: 20px;
-              }
-              .form-login-hint {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 10px;
-                padding: 10px 12px;
-                margin-bottom: 12px;
-                border-radius: 10px;
-                background: rgba(245, 158, 11, 0.08);
-                border: 1px dashed rgba(245, 158, 11, 0.5);
-                font-size: 13px;
-                font-weight: 700;
-                color: var(--text);
-              }
-              .form-group {
-                display: grid;
-                gap: 8px;
-              }
-              .form-label {
-                font-size: 14px;
-                font-weight: 700;
-                color: var(--text);
-              }
-              .form-input,
-              .form-textarea {
-                width: 100%;
-                border: 2px solid var(--line);
-                border-radius: 12px;
-                padding: 12px 16px;
-                background: var(--bg);
-                font-family: inherit;
-                font-size: 14px;
-                color: var(--text);
-                transition: all 0.2s ease;
-              }
-              .form-input:focus,
-              .form-textarea:focus {
-                outline: none;
-                border-color: var(--primary);
-                box-shadow: 0 0 0 4px rgba(44,75,255,0.1);
-                background: var(--card);
-              }
-              .form-textarea {
-                resize: vertical;
-                min-height: 120px;
-                line-height: 1.6;
-              }
-              .form-input:disabled,
-              .form-textarea:disabled {
-                opacity: 0.6;
-                cursor: not-allowed;
-              }
-              .rating-selector {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
-                flex-wrap: wrap;
-              }
-              .rating-stars-input {
-                display: flex;
-                flex-direction: row-reverse;
-                gap: 4px;
-              }
-              .rating-star-btn {
-                width: 32px;
-                height: 32px;
-                border-radius: 999px;
-                border: none;
-                background: transparent;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0;
-                transition: transform 0.15s ease, filter 0.15s ease;
-              }
-              .rating-star-btn .star-icon {
-                width: 22px;
-                height: 22px;
-                fill: #4b5563;
-                filter: drop-shadow(0 0 0 rgba(0,0,0,0));
-                transition: fill 0.15s ease, filter 0.15s ease;
-              }
-              .rating-star-btn.filled .star-icon {
-                fill: #fbbf24;
-                filter: drop-shadow(0 0 4px rgba(251,191,36,0.6));
-              }
-              .rating-star-btn:hover:not(:disabled) {
-                transform: translateY(-1px) scale(1.05);
-              }
-              .rating-star-btn:disabled {
-                cursor: not-allowed;
-                opacity: 0.6;
-              }
-              .rating-label {
-                font-size: 13px;
-                color: var(--muted);
-                font-weight: 700;
-              }
-              .char-counter {
-                font-size: 12px;
-                color: var(--muted);
-                text-align: left;
-              }
-              .char-counter .text-danger {
-                color: #ef4444;
-              }
-              .char-counter .text-warning {
-                color: #f59e0b;
-              }
-              .char-counter .text-muted {
-                color: var(--muted);
-              }
-              .submit-review-btn {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                padding: 14px 28px;
-                background: linear-gradient(135deg, var(--primary), #2c4bff);
-                color: white;
-                border: none;
-                border-radius: 12px;
-                font-size: 15px;
-                font-weight: 700;
-                cursor: pointer;
-                transition: all 0.3s ease;
-              }
-              .submit-review-btn:hover:not(:disabled) {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(44,75,255,0.3);
-              }
-              .submit-review-btn:disabled {
-                opacity: 0.6;
-                cursor: not-allowed;
-                transform: none;
-              }
-              .submit-review-btn .send-icon {
-                width: 18px;
-                height: 18px;
-              }
-              .submit-review-btn .spinner {
-                width: 20px;
-                height: 20px;
-                animation: spin 1s linear infinite;
-              }
-              @keyframes spin {
-                to { transform: rotate(360deg); }
-              }
-              @media (max-width: 640px) {
-                .review-card {
-                  padding: 12px;
-                }
-                .review-user {
-                  flex-wrap: wrap;
-                  justify-content: flex-end;
-                }
               }
             `}</style>
           </>
