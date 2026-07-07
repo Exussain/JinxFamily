@@ -5,11 +5,26 @@
 // Next.js 16: `params` is a Promise and must be awaited. `noindex` keeps this
 // showcase from competing with the canonical /blog articles in search.
 import { notFound } from 'next/navigation';
+import DOMPurify from 'isomorphic-dompurify';
 import ArticleClient from './ArticleClient';
 import { getAuthoredArticle } from '../../../lib/articlesMockData.mjs';
 import { getServerApiBases } from '../../../lib/serverFetch.mjs';
 
 export const dynamic = 'force-dynamic';
+
+// Imported blog HTML is admin-authored, but we sanitize it here (server-side,
+// before it's ever serialized into the SSR HTML) as defense-in-depth against
+// stored XSS — client-only sanitization would be too late, since a payload in
+// the server-rendered markup runs before hydration. Strips scripts, event
+// handlers, javascript:/data: URLs (DOMPurify defaults) plus embedding/form
+// tags; keeps the formatting tags real posts use (headings, lists, links, img).
+function sanitizeHtml(html) {
+  if (!html) return '';
+  return DOMPurify.sanitize(html, {
+    FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'textarea', 'button'],
+    ADD_ATTR: ['target'],
+  });
+}
 
 export const metadata = {
   title: 'مقاله — مجله نوبیکس شاپ',
@@ -80,7 +95,7 @@ export default async function ArticleShowcasePage({ params }) {
         label: '',
         image: article.cover_image || null,
         lead: article.summary || '',
-        htmlContent: article.content || '',
+        htmlContent: sanitizeHtml(article.content),
         imported: true,
       }}
     />
