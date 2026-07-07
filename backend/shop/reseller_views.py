@@ -97,6 +97,8 @@ DEFAULT_CREW_BEHAVIOR_MIN_SINGLE = 489_000   # کم‌ترین قیمت تک‌�
 DEFAULT_CREW_BEHAVIOR_MAX_TEN = 515_000
 DEFAULT_CREW_BEHAVIOR_MIN_TEN = 474_000
 BEHAVIOR_PRICING_ENABLED_DEFAULT = True
+DEFAULT_RESELLER_MIN_TOPUP = 10_000
+DEFAULT_RESELLER_MAX_TOPUP = 200_000_000
 
 
 def _setting_int(key: str, default: int) -> int:
@@ -990,8 +992,12 @@ def reseller_catalog(request):
             tiers = crew_tiers if crew_override else _crew_tiers_for_rate(lira_rate, cfg)
             lira_priced = True
             behavior_enabled = _setting_bool("reseller_behavior_pricing_enabled", BEHAVIOR_PRICING_ENABLED_DEFAULT)
-            if behavior_enabled and profile is not None:
+            if behavior_enabled and profile is not None and not crew_override:
                 crew_behavior = _compute_behavior_discount(profile)
+                tiers = [
+                    {"min_quantity": 1, "price": crew_behavior["crew_single"], "active": True},
+                    {"min_quantity": 10, "price": crew_behavior["crew_ten"], "active": True},
+                ]
         elif product.price_lira > 0:
             base_tiers, is_override = _tiers_for_reseller(product.id, None, profile)
             if is_override:
@@ -2147,8 +2153,8 @@ def reseller_wallet_topup(request):
     except (TypeError, ValueError):
         return JsonResponse({"message": "مبلغ نامعتبر"}, status=400)
 
-    min_topup = _setting_int("reseller_min_topup", 100_000)
-    max_topup = _setting_int("reseller_max_topup", 200_000_000)
+    min_topup = _setting_int("reseller_min_topup", DEFAULT_RESELLER_MIN_TOPUP)
+    max_topup = _setting_int("reseller_max_topup", DEFAULT_RESELLER_MAX_TOPUP)
 
     if amount < min_topup:
         return JsonResponse({"message": f"حداقل مبلغ شارژ {min_topup:,} تومان است."}, status=400)

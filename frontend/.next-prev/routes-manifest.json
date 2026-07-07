@@ -379,6 +379,14 @@
   },
   "dynamicRoutes": [
     {
+      "page": "/articles/[slug]",
+      "regex": "^/articles/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/articles/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/blog/[slug]",
       "regex": "^/blog/([^/]+?)(?:/)?$",
       "routeKeys": {
@@ -449,6 +457,12 @@
       "regex": "^/api/test\\-curl(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/test\\-curl(?:/)?$"
+    },
+    {
+      "page": "/articles",
+      "regex": "^/articles(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/articles(?:/)?$"
     },
     {
       "page": "/blog",

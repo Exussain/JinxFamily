@@ -1277,7 +1277,7 @@ export default function AdminPanelPage() {
   const [crewPackDisabledUpdatedAt, setCrewPackDisabledUpdatedAt] = useState(null);
   const [savingCrewDisabled, setSavingCrewDisabled] = useState(false);
   const [resellerTopupDisabled, setResellerTopupDisabled] = useState(false);
-  const [resellerMinTopup, setResellerMinTopup] = useState(100000);
+  const [resellerMinTopup, setResellerMinTopup] = useState(10000);
   const [resellerMaxTopup, setResellerMaxTopup] = useState(200000000);
   const [savingResellerTopupSettings, setSavingResellerTopupSettings] = useState(false);
   // Live crew capacity stats (what users see)
@@ -1686,7 +1686,7 @@ export default function AdminPanelPage() {
           setResellerTopupDisabled(data.reseller_topup_disabled === "true" || data.reseller_topup_disabled === true);
         }
         if (data?.reseller_min_topup !== undefined) {
-          setResellerMinTopup(Number(data.reseller_min_topup) || 100000);
+          setResellerMinTopup(Number(data.reseller_min_topup) || 10000);
         }
         if (data?.reseller_max_topup !== undefined) {
           setResellerMaxTopup(Number(data.reseller_max_topup) || 200000000);
@@ -3037,9 +3037,24 @@ export default function AdminPanelPage() {
     window.open(url, "_blank");
   };
 
+  const orderRequiresCreatedXboxAccount = (order) => {
+    if (typeof order?.requires_created_xbox_account === "boolean") {
+      return order.requires_created_xbox_account;
+    }
+    if (!order?.xbox_create_account) return false;
+    const xboxItems = (order?.items || []).filter((item) => (item?.account_type || "").toLowerCase() === "xbox");
+    if (!xboxItems.length) return true;
+    const gtaXboxWithCustomerCreds = xboxItems.every((item) => {
+      const slug = (item?.product_slug || "").toLowerCase();
+      const name = (item?.name || "").toLowerCase();
+      const isGta = slug === "gta6" || name.includes("gta vi") || name.includes("gta 6") || name.includes("جی تی ای");
+      return isGta && item?.account_email && item?.account_password;
+    });
+    return !gtaXboxWithCustomerCreds;
+  };
+
   const handleStatusChange = async (order, nextStatus, listType, xboxCredentials = null) => {
-    // Show Xbox credentials modal for every order when completing
-    if (nextStatus === "completed" && !order.created_xbox_email && !xboxCredentials) {
+    if (nextStatus === "completed" && orderRequiresCreatedXboxAccount(order) && !order.created_xbox_email && !xboxCredentials) {
       setXboxModal({
         open: true,
         order,
@@ -3095,7 +3110,7 @@ export default function AdminPanelPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data?.message || "خطا در بروزرسانی وضعیت/ایمیل");
+        throw new Error(data?.message || data?.email_error || "خطا در بروزرسانی وضعیت/ایمیل");
       }
       await loadOrders();
       const emailStatus = data.email_sent ? "ایمیل ارسال شد" : data.email_error ? `ایمیل: ${data.email_error}` : "ایمیل ارسال نشد";
@@ -8564,7 +8579,7 @@ export default function AdminPanelPage() {
                   });
                   const data = await res.json();
                   if (!res.ok) {
-                    throw new Error(data?.message || "خطا در بروزرسانی/ارسال ایمیل");
+                    throw new Error(data?.message || data?.email_error || "خطا در بروزرسانی/ارسال ایمیل");
                   }
 
                       const emailStatus = data.email_sent ? "ایمیل ارسال شد" : data.email_error ? `ایمیل: ${data.email_error}` : "ایمیل ارسال نشد";

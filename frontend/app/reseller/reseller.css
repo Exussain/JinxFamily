@@ -399,6 +399,7 @@
   border-collapse: collapse;
   margin-top: 12px;
   font-size: 14px;
+  table-layout: fixed;
 }
 
 .tier-table th, .tier-table td {
@@ -432,6 +433,58 @@
   color: #fff;
   border-radius: 6px;
   font-weight: 700;
+}
+
+.behavior-price-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.04));
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 16px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.behavior-price-copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 260px;
+}
+
+.behavior-price-icon { font-size: 20px; flex: 0 0 auto; }
+.behavior-price-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent-emerald);
+}
+
+.behavior-price-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.behavior-price-values {
+  text-align: right;
+  direction: rtl;
+  flex: 0 0 auto;
+}
+
+.behavior-price-old {
+  font-size: 11px;
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.behavior-price-current {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--accent-emerald);
 }
 
 /* orders list */
@@ -555,17 +608,24 @@
 
 .order-summary {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 8px 14px;
   padding: 14px;
   background: var(--bg);
   border-radius: 10px;
   font-size: 14px;
   margin-top: 14px;
+  direction: rtl;
 }
 
 .order-summary .label { color: var(--muted); }
-.order-summary .value { font-family: "Vazirmatn", system-ui, sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; }
+.order-summary .value {
+  font-family: "Vazirmatn", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  justify-self: start;
+  text-align: right;
+}
 .order-summary .total-row { font-size: 16px; padding-top: 8px; border-top: 1px solid var(--line); }
 
 .reseller-skel {
@@ -1076,6 +1136,36 @@
 }
 .reseller-cat-card .cat-name { font-weight: 700; color: var(--text); font-size: 14px; }
 .reseller-cat-card .cat-price { font-size: 13px; color: var(--muted); font-family: "Vazirmatn", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.reseller-cat-card .cat-price-old {
+  text-decoration: line-through;
+  color: var(--muted);
+  font-size: 11px;
+  display: block;
+  line-height: 1.6;
+}
+.reseller-cat-card .cat-price-current-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+.reseller-cat-card .cat-price-current {
+  color: var(--accent-emerald);
+  font-weight: 800;
+  font-size: 15px;
+  white-space: nowrap;
+}
+.reseller-cat-card .cat-discount-chip {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-emerald);
+  padding: 2px 7px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  white-space: nowrap;
+}
 
 /* best-seller rank badge on catalog cards */
 .reseller-cat-card .cat-thumb { position: relative; }
@@ -1261,6 +1351,27 @@
 @media (max-width: 560px) {
   .acc-row-fields { grid-template-columns: 1fr; }
   .reserve-opt .ro-desc { display: none; }
+  .behavior-price-card {
+    align-items: flex-start;
+    padding: 12px;
+  }
+  .behavior-price-values {
+    width: 100%;
+  }
+  .tier-table th,
+  .tier-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+  .tier-table tr.active-tier td .savings-badge {
+    display: table;
+    margin: 0 0 4px auto;
+  }
+  .order-summary {
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 7px 10px;
+    font-size: 13px;
+  }
 }
 
 /* reservation badge on orders */
@@ -1680,6 +1791,13 @@
   color: var(--accent-cyan) !important;
   font-weight: 700 !important;
   font-size: 15px !important;
+}
+.reseller-cat-card .cat-price-current {
+  color: var(--accent-emerald) !important;
+}
+.reseller-cat-card .cat-discount-chip {
+  background: rgba(16, 185, 129, 0.14) !important;
+  border-color: rgba(16, 185, 129, 0.28) !important;
 }
 .reseller-cat-card .cat-rank {
   background: linear-gradient(135deg, #f59e0b 0%, var(--accent-rose) 100%) !important;

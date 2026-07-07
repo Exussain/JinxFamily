@@ -57,7 +57,7 @@ export default function TopupModal({ initial = 1_000_000, onClose }) {
         {error && <div className="reseller-error">{error}</div>}
         <div className="actions">
           <button className="reseller-btn outline" onClick={onClose} disabled={busy}>انصراف</button>
-          <button className="reseller-btn" onClick={pay} disabled={busy || amount < 100_000}>
+          <button className="reseller-btn" onClick={pay} disabled={busy || amount < 10_000}>
             {busy ? "در حال اتصال به درگاه..." : `پرداخت ${fmtToman(amount)} تومان`}
           </button>
         </div>

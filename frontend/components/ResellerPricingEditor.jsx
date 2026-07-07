@@ -539,7 +539,11 @@ export default function ResellerPricingEditor({
               <div>
                 <strong>{isCrew ? "کروپک" : isFixedVariantTier ? "واریانت تومان ثابت" : isLiraPriced ? "محصول لیرمحور" : "تحلیل قیمت"}</strong>
                 <span>
-                  {isFixedVariantTier
+                  {isCrew && scopeResellerId
+                    ? "قیمت اختصاصی این همکار ثابت تومانی است و از قیمت‌گذاری رفتاری کروپک اولویت بالاتری دارد."
+                    : isCrew
+                    ? "قیمت عمومی نهایی کروپک از تنظیمات کروپک و قیمت‌گذاری رفتاری می‌آید؛ برای اولویت قطعی روی یک همکار، محدوده اختصاصی همکار را تنظیم کنید."
+                    : isFixedVariantTier
                     ? "قیمت این واریانت همان مبلغ نهایی همکار است و هنگام سفارش دوباره با نرخ لیر اسکیل نمی‌شود."
                     : isLiraPriced && !scopeResellerId && liraScaleFactor > 0
                     ? `قیمت عمومی در کاتالوگ با ضریب ${liraScaleFactor.toFixed(2)} نمایش داده می‌شود.`

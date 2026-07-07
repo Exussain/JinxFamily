@@ -3,6 +3,8 @@
   "/_not-found/page": "/_not-found",
   "/api/currency-rates/route": "/api/currency-rates",
   "/api/test-curl/route": "/api/test-curl",
+  "/articles/[slug]/page": "/articles/[slug]",
+  "/articles/page": "/articles",
   "/blog/[slug]/page": "/blog/[slug]",
   "/blog/feed.xml/route": "/blog/feed.xml",
   "/blog/page": "/blog",

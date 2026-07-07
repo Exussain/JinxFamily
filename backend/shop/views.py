@@ -931,6 +931,43 @@ def _send_purchase_points_sms(order, points_awarded: int):
         return False
 
 
+def _payload_item_is_gta6(it: dict) -> bool:
+    slug = (it.get("slug") or "").strip().lower()
+    if slug == "gta6":
+        return True
+    product_id = it.get("product_id")
+    if product_id:
+        try:
+            product_slug = Product.objects.filter(id=product_id).values_list("slug", flat=True).first()
+            return (product_slug or "").strip().lower() == "gta6"
+        except Exception:
+            return False
+    name = (it.get("name") or "").strip().lower()
+    return "gta vi" in name or "gta 6" in name or "جی تی ای" in name
+
+
+def _order_item_is_gta6(item) -> bool:
+    try:
+        product_slug = (item.product.slug if item.product else "") or ""
+    except Exception:
+        product_slug = ""
+    if product_slug.strip().lower() == "gta6":
+        return True
+    name = (getattr(item, "name", "") or "").strip().lower()
+    return "gta vi" in name or "gta 6" in name or "جی تی ای" in name
+
+
+def _order_requires_created_xbox_account(order: Order) -> bool:
+    if not getattr(order, "xbox_create_account", False):
+        return False
+    xbox_items = list(order.items.filter(account_type="xbox").select_related("product"))
+    if not xbox_items:
+        return True
+    if any(not _order_item_is_gta6(item) for item in xbox_items):
+        return True
+    return any(not (item.account_email and item.account_password) for item in xbox_items)
+
+
 @csrf_exempt
 def create_order(request):
     from .rewards import MIN_DIAMONDS_TO_REDEEM, diamonds_to_toman, toman_to_diamonds_ceil
@@ -1190,10 +1227,14 @@ def create_order(request):
             note_parts.append(f"Password: {xbox_pass}")
     xbox_create_account_raw = contact.get('xbox_create_account')
     xbox_create_account = str(xbox_create_account_raw).strip().lower() in {"1", "true", "yes", "on"}
-    has_xbox_item = any((it.get('account_type') or '').strip().lower() in {"xbox", "xboxx"} for it in items)
-    # Xbox orders should always be marked for admin follow-up, even if the checkout
-    # UI did not explicitly toggle the creation checkbox.
-    xbox_create_account = xbox_create_account or has_xbox_item
+    has_xbox_auto_create_item = any(
+        (it.get('account_type') or '').strip().lower() in {"xbox", "xboxx"} and not _payload_item_is_gta6(it)
+        for it in items
+    )
+    # Generic Xbox service orders still need admin account-creation follow-up.
+    # GTA VI Xbox variants use the customer's existing Xbox credentials unless
+    # the checkout explicitly requests account creation.
+    xbox_create_account = xbox_create_account or has_xbox_auto_create_item
     if xbox_create_account:
         if not xbox_section_added:
             note_parts.append(f"--- Xbox ---")
@@ -2763,6 +2804,7 @@ def _admin_order_dict(o: Order):
     first_item = o.items.first()
     latest_payment = o.payments.order_by("-created_at").first()
     items_payload = []
+    requires_created_xbox_account = _order_requires_created_xbox_account(o)
     for oi in o.items.all():
         accounts = []
         for acc in oi.accounts.all().order_by("index"):
@@ -2826,6 +2868,7 @@ def _admin_order_dict(o: Order):
         "telegram": o.telegram,
         "note": o.note,
         "xbox_create_account": o.xbox_create_account,
+        "requires_created_xbox_account": requires_created_xbox_account,
         "created_xbox_email": o.created_xbox_email,
         "created_xbox_pass": o.created_xbox_pass,
         "rush_order": o.rush_order,
@@ -3383,7 +3426,7 @@ def admin_settings(request):
         crew_disabled_setting = _get_setting("crew_pack_disabled", default="false")
         # Load reseller top-up settings
         reseller_topup_disabled_setting = _get_setting("reseller_topup_disabled", default="false")
-        reseller_min_topup_setting = _get_setting("reseller_min_topup", default="100000")
+        reseller_min_topup_setting = _get_setting("reseller_min_topup", default="10000")
         reseller_max_topup_setting = _get_setting("reseller_max_topup", default="200000000")
         # Load crew pack capacity numeric limits
         crew_regular_limit_setting = _get_setting("crew_regular_limit", default="20")
@@ -3521,7 +3564,7 @@ def admin_settings(request):
             crew_display_limit_value = _update_int_setting("crew_display_limit", "crew_display_limit", 50)
             crew_display_floor_value = _update_int_setting("crew_display_floor", "crew_display_floor", CREW_DISPLAY_FLOOR_DEFAULT)
             crew_display_override_value = _update_int_setting("crew_display_override", "crew_display_override", -1)
-            reseller_min_topup_value = _update_int_setting("reseller_min_topup", "reseller_min_topup", 100000)
+            reseller_min_topup_value = _update_int_setting("reseller_min_topup", "reseller_min_topup", 10000)
             reseller_max_topup_value = _update_int_setting("reseller_max_topup", "reseller_max_topup", 200000000)
         except ValueError as e:
             return JsonResponse({"message": str(e)}, status=400)
@@ -5196,7 +5239,7 @@ def admin_update_order_status(request, tracking):
             send_email = False
         send_sms = True
 
-    xbox_order = bool(order.xbox_create_account or order.items.filter(account_type="xbox").exists())
+    created_xbox_required = _order_requires_created_xbox_account(order)
     previous_status = order.status
     order.status = status
 
@@ -5212,7 +5255,7 @@ def admin_update_order_status(request, tracking):
         order.created_xbox_pass = created_xbox_pass
         update_fields.extend(['created_xbox_email', 'created_xbox_pass'])
 
-    if order.xbox_create_account and status == "completed":
+    if created_xbox_required and status == "completed":
         effective_xbox_email = created_xbox_email or order.created_xbox_email
         effective_xbox_pass = created_xbox_pass or order.created_xbox_pass
         if not send_email and not getattr(order, "is_reseller_order", False):
@@ -5313,7 +5356,7 @@ def admin_update_order_status(request, tracking):
         else:
             effective_xbox_email = created_xbox_email or order.created_xbox_email
             effective_xbox_pass = created_xbox_pass or order.created_xbox_pass
-            if xbox_order and (not effective_xbox_email or not effective_xbox_pass):
+            if created_xbox_required and (not effective_xbox_email or not effective_xbox_pass):
                 email_error = "اطلاعات اکانت Xbox برای ارسال ایمیل کامل نیست."
                 return JsonResponse({
                     "tracking_code": order.tracking_code,

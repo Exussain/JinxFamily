@@ -100,8 +100,7 @@ export default function UserPanelPage() {
   const displayName = (profileName || user?.name || user?.first_name || "").trim();
   const phoneNumber = user?.phone_number || user?.phone || "";
   const displayPhone = loading ? "" : phoneNumber || "ثبت نشده";
-  const successfulOrders = orders.filter(o => o.status_fa === "انجام شده");
-  const ordersCount = Array.isArray(successfulOrders) ? successfulOrders.length : 0;
+  const ordersCount = Array.isArray(orders) ? orders.length : 0;
   const cartCount = Array.isArray(items) ? items.length : 0;
   const completedOrderItems = celebrationOrder?.items || [];
   const needsProfileCompletion =
@@ -634,16 +633,16 @@ export default function UserPanelPage() {
                   <h3>سفارش‌های من</h3>
                 </div>
               </div>
-              {successfulOrders.length === 0 && (
+              {orders.length === 0 && (
                 <div className="empty-state">
                   <span className="empty-state__icon">🧾</span>
-                  <p>هنوز سفارش موفقی ثبت نکرده‌اید.</p>
+                  <p>هنوز سفارشی ثبت نکرده‌اید.</p>
                   <Link href="/" className="btn-ghost">شروع خرید</Link>
                 </div>
               )}
-              {successfulOrders.length > 0 && (
+              {orders.length > 0 && (
                 <div className="orders-list">
-                  {successfulOrders.map((o) => (
+                  {orders.map((o) => (
                     <div key={o.id} className="order-card">
                       <div className="order-card__top">
                         <div className="order-chip">{o.tracking_code}</div>

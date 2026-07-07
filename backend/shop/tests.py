@@ -101,6 +101,108 @@ class XboxOrderCredentialTests(TestCase):
         self.assertEqual(email_items[0]["account_email"], "player-xbox@example.com")
         self.assertEqual(email_items[0]["account_password"], "XboxPassword123")
 
+    def test_gta6_xbox_credentials_do_not_require_created_xbox_account(self):
+        gta6 = Product.objects.create(
+            name_fa="پیش‌خرید GTA VI",
+            slug="gta6",
+            category="GAMES",
+            price=550000,
+            active=True,
+        )
+        variant = ProductVariant.objects.create(
+            product=gta6,
+            title="آلتیمیت ادیشن · ظرفیت کامل · Xbox",
+            price=550000,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            "/api/orders",
+            data=json.dumps(
+                {
+                    "items": [
+                        {
+                            "product_id": gta6.id,
+                            "variant_id": variant.id,
+                            "slug": "gta6",
+                            "name": "پیش‌خرید GTA VI - Xbox",
+                            "quantity": 1,
+                            "account_type": "xbox",
+                            "account_email": "gta-xbox@example.com",
+                            "account_password": "XboxPassword123",
+                        }
+                    ],
+                    "contact": {
+                        "xbox_email": "gta-xbox@example.com",
+                        "xbox_pass": "XboxPassword123",
+                        "email": "customer@example.com",
+                    },
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201, response.content)
+        order = Order.objects.get(tracking_code=response.json()["tracking_code"])
+        self.assertFalse(order.xbox_create_account)
+        item = order.items.get()
+        self.assertEqual(item.account_type, "xbox")
+        self.assertEqual(item.account_email, "gta-xbox@example.com")
+
+        admin_payload = _admin_order_dict(order)
+        self.assertFalse(admin_payload["xbox_create_account"])
+        self.assertFalse(admin_payload["requires_created_xbox_account"])
+
+    @patch("shop.views.send_status_update_email", return_value=True)
+    def test_gta6_xbox_legacy_create_flag_can_complete_with_customer_credentials(self, mock_email):
+        admin = User.objects.create_user(username="admin", email="admin@example.com", password="x", is_staff=True)
+        gta6 = Product.objects.create(
+            name_fa="پیش‌خرید GTA VI",
+            slug="gta6",
+            category="GAMES",
+            price=550000,
+            active=True,
+        )
+        order = Order.objects.create(
+            user=self.user,
+            status="paid",
+            epic_username="customer@example.com",
+            phone="09120000000",
+            amount=550000,
+            xbox_create_account=True,
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=gta6,
+            name="پیش‌خرید GTA VI - Xbox",
+            price=550000,
+            quantity=1,
+            account_type="xbox",
+            account_email="gta-xbox@example.com",
+            account_password="XboxPassword123",
+        )
+
+        self.client.force_login(admin)
+        response = self.client.post(
+            f"/api/admin/orders/{order.tracking_code}/status",
+            data=json.dumps(
+                {
+                    "status": "completed",
+                    "send_email": True,
+                    "send_sms": False,
+                    "email_subject": "سفارش شما تکمیل شد",
+                    "email_body": "سفارش GTA VI شما تکمیل شد.",
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        body = response.json()
+        self.assertTrue(body["email_sent"])
+        self.assertEqual(body["status"], "completed")
+        mock_email.assert_called_once()
+
     def test_crewpack_rush_keeps_the_selected_duration_variant(self):
         crewpack = Product.objects.create(
             name_fa="کروپک فورتنایت",
@@ -935,6 +1037,51 @@ class ResellerAuthTests(TestCase):
         self.assertEqual(res.status_code, 200)
 
 
+class ResellerWalletTopupTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="r_topup", email="topup@example.com", password="x")
+        UserProfile.objects.create(user=self.user, tier="reseller")
+        self.profile = ResellerProfile.objects.create(
+            user=self.user,
+            seller_code="NS-TOPUP",
+            token_hash=_hash_token("1234567890123456"),
+            token_prefix="1234",
+            status="verified",
+            contact_phone="09120000000",
+        )
+        self.client.force_login(self.user)
+
+    def test_wallet_topup_allows_ten_thousand_toman_minimum(self):
+        with patch("shop.reseller_views.ZarinPalService") as zarinpal_cls:
+            zarinpal_cls.return_value.create_payment_request.return_value = (
+                True,
+                {"authority": "A000000000000000000000000000000001234", "payment_url": "https://pay.example/start"},
+            )
+
+            res = self.client.post(
+                "/api/reseller/wallet/topup",
+                data=json.dumps({"amount": 10_000}),
+                content_type="application/json",
+            )
+
+        self.assertEqual(res.status_code, 200)
+        body = res.json()
+        self.assertTrue(body["ok"])
+        self.assertEqual(body["amount"], 10_000)
+        zarinpal_cls.return_value.create_payment_request.assert_called_once()
+        self.assertEqual(zarinpal_cls.return_value.create_payment_request.call_args.kwargs["amount"], 10_000)
+
+    def test_wallet_topup_rejects_amounts_below_ten_thousand_toman(self):
+        res = self.client.post(
+            "/api/reseller/wallet/topup",
+            data=json.dumps({"amount": 9_999}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("10,000", res.json()["message"])
+
+
 class ResellerPriceTierTests(TestCase):
     """تست پله‌های قیمت و محاسبه قیمت برای تعداد."""
 
@@ -1129,6 +1276,43 @@ class ResellerPriceOverrideTests(TestCase):
         self.assertEqual(_price_for_quantity(self.crew_product.id, 1, profile=self.reseller_a), 400000)
         # همکار دیگر همچنان از فرمول لیر استفاده می‌کند
         self.assertGreater(_price_for_quantity(self.crew_product.id, 1, profile=self.reseller_b), 0)
+
+    def test_crew_behavior_catalog_returns_effective_tiers(self):
+        SiteSetting.objects.update_or_create(key="reseller_behavior_pricing_enabled", defaults={"value_text": "true"})
+        SiteSetting.objects.update_or_create(key="reseller_behavior_max_single", defaults={"value_text": "505000"})
+        SiteSetting.objects.update_or_create(key="reseller_behavior_min_single", defaults={"value_text": "505000"})
+        SiteSetting.objects.update_or_create(key="reseller_behavior_max_ten", defaults={"value_text": "469000"})
+        SiteSetting.objects.update_or_create(key="reseller_behavior_min_ten", defaults={"value_text": "469000"})
+
+        self.client.force_login(self.reseller_b.user)
+        res = self.client.get("/api/reseller/catalog")
+        self.assertEqual(res.status_code, 200)
+        product = next(p for p in res.json()["products"] if p["id"] == self.crew_product.id)
+
+        self.assertEqual(product["behavior_pricing"]["crew_single"], 505000)
+        self.assertEqual(product["tiers"][0]["price"], 505000)
+        self.assertEqual(product["tiers"][1]["price"], 469000)
+
+    def test_crew_reseller_override_takes_priority_over_behavior_catalog(self):
+        SiteSetting.objects.update_or_create(key="reseller_behavior_pricing_enabled", defaults={"value_text": "true"})
+        SiteSetting.objects.update_or_create(key="reseller_behavior_max_single", defaults={"value_text": "505000"})
+        SiteSetting.objects.update_or_create(key="reseller_behavior_min_single", defaults={"value_text": "505000"})
+        ResellerPriceTier.objects.create(
+            product=self.crew_product,
+            variant=None,
+            reseller=self.reseller_a,
+            min_quantity=1,
+            price=444000,
+            active=True,
+        )
+
+        self.client.force_login(self.reseller_a.user)
+        res = self.client.get("/api/reseller/catalog")
+        self.assertEqual(res.status_code, 200)
+        product = next(p for p in res.json()["products"] if p["id"] == self.crew_product.id)
+
+        self.assertIsNone(product["behavior_pricing"])
+        self.assertEqual(product["tiers"][0]["price"], 444000)
 
     def test_vbucks_variant_global_tiers_are_fixed_toman(self):
         from .reseller_views import _price_for_quantity

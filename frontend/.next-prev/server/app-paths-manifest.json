@@ -3,6 +3,8 @@
   "/_not-found/page": "app/_not-found/page.js",
   "/api/currency-rates/route": "app/api/currency-rates/route.js",
   "/api/test-curl/route": "app/api/test-curl/route.js",
+  "/articles/[slug]/page": "app/articles/[slug]/page.js",
+  "/articles/page": "app/articles/page.js",
   "/blog/[slug]/page": "app/blog/[slug]/page.js",
   "/blog/feed.xml/route": "app/blog/feed.xml/route.js",
   "/blog/page": "app/blog/page.js",

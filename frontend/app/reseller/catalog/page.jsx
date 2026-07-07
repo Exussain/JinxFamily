@@ -3,7 +3,11 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import SmartImage from "../../../components/SmartImage";
 import { resolveProductImage } from "../../../lib/productImageHelpers";
-import { api, fmtToman, priceForQuantity } from "../lib";
+import {
+  buildEffectiveResellerTiers,
+  resellerUnitPriceForQuantity,
+} from "../../../lib/resellerCatalogPricing.mjs";
+import { api, fmtToman } from "../lib";
 import TopupModal from "../components/TopupModal";
 import QtyStepper from "../components/QtyStepper";
 
@@ -281,7 +285,7 @@ function CatalogInner() {
     return selected.variants.find((v) => v.id === selectedVariantId) || null;
   }, [selectedVariantId, selected?.variants]);
 
-  const tiers = useMemo(() => {
+  const rawTiers = useMemo(() => {
     const baseTiers = selected?.tiers || [];
     if (selectedVariant?.tiers && selectedVariant.tiers.length > 0) return selectedVariant.tiers;
     if (!selectedVariant || !selected?.price_lira || selectedVariant.price_lira === selected.price_lira) return baseTiers;
@@ -292,7 +296,8 @@ function CatalogInner() {
     }));
   }, [selected, selectedVariant]);
 
-  const unitPrice = priceForQuantity(tiers, qty);
+  const tiers = useMemo(() => buildEffectiveResellerTiers(selected, rawTiers), [selected, rawTiers]);
+  const unitPrice = resellerUnitPriceForQuantity(selected, rawTiers, qty);
   const total = unitPrice * qty;
   const balance = me?.wallet_balance ?? 0;
   const balanceAfter = balance - total;
@@ -641,22 +646,14 @@ function CatalogInner() {
                   <div className="cat-price">
                     {p.behavior_pricing && p.behavior_pricing.crew_single ? (
                       <>
-                        <span style={{ textDecoration: "line-through", color: "var(--muted)", fontSize: 11, display: "block" }}>
+                        <span className="cat-price-old">
                           قیمت سایت: {fmtToman(p.original_price || Math.min(...p.tiers.map(t => t.price)))} تومان
                         </span>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                          <span style={{ color: "var(--accent-emerald)", fontWeight: 800, fontSize: 15 }}>
+                        <div className="cat-price-current-row">
+                          <span className="cat-price-current">
                             {fmtToman(p.behavior_pricing.crew_single)} تومان
                           </span>
-                          <span style={{
-                            background: "rgba(16, 185, 129, 0.15)",
-                            color: "var(--accent-emerald)",
-                            padding: "1px 6px",
-                            borderRadius: 6,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            border: "1px solid rgba(16, 185, 129, 0.25)"
-                          }}>
+                          <span className="cat-discount-chip">
                             {fmtToman((p.original_price || 0) - (p.behavior_pricing.crew_single || 0))} تومان تخفیف
                           </span>
                         </div>
@@ -860,41 +857,30 @@ function CatalogInner() {
             </div>
           </div>
 
-          <table className="tier-table">
-            {selected.behavior_pricing && (
-              <div style={{
-                background: "linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.04))",
-                border: "1px solid rgba(16, 185, 129, 0.25)",
-                borderRadius: 12,
-                padding: "12px 16px",
-                marginBottom: 12,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: 8
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 20 }}>💰</span>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: "var(--accent-emerald)" }}>
-                      قیمت ویژه شما
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--muted)" }}>
-                      قیمت‌گذاری هوشمند بر اساس سابقه همکاری — صرفه‌جویی {fmtToman((selected.original_price || 0) - (selected.behavior_pricing.crew_single || 0))} تومان نسبت به قیمت سایت
-                    </div>
+          {selected.behavior_pricing && (
+            <div className="behavior-price-card">
+              <div className="behavior-price-copy">
+                <span className="behavior-price-icon">💰</span>
+                <div>
+                  <div className="behavior-price-title">
+                    قیمت ویژه شما
                   </div>
-                </div>
-                <div style={{ textAlign: "left", direction: "ltr" }}>
-                  <div style={{ fontSize: 11, color: "var(--muted)", textDecoration: "line-through" }}>
-                    {fmtToman(selected.original_price || Math.min(...tiers.map(t => t.price)))} تومان
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: "var(--accent-emerald)" }}>
-                    {fmtToman(selected.behavior_pricing.crew_single)} تومان
+                  <div className="behavior-price-desc">
+                    قیمت‌گذاری هوشمند بر اساس سابقه همکاری — صرفه‌جویی {fmtToman(Math.max(0, (selected.original_price || 0) - unitPrice))} تومان نسبت به قیمت سایت
                   </div>
                 </div>
               </div>
-            )}
+              <div className="behavior-price-values">
+                <div className="behavior-price-old">
+                  {fmtToman(selected.original_price || Math.min(...tiers.map(t => t.price)))} تومان
+                </div>
+                <div className="behavior-price-current">
+                  {fmtToman(unitPrice)} تومان
+                </div>
+              </div>
+            </div>
+          )}
+          <table className="tier-table">
             <thead><tr><th>پله تعداد</th><th>قیمت واحد</th><th>قیمت کل</th></tr></thead>
             <tbody>
               {tiers.map((t, i) => {
