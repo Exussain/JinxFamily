@@ -56,6 +56,7 @@ Treat changes as deploying to production, not a sandbox.
   frontend's HardReload flow; there's no separate script for it).
 - Migrations: `.venv/bin/python manage.py makemigrations shop` / `migrate`.
 - One-off Scripts: Run helper or one-off scripts in the virtualenv from the `backend/` directory, e.g., `.venv/bin/python scripts/send_reseller_congrats.py` or `.venv/bin/python scripts/send_test_notifications.py`.
+- Discord Bot: Managed via systemd service. Restart and tail logs using `systemctl restart nubix-discord` / `journalctl -u nubix-discord -f`. Code and documentation are located in `/root/NubixDiscord/`.
 
 
 ## Architecture
@@ -108,9 +109,22 @@ commented-out MySQL config block also exists in `settings.py` and is intentional
 ### Frontend: Next.js App Router, no global state library
 
 - `app/` — route segments under the App Router; most pages are `page.jsx` with a co-located
-  `*Client.jsx` for client-side interactivity (e.g. `app/gta6/page.jsx` + `Gta6Client.jsx`).
-  Notable route groups: `app/panel/admin` (admin dashboard), `app/panel/user`, `app/reseller/*`
-  (separate reseller portal with its own `layout.jsx`/`reseller.css`), `app/blog`, `app/spin`.
+  `*Client.jsx` for client-side interactivity (e.g. `app/gta6/page.jsx` + `Gta6Client.jsx`;
+  `app/product/[slug]/page.jsx` is a server component that pre-fetches the product and renders
+  `ProductPageClient.jsx` so crawlers get full product HTML). Notable route groups:
+  `app/panel/admin` (admin dashboard), `app/panel/user`, `app/reseller/*` (separate reseller
+  portal; `layout.jsx` is a thin server layout for metadata wrapping `ResellerLayoutClient.jsx`),
+  `app/blog` (+ RSS at `app/blog/feed.xml/route.js`), `app/spin`, `app/category/[code]`
+  (SEO category landings driven by `/api/categories`).
+- SEO conventions: the root `app/layout.js` must NOT set `alternates.canonical` (App Router
+  inherits it into every child route — this once canonicalized the whole blog/FAQ to the
+  homepage); every indexable page declares its own canonical. Shared JSON-LD builders live in
+  `lib/seoJsonLd.mjs` (Product/AggregateOffer/Breadcrumb/FAQ). Legacy `/product/*` twins of the
+  dedicated landing pages (v-bucks, gta6, fortnite-crew-pack, gemini-subscription,
+  lego-starter-pack) permanently redirect in `next.config.js` and are excluded from
+  `app/sitemap.js` — keep redirects, sitemap, and `ProductCard`/`HeroSlider` link maps in sync
+  when adding another dedicated landing page. Persian product slugs must be decoded once via
+  `lib/productSlug.mjs` before API fetches (double-encoding returns 404s).
 - `components/` — shared React components (note: also reachable as its own working directory).
 - `lib/` — framework-free helper modules (`.js`/`.mjs`), most with a sibling `*.test.mjs`. This is
   where business logic that needs to be unit-tested lives (currency parsing, product image
@@ -140,6 +154,142 @@ commented-out MySQL config block also exists in `settings.py` and is intentional
   (`shop/views.py` `_parse_tgju_currency_rates` scrapes tgju.org; mirrored test helper in
   `frontend/lib/currencyRates.mjs`). Reseller tier pricing (`_crew_pricing_config`,
   `_crew_unit_price_for_quantity`) recomputes off that live rate — don't assume prices are static.
+
+### Reseller Pricing Architecture (critical — read before touching pricing)
+
+**Lira-priced products vs. fixed-price products:**
+- Any product with `price_lira > 0` is treated as "lira-priced" by the reseller catalog
+  (`reseller_catalog` at `reseller_views.py:900`) and order pricing (`_price_for_quantity` at
+  line 1016).
+- For **global tiers** (reseller_id=NULL): the price displayed in the catalog is scaled by the live
+  lira rate: `_round_toman(tier.price × lira_rate / ref_rate)`. This means the admin's raw tier
+  price in the database ≠ what resellers see in their catalog.
+- For **per-reseller override tiers** (reseller_id set): the price is used AS-IS — no lira scaling.
+  This is intentional: overrides are fixed Toman prices that don't fluctuate with lira.
+- The admin pricing editor (`ResellerPricingEditor.jsx`) shows RAW database prices, NOT scaled
+  prices. A notice warns the admin about lira scaling for non-crew lira-priced products in global
+  mode.
+
+**Smart pricing analysis (12.5% profit guardrail):**
+- `GET /api/admin/reseller-tiers?product_id=X` returns `cost_toman`, `ideal_min_price`, `profit_pct`
+  for lira-priced products. Formula: `cost_toman = product.price_lira × lira_rate`, then
+  `ideal_min_price = round(cost_toman × 1.125 / 1000) × 1000`.
+- The frontend shows a smart pricing panel with per-tier ✅/⚠️ status comparing each tier's price
+  to the ideal minimum.
+- For products with variants (like VBucks), variant-specific `price_lira` is used (from
+  `ProductVariant.original_price` field).
+- **DO NOT change `1.125` without updating the displayed `profit_pct` to match.**
+
+**VBucks variants:**
+- VBucks (product id=3, slug=v-bucks) has 4 variants with different `original_price` (lira cost):
+  800 V-Bucks: 190₺, 2400 V-Bucks: 485₺, 4500 V-Bucks: 780₺, 12500 V-Bucks: 1898₺.
+- Each variant can have independent pricing tiers. The admin pricing editor has a variant selector
+  dropdown. When a variant is selected, `variant_id` is passed to all tier API calls.
+- The backend `admin_reseller_tiers` accepts `?variant_id=X` and returns variant-specific
+  `cost_toman`/`ideal_min_price`.
+
+**TierStepChart slider behavior:**
+- `TierStepChart.jsx` `scaleMax` is frozen during pointer drags to prevent other bars from visually
+  shifting. It recalculates when the drag ends.
+- Price rounding during drag: `roundToStep(price, DRAG_ROUND_STEP=1000)` rounds to nearest 1,000
+  Toman. But the number input field bypasses this rounding — admins can type exact prices.
+
+**Key API endpoints for pricing:**
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/admin/reseller-tiers?product_id=X` | GET | Load global tiers + lira rate + smart pricing data |
+| `/api/admin/reseller-tiers?product_id=X&reseller_id=Y` | GET | Load per-reseller override tiers |
+| `/api/admin/reseller-tiers/upsert` | PUT | Save tiers (global or per-reseller) |
+| `/api/admin/reseller-tiers/clear-override` | POST | Remove per-reseller override |
+| `/api/admin/reseller-tiers/overrides-summary` | GET | List which resellers/products have overrides |
+| `/api/reseller/catalog` | GET | Reseller-facing catalog with computed prices |
+
 - Notifications fan out across SMS (Kavenegar), email (Resend), Telegram bots (`backend/ai/`,
   `shop/telegram_channel_service.py`), and Discord (webhook + bot outbox tables in `views.py`) —
   changes to order-status flows often need to touch more than one of these.
+
+
+## Rules to Prevent Regressions & SEO Guidelines
+
+To avoid repeating previous critical bugs and regressions, always adhere to these rules:
+
+### Next.js & Frontend SEO
+- **Next.js 16 Params**: In Next.js 16/React 19, route `params` and `searchParams` are Promises. They **MUST** be awaited before accessing their properties (e.g., `const { slug } = await params;` or `const slug = (await params).slug`).
+- **Conditional Rendering vs. CSS Hidden**: Never conditionally render (`{activeTab === 'desc' && <Description />}`) SEO-critical content like product descriptions, FAQs, or support tabs. Instead, mount all tabs/contents in the DOM and toggle their visibility using the HTML `hidden` attribute or CSS `display: none` (`.hidden`). This ensures search crawlers can index the entire page content.
+- **styled-jsx only scopes JSX in the same function as its `<style jsx>` tag**: JSX moved into a `const x = (…)` or a `renderX()` helper does NOT receive the scoping `jsx-<hash>` class, so the component's `<style jsx>` rules silently don't apply to it (it renders unstyled). Keep JSX that relies on a `<style jsx>` block inline in that component's `return` — don't factor tab bodies/sections into helper closures. If you must extract, use `<style jsx global>` with every selector prefixed by a page-unique root class (e.g. `.user-shell .card {…}`). This bit the `/panel/user` rebuild (2026-07-07) — the hero/tab-bar (in `return`) were styled while the tab panels (in closures) were not. Verify by grepping the built chunk in `.next/static/chunks/` for `className:"<class>"` with no `jsx-` prefix.
+- **Root Layout Canonical**: Never set `alternates.canonical: '/'` in the root layout (`frontend/app/layout.js`). Doing so causes child pages (blog, FAQ, products) to inherit this and canonicalize to the homepage, de-indexing them from Google. Each page must specify its own unique canonical URL.
+- **Page-Specific Meta & Schema (JSON-LD)**: 
+  - Every public page (including `/vbucks`, `/crewpack`, `/gta6`, `/lego`, `/gemini`, and dynamic products/blog pages) must have custom metadata (title, description, canonical link, `og:image` representing the actual product, and Twitter card).
+  - Use structured JSON-LD schemas constructed with `frontend/lib/seoJsonLd.mjs` (e.g., `Product`, `AggregateOffer`, `BreadcrumbList`, `FAQPage`, `BlogPosting`).
+- **Home Page SEO & LCP**:
+  - The home page includes an SEO text block (~200 words) + 5 FAQ `<details>` elements at the bottom, using keyword-rich internal links.
+  - Optimize LCP (Largest Contentful Paint) for above-the-fold images: the first image/slider should not be lazy-loaded and must use `fetchPriority="high"` (or `priority` prop). Minimize preloads for other images.
+- **Pagination**: Use standard crawlable links (e.g. `?page=X` or dedicated canonical paths) instead of purely client-side filtering state so search crawlers can discover all paginated pages (e.g. blog page 2).
+- **Navigation Links**: Do not use query-param links like `?cat=` or non-canonical paths in the Navbar or Footer. Always use clean canonical paths and keyword-rich anchor texts.
+- **Noindex for Panels**: Always set `noindex` metadata for the user/admin panels (e.g. in `frontend/app/panel/layout.jsx`) and disallow private dashboard paths in `robots.js` (while keeping public reseller pages like `/reseller` and `/reseller/apply` crawlable).
+- **Real 404s, never soft-404s**: Dynamic routes (`/product/[slug]`, `/blog/[slug]`) must return
+  HTTP 404 via `notFound()` when the backend API says the resource doesn't exist. Serving a 200
+  "loading/empty" shell for a missing product made Google flag dozens of removed products as
+  soft-404s/duplicates and keep recrawling them. Use `fetchApiJsonWithStatus` from
+  `lib/serverFetch.mjs` and only call `notFound()` when `status === 404` — when the backend is
+  merely unreachable (`status === 0`), render the client shell instead so a transient outage never
+  404s live products.
+- **Removing a product from the catalog** takes more than deleting the DB row. Checklist:
+  (1) delete/deactivate in backend; (2) remove the slug from frontend hardcoded lists —
+  `app/page.js` priority slugs, `lib/placeholderFeatured.js`, `lib/productDescriptions.js`,
+  `lib/productImageHelpers.js` `STATIC_IMAGE_MAP`, `components/CategoriesSection.jsx`
+  `categoryData`, and any category description in `backend/shop/categories.py` that advertises it;
+  (3) update `lib/heroSliderItems.test.mjs` fixtures; (4) let the URL 404 (correct signal for
+  removed content — do NOT redirect it to the homepage, Google treats that as a soft-404);
+  (5) the sitemap self-heals (it lists live API products only).
+- **Legacy URL redirects** live in `next.config.js` `redirects()`: old WordPress-era paths
+  (`/products/*`, `/orders`, `/index.php`, `/feed`, `/manifest.json`) and former alias pages
+  (`/contact`, `/privacy`, `/guide`, `/terms` → `/faq/*`) 308 to their live equivalents. Only add a
+  redirect when a genuinely equivalent target exists; otherwise let it 404. Never re-create alias
+  routes that duplicate another page's content with a canonical tag — redirect instead.
+- **Unicode-safe truncation**: Product/blog descriptions are full of emoji (surrogate pairs).
+  Never truncate them with `.slice(0, n)`/`.substring(0, n)` for meta descriptions or JSON-LD —
+  a split pair produces a lone surrogate and Google reports "Truncated Unicode character" (invalid
+  structured data). Truncate on code points: `Array.from(str).slice(0, n).join('')` (see
+  `truncateChars` in `app/product/[slug]/layout.jsx`).
+- **Product JSON-LD offers are mandatory**: A `Product` without `offers` (or review/aggregateRating)
+  is invalid for rich results. Both emitters — `app/product/[slug]/layout.jsx` (inline) and
+  `lib/seoJsonLd.mjs` `buildProductJsonLd` (used by `/crewpack`, `/vbucks`) — fall back to the
+  cheapest variant price when the product-level price is 0, and every Offer/AggregateOffer must
+  carry `hasMerchantReturnPolicy` and `shippingDetails` (digital goods: non-returnable, 0-cost
+  instant delivery) or Google Merchant flags them. Keep the two emitters' fields in sync when
+  changing either.
+
+### Core Web Vitals (mobile CLS/LCP — learned from CrUX "poor" reports)
+- **Reserve space for hero images**: The #1 CLS killer (CLS=1.0 on product pages) was a hero
+  `<img>` with no reserved box — it painted at 0px height and pushed the whole viewport down when
+  decoded. Every above-the-fold image needs either `width`/`height` attributes or a container with
+  a fixed `aspect-ratio` (+ `object-fit: contain`) — see the `/crewpack`, `/vbucks`, and
+  `/product/[slug]` heroes (all use the reserved-square pattern).
+- **LCP images must be eager AND high-priority**: `components/SmartImage.jsx`'s `eager` prop sets
+  `loading="eager"` + `fetchPriority="high"` (and `priority` on the next/image branch) — pass
+  `eager` on every above-the-fold hero. For server components, also `preload(imageUrl, { as:
+  "image", fetchPriority: "high" })` from `react-dom` so the download starts from the `<head>`
+  (see `app/crewpack/page.jsx`). Never leave an LCP image `loading="lazy"`.
+- **No post-hydration layout swaps**: Anything that renders differently on mobile vs desktop must
+  decide via CSS media queries, not `matchMedia`/`useEffect` state — the SSR HTML would show one
+  variant and swap after hydration (CLS). `components/PlatformSelector.jsx` renders BOTH controls
+  and lets `globals.css` (680px breakpoint) pick one. Same principle for content that depends on a
+  client fetch: pass server-fetched data down (e.g. crewpack passes `initialStats` so the rating
+  chip is in the SSR HTML instead of popping in).
+- **Static image caching**: `/products/*`, `/categories/*`, `/media/*`, `/icons/*` and the logo are
+  served with `max-age=86400, stale-while-revalidate=604800` via `next.config.js` `headers()` —
+  NOT `immutable`, because static images get replaced in place under the same filename. Don't
+  remove these rules (images were previously `max-age=0`, adding a revalidation round-trip to
+  every LCP), and don't add `Clear-Site-Data` anywhere (see the documented incident above).
+
+### UI/UX & Themes
+- **Select Option Colors**: In dark mode, ensure option elements inside selects have a dark background and light text (via `:root[data-theme="dark"] select option` or similar).
+- **Sub-navbar vs Main Navbar**: Do not make the sub-navbar absolute; keep it clean with `space-between` and only apply custom width limits/paddings on it, keeping the main navbar full-width.
+
+### App flows
+- **Xbox Verification Modal**: In `frontend/app/panel/admin/page.jsx`, the Xbox confirmation modal is shown for **ALL** orders upon completion (not just those with `xbox_create_account`). A red "This is not an Xbox activation" button is provided to easily skip and complete non-Xbox orders.
+- **Reseller Registration**: Public reseller registration at `POST /api/reseller/signup` (frontend `/reseller/apply`) creates reseller accounts in a `draft` status, issuing a one-time token. Once the reseller goes through onboarding, their status becomes `pending_review`. Users with `pending_review` status are redirected to the queue page `/reseller/pending` when logging in.
+- **Optional Registration Avatar**: During OTP registration, users can choose standard emoji/canvas-rendered avatars (via `frontend/lib/avatarImage.mjs`) or upload a custom image. If they do not interact, it remains optional (no upload). If selected, the avatar is uploaded to `POST /api/me/avatar` post-signup.
+- **Maintenance Mode**: The `MAINTENANCE_MODE` flag in `frontend/proxy.js` toggle serves a 503 status code and is built using static assets in `frontend/public/maintenance/`. When disabling, toggle it back to `false` and run `HardReload.sh`.
+
