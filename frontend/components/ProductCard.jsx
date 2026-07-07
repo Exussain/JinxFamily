@@ -59,7 +59,7 @@ export default function ProductCard({ p, imageFit = "contain" }) {
         
         {/* Floating Cart Action on Image */}
         <div className="cart-action" style={{ position: 'absolute', bottom: '12px', left: '12px', zIndex: 10, pointerEvents: 'auto' }}>
-          {!hasPrice ? (
+          {(!hasPrice || p.ordering_disabled || p.customer_ordering_disabled || p.purchasable === false) ? (
             <button
               type="button"
               className="product-cart-btn disabled"
@@ -150,7 +150,7 @@ export default function ProductCard({ p, imageFit = "contain" }) {
               <div className="product-price-old" style={{visibility: 'hidden'}}>0</div>
             )}
             
-            {hasPrice ? (
+            {hasPrice && !(p.ordering_disabled || p.customer_ordering_disabled || p.purchasable === false) ? (
               <div className="product-price-new">
                 {showPriceFrom && <span style={{fontSize:'12px', marginLeft:'4px'}}>از</span>}
                 {price.toLocaleString('fa-IR')}

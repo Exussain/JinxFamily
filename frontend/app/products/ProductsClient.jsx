@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import ProductCard from '../../components/ProductCard';
 
@@ -19,58 +19,97 @@ const categoryIcons = {
   "SUBSCRIPTIONS": "⭐",
 };
 
+// Custom sorting weights for Fortnite products
+const fortniteOrderMap = {
+  "fortnite-crew-pack": 0,
+  "crewpack": 0,
+  "fortnite-starter-pack": 1,
+  "lego-starter-pack": 1,
+  "starterpack": 1,
+  "v-bucks": 2,
+  "fortnite-battle-pass": 3,
+  "change-region-turkey": 4
+};
+
 export default function ProductsClient({ categories = [] }) {
-  const [activeCat, setActiveCat] = useState('');
-  const scrollAreaRef = useRef(null);
-  const observerRef = useRef(null);
+  const [activeCat, setActiveCat] = useState('FORTNITE');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showOutOfStock, setShowOutOfStock] = useState(true);
+  const [sortBy, setSortBy] = useState('popularity');
 
-  useEffect(() => {
-    if (categories.length > 0 && !activeCat) {
-      setActiveCat(categories[0].code);
+  // Filter and sort products dynamically
+  const filteredProducts = useMemo(() => {
+    const selectedCategory = categories.find(cat => cat.code === activeCat);
+    if (!selectedCategory) return [];
+
+    let list = [...selectedCategory.products];
+
+    // 1) Filter by Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(p => 
+        p.name_fa?.toLowerCase().includes(q) || 
+        p.subtitle?.toLowerCase().includes(q) ||
+        p.slug?.toLowerCase().includes(q)
+      );
     }
-  }, [categories, activeCat]);
 
-  // Active Category tracking via Intersection Observer
-  useEffect(() => {
-    const options = {
-      root: null, // viewport
-      rootMargin: '-20% 0px -60% 0px', // check elements around center area
-      threshold: 0
-    };
-
-    observerRef.current = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveCat(entry.target.id);
-        }
+    // 2) Filter by Out of Stock (if false, hide them)
+    if (!showOutOfStock) {
+      list = list.filter(p => {
+        const isOutOfStock = p.ordering_disabled || p.customer_ordering_disabled || p.purchasable === false;
+        return !isOutOfStock;
       });
-    }, options);
+    }
 
-    categories.forEach((cat) => {
-      const el = document.getElementById(`cat-sec-${cat.code}`);
-      if (el) observerRef.current.observe(el);
+    // 3) Sort products
+    list.sort((a, b) => {
+      // Primary sorting logic
+      if (sortBy === 'popularity') {
+        if (activeCat === 'FORTNITE') {
+          const aRank = fortniteOrderMap[a.slug] !== undefined ? fortniteOrderMap[a.slug] : 999;
+          const bRank = fortniteOrderMap[b.slug] !== undefined ? fortniteOrderMap[b.slug] : 999;
+          if (aRank !== bRank) return aRank - bRank;
+        }
+        // Fallback to default display order
+        const aOrder = a.display_order !== undefined ? a.display_order : 999;
+        const bOrder = b.display_order !== undefined ? b.display_order : 999;
+        return aOrder - bOrder;
+      }
+
+      if (sortBy === 'price_asc') {
+        const aPrice = Number(a.price ?? a.min_price ?? 0);
+        const bPrice = Number(b.price ?? b.min_price ?? 0);
+        // Handle 0 price (out of stock/no price) by placing them last
+        if (aPrice === 0) return 1;
+        if (bPrice === 0) return -1;
+        return aPrice - bPrice;
+      }
+
+      if (sortBy === 'price_desc') {
+        const aPrice = Number(a.price ?? a.min_price ?? 0);
+        const bPrice = Number(b.price ?? b.min_price ?? 0);
+        return bPrice - aPrice;
+      }
+
+      if (sortBy === 'alphabetical') {
+        return (a.name_fa || "").localeCompare(b.name_fa || " ", 'fa');
+      }
+
+      return 0;
     });
 
-    return () => {
-      if (observerRef.current) observerRef.current.disconnect();
-    };
-  }, [categories]);
+    return list;
+  }, [categories, activeCat, searchQuery, showOutOfStock, sortBy]);
 
-  const scrollToSection = (code) => {
-    setActiveCat(code);
-    const el = document.getElementById(`cat-sec-${code}`);
-    if (el) {
-      // Offset scroll to account for sticky navigation header
-      const yOffset = -120; 
-      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-  };
+  const activeCategoryInfo = categories.find(cat => cat.code === activeCat);
+  const activeGradient = categoryGradients[activeCat] || "linear-gradient(135deg, #6366F1, #8B5CF6)";
+  const activeIcon = categoryIcons[activeCat] || "🛍️";
 
   const styleContent = `
     .products-layout-wrapper {
       display: grid;
-      grid-template-columns: 260px 1fr;
+      grid-template-columns: 300px 1fr;
       gap: 32px;
       margin-top: 32px;
       position: relative;
@@ -82,12 +121,33 @@ export default function ProductsClient({ categories = [] }) {
       height: fit-content;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 24px;
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 16px;
+      border-radius: 24px;
+      padding: 24px;
       box-shadow: var(--shadow);
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .filter-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+      margin: 0;
+    }
+
+    .sidebar-cat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .sidebar-cat-btn {
@@ -104,6 +164,7 @@ export default function ProductsClient({ categories = [] }) {
       cursor: pointer;
       text-align: right;
       transition: all 0.25s ease;
+      width: 100%;
     }
 
     .sidebar-cat-btn:hover {
@@ -117,19 +178,68 @@ export default function ProductsClient({ categories = [] }) {
       box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
     }
 
+    .search-input-wrapper {
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 2px solid var(--line);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .checkbox-input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .sort-select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 2px solid var(--line);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13.5px;
+      outline: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
     .products-main-content {
       display: flex;
       flex-direction: column;
-      gap: 40px;
+      gap: 24px;
     }
 
     .cat-section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
       border-bottom: 1px solid var(--line);
-      padding-bottom: 12px;
+      padding-bottom: 16px;
     }
 
     .cat-section-title-wrapper {
@@ -139,96 +249,66 @@ export default function ProductsClient({ categories = [] }) {
     }
 
     .cat-section-gradient-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #fff;
-      font-size: 20px;
+      font-size: 22px;
     }
 
     .cat-section-title-wrapper h2 {
       margin: 0;
-      font-size: 19px;
-      font-weight: 800;
+      font-size: 20px;
+      font-weight: 900;
       color: var(--text);
     }
 
     .cat-section-count {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--muted);
       background: color-mix(in srgb, var(--bg) 60%, transparent);
-      padding: 4px 10px;
+      padding: 6px 14px;
       border-radius: 99px;
       font-weight: 700;
     }
 
-    /* Horizontal Slider Container (اسلاید طور) */
-    .cat-products-slider-row {
-      display: flex;
-      gap: 16px;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      padding-bottom: 16px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--line) transparent;
-      -webkit-overflow-scrolling: touch;
+    /* Grid Layout (منظم و مرتب) */
+    .products-clean-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
 
-    .cat-products-slider-row::-webkit-scrollbar {
-      height: 6px;
-    }
-    
-    .cat-products-slider-row::-webkit-scrollbar-track {
-      background: transparent;
+    @media (max-width: 1200px) {
+      .products-clean-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
-    .cat-products-slider-row::-webkit-scrollbar-thumb {
-      background: var(--line);
-      border-radius: 99px;
-    }
-
-    .slider-item-wrapper {
-      flex: 0 0 280px;
-      scroll-snap-align: start;
-      position: relative;
-    }
-
-    /* Mobile view styles mapping */
     @media (max-width: 992px) {
       .products-layout-wrapper {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 24px;
       }
 
       .products-sidebar-container {
-        position: sticky;
-        top: 75px;
-        z-index: 50;
-        flex-direction: row;
-        overflow-x: auto;
-        padding: 10px;
-        border-radius: 14px;
-        gap: 8px;
-        background: color-mix(in srgb, var(--card) 85%, transparent);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-color: var(--line);
-        margin-bottom: 12px;
-        scrollbar-width: none;
+        position: relative;
+        top: 0;
+        padding: 20px;
+        border-radius: 20px;
       }
 
-      .products-sidebar-container::-webkit-scrollbar {
-        display: none;
+      .products-clean-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
+    }
 
-      .sidebar-cat-btn {
-        white-space: nowrap;
-        padding: 8px 14px;
-        font-size: 13px;
-        border-radius: 99px;
+    @media (max-width: 576px) {
+      .products-clean-grid {
+        grid-template-columns: 1fr;
       }
     }
   `;
@@ -252,69 +332,112 @@ export default function ProductsClient({ categories = [] }) {
           </Link>
         </div>
         <div className="category-hero-body">
-          <div className="category-kicker">⚡ سایدبار تعاملی و ویترین هوشمند</div>
+          <div className="category-kicker">🛍️ ویترین محصولات و فیلتر پیشرفته</div>
           <h1 className="category-title" style={{ fontSize: '26px', fontWeight: '900', color: '#fff', margin: '12px 0' }}>
             خرید محصولات دیجیتال و گیمینگ
           </h1>
           <p className="category-description" style={{ color: 'rgba(255,255,255,0.75)', fontSize: '15px', lineHeight: '1.8' }}>
-            محصولات را بر اساس دسته‌بندی و میزان محبوبیت مشاهده کنید. با کلیک بر روی گزینه‌های سایدبار به راحتی بین بخش‌های مختلف فروشگاه حرکت کنید.
+            دسته‌بندی مورد نظر خود را انتخاب کرده و از فیلترهای پیشرفته جهت جستجو و مرتب‌سازی دقیق استفاده کنید. امکان نمایش محصولات ناموجود جهت اطلاع‌رسانی موجودی فعال است.
           </p>
         </div>
       </section>
 
       <div className="products-layout-wrapper">
-        {/* Sidebar drawer switcher */}
+        {/* Sidebar Filters on the Right */}
         <aside className="products-sidebar-container">
-          {categories.map((cat) => (
-            <button
-              key={cat.code}
-              type="button"
-              className={`sidebar-cat-btn${activeCat === cat.code ? ' active' : ''}`}
-              onClick={() => scrollToSection(cat.code)}
+          {/* 1) Search */}
+          <div className="filter-group">
+            <h3 className="filter-title">🔍 جستجوی محصول</h3>
+            <div className="search-input-wrapper">
+              <input
+                type="text"
+                placeholder="نام محصول را وارد کنید..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+            </div>
+          </div>
+
+          {/* 2) Categories */}
+          <div className="filter-group">
+            <h3 className="filter-title">📁 دسته‌بندی‌ها</h3>
+            <div className="sidebar-cat-list">
+              {categories.map((cat) => (
+                <button
+                  key={cat.code}
+                  type="button"
+                  className={`sidebar-cat-btn${activeCat === cat.code ? ' active' : ''}`}
+                  onClick={() => setActiveCat(cat.code)}
+                >
+                  <span>{categoryIcons[cat.code] || "🛍️"}</span>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 3) Stock Availability */}
+          <div className="filter-group">
+            <h3 className="filter-title">📦 فیلتر موجودی</h3>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={showOutOfStock}
+                onChange={(e) => setShowOutOfStock(e.target.checked)}
+                className="checkbox-input"
+              />
+              <span>نمایش محصولات ناموجود</span>
+            </label>
+          </div>
+
+          {/* 4) Sorting */}
+          <div className="filter-group">
+            <h3 className="filter-title">📊 مرتب‌سازی بر اساس</h3>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="sort-select"
             >
-              <span>{categoryIcons[cat.code] || "🛍️"}</span>
-              <span>{cat.name}</span>
-            </button>
-          ))}
+              <option value="popularity">پرفروش‌ترین‌ها (پیش‌فرض)</option>
+              <option value="price_asc">قیمت: از کم به زیاد</option>
+              <option value="price_desc">قیمت: از زیاد به کم</option>
+              <option value="alphabetical">حروف الفبا (الف-ی)</option>
+            </select>
+          </div>
         </aside>
 
-        {/* Staked panels */}
-        <div className="products-main-content" ref={scrollAreaRef}>
-          {categories.map((cat) => {
-            const gradient = categoryGradients[cat.code] || "linear-gradient(135deg, #6366F1, #8B5CF6)";
-            const icon = categoryIcons[cat.code] || "🛍️";
-            const targetUrl = `/category/${cat.code.toLowerCase()}`;
-
-            return (
-              <section key={cat.code} id={`cat-sec-${cat.code}`} style={{ scrollMarginTop: '180px' }}>
-                <div className="cat-section-header">
-                  <div className="cat-section-title-wrapper">
-                    <div className="cat-section-gradient-icon" style={{ background: gradient }}>
-                      {icon}
-                    </div>
-                    <h2>{cat.name}</h2>
-                  </div>
-                  <Link href={targetUrl} className="cat-section-count" style={{ textDecoration: 'none' }}>
-                    مشاهده همه ({cat.productCount.toLocaleString('fa-IR')}) ←
-                  </Link>
+        {/* Product Grid on the Left */}
+        <div className="products-main-content">
+          {activeCategoryInfo && (
+            <div className="cat-section-header">
+              <div className="cat-section-title-wrapper">
+                <div className="cat-section-gradient-icon" style={{ background: activeGradient }}>
+                  {activeIcon}
                 </div>
+                <h2>{activeCategoryInfo.name}</h2>
+              </div>
+              <span className="cat-section-count">
+                تعداد نتایج: {filteredProducts.length.toLocaleString('fa-IR')} محصول
+              </span>
+            </div>
+          )}
 
-                {cat.products.length === 0 ? (
-                  <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)' }}>
-                    محصولی در این دسته‌بندی وجود ندارد.
-                  </div>
-                ) : (
-                  <div className="cat-products-slider-row">
-                    {cat.products.map((p) => (
-                      <div key={p.id || p.slug} className="slider-item-wrapper">
-                        <ProductCard p={p} imageFit="cover" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            );
-          })}
+          {filteredProducts.length === 0 ? (
+            <div style={{ padding: '64px 24px', textAlign: 'center', color: 'var(--muted)', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '24px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
+              <h3 style={{ margin: '0 0 8px 0', color: 'var(--text)', fontWeight: 800 }}>محصولی یافت نشد!</h3>
+              <p style={{ margin: 0, fontSize: '14px' }}>هیچ محصولی با فیلترها و کلمات جستجو شده همخوانی ندارد.</p>
+            </div>
+          ) : (
+            <div className="products-clean-grid">
+              {filteredProducts.map((p) => (
+                <div key={p.id || p.slug} style={{ position: 'relative' }}>
+                  <ProductCard p={p} imageFit="cover" />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

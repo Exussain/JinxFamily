@@ -51,7 +51,62 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name_fa)
+        
+        is_new = self.pk is None
+        old_ordering_disabled = False
+        old_customer_ordering_disabled = False
+        
+        if not is_new:
+            try:
+                old_obj = Product.objects.get(pk=self.pk)
+                old_ordering_disabled = old_obj.ordering_disabled
+                old_customer_ordering_disabled = old_obj.customer_ordering_disabled
+            except Exception:
+                pass
+                
         super().save(*args, **kwargs)
+        
+        # Check if it was out of stock but is now in stock
+        was_out_of_stock = old_ordering_disabled or old_customer_ordering_disabled
+        is_in_stock = not self.ordering_disabled and not self.customer_ordering_disabled
+        
+        if not is_new and was_out_of_stock and is_in_stock:
+            try:
+                from .email_service import send_status_update_email
+                target_marker = f"(شناسه: {self.id})"
+                
+                # Retrieve and update requests
+                requests = ProductRequest.objects.filter(
+                    status="PENDING",
+                    product_name__contains=target_marker
+                )
+                
+                for req in requests:
+                    try:
+                        subject = f"محصول {self.name_fa} در نوبیکس شاپ موجود شد!"
+                        body_html = f"""
+                        <div dir="rtl" style="font-family: Tahoma, sans-serif; line-height: 1.8; text-align: right;">
+                            <h3>کاربر گرامی،</h3>
+                            <p>محصول <strong>{self.name_fa}</strong> که درخواست اطلاع‌رسانی برای موجود شدن آن را ثبت کرده بودید، هم‌اکنون در نوبیکس شاپ موجود و قابل سفارش است.</p>
+                            <p>برای مشاهده و خرید محصول، می‌توانید روی لینک زیر کلیک کنید:</p>
+                            <p><a href="https://nubixshop.ir/product/{self.slug}" style="display: inline-block; padding: 10px 20px; background-color: #7c3aed; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;">مشاهده و خرید محصول</a></p>
+                            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;"/>
+                            <p style="font-size: 11px; color: #64748b;">این یک ایمیل خودکار است، لطفاً به آن پاسخ ندهید.</p>
+                        </div>
+                        """
+                        send_status_update_email(req.contact_info, subject, body_html)
+                        
+                        req.status = "PROCESSED"
+                        req.admin_note = f"اطلاع‌رسانی خودکار موجود شدن محصول در تاریخ جاری انجام شد."
+                        req.save()
+                    except Exception as mail_err:
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        logger.error(f"Failed to send stock alert email to {req.contact_info}: {mail_err}")
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error handling stock alert requests for product {self.id}: {e}")
 
     def __str__(self):
         return self.name_fa

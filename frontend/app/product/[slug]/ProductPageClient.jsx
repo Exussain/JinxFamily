@@ -11,6 +11,104 @@ import { adminCacheBustHref } from "../../../lib/adminUrl.mjs";
 import RelatedProducts from "../../../components/RelatedProducts";
 import ReviewSection from "../../../components/ReviewSection";
 
+function StockAlertForm({ product, apiBase }) {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      setError("لطفاً یک ایمیل معتبر وارد کنید.");
+      return;
+    }
+    setError("");
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${apiBase}/api/product-requests`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_name: `[اطلاع‌رسانی موجودی] ${product.name_fa} (شناسه: ${product.id})`,
+          contact_info: email.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "خطا در ثبت درخواست");
+      setSubmitted(true);
+    } catch (err) {
+      setError(err.message || "خطایی در ثبت درخواست رخ داد.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="info-card" style={{ borderRadius: 14, padding: 20, background: "rgba(16,185,129,0.08)", border: "2px solid rgba(16,185,129,0.3)", textAlign: "center" }}>
+        <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
+        <div style={{ fontWeight: 900, fontSize: 15, color: "#10b981", marginBottom: 6 }}>درخواست شما ثبت شد!</div>
+        <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>به محض موجود شدن محصول <strong>{product.name_fa}</strong>، ایمیل اطلاع‌رسانی برای شما ارسال خواهد شد.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="info-card" style={{ borderRadius: 14, padding: 20, background: "var(--card)", border: "2px solid var(--line)", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+      <div style={{ fontWeight: 900, display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 20 }}>🔔</span>
+        <span style={{ color: 'var(--text)', fontSize: 15 }}>اطلاع از موجود شدن محصول</span>
+      </div>
+      <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, margin: "0 0 16px 0" }}>
+        این محصول در حال حاضر موجود نیست. ایمیل خود را وارد کنید تا به محض شارژ مجدد و امکان خرید، فوراً باخبر شوید:
+      </p>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
+        <input
+          type="email"
+          required
+          placeholder="email@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={submitting}
+          style={{
+            border: "2px solid var(--line)",
+            borderRadius: 10,
+            padding: "12px 14px",
+            background: "var(--bg)",
+            color: "var(--text)",
+            fontSize: 14,
+            outline: "none",
+            width: "100%",
+            textAlign: "left",
+            direction: "ltr",
+          }}
+        />
+        {error && (
+          <div style={{ color: "var(--danger)", fontSize: 12, fontWeight: 700 }}>
+            {error}
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="btn primary"
+          style={{
+            width: '100%',
+            padding: '12px 20px',
+            fontSize: '15px',
+            fontWeight: 900,
+          }}
+        >
+          {submitting ? "در حال ثبت..." : "خبرم کن وقتی موجود شد"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function ProductPageClient({ slug: slugProp, initialProduct = null, initialProducts = [], initialStats = null }) {
   const params = useParams();
   const slug = slugProp || params?.slug;
@@ -154,6 +252,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
     : (product?.original_price || 0);
   const displayPrice = Number(selectedVariant?.price ?? product?.price ?? product?.min_price ?? 0);
   const hasPrice = displayPrice > 0;
+  const isOutOfStock = !product || !!product.ordering_disabled || !!product.customer_ordering_disabled || !hasPrice;
 
   const isFieldRequired = (field) => field.required === true;
 
@@ -285,7 +384,9 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                   />
                 </div>
 
-                {(hasCustomFields || needs2FA) && (
+                {isOutOfStock ? (
+                  <StockAlertForm product={product} apiBase={apiBase} />
+                ) : (hasCustomFields || needs2FA) && (
                   <div
                     className="info-card"
                     style={{
@@ -673,30 +774,32 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
 
                 {/* Price Row - Moved Up */}
                 <div className="price-row" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", margin: "4px 0" }}>
-                  {originalPrice && hasPrice ? (
-                    <div className="price-old" style={{ fontSize: 16, textDecoration: "line-through", color: "var(--muted)" }}>
-                      {originalPrice.toLocaleString("fa-IR")} تومان
-                    </div>
-                  ) : null}
-                  {hasPrice ? (
-                    <div className="price" style={{ fontSize: 28, fontWeight: 900, background: "linear-gradient(135deg, var(--text) 30%, var(--primary) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", display: "inline-flex", gap: 4, alignItems: "baseline" }}>
-                      <span>{displayPrice.toLocaleString("fa-IR")}</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, WebkitTextFillColor: "var(--text)" }}>تومان</span>
+                  {isOutOfStock ? (
+                    <div className="muted" style={{ fontSize: 18, fontWeight: 900, color: "var(--danger)" }}>
+                      این محصول در حال حاضر ناموجود است
                     </div>
                   ) : (
-                    <div className="muted" style={{ fontSize: 16, fontWeight: 800 }}>
-                      این محصول در حال حاضر در دسترس نیست
-                    </div>
+                    <>
+                      {originalPrice && (
+                        <div className="price-old" style={{ fontSize: 16, textDecoration: "line-through", color: "var(--muted)" }}>
+                          {originalPrice.toLocaleString("fa-IR")} تومان
+                        </div>
+                      )}
+                      <div className="price" style={{ fontSize: 28, fontWeight: 900, background: "linear-gradient(135deg, var(--text) 30%, var(--primary) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", display: "inline-flex", gap: 4, alignItems: "baseline" }}>
+                        <span>{displayPrice.toLocaleString("fa-IR")}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, WebkitTextFillColor: "var(--text)" }}>تومان</span>
+                      </div>
+                      {originalPrice && originalPrice > displayPrice && (
+                        <span className="price-discount-percent">
+                          {Math.round((1 - (displayPrice / originalPrice)) * 100).toLocaleString("fa-IR")}٪ تخفیف ویژه
+                        </span>
+                      )}
+                    </>
                   )}
-                  {originalPrice && hasPrice && originalPrice > displayPrice ? (
-                    <span className="price-discount-percent">
-                      {Math.round((1 - (displayPrice / originalPrice)) * 100).toLocaleString("fa-IR")}٪ تخفیف ویژه
-                    </span>
-                  ) : null}
                 </div>
 
                 {/* Buy Button for Products Without Account Form */}
-                {!hasCustomFields && hasPrice && (
+                {!hasCustomFields && !isOutOfStock && (
                   <button
                     type="button"
                     className="btn primary details-buy-btn"
