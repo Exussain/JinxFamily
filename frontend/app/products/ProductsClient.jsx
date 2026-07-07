@@ -347,7 +347,10 @@ export default function ProductsClient({ categories = [] }) {
         <aside className="products-sidebar-container">
           {/* 1) Search */}
           <div className="filter-group">
-            <h3 className="filter-title">🔍 جستجوی محصول</h3>
+            <h3 className="filter-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <span>جستجوی محصول</span>
+            </h3>
             <div className="search-input-wrapper">
               <input
                 type="text"
@@ -361,7 +364,10 @@ export default function ProductsClient({ categories = [] }) {
 
           {/* 2) Categories */}
           <div className="filter-group">
-            <h3 className="filter-title">📁 دسته‌بندی‌ها</h3>
+            <h3 className="filter-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <span>دسته‌بندی‌ها</span>
+            </h3>
             <div className="sidebar-cat-list">
               {categories.map((cat) => (
                 <button
@@ -369,8 +375,17 @@ export default function ProductsClient({ categories = [] }) {
                   type="button"
                   className={`sidebar-cat-btn${activeCat === cat.code ? ' active' : ''}`}
                   onClick={() => setActiveCat(cat.code)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
                 >
-                  <span>{categoryIcons[cat.code] || "🛍️"}</span>
+                  {cat.image ? (
+                    <img 
+                      src={cat.image} 
+                      alt={cat.name} 
+                      style={{ width: '22px', height: '22px', borderRadius: '6px', objectFit: 'cover', display: 'block', filter: activeCat === cat.code ? 'none' : 'grayscale(30%)' }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '16px' }}>🛍️</span>
+                  )}
                   <span>{cat.name}</span>
                 </button>
               ))}
@@ -379,7 +394,10 @@ export default function ProductsClient({ categories = [] }) {
 
           {/* 3) Stock Availability */}
           <div className="filter-group">
-            <h3 className="filter-title">📦 فیلتر موجودی</h3>
+            <h3 className="filter-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon><polygon points="12 12 21 6.92 21 17.08 12 22.08"></polygon><polygon points="12 2 3 6.92 12 12 21 6.92 12 2"></polygon><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              <span>فیلتر موجودی</span>
+            </h3>
             <label className="checkbox-label">
               <input
                 type="checkbox"
@@ -393,7 +411,10 @@ export default function ProductsClient({ categories = [] }) {
 
           {/* 4) Sorting */}
           <div className="filter-group">
-            <h3 className="filter-title">📊 مرتب‌سازی بر اساس</h3>
+            <h3 className="filter-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
+              <span>مرتب‌سازی بر اساس</span>
+            </h3>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -412,9 +433,17 @@ export default function ProductsClient({ categories = [] }) {
           {activeCategoryInfo && (
             <div className="cat-section-header">
               <div className="cat-section-title-wrapper">
-                <div className="cat-section-gradient-icon" style={{ background: activeGradient }}>
-                  {activeIcon}
-                </div>
+                {activeCategoryInfo.image ? (
+                  <img 
+                    src={activeCategoryInfo.image} 
+                    alt={activeCategoryInfo.name} 
+                    style={{ width: '42px', height: '42px', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                ) : (
+                  <div className="cat-section-gradient-icon" style={{ background: activeGradient }}>
+                    🛍️
+                  </div>
+                )}
                 <h2>{activeCategoryInfo.name}</h2>
               </div>
               <span className="cat-section-count">
@@ -425,7 +454,7 @@ export default function ProductsClient({ categories = [] }) {
 
           {filteredProducts.length === 0 ? (
             <div style={{ padding: '64px 24px', textAlign: 'center', color: 'var(--muted)', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '24px' }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px', display: 'inline-block' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               <h3 style={{ margin: '0 0 8px 0', color: 'var(--text)', fontWeight: 800 }}>محصولی یافت نشد!</h3>
               <p style={{ margin: 0, fontSize: '14px' }}>هیچ محصولی با فیلترها و کلمات جستجو شده همخوانی ندارد.</p>
             </div>

@@ -49,7 +49,9 @@ function StockAlertForm({ product, apiBase }) {
   if (submitted) {
     return (
       <div className="info-card" style={{ borderRadius: 14, padding: 20, background: "rgba(16,185,129,0.08)", border: "2px solid rgba(16,185,129,0.3)", textAlign: "center" }}>
-        <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
+        <div style={{ marginBottom: 8 }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
         <div style={{ fontWeight: 900, fontSize: 15, color: "#10b981", marginBottom: 6 }}>درخواست شما ثبت شد!</div>
         <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>به محض موجود شدن محصول <strong>{product.name_fa}</strong>، ایمیل اطلاع‌رسانی برای شما ارسال خواهد شد.</div>
       </div>
@@ -59,7 +61,9 @@ function StockAlertForm({ product, apiBase }) {
   return (
     <div className="info-card" style={{ borderRadius: 14, padding: 20, background: "var(--card)", border: "2px solid var(--line)", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
       <div style={{ fontWeight: 900, display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
-        <span style={{ fontSize: 20 }}>🔔</span>
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        </span>
         <span style={{ color: 'var(--text)', fontSize: 15 }}>اطلاع از موجود شدن محصول</span>
       </div>
       <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, margin: "0 0 16px 0" }}>
@@ -457,7 +461,9 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                               fontSize: 13
                             }}>
                               {field.label} {isFieldRequired(field) ? "(اجباری)" : ""}
-                              {hasError && <span style={{ fontSize: 11 }}>⚠️</span>}
+                              {hasError && (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', marginRight: '4px', verticalAlign: 'middle' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                              )}
                             </span>
                             {field.type === "select" ? (
                               <select
@@ -568,7 +574,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                     <div style={{ display: "grid", gap: 10 }}>
                       <a href="/guides/disable-2fa" target="_blank" rel="noopener noreferrer" className="guide-link-item">
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>🛡️</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                           آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -577,7 +583,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                       </a>
                       <a href="/guides/link-unlink" target="_blank" rel="noopener noreferrer" className="guide-link-item">
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>🔗</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                           آموزش اتصال و لینک کردن اکانت
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -586,7 +592,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                       </a>
                       <a href="/guides/remove-restriction" target="_blank" rel="noopener noreferrer" className="guide-link-item">
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>⚠️</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                           آموزش رفع محدودیت و ریستریکت اکانت
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -614,7 +620,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                         className="guide-link-item"
                       >
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>🛡️</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                           آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -629,7 +635,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                         className="guide-link-item"
                       >
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>🔗</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                           آموزش اتصال و لینک کردن اکانت
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -644,7 +650,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                         className="guide-link-item"
                       >
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>⚠️</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                           آموزش رفع محدودیت و ریستریکت اکانت
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -975,7 +981,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                         className="guide-link-item"
                       >
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>🛡️</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                           آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -990,7 +996,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                         className="guide-link-item"
                       >
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>🔗</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                           آموزش اتصال و لینک کردن اکانت
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1005,7 +1011,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                         className="guide-link-item"
                       >
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14 }}>⚠️</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                           آموزش رفع محدودیت و ریستریکت اکانت
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
