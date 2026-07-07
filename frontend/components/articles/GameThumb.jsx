@@ -1,7 +1,11 @@
+'use client';
+
 // Cover slot: renders a real image when `image` is set, otherwise a themed
 // gradient "placeholder" tile with an optional label. Same box either way, so
 // swapping a placeholder for a real cover is just setting the `image` field.
-import React from 'react';
+// If a real image fails to load (missing/offline), it degrades to the gradient
+// instead of showing a broken image.
+import React, { useState } from 'react';
 import styles from './articles.module.css';
 
 const THEME_CLASS = {
@@ -14,7 +18,9 @@ const THEME_CLASS = {
 };
 
 export default function GameThumb({ theme = 'guides', label = '', image = null, alt = '', className = '' }) {
-  if (image) {
+  const [failed, setFailed] = useState(false);
+
+  if (image && !failed) {
     return (
       <img
         src={image}
@@ -22,6 +28,7 @@ export default function GameThumb({ theme = 'guides', label = '', image = null, 
         className={`${styles.thumbImg} ${className}`}
         loading="lazy"
         decoding="async"
+        onError={() => setFailed(true)}
       />
     );
   }

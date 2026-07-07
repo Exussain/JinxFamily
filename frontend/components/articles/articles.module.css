@@ -642,8 +642,18 @@
 .themeGames        { background: linear-gradient(150deg, #4c0519, #f43f5e); }
 .themeSubscriptions{ background: linear-gradient(150deg, #064e3b, #10b981); }
 .themeGuides       { background: linear-gradient(150deg, #0c4a6e, #0ea5e9); }
-/* Real cover image fills the same slot as the placeholder gradient. */
-.thumbImg { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Real cover image fills the same slot as the placeholder gradient. The
+   background gradient shows through if the image is still loading or missing,
+   so a broken cover reads as a themed tile rather than a white gap. */
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: linear-gradient(150deg, #0c4a6e, #0ea5e9);
+  color: transparent;
+  font-size: 0;
+}
 
 /* ============================================================== Pagination */
 .pagination {
