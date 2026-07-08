@@ -6,7 +6,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import styles from './articles.module.css';
-import { NEWS_FEATURED } from '../../lib/articlesMockData.mjs';
 import { rarityClass } from './rarity';
 import GameThumb from './GameThumb';
 import { IconChevronLeft, IconChevronRight, IconArrowLeft, IconClock } from './Icons';
@@ -20,7 +19,7 @@ function pad2(n) {
   return toFa(String(n).padStart(2, '0'));
 }
 
-export default function FeaturedCarousel({ slides = NEWS_FEATURED }) {
+export default function FeaturedCarousel({ slides = [] }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchX = useRef(null);
@@ -46,6 +45,7 @@ export default function FeaturedCarousel({ slides = NEWS_FEATURED }) {
     touchX.current = null;
   };
 
+  if (!count) return null;
   const active = slides[index];
 
   return (
@@ -59,7 +59,7 @@ export default function FeaturedCarousel({ slides = NEWS_FEATURED }) {
       onBlurCapture={() => setPaused(false)}
     >
       <div className={styles.heroTopline}>
-        <span className={styles.eyebrowFa}>تازه‌های دنیای گیم و هوش مصنوعی</span>
+        <span className={styles.eyebrowFa}>تازه‌ترین مقالات</span>
         <span className={styles.heroCounter} aria-hidden="true">
           <span className={styles.bracket}>⟨</span> <b>{pad2(index + 1)}</b> / {pad2(count)}{' '}
           <span className={styles.bracket}>⟩</span>
@@ -99,7 +99,7 @@ export default function FeaturedCarousel({ slides = NEWS_FEATURED }) {
                   <p className={styles.heroExcerpt}>{s.excerpt}</p>
                   <div className={styles.heroActions}>
                     <Link
-                      href={`/articles/${s.slug}`}
+                      href={`/blog/${s.slug}`}
                       className={styles.cta}
                       tabIndex={i === index ? 0 : -1}
                     >

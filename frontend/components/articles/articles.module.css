@@ -201,6 +201,10 @@
 @media (max-width: 520px) { .utilLabel { display: none; } }
 
 /* ============================================================= Page shell */
+/* Clears the site's fixed <Navbar> (magazine pages render it instead of the
+   old bespoke header). */
+.navOffset { padding-top: 84px; }
+@media (min-width: 700px) { .navOffset { padding-top: 92px; } }
 .page { max-width: 1200px; margin: 0 auto; padding: 10px 16px 104px; }
 .blockGap { margin-top: 40px; }
 

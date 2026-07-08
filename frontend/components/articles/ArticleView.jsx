@@ -1,38 +1,31 @@
 'use client';
 
-// Single-article template. Renders either authored body content (lead +
-// sections + optional step cards) or an imported post's HTML (`htmlContent`).
-// Header / drawer / bottom-nav are shared with the archive.
-import React, { useState } from 'react';
+// Single-article template (used by /blog/[slug]). Renders either authored body
+// content (lead + sections + optional step cards) or an imported CMS post's
+// sanitized HTML (`htmlContent`). The site's main <Navbar> is rendered by the
+// server page above this; this component renders only the article.
+import React from 'react';
 import Link from 'next/link';
-import styles from '../../../components/articles/articles.module.css';
-import MagazineHeader from '../../../components/articles/MagazineHeader';
-import MobileDrawer from '../../../components/articles/MobileDrawer';
-import StickyBottomNav from '../../../components/articles/StickyBottomNav';
-import GameThumb from '../../../components/articles/GameThumb';
-import { rarityClass } from '../../../components/articles/rarity';
-import { IconChevronLeft, IconCalendar, IconPen, IconClock } from '../../../components/articles/Icons';
+import styles from './articles.module.css';
+import GameThumb from './GameThumb';
+import { rarityClass } from './rarity';
+import { IconChevronLeft, IconCalendar, IconPen, IconClock } from './Icons';
 
 function toFaNum(n) {
   return String(n).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
 }
 
-export default function ArticleClient({ article }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const openMenu = () => setDrawerOpen(true);
+export default function ArticleView({ article }) {
   const steps = article.steps || [];
 
   return (
-    <div className={`${styles.section} ${rarityClass(article.cat)}`}>
-      <MagazineHeader onOpenMenu={openMenu} />
-      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-
+    <div className={`${styles.section} ${styles.navOffset} ${rarityClass(article.cat)}`}>
       <main className={styles.page}>
         <article className={styles.articleWrap}>
           <nav className={styles.crumbs} aria-label="مسیر صفحه">
             <Link href="/">خانه</Link>
             <IconChevronLeft size={14} className={styles.sep} />
-            <Link href="/articles">مجله</Link>
+            <Link href="/blog">وبلاگ</Link>
             <IconChevronLeft size={14} className={styles.sep} />
             <span className={styles.crumbCurrent}>{article.title}</span>
           </nav>
@@ -69,11 +62,8 @@ export default function ArticleClient({ article }) {
           {article.lead && <p className={styles.lead}>{article.lead}</p>}
 
           {article.htmlContent ? (
-            // Imported post: render the real published HTML in the prose shell.
-            <div
-              className={styles.prose}
-              dangerouslySetInnerHTML={{ __html: article.htmlContent }}
-            />
+            // Imported CMS post: HTML is sanitized server-side before it reaches here.
+            <div className={styles.prose} dangerouslySetInnerHTML={{ __html: article.htmlContent }} />
           ) : (
             <div className={styles.prose}>
               {(article.sections || []).map((sec, i) => (
@@ -109,8 +99,6 @@ export default function ArticleClient({ article }) {
           )}
         </article>
       </main>
-
-      <StickyBottomNav active="magazine" onOpenMenu={openMenu} />
     </div>
   );
 }

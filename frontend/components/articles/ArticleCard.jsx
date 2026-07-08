@@ -6,11 +6,15 @@ import styles from './articles.module.css';
 import { rarityClass, rarityLabel } from './rarity';
 import GameThumb from './GameThumb';
 
-export default function ArticleCard({ article }) {
+// `hidden` keeps a filtered-out card in the DOM (so its link stays crawlable)
+// while removing it visually — search crawlers see every article regardless of
+// the active client-side filter.
+export default function ArticleCard({ article, hidden = false }) {
   return (
     <Link
-      href={`/articles/${article.slug}`}
+      href={`/blog/${article.slug}`}
       className={`${styles.card} ${rarityClass(article.cat)}`}
+      hidden={hidden}
     >
       <div className={styles.cardBody}>
         <div className={styles.cardKicker}>

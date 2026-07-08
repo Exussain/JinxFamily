@@ -1,37 +1,22 @@
 // ---------------------------------------------------------------------------
-// Content model for the نوبیکس شاپ magazine ("/articles").
+// Content model for the نوبیکس شاپ magazine blog ("/blog").
 //
-// Three sources feed the UI:
-//   1. NEWS_FEATURED  – the hero slider: latest game-industry & AI news.
-//   2. ARTICLES       – authored guides, categorised by what the shop actually
-//                        sells (Fortnite / AI / Gift cards / Games / Subs).
-//   3. IMPORTED       – the real blog posts already on the site (fetched live
-//                        by the [slug] route from /api/blog/articles/<slug> and
-//                        re-skinned in the new template).
+// The /blog server page fetches the REAL CMS posts live and:
+//   • features the newest of them in the hero slider, and
+//   • merges them with ARTICLES (below) for the archive list.
+//
+// ARTICLES – authored product guides, categorised by what the shop actually
+//   sells (Fortnite / AI / Gift cards / Games / Subs). These are real, accurate
+//   guides rendered by /blog/[slug] from their local body content.
 //
 // Placeholder art: authored items set `image: null` and render a labelled
 // gradient tile (GameThumb). Each carries an `imagePrompt` — the exact prompt
 // or stock-search phrase to generate/replace the cover. Drop a real path into
 // `image` (e.g. '/blog/covers/vbucks.jpg') to swap the placeholder out.
+//
+// The real CMS posts are fetched live at request time by app/blog/page.js; no
+// static mirror lives here anymore.
 // ---------------------------------------------------------------------------
-
-// Scrolling announcement ticker under the header.
-export const MARQUEE_ITEMS = [
-  '🎮 آموزش‌های تصویری خرید وی‌باکس و کروپک فورتنایت',
-  '⚡ تحویل آنی سفارش‌ها، پشتیبانی ۲۴ ساعته و بدون واسطه',
-  '💳 پرداخت امن از درگاه رسمی زرین‌پال و شاپرک',
-  '🤖 اشتراک ChatGPT، Gemini و اسپاتیفای با فعال‌سازی فوری',
-];
-
-// Category tree for the slide-out drawer (mirrors the shop's real categories).
-export const DRAWER_CATEGORIES = [
-  { title: 'فورتنایت', slug: 'fortnite', children: ['وی‌باکس', 'کروپک', 'بتل پس', 'پک‌ها'] },
-  { title: 'هوش مصنوعی', slug: 'ai', children: ['ChatGPT Plus', 'Gemini', 'ابزارهای دیگر'] },
-  { title: 'گیفت کارت‌ها', slug: 'giftcards', children: ['PlayStation', 'Xbox', 'Steam', 'Google Play', 'iTunes'] },
-  { title: 'بازی‌ها', slug: 'games', children: ['پیش‌خرید GTA VI'] },
-  { title: 'اشتراک‌ها', slug: 'subscriptions', children: ['Spotify Premium'] },
-  { title: 'راهنما و سوالات متداول', slug: 'guides', children: [] },
-];
 
 // Filter chips over the archive. `cat` also selects the rarity accent + label.
 export const FILTER_TABS = [
@@ -45,184 +30,6 @@ export const FILTER_TABS = [
 ];
 
 const AUTHOR = 'تیم نوبیکس شاپ';
-
-// ===========================================================================
-// 1) FEATURED — latest game-industry & AI news (hero slider)
-// ===========================================================================
-export const NEWS_FEATURED = [
-  {
-    id: 'n1',
-    slug: 'news-gta6-release-window',
-    cat: 'games',
-    tag: 'اخبار بازی',
-    date: '۱۵ تیر ۱۴۰۵',
-    title: 'راکستار پنجره انتشار GTA VI را نهایی کرد',
-    excerpt:
-      'راکستار گیمز اعلام کرد GTA VI در بازه پاییز ۲۰۲۶ برای پلی‌استیشن ۵ و ایکس‌باکس سری X|S عرضه می‌شود. پیش‌خرید نسخه‌های استاندارد و ویژه هم‌اکنون در نوبیکس شاپ فعال است.',
-    label: 'GTA VI · 2026',
-    theme: 'games',
-    image: null,
-    imagePrompt:
-      'Cinematic neon-lit Miami-style city skyline at dusk, palm trees and pink/teal sunset, moody GTA-inspired aesthetic (no logos/trademarks). Search stock: "Miami vice neon skyline sunset".',
-    body: {
-      lead:
-        'راکستار گیمز پس از ماه‌ها انتظار، بازه زمانی رسمی انتشار GTA VI را اعلام کرد و جامعه گیمینگ را به وجد آورد.',
-      sections: [
-        {
-          heading: 'چه زمانی منتشر می‌شود؟',
-          paragraphs: [
-            'بر اساس اعلام رسمی، GTA VI در پاییز ۲۰۲۶ برای کنسول‌های نسل جدید یعنی PlayStation 5 و Xbox Series X|S عرضه خواهد شد. نسخه رایانه‌های شخصی طبق روال معمول راکستار، مدتی بعد از کنسول‌ها می‌رسد.',
-            'داستان بازی این‌بار به شهر خیالی «وایس سیتی» و اطراف آن بازمی‌گردد و برای نخستین‌بار یک شخصیت اصلی زن در کنار شخصیت دوم روایت می‌شود.',
-          ],
-        },
-        {
-          heading: 'پیش‌خرید در نوبیکس شاپ',
-          paragraphs: [
-            'شما می‌توانید همین حالا نسخه استاندارد GTA VI را از نوبیکس شاپ پیش‌خرید کنید؛ پرداخت از درگاه رسمی و بدون نیاز به کارت بین‌المللی انجام می‌شود و اکانت پیش‌خرید به‌صورت قانونی تحویل داده می‌شود.',
-          ],
-        },
-      ],
-      steps: [],
-    },
-  },
-  {
-    id: 'n2',
-    slug: 'news-gpt5-launch',
-    cat: 'ai',
-    tag: 'هوش مصنوعی',
-    date: '۱۱ تیر ۱۴۰۵',
-    title: 'نسل تازه ChatGPT با قابلیت‌های چندوجهی معرفی شد',
-    excerpt:
-      'مدل جدید OpenAI با درک بهتر تصویر، صدا و استدلال طولانی معرفی شد. کاربران اشتراک Plus زودتر به این قابلیت‌ها دسترسی پیدا می‌کنند؛ اشتراک ChatGPT Plus با فعال‌سازی فوری در نوبیکس موجود است.',
-    label: 'ChatGPT · NEXT-GEN',
-    theme: 'ai',
-    image: null,
-    imagePrompt:
-      'Abstract glowing neural-network / synaptic mesh in teal and violet on dark background, soft bokeh nodes, futuristic AI feel. Search stock: "abstract AI neural network glowing teal".',
-    body: {
-      lead:
-        'OpenAI از نسل تازه مدل‌های ChatGPT رونمایی کرد؛ نسخه‌ای که در درک تصویر، صدا و استدلال چندمرحله‌ای جهش قابل‌توجهی داشته است.',
-      sections: [
-        {
-          heading: 'چه چیزی تغییر کرده؟',
-          paragraphs: [
-            'مدل تازه می‌تواند ورودی‌های متنی، تصویری و صوتی را هم‌زمان تحلیل کند و پاسخ‌های دقیق‌تری در مسائل پیچیده ارائه دهد. سرعت پاسخ‌دهی و کیفیت خروجی کدنویسی نیز بهبود یافته است.',
-            'همانند گذشته، کاربران اشتراک Plus زودتر و بدون محدودیت شلوغی به جدیدترین مدل‌ها دسترسی خواهند داشت.',
-          ],
-        },
-        {
-          heading: 'دسترسی از ایران',
-          paragraphs: [
-            'به‌دلیل تحریم‌ها، فعال‌سازی اشتراک ChatGPT Plus از ایران دردسرساز است. نوبیکس شاپ این اشتراک را روی ایمیل خودتان و با فعال‌سازی فوری ارائه می‌دهد تا بدون کارت بین‌المللی از امکانات کامل استفاده کنید.',
-          ],
-        },
-      ],
-      steps: [],
-    },
-  },
-  {
-    id: 'n3',
-    slug: 'news-fortnite-new-chapter',
-    cat: 'fortnite',
-    tag: 'فورتنایت',
-    date: '۰۸ تیر ۱۴۰۵',
-    title: 'فصل تازه فورتنایت با نقشه و بتل‌پس جدید آغاز شد',
-    excerpt:
-      'اپیک گیمز فصل جدید فورتنایت را با نقشه بازطراحی‌شده، اسلحه‌های تازه و بتل‌پس پرمحتوا منتشر کرد. برای باز کردن سریع بتل‌پس کافی است وی‌باکس یا کروپک را از نوبیکس تهیه کنید.',
-    label: 'FORTNITE · NEW SEASON',
-    theme: 'fortnite',
-    image: null,
-    imagePrompt:
-      'Vibrant stylised battle-royale island seen from above, colourful cartoonish landscape with storm circle, bright saturated colours (no game logos). Search stock: "colorful battle royale island illustration".',
-    body: {
-      lead:
-        'فصل تازه فورتنایت رسماً آغاز شد و با خود نقشه‌ای بازطراحی‌شده، مکانیک‌های جدید و یک بتل‌پس پر از اسکین آورد.',
-      sections: [
-        {
-          heading: 'تازه‌ها چیست؟',
-          paragraphs: [
-            'نقشه این فصل بخش‌های تازه‌ای برای فرود و مبارزه دارد و چند اسلحه و آیتم حرکتی جدید به گیم‌پلی اضافه شده است. بتل‌پس این فصل نیز شامل اسکین‌های همکاری‌های ویژه است.',
-          ],
-        },
-        {
-          heading: 'سریع‌ترین راه باز کردن بتل‌پس',
-          paragraphs: [
-            'برای خرید بتل‌پس یا اسکین‌های فروشگاه به وی‌باکس نیاز دارید. با تهیه وی‌باکس یا اشتراک کروپک از نوبیکس شاپ، شارژ حساب فورتنایت شما در کمترین زمان و با ارزان‌ترین نرخ انجام می‌شود.',
-          ],
-        },
-      ],
-      steps: [],
-    },
-  },
-  {
-    id: 'n4',
-    slug: 'news-gemini-advanced-update',
-    cat: 'ai',
-    tag: 'هوش مصنوعی',
-    date: '۰۳ تیر ۱۴۰۵',
-    title: 'گوگل قابلیت‌های تازه Gemini Advanced را گسترش داد',
-    excerpt:
-      'گوگل با به‌روزرسانی Gemini، پنجره متنی بلندتر و ابزارهای تولید تصویر و کد را در دسترس مشترکان Advanced قرار داد. اشتراک Gemini با فعال‌سازی فوری در نوبیکس موجود است.',
-    label: 'GEMINI · ADVANCED',
-    theme: 'ai',
-    image: null,
-    imagePrompt:
-      'Flowing prismatic gradient ribbons (blue → violet → pink) on dark canvas, elegant Google-Gemini-like aura, minimal and premium. Search stock: "colorful gradient light ribbons dark abstract".',
-    body: {
-      lead:
-        'گوگل در تازه‌ترین به‌روزرسانی Gemini، توان مدل را در پردازش متن‌های طولانی و تولید محتوای چندرسانه‌ای افزایش داد.',
-      sections: [
-        {
-          heading: 'چه امکاناتی اضافه شد؟',
-          paragraphs: [
-            'پنجره متنی بزرگ‌تر امکان تحلیل اسناد و کدهای حجیم را در یک درخواست فراهم می‌کند. ابزارهای تولید تصویر و کمک‌کدنویسی نیز برای مشترکان Gemini Advanced تقویت شده‌اند.',
-          ],
-        },
-        {
-          heading: 'فعال‌سازی برای کاربران ایرانی',
-          paragraphs: [
-            'اشتراک Gemini Advanced را می‌توانید از نوبیکس شاپ روی حساب گوگل خودتان و با پرداخت ریالی تهیه کنید؛ بدون نیاز به کارت اعتباری خارجی.',
-          ],
-        },
-      ],
-      steps: [],
-    },
-  },
-  {
-    id: 'n5',
-    slug: 'news-steam-summer-sale',
-    cat: 'games',
-    tag: 'اخبار بازی',
-    date: '۲۸ خرداد ۱۴۰۵',
-    title: 'حراج تابستانه استیم با تخفیف‌های سنگین آغاز شد',
-    excerpt:
-      'حراج بزرگ تابستانه استیم شروع شد و صدها بازی مطرح با تخفیف عرضه شده‌اند. با گیفت کارت استیم از نوبیکس، کیف پول خود را شارژ کنید و بازی‌های موردعلاقه‌تان را قانونی بخرید.',
-    label: 'STEAM · SUMMER SALE',
-    theme: 'giftcards',
-    image: null,
-    imagePrompt:
-      'Summer-themed digital game-store sale banner vibe: warm gradient, sunglasses/beach motif, price-tag sparkles, no brand logos. Search stock: "summer sale gaming banner gradient".',
-    body: {
-      lead:
-        'فصل حراج‌های بزرگ فرا رسیده و استیم حراج تابستانه خود را با تخفیف روی صدها عنوان محبوب آغاز کرده است.',
-      sections: [
-        {
-          heading: 'چطور از حراج استفاده کنیم؟',
-          paragraphs: [
-            'برای خرید از استیم به موجودی کیف پول (Wallet) نیاز دارید. ساده‌ترین راه شارژ کیف پول، استفاده از گیفت کارت استیم است که بدون نیاز به کارت بانکی بین‌المللی کار می‌کند.',
-          ],
-        },
-        {
-          heading: 'تهیه گیفت کارت استیم',
-          paragraphs: [
-            'گیفت کارت‌های استیم در مبالغ مختلف در نوبیکس شاپ موجود است. کد را در حساب استیم خود Redeem کنید و در زمان حراج، بازی‌ها را با بهترین قیمت خریداری کنید.',
-          ],
-        },
-      ],
-      steps: [],
-    },
-  },
-];
 
 // ===========================================================================
 // 2) ARTICLES — authored guides, categorised by the shop's real catalogue
@@ -487,39 +294,10 @@ export const ARTICLES = [
   },
 ];
 
-// ===========================================================================
-// 3) IMPORTED — the real blog posts already published on the site.
-//    The [slug] route fetches full content live from /api/blog/articles/<slug>
-//    and renders it inside the new template. Metadata here drives the cards.
-// ===========================================================================
-// cover_image paths mirror the live posts. In production these are served from
-// /media (nginx); if unreachable they gracefully fall back to the gradient.
-const HELP = '/media/blog/covers/help_center_banner.jpg';
-export const IMPORTED = [
-  { id: 1, slug: 'why-choose-nubix', title: 'چرا نوبیکس شاپ را انتخاب کنیم؟ خرید قانونی با پشتیبانی ۲۴ ساعته', excerpt: 'دلایل انتخاب نوبیکس شاپ برای خرید امن و قانونی محصولات دیجیتال و گیمینگ.', date: '۱۰ تیر ۱۴۰۵', cover_image: HELP, label: 'WHY NUBIX' },
-  { id: 2, slug: 'how-orders-completed', title: 'سفارشات چگونه تکمیل می‌شوند؟ فرآیند کاملاً خودکار و هوشمند', excerpt: 'نگاهی به فرآیند خودکار پردازش و تحویل سفارش‌ها در نوبیکس شاپ.', date: '۱۰ تیر ۱۴۰۵', cover_image: HELP, label: 'AUTO ORDERS' },
-  { id: 3, slug: 'track-my-order', title: 'چگونه سفارش خود را پیگیری کنم؟ سیستم رهگیری لحظه‌ای و پیامک', excerpt: 'راهنمای پیگیری لحظه‌ای وضعیت سفارش و دریافت اطلاع‌رسانی پیامکی.', date: '۱۰ تیر ۱۴۰۵', cover_image: HELP, label: 'TRACK ORDER' },
-  { id: 4, slug: 'support-hours', title: 'ساعات کاری پشتیبانی چیست؟ پاسخگویی تلفنی و آنلاین', excerpt: 'ساعات پاسخگویی تیم پشتیبانی نوبیکس شاپ از طریق تلفن و چت آنلاین.', date: '۰۹ تیر ۱۴۰۵', cover_image: HELP, label: 'SUPPORT 24/7' },
-  { id: 5, slug: 'payment-methods', title: 'روش پرداخت چگونه است؟ درگاه پرداخت رسمی زرین‌پال و شاپرک', excerpt: 'روش‌های پرداخت امن نوبیکس از طریق درگاه رسمی زرین‌پال و شبکه شاپرک.', date: '۰۹ تیر ۱۴۰۵', cover_image: HELP, label: 'SECURE PAY' },
-  { id: 6, slug: 'can-i-trust-nubix', title: 'آیا می‌توانم به نوبیکس اعتماد کنم؟ نماد اعتماد الکترونیکی و دفتر رسمی', excerpt: 'مجوزها، نماد اعتماد الکترونیکی و دفتر رسمی نوبیکس شاپ را بشناسید.', date: '۰۸ تیر ۱۴۰۵', cover_image: HELP, label: 'TRUST & SAFETY' },
-  { id: 7, slug: 'available-products', title: 'چه محصولاتی در نوبیکس موجود است؟ بازی‌ها، ویباکس و اشتراک‌ها', excerpt: 'فهرست کامل محصولات نوبیکس شاپ؛ از وی‌باکس و گیفت کارت تا اشتراک‌های هوش مصنوعی.', date: '۰۸ تیر ۱۴۰۵', cover_image: HELP, label: 'CATALOG' },
-  { id: 8, slug: 'why-some-virtual-cards-fail', title: 'چرا برخی کارت‌های مجازی کار نمی‌کنند؟ بررسی محدودیت‌های ترکیه', excerpt: 'دلایل رد شدن برخی کارت‌های مجازی و نکات مهم درباره محدودیت‌های منطقه‌ای.', date: '۰۷ تیر ۱۴۰۵', cover_image: HELP, label: 'VIRTUAL CARDS' },
-  { id: 9, slug: 'disable-2fa', title: 'راهنمای خاموش کردن تایید دو مرحله‌ای (2FA) در اپیک گیمز، ایکس باکس و سونی', excerpt: 'آموزش غیرفعال‌سازی تایید دو مرحله‌ای در حساب‌های اپیک گیمز، Xbox و PlayStation.', date: '۰۶ تیر ۱۴۰۵', cover_image: '/media/blog/covers/disable_2fa_banner.jpg', label: 'DISABLE 2FA' },
-  { id: 10, slug: 'link-unlink', title: 'راهنمای لینک و آنلینک کردن حساب‌های بازی Xbox و PlayStation به اپیک گیمز', excerpt: 'روش اتصال و قطع اتصال حساب‌های Xbox و PlayStation به اپیک گیمز.', date: '۰۵ تیر ۱۴۰۵', cover_image: '/media/blog/covers/link_unlink_banner.jpg', label: 'LINK ACCOUNTS' },
-  { id: 11, slug: 'remove-restriction', title: 'راهنمای رفع محدودیت‌های موقت حساب (Remove Restriction) و بازگشایی قفل امنیت', excerpt: 'نحوه برطرف کردن خطاهای امنیتی و قفل‌های لاگین در حساب‌های Epic Games، Xbox و PlayStation.', date: '۰۱ تیر ۱۴۰۵', cover_image: '/media/blog/covers/account_restriction_banner.jpg', label: 'REMOVE LOCK' },
-].map((a) => ({ ...a, cat: 'guides', tag: 'راهنما', author: AUTHOR, theme: 'guides', imported: true }));
-
-// Everything shown in the archive list (authored guides + imported real posts).
-export const ARCHIVE = [...ARTICLES, ...IMPORTED];
-
-// Look up an authored article (news or guide) by slug — used by the [slug] page
-// to decide between rendering local body content vs. fetching the real post.
+// Look up an authored guide by slug — used by the [slug] page to decide
+// between rendering local body content vs. fetching the real CMS post.
 export function getAuthoredArticle(slug) {
-  return (
-    NEWS_FEATURED.find((a) => a.slug === slug) ||
-    ARTICLES.find((a) => a.slug === slug) ||
-    null
-  );
+  return ARTICLES.find((a) => a.slug === slug) || null;
 }
 
 // Trust badges strip.
@@ -528,13 +306,4 @@ export const FEATURE_STRIP = [
   { key: 'data', title: 'حفظ اطلاعات', icon: 'lock' },
   { key: 'fast', title: 'ثبت سفارش فوری', icon: 'clock' },
   { key: 'guarantee', title: 'ضمانت پرداخت', icon: 'shield' },
-];
-
-// Bottom sticky tab bar.
-export const BOTTOM_NAV = [
-  { key: 'home', label: 'خانه', href: '/', icon: 'home' },
-  { key: 'categories', label: 'دسته‌ها', href: '#', icon: 'grid' },
-  { key: 'magazine', label: 'مجله', href: '/articles', icon: 'book' },
-  { key: 'cart', label: 'سبد خرید', href: '#', icon: 'cart' },
-  { key: 'account', label: 'حساب من', href: '#', icon: 'user' },
 ];
