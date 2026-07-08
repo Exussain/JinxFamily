@@ -990,6 +990,54 @@
 .stepTitle { margin: 0 0 6px; font-size: 15px; font-weight: 900; }
 .stepDesc { margin: 0; font-size: 13px; line-height: 1.9; color: var(--muted); }
 
+/* Store CTA aside — connects a blog article to the shop's money pages.
+   Uses the article's rarity accent (--rarity) so it visually belongs to
+   the same category card the user just read. */
+.ctaAside {
+  margin-top: 40px;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--rarity) 35%, var(--line));
+  background: color-mix(in srgb, var(--rarity) 8%, var(--card));
+  position: relative;
+  overflow: hidden;
+}
+.ctaAside::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--rarity), transparent);
+}
+.ctaHead { margin: 0 0 6px; font-size: 17px; font-weight: 900; color: var(--text); }
+.ctaLead { margin: 0 0 16px; font-size: 14px; color: var(--muted); line-height: 1.9; }
+.ctaRow { display: flex; flex-wrap: wrap; gap: 10px; }
+.ctaLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--rarity) 40%, var(--line));
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+.ctaLink:hover {
+  transform: translateY(-1px);
+  border-color: var(--rarity);
+  background: color-mix(in srgb, var(--rarity) 10%, var(--card));
+}
+.ctaLinkDot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--rarity);
+  flex: 0 0 auto;
+}
+
 /* Reduced motion: kill ambient/looping animation, keep instant states. */
 @media (prefers-reduced-motion: reduce) {
   .marqueeTrack,

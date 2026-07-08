@@ -15,8 +15,49 @@ function toFaNum(n) {
   return String(n).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
 }
 
+// Store-CTA aside: links the blog content to the shop's money pages. We pick
+// the most relevant 3-4 links for the article's category so the CTA stays
+// useful instead of a generic "buy stuff" panel.
+const CTA_BY_CAT = {
+  fortnite: [
+    { href: '/vbucks', label: 'خرید وی‌باکس فورتنایت' },
+    { href: '/crewpack', label: 'خرید کروپک فورتنایت' },
+    { href: '/products', label: 'همه محصولات فورتنایت' },
+  ],
+  ai: [
+    { href: '/product/chatgpt-subscription', label: 'اشتراک ChatGPT Plus' },
+    { href: '/gemini', label: 'اشتراک Gemini Advanced' },
+  ],
+  giftcards: [
+    { href: '/products', label: 'گیفت کارت استیم، پلی‌استیشن و ایکس‌باکس' },
+  ],
+  games: [
+    { href: '/gta6', label: 'پیش‌خرید GTA VI' },
+  ],
+  subscriptions: [
+    { href: '/product/spotify-subscription', label: 'اشتراک اسپاتیفای پرمیوم' },
+  ],
+  guides: [
+    { href: '/vbucks', label: 'خرید وی‌باکس فورتنایت' },
+    { href: '/crewpack', label: 'خرید کروپک فورتنایت' },
+    { href: '/product/chatgpt-subscription', label: 'اشتراک ChatGPT' },
+    { href: '/gemini', label: 'اشتراک Gemini' },
+  ],
+};
+const FALLBACK_CTA = [
+  { href: '/vbucks', label: 'خرید وی‌باکس فورتنایت' },
+  { href: '/crewpack', label: 'خرید کروپک فورتنایت' },
+  { href: '/product/chatgpt-subscription', label: 'اشتراک ChatGPT' },
+  { href: '/gemini', label: 'اشتراک Gemini' },
+];
+
+function getCtaLinks(cat) {
+  return CTA_BY_CAT[cat] || FALLBACK_CTA;
+}
+
 export default function ArticleView({ article }) {
   const steps = article.steps || [];
+  const ctaLinks = getCtaLinks(article.cat);
 
   return (
     <div className={`${styles.section} ${styles.navOffset} ${rarityClass(article.cat)}`}>
@@ -97,6 +138,21 @@ export default function ArticleView({ article }) {
               </div>
             </section>
           )}
+
+          <aside className={styles.ctaAside} aria-label="خرید از نوبیکس شاپ">
+            <h2 className={styles.ctaHead}>خرید از نوبیکس شاپ</h2>
+            <p className={styles.ctaLead}>
+              برای خرید قانونی و تحویل سریع محصولات دیجیتال، این صفحه‌ها را ببینید:
+            </p>
+            <div className={styles.ctaRow}>
+              {ctaLinks.map((cta) => (
+                <Link key={cta.href} href={cta.href} className={styles.ctaLink}>
+                  <span className={styles.ctaLinkDot} aria-hidden="true" />
+                  {cta.label}
+                </Link>
+              ))}
+            </div>
+          </aside>
         </article>
       </main>
     </div>

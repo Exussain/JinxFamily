@@ -72,6 +72,20 @@ async function getBlogArticles() {
   return articles;
 }
 
+// The /blog page mixes the real CMS posts with seven hand-written product
+// guides served from a local module. The CMS API doesn't know about them, so
+// we list them here directly. The slugs must stay in sync with
+// frontend/lib/articlesMockData.mjs `ARTICLES`.
+const AUTHORED_GUIDE_SLUGS = [
+  'guide-buy-vbucks',
+  'guide-crew-pack',
+  'guide-buy-chatgpt-plus',
+  'guide-gemini-advanced',
+  'guide-buy-steam-giftcard',
+  'guide-preorder-gta6',
+  'guide-spotify-premium',
+];
+
 export default async function sitemap() {
   // Only canonical URLs here: alias routes (/contact, /help, /guide, /terms,
   // /privacy) canonicalize or redirect to /faq/* pages, so they are omitted.
@@ -136,6 +150,17 @@ export default async function sitemap() {
     entries.push({
       url: `${BASE_URL}/blog/${encodeURIComponent(slug)}`,
       ...(updatedAt && { lastModified: new Date(updatedAt) }),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    });
+  }
+
+  // Hand-written product guides live in articlesMockData.mjs; the CMS API
+  // can't see them, so we list them here directly.
+  for (const slug of AUTHORED_GUIDE_SLUGS) {
+    if (CANONICALIZED_BLOG_SLUGS.has(slug)) continue;
+    entries.push({
+      url: `${BASE_URL}/blog/${encodeURIComponent(slug)}`,
       changeFrequency: 'monthly',
       priority: 0.6,
     });
