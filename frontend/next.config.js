@@ -117,6 +117,7 @@ const nextConfig = {
       { source: '/checkout', headers: noStore },
       { source: '/crewpack', headers: noStore },
       { source: '/vbucks', headers: noStore },
+      { source: '/products', headers: noStore },
       { source: '/lego', headers: noStore },
       { source: '/gemini', headers: noStore },
       { source: '/login', headers: noStore },
