@@ -64,6 +64,9 @@ export default function CheckoutPage() {
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscountCode, setAppliedDiscountCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState(0);
+  const [backendDiamondDiscount, setBackendDiamondDiscount] = useState(0);
+  const [backendDiamondsApplied, setBackendDiamondsApplied] = useState(0);
+  const [isValidating, setIsValidating] = useState(false);
   const [discountFlat, setDiscountFlat] = useState(0);
   const [discountMessage, setDiscountMessage] = useState('');
   const [discountMessageKind, setDiscountMessageKind] = useState('');
@@ -222,10 +225,9 @@ export default function CheckoutPage() {
   const subtotalAfterDiscount = Math.max(0, baseTotal + rushFee - discountAmount);
   const diamondsBalance = me?.points_balance || 0;
   const diamondsCap = Math.min(diamondsBalance, tomanToDiamondsCeil(subtotalAfterDiscount));
-  const diamondDiscount = diamondsUse >= MIN_DIAMONDS_TO_REDEEM
-    ? Math.min(diamondsToToman(diamondsUse), subtotalAfterDiscount)
-    : 0;
+  const diamondDiscount = diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? backendDiamondDiscount : 0;
   const finalTotal = Math.max(0, subtotalAfterDiscount - diamondDiscount);
+  const diamondsLimitExceeded = diamondsUse > 0 && diamondsUse > backendDiamondsApplied;
 
   const handleDiamondToggle = () => {
     setDiamondsUse(currentUse => nextDiamondUse(currentUse, diamondsBalance, diamondsCap));
@@ -233,6 +235,45 @@ export default function CheckoutPage() {
     setDiscountMessage(nextMessage);
     if (!nextMessage) setDiscountMessageKind('');
   };
+
+  useEffect(() => {
+    let active = true;
+    const validateCartState = async () => {
+      if (!items || items.length === 0) return;
+      setIsValidating(true);
+      try {
+        const validationItems = items.map((it) => ({
+          product_id: it.product_id || it.id,
+          slug: it.slug,
+          variant_id: it.variant_id,
+          quantity: it.quantity || 1,
+        }));
+        const res = await fetch(`${apiBase}/api/discounts/validate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: appliedDiscountCode || undefined,
+            items: validationItems,
+            rush_order: rushOrder,
+            rush_fee: rushFee,
+            diamonds_use: diamondsUse,
+          }),
+        });
+        if (res.ok && active) {
+          const data = await res.json();
+          setBackendDiamondDiscount(data.diamond_discount || 0);
+          setBackendDiamondsApplied(data.diamonds_applied || 0);
+        }
+      } catch (err) {
+        console.error("Failed to validate cart state:", err);
+      } finally {
+        if (active) setIsValidating(false);
+      }
+    };
+
+    validateCartState();
+    return () => { active = false; };
+  }, [items, rushOrder, appliedDiscountCode, diamondsUse, rushFee]);
 
   // Check if name is required but not provided
   const nameRequired = needsName && !fullName.trim();
@@ -606,9 +647,20 @@ export default function CheckoutPage() {
   };
 
   const applyDiscountCode = async () => {
-    if (!discountCode.trim()) {
+    const codeToApply = discountCode.trim().toUpperCase();
+    if (!codeToApply) {
       setDiscountMessage('کد تخفیف را وارد کنید.');
       setDiscountMessageKind('info');
+      return;
+    }
+    if (appliedDiscountCode) {
+      if (appliedDiscountCode === codeToApply) {
+        setDiscountMessage(`کد تخفیف ${appliedDiscountCode} قبلاً اعمال شده است.`);
+        setDiscountMessageKind('success');
+        return;
+      }
+      setDiscountMessage('فقط یک کد تخفیف قابل اعمال است. ابتدا کد قبلی را حذف کنید.');
+      setDiscountMessageKind('error');
       return;
     }
     setDiscountMessage('');
@@ -1332,9 +1384,6 @@ export default function CheckoutPage() {
                     value={discountCode}
                     onChange={(e) => {
                       setDiscountCode(e.target.value.toUpperCase());
-                      setAppliedDiscountCode('');
-                      setDiscountPercent(0);
-                      setDiscountFlat(0);
                     }}
                     placeholder="کد تخفیف دارید؟"
                     className="sidebar-discount-input"
@@ -1345,8 +1394,32 @@ export default function CheckoutPage() {
                 </div>
 
                 {discountMessage && (
-                  <div className={`discount-message-box ${discountMessageKind === 'success' ? 'success' : 'error'}`}>
-                    {discountMessage}
+                  <div className={`discount-message-box ${discountMessageKind === 'success' ? 'success' : 'error'}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{discountMessage}</span>
+                    {appliedDiscountCode && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAppliedDiscountCode('');
+                          setDiscountCode('');
+                          setDiscountPercent(0);
+                          setDiscountFlat(0);
+                          setDiscountMessage('');
+                          setDiscountMessageKind('');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#ef4444',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          marginRight: '8px'
+                        }}
+                      >
+                        حذف
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -1384,7 +1457,11 @@ export default function CheckoutPage() {
                       />
                       <span className="wallet-input-unit">💎</span>
                     </div>
-                    {diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? (
+                    {diamondsLimitExceeded ? (
+                      <span className="diamond-discount-tag error" style={{ color: '#ef4444', fontWeight: 'bold' }}>
+                        ⚠️ بیشتر از حد مجاز (حداکثر {backendDiamondsApplied} الماس)
+                      </span>
+                    ) : diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? (
                       <span className="diamond-discount-tag">
                         ✅ {diamondsToToman(diamondsUse).toLocaleString('fa-IR')} تومان تخفیف
                       </span>
@@ -1472,14 +1549,19 @@ export default function CheckoutPage() {
 
               {/* Submit Button */}
               <button 
-                className={`submit-btn-new ${loading ? 'loading' : ''}`} 
-                aria-disabled={loading ? "true" : "false"}
-                onClick={submit}
+                className={`submit-btn-new ${(loading || diamondsLimitExceeded) ? 'loading' : ''}`} 
+                aria-disabled={(loading || diamondsLimitExceeded) ? "true" : "false"}
+                onClick={(loading || diamondsLimitExceeded) ? undefined : submit}
+                style={(loading || diamondsLimitExceeded) ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
               >
                 {loading ? (
                   <>
                     <span className="spinner"></span>
                     در حال اتصال به درگاه پرداخت...
+                  </>
+                ) : diamondsLimitExceeded ? (
+                  <>
+                    تعداد الماس انتخابی بیشتر از حد مجاز است
                   </>
                 ) : (
                   <>

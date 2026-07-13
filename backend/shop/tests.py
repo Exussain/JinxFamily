@@ -724,6 +724,26 @@ class AdminProductManagementTests(TestCase):
         self.assertEqual(product.image_url, "/products/fresh.webp")
         self.assertEqual(product.category, "SUBSCRIPTIONS")
 
+    def test_admin_products_lists_active_before_inactive(self):
+        self.client.force_login(self.admin)
+        self.product.active = False
+        self.product.display_order = 0
+        self.product.save(update_fields=["active", "display_order"])
+        active_product = Product.objects.create(
+            name_fa="Active Later",
+            slug="active-later",
+            category="FORTNITE",
+            price=100000,
+            active=True,
+            display_order=100,
+        )
+
+        response = self.client.get("/api/admin/products?limit=10")
+
+        self.assertEqual(response.status_code, 200, response.content)
+        slugs = [p["slug"] for p in response.json()["results"]]
+        self.assertLess(slugs.index(active_product.slug), slugs.index(self.product.slug))
+
     def test_admin_can_upload_product_cover(self):
         self.client.force_login(self.admin)
         image = SimpleUploadedFile(
@@ -1848,6 +1868,80 @@ class DiscountValidationGuardrailTests(TestCase):
         self.discount.refresh_from_db()
         self.assertEqual(self.discount.used_count, 1)
 
+    def test_crewpack_profit_floor_only(self):
+        from shop.rewards import get_profit_floor
+        crew = Product.objects.create(
+            name_fa="کروپک",
+            slug="fortnite-crew-pack",
+            price=649000,
+            active=True,
+        )
+        line_items = [(crew, None, 1)]
+        floor = get_profit_floor(line_items, 649000)
+        self.assertEqual(floor, 80000)
+
+    def test_mixed_profit_floor(self):
+        from shop.rewards import get_profit_floor
+        crew = Product.objects.create(
+            name_fa="کروپک",
+            slug="fortnite-crew-pack",
+            price=649000,
+            active=True,
+        )
+        other = Product.objects.create(
+            name_fa="وی‌باکس",
+            slug="v-bucks",
+            price=200000,
+            active=True,
+        )
+        line_items = [(crew, None, 1), (other, None, 1)]
+        floor = get_profit_floor(line_items, 849000)
+        self.assertEqual(floor, 250000)
+
+    def test_diamonds_validation_crewpack_limit(self):
+        self.client.force_login(self.user)
+        from shop.models import UserProfile, ResellerPriceTier
+        profile, _ = UserProfile.objects.get_or_create(user=self.user)
+        profile.points_balance = 1000
+        profile.save()
+
+        crew = Product.objects.create(
+            name_fa="کروپک",
+            slug="fortnite-crew-pack",
+            price=649000,
+            active=True,
+        )
+        ResellerPriceTier.objects.create(
+            product=crew,
+            min_quantity=1,
+            price=480000,
+            active=True
+        )
+
+        response = self.client.post(
+            "/api/discounts/validate",
+            data=json.dumps({
+                "code": "",
+                "items": [
+                    {
+                        "product_id": crew.id,
+                        "slug": crew.slug,
+                        "quantity": 1,
+                    }
+                ],
+                "diamonds_use": 350,
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        payload = response.json()
+        self.assertEqual(payload["diamond_discount"], 42000)
+        self.assertEqual(payload["diamonds_applied"], 134)
+
+
+
+
+
 
 class MyOrdersFilterTests(TestCase):
     def setUp(self):
@@ -1912,3 +2006,59 @@ class MyOrdersFilterTests(TestCase):
         self.assertIn(order_pend_new.tracking_code, tracking_codes)
         self.assertNotIn(order_pend_old.tracking_code, tracking_codes)
         self.assertNotIn(order_canc_new.tracking_code, tracking_codes)
+
+
+class AbandonedCartReminderTests(TestCase):
+    def setUp(self):
+        self.product = Product.objects.create(
+            name_fa="محصول تستی",
+            slug="test-product",
+            price=250000,
+            active=True,
+        )
+
+    def test_reminder_skips_and_converts_if_user_already_purchased(self):
+        from django.core.management import call_command
+        from unittest.mock import patch
+        from shop.models import AbandonedCart
+
+        # 1. Create a guest abandoned cart with phone
+        cart = AbandonedCart.objects.create(
+            session_id="guest-session-123",
+            phone="09123456789",
+            items=[{"product_id": self.product.id, "quantity": 1}],
+            item_count=1,
+            total_value=250000,
+        )
+        # Update last_seen_at back in time so it qualifies for reminder (30+ minutes)
+        AbandonedCart.objects.filter(id=cart.id).update(
+            last_seen_at=timezone.now() - timedelta(minutes=45),
+            created_at=timezone.now() - timedelta(minutes=45)
+        )
+        cart.refresh_from_db()
+
+        # 2. Create a paid order for the same phone number
+        user = User.objects.create_user(
+            username="testuser_reminder",
+            email="testuser_reminder@example.com",
+            password="password123",
+        )
+        Order.objects.create(
+            user=user,
+            phone="09123456789",
+            status="paid",
+            amount=250000,
+        )
+
+        # 3. Call the send_abandoned_cart_reminders command
+        with patch("shop.kavenegar_service.KavenegarService.send_abandoned_cart_sms") as mock_sms:
+            call_command("send_abandoned_cart_reminders")
+            
+            # The SMS should NOT have been sent
+            mock_sms.assert_not_called()
+
+        # 4. The cart should now be marked as converted
+        cart.refresh_from_db()
+        self.assertIsNotNone(cart.converted_at)
+
+

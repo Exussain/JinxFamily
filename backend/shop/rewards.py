@@ -225,6 +225,30 @@ def line_items_cost(line_items) -> int:
     return total
 
 
+def get_profit_floor(line_items, gross_amount: int) -> int:
+    """Calculate the profit floor dynamically, ensuring an 80,000 Toman floor
+    for fortnite-crew-pack, and standard floors for other items.
+    """
+    crew_qty = 0
+    non_crew_cost = 0
+    for product, variant, quantity in line_items:
+        slug = getattr(product, "slug", "") or ""
+        if slug == "fortnite-crew-pack":
+            crew_qty += quantity
+        else:
+            non_crew_cost += estimate_item_cost(product, variant, quantity)
+
+    if non_crew_cost > 0:
+        if int(gross_amount) < 1000000:
+            non_crew_floor = max(170000, int(non_crew_cost * 0.09))
+        else:
+            non_crew_floor = max(290000, int(non_crew_cost * 0.09))
+    else:
+        non_crew_floor = 0
+
+    return non_crew_floor + (80000 * crew_qty)
+
+
 def cap_discount_for_profit(line_items, gross_amount: int, discount_amount: int):
     """Clamp a discount so net profit can never fall below the floor.
 
@@ -236,13 +260,11 @@ def cap_discount_for_profit(line_items, gross_amount: int, discount_amount: int)
     Returns (capped_discount, total_cost, allowed_discount).
     """
     total_cost = line_items_cost(line_items)
-    if int(gross_amount) < 1000000:
-        floor = max(170000, int(total_cost * 0.09))
-    else:
-        floor = max(290000, int(total_cost * 0.09))
+    floor = get_profit_floor(line_items, gross_amount)
     allowed = max(0, int(gross_amount) - total_cost - floor)
     capped = min(int(discount_amount or 0), allowed)
     return capped, total_cost, allowed
+
 
 
 # ---------------------------------------------------------------------------

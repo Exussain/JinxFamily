@@ -162,7 +162,7 @@ def _discount_guardrail_warning(dc, line_items, gross_amount: int, discount_amou
     return None
 
 
-def _discount_preview_from_cart_payload(payload, dc):
+def _discount_preview_from_cart_payload(payload, dc, user=None):
     items_payload = payload.get("items") or []
     if not isinstance(items_payload, list) or not items_payload:
         return None
@@ -213,8 +213,55 @@ def _discount_preview_from_cart_payload(payload, dc):
     if payload.get("rush_order") and rush_fee > 0:
         gross_amount += rush_fee
 
-    discount_percent, nominal_discount = _discount_nominal_amount(dc, gross_amount)
-    warning = _discount_guardrail_warning(dc, line_items, gross_amount, nominal_discount)
+    if dc:
+        discount_percent, nominal_discount = _discount_nominal_amount(dc, gross_amount)
+        warning = _discount_guardrail_warning(dc, line_items, gross_amount, nominal_discount)
+    else:
+        discount_percent, nominal_discount = 0, 0
+        warning = None
+
+    amount_after_code = max(gross_amount - nominal_discount, 0)
+
+    # Calculate diamond discount based on dynamic profit guardrail
+    diamonds_use = 0
+    try:
+        diamonds_use = int(payload.get("diamonds_use") or 0)
+    except (TypeError, ValueError):
+        pass
+    diamonds_use = max(diamonds_use, 0)
+
+    diamonds_applied = 0
+    diamond_discount = 0
+    if user is not None and user.is_authenticated:
+        try:
+            is_reseller = user.profile.tier == "reseller"
+        except Exception:
+            is_reseller = False
+        if not is_reseller:
+            from .rewards import diamonds_to_toman, toman_to_diamonds_ceil, MIN_DIAMONDS_TO_REDEEM
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            if diamonds_use >= MIN_DIAMONDS_TO_REDEEM:
+                usable_diamonds = min(diamonds_use, profile.points_balance)
+                diamond_discount = min(diamonds_to_toman(usable_diamonds), amount_after_code)
+
+                # Profit guardrail for diamonds:
+                try:
+                    from .rewards import line_items_cost, get_profit_floor
+                    total_cost = line_items_cost(line_items)
+                    floor = get_profit_floor(line_items, amount_after_code)
+                    min_payable = total_cost + floor
+
+                    allowed_diamond_discount = max(0, amount_after_code - min_payable)
+                    diamond_discount = min(diamond_discount, allowed_diamond_discount)
+                except Exception:
+                    logger.exception("profit guardrail for diamonds failed in preview")
+
+                full_value = diamonds_to_toman(usable_diamonds)
+                diamonds_applied = (
+                    usable_diamonds if diamond_discount >= full_value
+                    else toman_to_diamonds_ceil(diamond_discount)
+                )
+
     return {
         "gross_amount": gross_amount,
         "percent": discount_percent,
@@ -222,6 +269,9 @@ def _discount_preview_from_cart_payload(payload, dc):
         "discount_amount": nominal_discount,
         "guardrail_warning": bool(warning),
         "guardrail": warning,
+        "diamond_discount": diamond_discount,
+        "diamonds_applied": diamonds_applied,
+        "final_amount": max(0, amount_after_code - diamond_discount),
     }
 
 # Canonical identifiers for Fortnite Crew pack (used across capacity / limits)
@@ -1280,10 +1330,20 @@ def create_order(request):
     )
     order.save()
 
-    # mark any abandoned cart for this user as converted
+    # mark any abandoned cart for this user, phone, or email as converted
     try:
+        cart_filter = Q(user=user)
+        if phone:
+            normalized_phone = "".join(c for c in phone if c.isdigit())
+            if len(normalized_phone) >= 10:
+                last_10 = normalized_phone[-10:]
+                cart_filter |= Q(phone__endswith=last_10)
+        if contact_email:
+            cart_filter |= Q(email__iexact=contact_email)
+
         AbandonedCart.objects.filter(
-            user=user, converted_at__isnull=True
+            cart_filter,
+            converted_at__isnull=True
         ).update(converted_at=timezone.now())
     except Exception:
         pass
@@ -1537,16 +1597,13 @@ def create_order(request):
                 
                 # Profit guardrail for diamonds:
                 try:
-                    from .rewards import line_items_cost
+                    from .rewards import line_items_cost, get_profit_floor
                     cost_lines = [
                         (it.product, it.variant, it.quantity)
                         for it in order.items.select_related("product", "variant").all()
                     ]
                     total_cost = line_items_cost(cost_lines)
-                    if amount < 1000000:
-                        floor = max(170000, int(total_cost * 0.09))
-                    else:
-                        floor = max(290000, int(total_cost * 0.09))
+                    floor = get_profit_floor(cost_lines, amount)
                     min_payable = total_cost + floor
                     
                     allowed_diamond_discount = max(0, amount - min_payable)
@@ -1568,6 +1625,30 @@ def create_order(request):
     order.amount = payable
     order.diamonds_used = diamonds_applied
     order.save()
+
+    # Verify expected_amount matches calculated order.amount to prevent silent price mismatch
+    expected_amount = payload.get('expected_amount')
+    if expected_amount is not None:
+        try:
+            expected_amount = int(expected_amount)
+            if abs(order.amount - expected_amount) > 10:  # allow tiny rounding difference
+                # rollback point deduction if any
+                if diamonds_applied > 0:
+                    from .rewards import award_points
+                    award_points(user, diamonds_applied, "adjust", note="بازگرداندن الماس به دلیل عدم ثبت سفارش")
+                # rollback discount code used_count if any
+                if order.discount_code:
+                    try:
+                        dc = DiscountCode.objects.get(code=order.discount_code)
+                        dc.used_count = max(0, (dc.used_count or 0) - 1)
+                        dc.save(update_fields=["used_count"])
+                    except Exception:
+                        pass
+                # delete the order
+                order.delete()
+                return JsonResponse({"message": "مبلغ نهایی سفارش با سبد خرید شما همخوانی ندارد. لطفاً صفحه را مجدداً بارگذاری کنید."}, status=400)
+        except (ValueError, TypeError):
+            pass
 
     logger.info(
         "Order saved: tracking=%s, amount=%s, rush_order=%s, rush_fee=%s, diamonds_applied=%s",
@@ -1955,13 +2036,23 @@ def my_referral(request):
         REFERRAL_MILESTONE_COUNT,
     )
     code = ensure_referral_code(user)
-    invites = Referral.objects.filter(referrer=user).count()
+    referrals = Referral.objects.filter(referrer=user).order_by("created_at", "id")
+    invites = referrals.count()
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    acknowledged_count = min(profile.referral_notified_count, invites)
+    unseen_referrals = referrals[acknowledged_count:]
+    unseen_count = len(unseen_referrals)
+    unseen_diamonds = sum(referral.points_awarded for referral in unseen_referrals)
     points_earned = (
         PointsTransaction.objects.filter(user=user, reason="referral")
         .aggregate(s=Sum("amount"))["s"] or 0
     )
     base = (os.environ.get("PUBLIC_SITE_URL") or "https://nubixshop.ir").rstrip("/")
     link = f"{base}/?ref={code}" if code else ""
+    rewards = DiscountCode.objects.filter(
+        assigned_user=user,
+        source="milestone",
+    ).order_by("-created_at", "-id")
     return JsonResponse({
         "referral_code": code,
         "link": link,
@@ -1971,8 +2062,42 @@ def my_referral(request):
             "target": REFERRAL_MILESTONE_COUNT,
             "reached": invites >= REFERRAL_MILESTONE_COUNT,
             "reward_amount": REFERRAL_MILESTONE_AMOUNT,
+            "rewards": [
+                {
+                    "code": reward.code,
+                    "amount": reward.amount,
+                    "active": reward.active,
+                    "used_count": reward.used_count,
+                    "created_at": reward.created_at.isoformat(),
+                    "expires_at": reward.expires_at.isoformat() if reward.expires_at else None,
+                }
+                for reward in rewards
+            ],
+        },
+        "unseen": {
+            "count": unseen_count,
+            "diamonds": unseen_diamonds,
+            "crossed_milestone": acknowledged_count < REFERRAL_MILESTONE_COUNT <= invites,
         },
     })
+
+
+@csrf_exempt
+def acknowledge_referrals(request):
+    """Mark all referral activity currently visible to this user as acknowledged."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+
+    with transaction.atomic():
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile = UserProfile.objects.select_for_update().get(pk=profile.pk)
+        current_count = Referral.objects.filter(referrer=request.user).count()
+        if profile.referral_notified_count != current_count:
+            profile.referral_notified_count = current_count
+            profile.save(update_fields=["referral_notified_count"])
+    return JsonResponse({"acknowledged_count": current_count})
 
 
 @csrf_exempt
@@ -2713,6 +2838,7 @@ def _build_cart_data(order):
 def my_orders(request):
     if not request.user.is_authenticated:
         return JsonResponse({"detail": "authentication required"}, status=401)
+    
     cutoff_time = timezone.now() - timedelta(hours=72)
     orders_qs = Order.objects.filter(user=request.user).exclude(status='canceled').filter(
         Q(status='completed') | Q(created_at__gte=cutoff_time)
@@ -4548,7 +4674,7 @@ def admin_products(request):
             limit = 300
         limit = max(1, min(limit, 1000))
 
-        products = Product.objects.prefetch_related('variants').order_by('display_order', '-created_at')[:limit]
+        products = Product.objects.prefetch_related('variants').order_by('-active', 'display_order', '-created_at')[:limit]
         data = [_admin_product_dict(p) for p in products]
         return JsonResponse({"results": data})
 
@@ -5879,19 +6005,23 @@ def discount_validate(request):
         return JsonResponse({"message": "JSON نامعتبر"}, status=400)
     code = (payload.get("code") or "").strip()
     req_user = request.user if request.user.is_authenticated else None
-    dc, error = _get_discount_code_status(code, req_user)
-    if error:
-        status_code = 400
-        if error == "کد تخفیف نامعتبر است.":
-            status_code = 404
-        return JsonResponse({"message": error}, status=status_code)
+    
+    dc = None
+    if code:
+        dc, error = _get_discount_code_status(code, req_user)
+        if error:
+            status_code = 400
+            if error == "کد تخفیف نامعتبر است.":
+                status_code = 404
+            return JsonResponse({"message": error}, status=status_code)
+            
     response = {
-        "code": dc.code,
-        "percent": dc.percent,
-        "amount": dc.amount,
-        "expires_at": dc.expires_at.isoformat() if dc.expires_at else None,
+        "code": dc.code if dc else None,
+        "percent": dc.percent if dc else 0,
+        "amount": dc.amount if dc else 0,
+        "expires_at": dc.expires_at.isoformat() if (dc and dc.expires_at) else None,
     }
-    preview = _discount_preview_from_cart_payload(payload, dc)
+    preview = _discount_preview_from_cart_payload(payload, dc, user=req_user)
     if preview is not None:
         response.update({
             "previewed": True,
@@ -5901,8 +6031,11 @@ def discount_validate(request):
             "capped": False,
             "guardrail_warning": preview["guardrail_warning"],
             "guardrail": preview["guardrail"],
+            "diamond_discount": preview["diamond_discount"],
+            "diamonds_applied": preview["diamonds_applied"],
+            "final_amount": preview["final_amount"],
         })
-        response["applicable"] = preview["discount_amount"] > 0
+        response["applicable"] = (preview["discount_amount"] > 0) or (preview["diamond_discount"] > 0)
     return JsonResponse(response)
 
 
