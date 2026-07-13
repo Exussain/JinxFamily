@@ -9,6 +9,10 @@ import SmartImage from "../../components/SmartImage";
 import { getPlatformOption } from "../../lib/platforms";
 import PasswordInput from '../../components/PasswordInput';
 import { SpinWheelSvg, FALLBACK_TYPES, SLICE } from "../../components/spinWheel";
+import {
+  discountMessageAfterDiamondToggle,
+  nextDiamondUse,
+} from '../../lib/checkoutDiamonds.mjs';
 
 // Constants
 const CREWPACK_SLUG = 'fortnite-crew-pack';
@@ -62,6 +66,7 @@ export default function CheckoutPage() {
   const [discountPercent, setDiscountPercent] = useState(0);
   const [discountFlat, setDiscountFlat] = useState(0);
   const [discountMessage, setDiscountMessage] = useState('');
+  const [discountMessageKind, setDiscountMessageKind] = useState('');
   const [loading, setLoading] = useState(false);
   const [ackImportant, setAckImportant] = useState(false);
   const [showAckSection, setShowAckSection] = useState(true);
@@ -221,6 +226,13 @@ export default function CheckoutPage() {
     ? Math.min(diamondsToToman(diamondsUse), subtotalAfterDiscount)
     : 0;
   const finalTotal = Math.max(0, subtotalAfterDiscount - diamondDiscount);
+
+  const handleDiamondToggle = () => {
+    setDiamondsUse(currentUse => nextDiamondUse(currentUse, diamondsBalance, diamondsCap));
+    const nextMessage = discountMessageAfterDiamondToggle(discountMessageKind, discountMessage);
+    setDiscountMessage(nextMessage);
+    if (!nextMessage) setDiscountMessageKind('');
+  };
 
   // Check if name is required but not provided
   const nameRequired = needsName && !fullName.trim();
@@ -596,9 +608,11 @@ export default function CheckoutPage() {
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) {
       setDiscountMessage('کد تخفیف را وارد کنید.');
+      setDiscountMessageKind('info');
       return;
     }
     setDiscountMessage('');
+    setDiscountMessageKind('');
     try {
       const validationItems = items.map((it) => ({
         product_id: it.product_id || it.id,
@@ -639,11 +653,13 @@ export default function CheckoutPage() {
           ? `کد اعمال شد: ${appliedAmount.toLocaleString('fa-IR')} تومان`
           : `کد اعمال شد: ${data.percent}% تخفیف`
       );
+      setDiscountMessageKind('success');
     } catch (err) {
       setAppliedDiscountCode('');
       setDiscountPercent(0);
       setDiscountFlat(0);
       setDiscountMessage(err?.message || 'کد تخفیف نامعتبر است');
+      setDiscountMessageKind('error');
       // Show Telegram promo when discount code is invalid
       // setTelegramPromoVisible(true);
     }
@@ -1329,7 +1345,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {discountMessage && (
-                  <div className={`discount-message-box ${discountPercent > 0 || discountFlat > 0 ? 'success' : 'error'}`}>
+                  <div className={`discount-message-box ${discountMessageKind === 'success' ? 'success' : 'error'}`}>
                     {discountMessage}
                   </div>
                 )}
@@ -1339,7 +1355,7 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       className={`sidebar-discount-action-btn ${diamondsUse > 0 ? 'active' : ''}`}
-                      onClick={() => setDiamondsUse(diamondsUse > 0 ? 0 : Math.min(diamondsBalance, diamondsCap))}
+                      onClick={handleDiamondToggle}
                     >
                       <span>💎 استفاده از الماس ({diamondsBalance.toLocaleString('fa-IR')})</span>
                     </button>
