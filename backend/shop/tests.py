@@ -1847,3 +1847,68 @@ class DiscountValidationGuardrailTests(TestCase):
         self.assertIn("هشدار سیستم", order.note)
         self.discount.refresh_from_db()
         self.assertEqual(self.discount.used_count, 1)
+
+
+class MyOrdersFilterTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="09121111111",
+            email="filter-test@example.com",
+            password="password123",
+        )
+
+    def test_my_orders_filtering_logic(self):
+        # 1. Completed order created 5 days ago (should be returned)
+        order_comp_old = Order.objects.create(
+            user=self.user,
+            status="completed",
+            epic_username="player1",
+            phone="09120000011",
+            amount=100000,
+        )
+        Order.objects.filter(id=order_comp_old.id).update(created_at=timezone.now() - timedelta(days=5))
+
+        # 2. Pending order created 5 days ago (should NOT be returned)
+        order_pend_old = Order.objects.create(
+            user=self.user,
+            status="pending",
+            epic_username="player2",
+            phone="09120000011",
+            amount=100000,
+        )
+        Order.objects.filter(id=order_pend_old.id).update(created_at=timezone.now() - timedelta(days=5))
+
+        # 3. Pending order created 24 hours ago (should be returned)
+        order_pend_new = Order.objects.create(
+            user=self.user,
+            status="pending",
+            epic_username="player3",
+            phone="09120000011",
+            amount=100000,
+        )
+        Order.objects.filter(id=order_pend_new.id).update(created_at=timezone.now() - timedelta(hours=24))
+
+        # 4. Canceled order created 1 hour ago (should NOT be returned because canceled is excluded)
+        order_canc_new = Order.objects.create(
+            user=self.user,
+            status="canceled",
+            epic_username="player4",
+            phone="09120000011",
+            amount=100000,
+        )
+        Order.objects.filter(id=order_canc_new.id).update(created_at=timezone.now() - timedelta(hours=1))
+
+        self.client.force_login(self.user)
+        response = self.client.get("/api/me/orders")
+        self.assertEqual(response.status_code, 200)
+        results = response.json()["results"]
+        
+        # We expect only:
+        # - order_comp_old (completed)
+        # - order_pend_new (pending, <72 hours old)
+        self.assertEqual(len(results), 2)
+        tracking_codes = [r["tracking_code"] for r in results]
+        self.assertIn(order_comp_old.tracking_code, tracking_codes)
+        self.assertIn(order_pend_new.tracking_code, tracking_codes)
+        self.assertNotIn(order_pend_old.tracking_code, tracking_codes)
+        self.assertNotIn(order_canc_new.tracking_code, tracking_codes)

@@ -2713,7 +2713,10 @@ def _build_cart_data(order):
 def my_orders(request):
     if not request.user.is_authenticated:
         return JsonResponse({"detail": "authentication required"}, status=401)
-    orders_qs = Order.objects.filter(user=request.user).exclude(status='canceled').order_by('-created_at')
+    cutoff_time = timezone.now() - timedelta(hours=72)
+    orders_qs = Order.objects.filter(user=request.user).exclude(status='canceled').filter(
+        Q(status='completed') | Q(created_at__gte=cutoff_time)
+    ).order_by('-created_at')
 
     def status_tag(code):
         return dict(Order.STATUS_CHOICES).get(code, code)
