@@ -1918,25 +1918,27 @@ class DiscountValidationGuardrailTests(TestCase):
             active=True
         )
 
-        response = self.client.post(
-            "/api/discounts/validate",
-            data=json.dumps({
-                "code": "",
-                "items": [
-                    {
-                        "product_id": crew.id,
-                        "slug": crew.slug,
-                        "quantity": 1,
-                    }
-                ],
-                "diamonds_use": 350,
-            }),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        payload = response.json()
-        self.assertEqual(payload["diamond_discount"], 42000)
-        self.assertEqual(payload["diamonds_applied"], 134)
+        from unittest.mock import patch
+        with patch("shop.reseller_views._lira_rate", return_value=3860):
+            response = self.client.post(
+                "/api/discounts/validate",
+                data=json.dumps({
+                    "code": "",
+                    "items": [
+                        {
+                            "product_id": crew.id,
+                            "slug": crew.slug,
+                            "quantity": 1,
+                        }
+                    ],
+                    "diamonds_use": 350,
+                }),
+                content_type="application/json",
+            )
+            self.assertEqual(response.status_code, 200, response.content)
+            payload = response.json()
+            self.assertEqual(payload["diamond_discount"], 42000)
+            self.assertEqual(payload["diamonds_applied"], 134)
 
 
 
