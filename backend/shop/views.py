@@ -702,6 +702,7 @@ def _product_to_dict(p: Product):
         "purchasable": not (
             bool(getattr(p, "ordering_disabled", False))
             or bool(getattr(p, "customer_ordering_disabled", False))
+            or not bool(getattr(p, "active", True))
         ),
     }
 
@@ -805,7 +806,7 @@ def product_detail(request, slug):
         return HttpResponseNotAllowed(['GET'])
     if slug == 'gift-battle-pass':
         return JsonResponse({"message": "محصول مورد نظر در دسترس نیست"}, status=404)
-    p = get_object_or_404(Product, slug=slug, active=True)
+    p = get_object_or_404(Product, slug=slug)
     return JsonResponse(_product_to_dict(p))
 
 
@@ -820,7 +821,7 @@ def product_viewers(request, slug):
         return HttpResponseNotAllowed(['GET', 'POST'])
 
     try:
-        Product.objects.get(slug=slug, active=True)
+        Product.objects.get(slug=slug)
     except Product.DoesNotExist:
         return JsonResponse({"viewers": 0})
 
