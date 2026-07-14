@@ -11,8 +11,10 @@ export const metadata = {
   },
   description: SITE_DESCRIPTION,
   keywords: [
-    'نوبیکس شاپ', 'فعال‌سازی محصولات آنلاین', 'خرید اشتراک قانونی',
-    'اشتراک ChatGPT', 'خرید چت جی‌پی‌تی', 'اشتراک جیمینی', 'Gemini', 'هوش مصنوعی',
+    'نوبیکس شاپ', 'نوبیکس', 'نوبيکس', 'نوبيکس شاپ', 'نوبيكس', 'نوبيكس شاپ',
+    'nubixshop', 'nubix shop', 'nubix', 'nubixshop.ir',
+    'فعال‌سازی محصولات آنلاین', 'خرید اشتراک قانونی', 'اشتراک ChatGPT',
+    'خرید چت جی‌پی‌تی', 'اشتراک جیمینی', 'Gemini', 'هوش مصنوعی',
     'وی‌باکس', 'وی باکس', 'V-Bucks', 'کروپک', 'بتل پس', 'استارتر پک', 'Fortnite', 'فورتنایت',
     'گیفت کارت', 'گیفت کارت پلی‌استیشن', 'گیفت کارت استیم', 'اشتراک اسپاتیفای'
   ],
@@ -89,7 +91,10 @@ const siteJsonLd = {
       '@type': 'OnlineStore',
       '@id': 'https://nubixshop.ir/#organization',
       name: SITE_NAME,
-      alternateName: ['NubixShop', 'نوبیکس'],
+      alternateName: [
+        'NubixShop', 'Nubix Shop', 'نوبیکس', 'نوبیکس شاپ', 'نوبيکس',
+        'نوبيکس شاپ', 'نوبيكس', 'نوبيكس شاپ', 'nubixshop.ir'
+      ],
       url: 'https://nubixshop.ir',
       logo: 'https://nubixshop.ir/web_logo.webp',
       sameAs: [
