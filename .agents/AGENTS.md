@@ -1,8 +1,8 @@
 # Project Rules
 
-- **Post-Change Build & Restart**: Always run the `HardReload.sh` script (`/root/NubixShop/public/frontend/HardReload.sh`) after making any code changes in the frontend folder. This compiles the Next.js application and restarts the pm2 server to apply the changes.
+- **Post-Change Build & Restart**: Always run the `HardReload.sh` script (`/root/NubixShop/public/HardReload.sh`) after making any code changes in the frontend folder. This compiles the Next.js application and restarts the pm2 server to apply the changes.
 
-- **Pre-Deployment Process Check (MANDATORY)**: Before starting any deployment, you MUST check for any existing `HardReload.sh` or its `next build --webpack` child processes. If an older/stale deployment is still running, terminate it completely first, verify that it has stopped, and then start exactly one fresh `/root/NubixShop/public/frontend/HardReload.sh`. This prevents multiple builds from running concurrently and racing/corrupting the `.next-build`, `.next-prev`, and `.next` build directories.
+- **Pre-Deployment Process Check (MANDATORY)**: Before starting any deployment, you MUST check for any existing `HardReload.sh` or its `next build --webpack` child processes. If an older/stale deployment is still running, terminate it completely first, verify that it has stopped, and then start exactly one fresh `/root/NubixShop/public/HardReload.sh`. This prevents multiple builds from running concurrently and racing/corrupting the `.next-build`, `.next-prev`, and `.next` build directories.
 
   **Steps to follow before every `HardReload.sh` run:**
   1. Check for running processes: `pgrep -a -f 'HardReload.sh|next build'`
