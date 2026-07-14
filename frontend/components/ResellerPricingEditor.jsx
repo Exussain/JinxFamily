@@ -271,6 +271,7 @@ export default function ResellerPricingEditor({
                   tiers: smartTiers,
                 }),
               });
+              if (cancelled) return;
               if (!autoResult.res.ok) {
                 autoCreateAttempts.current.delete(scopeKey);
                 setEditingTiers([]);
