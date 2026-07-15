@@ -6907,47 +6907,55 @@ export default function AdminPanelPage() {
                           <div className="quick-price-row">
                             <div className="quick-price-title-wrap" style={{ display: 'grid', gap: '2px' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span className="quick-price-icon">💰</span>
-                                <span className="quick-price-label">تغییر قیمت فوری:</span>
+                                <span className="quick-price-icon">⚡</span>
+                                <span className="quick-price-label">تغییر قیمت فوری (نسبی):</span>
                               </div>
                               <span className="quick-price-current-info" style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: 'bold' }}>
                                 قیمت فعلی: {Number(p.price || 0).toLocaleString("fa-IR")} تومان
                               </span>
                             </div>
                             <div className="quick-price-input-wrap">
+                              <span style={{ position: 'absolute', right: '12px', fontSize: '14px', fontWeight: 'bold', color: 'var(--text)' }}>+</span>
                               <input
                                 type="number"
                                 value={
                                   quickPrices[p.id] !== undefined
                                     ? quickPrices[p.id]
-                                    : (Number(p.price || 0) + (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000))
+                                    : (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000)
                                 }
-                                min="0"
+                                min="-9999999"
                                 onChange={(e) => setQuickPrices({ ...quickPrices, [p.id]: Number(e.target.value || 0) })}
-                                placeholder="قیمت"
+                                placeholder="مقدار تغییر"
+                                style={{ padding: '0 45px 0 25px', textAlign: 'right', direction: 'ltr' }}
                               />
                               <span className="quick-price-unit">تومان</span>
                             </div>
-                            <button
-                              type="button"
-                              className={`quick-price-btn ${productSaving === p.id ? "saving" : ""}`}
-                              disabled={productSaving === p.id}
-                              onClick={async () => {
-                                const finalPrice =
-                                  quickPrices[p.id] !== undefined
-                                    ? quickPrices[p.id]
-                                    : (Number(p.price || 0) + (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000));
-                                const updatedProduct = { ...p, price: finalPrice };
-                                await saveQuickPrice(updatedProduct);
-                                setQuickPrices((prev) => {
-                                  const next = { ...prev };
-                                  delete next[p.id];
-                                  return next;
-                                });
-                              }}
-                            >
-                              {productSaving === p.id ? "در حال ثبت..." : "ثبت فوری"}
-                            </button>
+                            <div style={{ display: 'grid', gap: '4px', alignItems: 'center' }}>
+                              <button
+                                type="button"
+                                className={`quick-price-btn ${productSaving === p.id ? "saving" : ""}`}
+                                disabled={productSaving === p.id}
+                                onClick={async () => {
+                                  const adjustment =
+                                    quickPrices[p.id] !== undefined
+                                      ? quickPrices[p.id]
+                                      : (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000);
+                                  const finalPrice = Math.max(0, Number(p.price || 0) + adjustment);
+                                  const updatedProduct = { ...p, price: finalPrice };
+                                  await saveQuickPrice(updatedProduct);
+                                  setQuickPrices((prev) => {
+                                    const next = { ...prev };
+                                    delete next[p.id];
+                                    return next;
+                                  });
+                                }}
+                              >
+                                {productSaving === p.id ? "در حال ثبت..." : "ثبت فوری"}
+                              </button>
+                              <span style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: 'bold', textAlign: 'center' }}>
+                                خروجی: {Math.max(0, Number(p.price || 0) + (quickPrices[p.id] !== undefined ? quickPrices[p.id] : (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000))).toLocaleString("fa-IR")}
+                              </span>
+                            </div>
                           </div>
 
                           <div className="product-edit-grid">
