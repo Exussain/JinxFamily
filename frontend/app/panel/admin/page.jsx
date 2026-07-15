@@ -8,6 +8,8 @@ import Navbar from "../../../components/Navbar";
 import AdminLiveChatWidget from "../../../components/AdminLiveChatWidget";
 import ResellerTabContent from "../../../components/ResellerTabContent";
 
+const LIRA_RATE_MARKUP_TOMAN = 140;
+
 function AccountDetailsRow({ account_email, account_password, account_type, copyToClipboard, copiedField }) {
   const [showPass, setShowPass] = useState(false);
   if (!account_email && !account_password) return null;
@@ -2530,7 +2532,8 @@ export default function AdminPanelPage() {
     activeUsers: users.filter(u => u.orders_count > 0).length,
   };
 
-  const liraRateNumber = Math.round(liveLiraRate / 10) || 0;
+  const marketLiraRateToman = Math.round(liveLiraRate / 10) || 0;
+  const liraRateNumber = marketLiraRateToman > 0 ? marketLiraRateToman + LIRA_RATE_MARKUP_TOMAN : 0;
 
   const orderCostInToman = (order) => {
     const items = order?.items || [];
@@ -3595,6 +3598,20 @@ export default function AdminPanelPage() {
     }
   };
 
+  const saveQuickPrice = async (product) => {
+    let updatedProduct = { ...product };
+    if (product.variants && product.variants.length > 0) {
+      const variants = product.variants.map((v, index) => {
+        if (index === 0) {
+          return { ...v, price: Number(product.price) || 0 };
+        }
+        return v;
+      });
+      updatedProduct = { ...product, variants };
+    }
+    await saveProduct(updatedProduct);
+  };
+
   const deleteProduct = async (product) => {
     if (!confirm(`آیا از حذف کامل «${product.name_fa || product.slug}» اطمینان دارید؟\nاین عملیات قابل بازگشت نیست.`)) return;
     setProductDeleting(product.id);
@@ -3983,17 +4000,21 @@ export default function AdminPanelPage() {
               </div>
             </div>
             <div className="finance-rate live-rate">
-              <div className="finance-rate-title">🇹🇷 لیر ترکیه (لحظه‌ای)</div>
+              <div className="finance-rate-title">🇹🇷 لیر ترکیه (بازار)</div>
               <div className="finance-rate-row">
                 <input
                   type="number"
                   min={0}
-                  className="finance-input"
-                  value={Math.round(liveLiraRate / 10)}
+                  className="finance-input finance-input-compact"
+                  value={marketLiraRateToman}
                   readOnly
                   style={{ background: 'rgba(239, 68, 68, 0.1)', cursor: 'not-allowed' }}
                 />
                 <span className="live-badge">🔴</span>
+              </div>
+              <div className="muted-small">
+                نرخ مبنای حسابداری: <strong>{liraRateNumber.toLocaleString("fa-IR")}</strong> تومان
+                {marketLiraRateToman > 0 ? ` (بازار + ${LIRA_RATE_MARKUP_TOMAN.toLocaleString("fa-IR")})` : ""}
               </div>
               <div className="muted-small">
                 {currencyRatesLastUpdate ? `آخرین بروزرسانی: ${currencyRatesLastUpdate.toLocaleString("fa-IR")}` : "در حال دریافت..."}
@@ -6575,11 +6596,12 @@ export default function AdminPanelPage() {
                       />
                     </label>
                     <label className="product-edit-field">
-                      <span>قیمت لیر</span>
+                      <span>قیمت خرید به لیر</span>
                       <input
                         type="number"
                         min={0}
-                        value={newProduct.price_lira}
+                        value={newProduct.price_lira || ""}
+                        placeholder="مثلاً 190"
                         onChange={(e) => handleNewProductChange("price_lira", Number(e.target.value || 0))}
                       />
                     </label>
@@ -6881,6 +6903,31 @@ export default function AdminPanelPage() {
                         </div>
 
                         <div className="product-card-body">
+                          <div className="quick-price-row">
+                            <div className="quick-price-title-wrap">
+                              <span className="quick-price-icon">💰</span>
+                              <span className="quick-price-label">تغییر قیمت فوری:</span>
+                            </div>
+                            <div className="quick-price-input-wrap">
+                              <input
+                                type="number"
+                                value={p.price || 0}
+                                min="0"
+                                onChange={(e) => handleProductChange(p.id, "price", Number(e.target.value || 0))}
+                                placeholder="قیمت"
+                              />
+                              <span className="quick-price-unit">تومان</span>
+                            </div>
+                            <button
+                              type="button"
+                              className={`quick-price-btn ${productSaving === p.id ? "saving" : ""}`}
+                              disabled={productSaving === p.id}
+                              onClick={() => saveQuickPrice(p)}
+                            >
+                              {productSaving === p.id ? "در حال ثبت..." : "ثبت فوری"}
+                            </button>
+                          </div>
+
                           <div className="product-edit-grid">
                             <label className="product-edit-field">
                               <span>عنوان</span>
@@ -6977,12 +7024,13 @@ export default function AdminPanelPage() {
                               </div>
                             </div>
                             <div className="price-group lira">
-                              <label>قیمت لیر</label>
+                              <label>قیمت خرید به لیر</label>
                               <div className="price-input-wrapper">
                                 <input
                                   type="number"
-                                  value={p.price_lira || 0}
+                                  value={p.price_lira || ""}
                                   min={0}
+                                  placeholder="تنظیم نشده"
                                   onChange={(e) => handleProductChange(p.id, "price_lira", Number(e.target.value || 0))}
                                 />
                                 <span className="currency">TL</span>
@@ -7271,10 +7319,10 @@ export default function AdminPanelPage() {
                                     <div className="variant-input-group">
                                       <input
                                         type="number"
-                                        value={v.original_price || 0}
+                                        value={v.original_price || ""}
                                         min={0}
                                         onChange={(e) => handleProductChange(p.id, "original_price", Number(e.target.value || 0), v.id)}
-                                        placeholder="قیمت اصلی"
+                                        placeholder="قیمت خرید واریانت (لیر)"
                                       />
                                     </div>
                                   </div>
@@ -9170,6 +9218,12 @@ export default function AdminPanelPage() {
             color: var(--text);
           }
 
+          .finance-input-compact {
+            width: 96px;
+            padding: 8px 10px;
+            font-size: 13px;
+          }
+
           .finance-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -10867,39 +10921,132 @@ export default function AdminPanelPage() {
             min-height: 64px;
             padding: 12px 14px;
             border: 1px solid var(--line);
-            border-radius: 8px;
+            border-radius: 12px;
             background: var(--card);
             color: var(--text);
             cursor: pointer;
             text-align: right;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+            transition: all 0.2s ease;
           }
 
           .product-group-tab:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            border-color: rgba(102, 126, 234, 0.3);
           }
 
           .product-group-tab.active {
             color: #fff;
             border-color: transparent;
-            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
           }
 
           .product-group-fortnite.active {
             background: linear-gradient(135deg, #2563eb, #0ea5e9);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
           }
 
           .product-group-ai.active {
             background: linear-gradient(135deg, #059669, #14b8a6);
+            box-shadow: 0 8px 20px rgba(5, 150, 105, 0.25);
           }
 
           .product-group-subscriptions.active {
             background: linear-gradient(135deg, #db2777, #f97316);
+            box-shadow: 0 8px 20px rgba(219, 39, 119, 0.25);
           }
 
           .product-group-other-games.active {
             background: linear-gradient(135deg, #7c3aed, #475569);
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+          }
+
+          .quick-price-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: rgba(102, 126, 234, 0.04);
+            border: 1px dashed var(--line);
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+          }
+
+          .quick-price-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+
+          .quick-price-icon {
+            font-size: 15px;
+          }
+
+          .quick-price-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+          }
+
+          .quick-price-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex: 1;
+            max-width: 180px;
+          }
+
+          .quick-price-input-wrap input {
+            width: 100%;
+            height: 32px;
+            padding: 0 45px 0 10px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: left;
+            direction: ltr;
+            outline: none;
+            transition: border-color 0.15s ease;
+          }
+
+          .quick-price-input-wrap input:focus {
+            border-color: #667eea;
+          }
+
+          .quick-price-unit {
+            position: absolute;
+            right: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--muted);
+            pointer-events: none;
+          }
+
+          .quick-price-btn {
+            height: 32px;
+            padding: 0 16px;
+            border: none;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+          }
+
+          .quick-price-btn:hover {
+            opacity: 0.9;
+          }
+
+          .quick-price-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
           }
 
           .group-tab-main {
@@ -11688,6 +11835,16 @@ export default function AdminPanelPage() {
           @media (max-width: 860px) {
             .product-group-tabs {
               grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .quick-price-row {
+              flex-direction: column;
+              align-items: stretch;
+              gap: 8px;
+            }
+
+            .quick-price-input-wrap {
+              max-width: 100%;
             }
 
             .new-product-head {
