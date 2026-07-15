@@ -10,6 +10,7 @@ import TelegramContact from "../../../components/TelegramContact";
 import { adminCacheBustHref } from "../../../lib/adminUrl.mjs";
 import RelatedProducts from "../../../components/RelatedProducts";
 import ReviewSection from "../../../components/ReviewSection";
+import { createCartSplash } from "../../../lib/effects";
 
 function StockAlertForm({ product, apiBase }) {
   const [email, setEmail] = useState("");
@@ -256,7 +257,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
     : (product?.original_price || 0);
   const displayPrice = Number(selectedVariant?.price ?? product?.price ?? product?.min_price ?? 0);
   const hasPrice = displayPrice > 0;
-  const isOutOfStock = !product || !!product.ordering_disabled || !!product.customer_ordering_disabled || !hasPrice;
+  const isOutOfStock = !product || !!product.ordering_disabled || !!product.customer_ordering_disabled || !hasPrice || product.purchasable === false;
 
   const isFieldRequired = (field) => field.required === true;
 
@@ -282,7 +283,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
     return true;
   };
 
-  const handleAdd = () => {
+  const handleAdd = (e) => {
     if (!product) return;
     setShowValidation(true);
 
@@ -324,6 +325,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
       }
     }
     addItem(item);
+    createCartSplash(e);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("cart:add"));
     }

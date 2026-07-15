@@ -1098,6 +1098,7 @@ export default function AdminPanelPage() {
   const [discounts, setDiscounts] = useState([]);
   const [products, setProducts] = useState([]);
   const [activeProductGroup, setActiveProductGroup] = useState("fortnite");
+  const [quickPrices, setQuickPrices] = useState({});
   const [orderCounts, setOrderCounts] = useState({});
   const emptyProductForm = {
     name_fa: "",
@@ -6904,16 +6905,25 @@ export default function AdminPanelPage() {
 
                         <div className="product-card-body">
                           <div className="quick-price-row">
-                            <div className="quick-price-title-wrap">
-                              <span className="quick-price-icon">💰</span>
-                              <span className="quick-price-label">تغییر قیمت فوری:</span>
+                            <div className="quick-price-title-wrap" style={{ display: 'grid', gap: '2px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span className="quick-price-icon">💰</span>
+                                <span className="quick-price-label">تغییر قیمت فوری:</span>
+                              </div>
+                              <span className="quick-price-current-info" style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: 'bold' }}>
+                                قیمت فعلی: {Number(p.price || 0).toLocaleString("fa-IR")} تومان
+                              </span>
                             </div>
                             <div className="quick-price-input-wrap">
                               <input
                                 type="number"
-                                value={p.price || 0}
+                                value={
+                                  quickPrices[p.id] !== undefined
+                                    ? quickPrices[p.id]
+                                    : (Number(p.price || 0) + (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000))
+                                }
                                 min="0"
-                                onChange={(e) => handleProductChange(p.id, "price", Number(e.target.value || 0))}
+                                onChange={(e) => setQuickPrices({ ...quickPrices, [p.id]: Number(e.target.value || 0) })}
                                 placeholder="قیمت"
                               />
                               <span className="quick-price-unit">تومان</span>
@@ -6922,7 +6932,19 @@ export default function AdminPanelPage() {
                               type="button"
                               className={`quick-price-btn ${productSaving === p.id ? "saving" : ""}`}
                               disabled={productSaving === p.id}
-                              onClick={() => saveQuickPrice(p)}
+                              onClick={async () => {
+                                const finalPrice =
+                                  quickPrices[p.id] !== undefined
+                                    ? quickPrices[p.id]
+                                    : (Number(p.price || 0) + (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000));
+                                const updatedProduct = { ...p, price: finalPrice };
+                                await saveQuickPrice(updatedProduct);
+                                setQuickPrices((prev) => {
+                                  const next = { ...prev };
+                                  delete next[p.id];
+                                  return next;
+                                });
+                              }}
                             >
                               {productSaving === p.id ? "در حال ثبت..." : "ثبت فوری"}
                             </button>

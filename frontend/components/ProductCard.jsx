@@ -6,6 +6,8 @@ import { productHref } from "../lib/productUrls.mjs";
 import SmartImage from "./SmartImage";
 import Link from "next/link";
 
+import { createCartSplash } from "../lib/effects";
+
 export default function ProductCard({ p, imageFit = "contain" }) {
   const { items, addItem, setQty, removeItem } = useCart();
   const [btnPulse, setBtnPulse] = useState(false);
@@ -78,6 +80,7 @@ export default function ProductCard({ p, imageFit = "contain" }) {
               title="افزودن به سبد خرید"
               onClick={(e) => {
                 e.preventDefault(); // Prevent link click if necessary
+                createCartSplash(e);
                 addItem({
                   product_id: p.id,
                   name: p.name_fa,
