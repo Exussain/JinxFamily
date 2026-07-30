@@ -71,7 +71,7 @@ class OrderAdminForm(forms.ModelForm):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     form = OrderAdminForm
-    list_display = ("tracking_code", "bot_updates_badge", "status", "epic_username", "amount", "refund_badge", "is_test_order", "created_at", "completed_at", "short_note")
+    list_display = ("tracking_code", "reseller_info_badge", "bot_updates_badge", "status", "epic_username", "amount", "refund_badge", "is_test_order", "created_at", "completed_at", "short_note")
     list_filter = ("status", "is_test_order", "refund_confirmed", "created_at", "completed_at")
     search_fields = ("tracking_code", "epic_username", "phone", "telegram", "note")
     inlines = [OrderItemInline, OrderBotUpdateInline]
@@ -87,7 +87,7 @@ class OrderAdmin(admin.ModelAdmin):
             )
         }),
         ("اکانت Xbox", {
-            "fields": ("xbox_create_account", "created_xbox_email", "created_xbox_pass"),
+            "fields": ("xbox_create_account", "xbox_account_creation_skipped", "created_xbox_email", "created_xbox_pass"),
             "classes": ("collapse",),
             "description": "اگر مشتری درخواست ساخت اکانت Xbox داده، اطلاعات اکانت ساخته شده را وارد کنید. با ذخیره، ایمیل به مشتری ارسال می‌شود."
         }),
@@ -110,6 +110,32 @@ class OrderAdmin(admin.ModelAdmin):
             '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;">⏳ در انتظار</span>'
         )
     refund_badge.short_description = "وضعیت استرداد"
+
+    def reseller_info_badge(self, obj):
+        if getattr(obj, "reseller_info_updated", False):
+            return format_html(
+                '<span class="reseller-updated-badge" style="background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:bold;">✍️ تغییر اطلاعات</span>'
+                '<style>'
+                '  .reseller-updated-tr { background-color: #f5f3ff !important; }'
+                '</style>'
+                '<script>'
+                '  (function() {'
+                '    var run = function() {'
+                '      document.querySelectorAll(".reseller-updated-badge").forEach(function(el) {'
+                '        var tr = el.closest("tr");'
+                '        if (tr) tr.classList.add("reseller-updated-tr");'
+                '      });'
+                '    };'
+                '    if (document.readyState === "loading") {'
+                '      document.addEventListener("DOMContentLoaded", run);'
+                '    } else {'
+                '      run();'
+                '    }'
+                '  })();'
+                '</script>'
+            )
+        return "-"
+    reseller_info_badge.short_description = "تغییر اطلاعات"
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -151,6 +177,8 @@ class OrderAdmin(admin.ModelAdmin):
         """
         Override save_model to automatically send notifications
         """
+        if change:
+            obj.reseller_info_updated = False
         # Check if this is an update (not a new order) and status changed
         if change and 'status' in form.changed_data:
             old_status = form.initial.get('status')
@@ -228,13 +256,22 @@ class OrderAdmin(admin.ModelAdmin):
                     amount=refund_amount,
                 )
             elif new_status == "invalid_info":
-                success, message = KavenegarService.send_status_sms(
-                    phone_number=phone,
-                    customer_name=customer_name,
-                    status_fa="",
-                    template_name="nubixshop-wrong-details",
-                    include_status_token=False,
-                )
+                if order.is_reseller_order:
+                    success, message = KavenegarService.send_status_sms(
+                        phone_number=phone,
+                        customer_name=customer_name,
+                        status_fa=order.tracking_code,
+                        template_name="nubix-re-wronginfo",
+                        include_status_token=False,
+                    )
+                else:
+                    success, message = KavenegarService.send_status_sms(
+                        phone_number=phone,
+                        customer_name=customer_name,
+                        status_fa="",
+                        template_name="nubixshop-wrong-details",
+                        include_status_token=False,
+                    )
             elif new_status in ("needs_2fa", "needs_tr_region"):
                 success, message = KavenegarService.send_status_sms(
                     phone_number=phone,

@@ -51,6 +51,8 @@ export function buildCrewpackPresentation(product = null) {
   const fallbackProduct = product || { slug: "fortnite-crew-pack" };
   const { imageSrc, imageBase } = resolveProductImage(fallbackProduct);
 
+  const coverSrc = product?.cover_16_9 || null;
+
   const liveOptions = buildOptionsFromVariants(product);
   const options = liveOptions.length
     ? liveOptions
@@ -63,8 +65,8 @@ export function buildCrewpackPresentation(product = null) {
       }));
 
   return {
-    imageSrc,
-    imageBase,
+    imageSrc: coverSrc || imageSrc,
+    imageBase: coverSrc ? undefined : imageBase,
     options,
     selectedVariantId: options[0]?.variant_id || DEFAULT_OPTIONS[0].variant_id,
   };

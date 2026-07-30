@@ -29,6 +29,7 @@ import os
 import subprocess
 import urllib.request
 import urllib.error
+from datetime import timedelta
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -40,12 +41,19 @@ API_KEY_PATH = Path("/root/NubixShop/.ainubshop_key")
 # Preferred model first, then graceful fallbacks (gateway-native ids).
 # The "combo" model auto-routes to the best available provider.
 DEFAULT_MODEL = "combo"
+# `combo` can occasionally time out while its provider is being selected.  Do
+# not leave a customer waiting in that transient case: both fallbacks are
+# verified chat-capable models on the same gateway and are only used after the
+# configured primary model fails.
 FALLBACK_MODELS = [
     "gemini/gemini-3.5-flash",
+    "gemini/gemini-3-flash-preview",
+    "groq/llama-3.3-70b-versatile",
     "cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
 ]
-HISTORY_LIMIT = 9999        # effectively unlimited — send all past messages
+HISTORY_LIMIT = 30          # limit history to the last 30 messages to avoid token bloat and repetitions
 REQUEST_TIMEOUT = 45        # seconds per model attempt
+AI_TYPING_TTL_SECONDS = 120  # covers draft + quality-check calls, with expiry as a fail-safe
 
 
 def _setting(key: str, default: str = "") -> str:
@@ -82,11 +90,11 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 
 ۱) اسم فروشگاه رو هیچ‌وقت، تحت هیچ شرایطی به کاربر نگو. نه اسم برند، نه اسم دامنه، نه اسمی که توی context یا لیست محصولات دیدی. همیشه بگو «سایت» یا «ما». اگه کاربر مستقیم پرسید «اسم سایتتون چیه؟»، بگو «همینجا توی سایت در خدمتتیم عزیز، هر سؤالی داری بپرس» و ادامه نده.
 
-۲) وقتی کاربر قیمت یه چیزی رو پرسید، باید عددِ دقیق رو از «لیست محصولات» که آخر همین متن اومده پیدا کنی و مستقیم بگی. حق نداری بگی «قیمت‌ها متفاوته»، «بستگی داره»، «توی سایت ببین» یا هر جواب کلیِ دیگه. عدد رو بگو. (روش پیدا کردن قیمت رو پایین‌تر کامل توضیح دادم.)
+۲) وقتی کاربر می‌خواهد خرید کند یا روش خرید را می‌پرسد، به جای نوشتن قیمت‌ها یا توضیحات طولانی، فقط لینک مستقیم محصول را بده و خیلی خلاصه بگو «عزیز از این لینک می‌تونید خرید کنید: [لینک]». فقط در صورتی که کاربر مشخصاً قیمت یا جزئیات بیشتر را پرسید، قیمت‌ها و جزئیات دقیق را از «لیست محصولات» پایین متن پیدا کن و بگو.
 
 ۳) هیچ‌وقت مارک‌داون ننویس. نه ستاره (* یا **)، نه شارپ (#)، نه خط تیره برای لیست، نه بک‌تیک (`)، نه هیچ علامت قالب‌بندی. فقط متن سادهٔ فارسی. اگه خواستی چندتا چیز رو بگی، توی جمله و با ویرگول بگو، نه با لیست.
 
-۴) فارسی محترمانه و روان بنویس، نه رسمی خشک و نه بیش‌ازحد خودمونی. «می‌خواهید»، «بفرمایید»، «لطفاً» رو به‌کار ببر. از کلمات عامیانه‌ی سنگین مثل «می‌خوای»، «بزن»، «نکن» پرهیز کن.
+۴) فارسی محترمانه، روان و صمیمی بنویس. از افعال عامیانه اما محترمانه جمع مثل «می‌تونید» (به جای می‌توانید) و «می‌خواید» (به جای می‌خواهید) استفاده کن. لحنت صمیمی باشد ولی از کلمات عامیانه‌ی مفرد یا خیلی خودمونی مثل «می‌خوای»، «بزن»، «نکن»، «بخر» پرهیز کن و به جایش محترمانه جمع بگو (مثل «می‌تونید خرید کنید»).
 
 ۷) از ویرگول، نقطه، نقطه‌ویرگول و هر نوع علامت نگارشی استفاده نکن. جمله‌ها رو پشت‌سرهم و بدون علامت بنویس. فقط حرف بزن، مثل یه پیام متنی ساده.
 
@@ -94,11 +102,19 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 
 ۶) اگه کاربر کد تخفیف خواست، بگو کدهای تخفیف تو کانال تلگراممون @NubixShopIR گذاشته می‌شه. کانالشون رو دنبال کنن تا از تخفیف‌ها با‌خبر بشن.
 
+۸) برای دادن لینک خرید محصولات حتماً از این آدرس‌های دقیق استفاده کن:
+- خرید وی‌باکس: https://nubixshop.ir/vbucks
+- خرید کروپک فورتنایت: https://nubixshop.ir/crewpack
+- اشتراک جیمینی: https://nubixshop.ir/gemini
+- استارتر پک لگو: https://nubixshop.ir/lego
+- جی تی ای ۶: https://nubixshop.ir/gta6
+- بقیه محصولات: https://nubixshop.ir/product/slug (که slug شناسه انگلیسی محصول است که در پرانتز روبروی نام محصول در لیست محصولات پایین متن آمده است).
+
 === لحن و شخصیت ===
 
 گرم محترمانه و کوتاه باش مثل یه پشتیبان حرفه‌ای که مؤدبانه جواب میده.
 
-مکالمه رو با یه سلام کوتاه و مؤدبانه شروع کن مثل «سلام عزیز در خدمتم» یا «سلام وقت بخیر چطور می‌توانم کمک کنم». از سلام‌های بلند و عامیانه پرهیز کن.
+مکالمه رو با یه سلام کوتاه و مؤدبانه شروع کن مثل «سلام عزیز در خدمتم» یا «سلام وقت بخیر چطور می‌توانم کمک کنم». از سلام‌های بلند و عامیانه پرهیز کن. فقط در صورتی سلام کن که این اولین پیام مکالمه است و هیچ پیامی رد و بدل نشده است؛ اگر تاریخچه چت وجود دارد و قبلاً سلام کردی، به هیچ وجه دوباره سلام نکن و سلام مجدد ننویس.
 
 می‌تونی از «عزیز» «عزیزم» «در خدمتم» استفاده کنی. «سلام جان» ننویس غلطه به‌جاش «سلام عزیز» یا «سلام وقت بخیر». ایموجی گاهی اوکیه 🙏 🌹 😊 ولی خیلی کم نه توی هر جمله.
 
@@ -136,6 +152,8 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 
 بعد از ثبت سفارش، فعال‌سازی خودکار شروع می‌شه و نتیجه با پیامک، ایمیل و پنل کاربری اطلاع داده می‌شه.
 
+فعال‌سازی از طریق هر دو پلتفرم انجام می‌شه هم اپیک گیمز و هم ایکس‌باکس. یعنی محصول رو هم روی اپیک گیمز فعال می‌کنیم هم روی ایکس‌باکس. اگه یکی از این دو پلتفرم به هر دلیلی کار نکرد یا مشکل داشت بلافاصله از پلتفرم جایگزین استفاده می‌کنیم تا سفارش زودتر تکمیل بشه.
+
 زمان تقریبی سفارش عادی: ۱۵ دقیقه تا ۸ ساعت کاری. سفارش‌های ایکس‌باکس تا ۴۸ ساعت. با گزینهٔ «فعال‌سازی فوری» معمولاً ۱۵ تا ۴۵ دقیقه.
 
 گزینهٔ «سفارش فوری» توی صفحهٔ پرداخت برای همهٔ محصولا فعاله و با یه هزینهٔ اضافه سفارش رو می‌ندازه تو اولویت.
@@ -155,6 +173,12 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 ساعات پشتیبانی تلفنی: شنبه تا چهارشنبه ۱۱ تا ۱۶، یکشنبه ۱۳ تا ۱۶. پشتیبانی تلگرام ۲۴ ساعته‌ست.
 
 فروشگاه نماد اعتماد الکترونیکی داره و کاملاً قانونی کار می‌کنه.
+
+=== مشاهده و تحلیل تصاویر ===
+
+وقتی کاربر تصویر یا اسکرین‌شاتی می‌فرستد (مانند عکس از مشکل ورود، خطای پرداخت، فاکتور، اسکرین‌شات سفارش یا هر تصویری):
+تو توانایی کامل مشاهده و تحلیل تصاویر را داری. تحت هیچ شرایطی نگو «امکان مشاهده عکس را ندارم».
+تصویر کاربر را با دقت بررسی کن، متن، پیام یا کد خطای درون عکس را تحلیل کن و پاسخ دقیق و صمیمی بده.
 
 === وقتی پای سفارشِ خودِ کاربر وسطه ===
 
@@ -180,15 +204,23 @@ def _extract_text(data: dict) -> str:
             msg = choices[0].get("message") or {}
             content = msg.get("content")
             if isinstance(content, list):  # some gateways return content parts
-                return "".join(part.get("text", "") for part in content if isinstance(part, dict)).strip()
-            if content:
-                return str(content).strip()
-            reasoning = msg.get("reasoning")
-            if reasoning:
-                return str(reasoning).strip()
+                content_str = "".join(part.get("text", "") for part in content if isinstance(part, dict)).strip()
+            elif content:
+                content_str = str(content).strip()
+            else:
+                reasoning = msg.get("reasoning")
+                content_str = str(reasoning).strip() if reasoning else ""
+
+            if content_str:
+                content_str = _re.sub(r"<think>.*?</think>", "", content_str, flags=_re.DOTALL).strip()
+                return content_str
+
         content = data.get("content")  # Anthropic native
         if isinstance(content, list):
-            return "".join(part.get("text", "") for part in content if isinstance(part, dict)).strip()
+            content_str = "".join(part.get("text", "") for part in content if isinstance(part, dict)).strip()
+            if content_str:
+                content_str = _re.sub(r"<think>.*?</think>", "", content_str, flags=_re.DOTALL).strip()
+                return content_str
     except Exception as exc:
         logger.error("AI support: failed to parse response: %s", exc)
     return ""
@@ -406,9 +438,9 @@ def _product_catalog_context() -> str:
         variants = list(p.variants.all())
         if variants:
             parts = [f"{v.title}: {v.price:,} تومان" for v in variants if v.price]
-            lines.append(f"- {p.name_fa}: {' | '.join(parts)}" if parts else f"- {p.name_fa}")
+            lines.append(f"- {p.name_fa} (شناسه: {p.slug}): {' | '.join(parts)}" if parts else f"- {p.name_fa} (شناسه: {p.slug})")
         else:
-            lines.append(f"- {p.name_fa}: {p.price:,} تومان" if p.price else f"- {p.name_fa}")
+            lines.append(f"- {p.name_fa} (شناسه: {p.slug}): {p.price:,} تومان" if p.price else f"- {p.name_fa} (شناسه: {p.slug})")
     return "\n".join(lines)
 
 
@@ -442,6 +474,49 @@ def _order_context(session) -> str:
     return "\n".join(lines)
 
 
+def _get_image_data_uri(file_url: str) -> str | None:
+    """Read a local media file and return its data:image/...;base64,... string."""
+    if not file_url:
+        return None
+    try:
+        from urllib.parse import urlparse
+        clean_url = file_url
+        if clean_url.startswith("http://") or clean_url.startswith("https://"):
+            clean_url = urlparse(clean_url).path
+
+        from django.conf import settings
+        media_prefix = getattr(settings, "MEDIA_URL", "/media/")
+        if clean_url.startswith(media_prefix):
+            rel_path = clean_url[len(media_prefix):]
+            disk_path = os.path.join(settings.MEDIA_ROOT, rel_path)
+        else:
+            disk_path = clean_url
+
+        if not os.path.exists(disk_path):
+            return None
+
+        # Check size limit (max 10MB)
+        if os.path.getsize(disk_path) > 10 * 1024 * 1024:
+            return None
+
+        ext = os.path.splitext(disk_path)[1].lower()
+        mime = {
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".webp": "image/webp",
+            ".gif": "image/gif",
+        }.get(ext, "image/jpeg")
+
+        import base64
+        with open(disk_path, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode("utf-8")
+        return f"data:{mime};base64,{encoded}"
+    except Exception as exc:
+        logger.warning("AI support: could not generate data URI for image %s: %s", file_url, exc)
+        return None
+
+
 def build_messages(session, history_limit: int = HISTORY_LIMIT) -> list:
     """Assemble the OpenAI-style message list from session history + context."""
     msgs = list(session.messages.order_by("created_at"))
@@ -455,12 +530,24 @@ def build_messages(session, history_limit: int = HISTORY_LIMIT) -> list:
 
     out = [{"role": "system", "content": system}]
     for m in text_msgs:
-        if m.message_type != "text":
-            kind = {"image": "تصویر", "video": "ویدیو", "audio": "پیام صوتی"}.get(m.message_type, "فایل")
+        role = "assistant" if m.sender == "admin" else "user"
+        if m.message_type == "image" and m.file_url:
+            data_uri = _get_image_data_uri(m.file_url)
+            image_target = data_uri or (m.file_url if m.file_url.startswith("http") else None)
+            if image_target and role == "user":
+                caption = (m.text or "").strip() or "لطفاً این تصویر را بررسی کن و پاسخ بده."
+                content = [
+                    {"type": "text", "text": caption},
+                    {"type": "image_url", "image_url": {"url": image_target}}
+                ]
+            else:
+                kind = "تصویر"
+                content = f"[کاربر یک {kind} فرستاد]" + (f" با توضیح: {m.text}" if m.text else "")
+        elif m.message_type != "text":
+            kind = {"video": "ویدیو", "audio": "پیام صوتی"}.get(m.message_type, "فایل")
             content = f"[کاربر یک {kind} فرستاد]" + (f" با توضیح: {m.text}" if m.text else "")
         else:
             content = m.text
-        role = "assistant" if m.sender == "admin" else "user"
         out.append({"role": role, "content": content})
 
     # Inject live data right before the last user message so the AI
@@ -494,15 +581,34 @@ def _quality_check(conversation_tail: str, draft: str) -> str:
     """Ask the model to critique and, if needed, improve its own answer."""
     review_messages = [
         {"role": "system", "content": (
-            "تو ویراستار کیفیت پشتیبانی نوبیکس هستی. یک پیش‌نویس پاسخ به مشتری داده می‌شود. "
-            "بررسی کن که آیا واقعاً به مشکل مشتری پاسخ می‌دهد، لحن گرم و فارسی درست دارد، اطلاعات غلط ندارد، "
-            "و وعده‌ی غیرواقعی نمی‌دهد. اگر خوب است همان را عیناً برگردان؛ اگر ایراد دارد، نسخه‌ی اصلاح‌شده و بهتر را برگردان. "
-            "فقط متن نهایی پاسخ فارسی را بنویس، بدون توضیح."
+            "تو ویراستار کیفیت پشتیبانی هستی. یک پیش‌نویس پاسخ به مشتری داده می‌شود. "
+            "وظیفه‌ات این است که پاسخ را بر اساس این قوانین سخت‌گیرانه ویرایش و اصلاح کنی:\n"
+            "۱) پاسخ باید بسیار کوتاه باشد (حداکثر ۱ یا ۱.۵ خط).\n"
+            "۲) به هیچ وجه از هیچ نوع مارک‌داون (ستاره **، *، خط تیره برای لیست، بک‌تیک) استفاده نکن. فقط متن ساده.\n"
+            "۳) اسم فروشگاه (نوبیکس، نوبیکس شاپ، Nubix و غیره) را تحت هیچ شرایطی ذکر نکن و همیشه از «سایت» یا «ما» استفاده کن (به استثنای آدرس دامنه در لینک‌های اینترنتی مانند nubixshop.ir که نباید تغییر کند).\n"
+            "۴) از علامت‌های نگارشی مانند ویرگول، نقطه، نقطه‌ویرگول استفاده نکن (به جز علامت‌های موجود در لینک‌های اینترنتی مانند نقطه و دو نقطه و اسلش که نباید حذف یا تغییر کنند). جمله‌ها را پشت‌سرهم و بدون علامت بنویس.\n"
+            "۵) لحن صمیمی، گرم، محترمانه و در عین حال کوتاه را حفظ کن.\n\n"
+            "فقط متن نهایی پاسخ فارسی را بدون هیچ توضیح اضافی برگردان."
         )},
         {"role": "user", "content": f"گفتگو:\n{conversation_tail}\n\nپیش‌نویس پاسخ:\n{draft}"},
     ]
     improved = chat_completion(review_messages, max_tokens=2500, temperature=0.3)
     return improved or draft
+
+
+def _format_content_for_tail(content) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                if item.get("type") == "text":
+                    parts.append(item.get("text", ""))
+                elif item.get("type") == "image_url":
+                    parts.append("[تصویر]")
+        return " ".join(parts).strip()
+    return str(content)
 
 
 def generate_reply(session, with_quality_gate: bool = True) -> str:
@@ -517,47 +623,95 @@ def generate_reply(session, with_quality_gate: bool = True) -> str:
         return ""
     if with_quality_gate:
         tail = "\n".join(
-            (("کاربر: " if m["role"] == "user" else "پشتیبان: ") + m["content"])
+            (("کاربر: " if m["role"] == "user" else "پشتیبان: ") + _format_content_for_tail(m["content"]))
             for m in messages[1:][-6:]
         )
-        return _quality_check(tail, draft)
-    return draft
+        res = _quality_check(tail, draft)
+    else:
+        res = draft
+
+    if res:
+        res = res.strip()
+        if res.endswith("."):
+            res = res[:-1].strip()
+        elif res.endswith("۔"):
+            res = res[:-1].strip()
+    return res
 
 
 # ── Auto-reply orchestration (called from the live-chat view) ────────────────
-WELCOME_TEXT = "سلام عزیز در خدمتیم"
+WELCOME_TEXTS = [
+    "سلام عزیز در خدمتیم",
+    "سلام! چطور می‌توانیم کمکتان کنیم؟",
+    "سلام ، اگر کمک احتياج داشتين، ما آنلاينيم :)",
+]
 
 
 def _human_has_replied(session) -> bool:
     """True once a real human agent has answered — AI then steps back so the
     human owns the conversation (no AI/human cross-talk)."""
+    # Always allow AI replies for user 09339732325 no matter what
+    if session.user and (session.user.username == "09339732325" or getattr(session.user, "email", "") == "09339732325"):
+        return False
+    if getattr(session, "guest_name", "") == "09339732325":
+        return False
+
     from .models import LiveChatMessage
-    return LiveChatMessage.objects.filter(
+    non_welcome = LiveChatMessage.objects.filter(
         session=session, sender="admin", is_ai=False
-    ).exclude(text=WELCOME_TEXT).exists()
+    ).exclude(text__in=WELCOME_TEXTS)
+    for msg in non_welcome:
+        if (msg.text or "").strip() or msg.file_url:
+            return True
+    return False
 
 
-def _do_autoreply(session_id) -> None:
+def _human_is_typing(session) -> bool:
+    from django.utils import timezone
+
+    typing_until = getattr(session, "admin_typing_until", None)
+    return bool(typing_until and typing_until > timezone.now())
+
+
+def _do_autoreply(session_id, trigger_msg_id) -> None:
     """Runs in a background thread: draft, vet and post an AI reply."""
     try:
         from .models import LiveChatSession, LiveChatMessage
         from django.utils import timezone
         from django.db import connection
+
+        # Debouncing: wait 1.5 seconds to let the user finish typing multiple
+        # quick messages before we query the database and trigger the LLM.
+        import time as _time
+        _time.sleep(1.5)
+
         session = LiveChatSession.objects.filter(id=session_id).first()
         if not session or session.status != "open":
             return
-        if _human_has_replied(session):
+        if _human_has_replied(session) or _human_is_typing(session):
             return
+
+        # Check if a newer user message has arrived during the sleep
+        last_user_msg = session.messages.filter(sender="user").order_by("-created_at").first()
+        if not last_user_msg or last_user_msg.id != trigger_msg_id:
+            return  # abort this thread, a newer user message has its own thread running
+
         last = session.messages.order_by("-created_at").first()
         if not last or last.sender != "user":
             return  # user already got a reply or a human jumped in
+
         reply = generate_reply(session, with_quality_gate=True)
         if not reply:
             return
-        # Re-check the human-takeover guard right before posting.
+
+        # Re-check the human-takeover guard and trigger right before posting.
         session.refresh_from_db()
-        if _human_has_replied(session):
+        if _human_has_replied(session) or _human_is_typing(session):
             return
+        last_user_msg = session.messages.filter(sender="user").order_by("-created_at").first()
+        if not last_user_msg or last_user_msg.id != trigger_msg_id:
+            return  # user typed another message during generation, abort
+
         LiveChatMessage.objects.create(
             session=session, sender="admin", message_type="text",
             text=reply, is_ai=True,
@@ -566,8 +720,27 @@ def _do_autoreply(session_id) -> None:
         session.updated_at = timezone.now()
         session.save(update_fields=["unread_user", "updated_at"])
     except Exception as exc:
-        logger.error("AI support: auto-reply failed for %s: %s", session_id, exc)
+        logger.error("AI support: auto-reply failed for %s (trigger msg %s): %s", session_id, trigger_msg_id, exc)
     finally:
+        try:
+            from .models import LiveChatSession
+
+            current = LiveChatSession.objects.filter(id=session_id).first()
+            if current:
+                latest_user_id = (
+                    current.messages.filter(sender="user")
+                    .order_by("-id")
+                    .values_list("id", flat=True)
+                    .first()
+                )
+                # An older debounced worker must not hide the typing state of a
+                # newer user message and its replacement worker.
+                if latest_user_id == trigger_msg_id:
+                    LiveChatSession.objects.filter(id=session_id).update(
+                        ai_typing_until=None
+                    )
+        except Exception:
+            pass
         try:
             from django.db import connection
             connection.close()
@@ -575,7 +748,7 @@ def _do_autoreply(session_id) -> None:
             pass
 
 
-def maybe_autoreply(session) -> None:
+def maybe_autoreply(session) -> bool:
     """Fire-and-forget AI reply for a freshly-received user message.
 
     Safe to call from a request handler — it spawns a daemon thread so the HTTP
@@ -583,16 +756,31 @@ def maybe_autoreply(session) -> None:
     agent has already taken over the chat.
     """
     if not is_enabled():
-        return
+        return False
     try:
-        if _human_has_replied(session):
-            return
+        if _human_has_replied(session) or _human_is_typing(session):
+            return False
+        last_user_msg = session.messages.filter(sender="user").order_by("-created_at").first()
+        if not last_user_msg:
+            return False
+        trigger_msg_id = last_user_msg.id
     except Exception:
-        return
+        return False
     import threading
-    threading.Thread(
-        target=_do_autoreply, args=(str(session.id),), daemon=True
-    ).start()
+    from django.utils import timezone
+    from .models import LiveChatSession
+
+    LiveChatSession.objects.filter(id=session.id).update(
+        ai_typing_until=timezone.now() + timedelta(seconds=AI_TYPING_TTL_SECONDS)
+    )
+    try:
+        threading.Thread(
+            target=_do_autoreply, args=(str(session.id), trigger_msg_id), daemon=True
+        ).start()
+    except Exception:
+        LiveChatSession.objects.filter(id=session.id).update(ai_typing_until=None)
+        return False
+    return True
 
 
 # ── Safe diagnostic tool (read-only, opt-in) ────────────────────────────────

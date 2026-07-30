@@ -2,6 +2,7 @@
 APIهای مربوط به دسته‌بندی محصولات
 """
 from django.http import JsonResponse, HttpResponseNotAllowed
+from django.db.models import IntegerField, OuterRef, Subquery, Sum
 from .models import Product, SubCategory
 from .categories import CATEGORY_INFO, get_all_categories
 
@@ -38,12 +39,36 @@ def category_products(request, category_code):
     if request.method != 'GET':
         return HttpResponseNotAllowed(['GET'])
 
+    # Public category URLs use hyphens; database category codes use underscores.
+    category_code = category_code.upper().replace('-', '_')
+
     # بررسی وجود دسته‌بندی
     if category_code not in CATEGORY_INFO:
         return JsonResponse({"error": "دسته‌بندی یافت نشد"}, status=404)
 
-    # دریافت محصولات
-    products = Product.objects.filter(category=category_code, active=True).order_by('-id')
+    # Real completed sales are supplied for the storefront's default
+    # best-seller ordering. display_order remains available for the admin
+    # homepage showcase order selected by the customer.
+    from .models import OrderItem
+    from .views import SOLD_ORDER_STATUSES
+
+    sold_count_subquery = (
+        OrderItem.objects.filter(
+            product=OuterRef('pk'),
+            order__is_test_order=False,
+            order__status__in=SOLD_ORDER_STATUSES,
+        )
+        .values('product')
+        .annotate(total=Sum('quantity'))
+        .values('total')
+    )
+
+    products = (
+        Product.objects.filter(category=category_code, active=True)
+        .prefetch_related('variants')
+        .annotate(sold_count=Subquery(sold_count_subquery, output_field=IntegerField()))
+        .order_by('display_order', '-id')
+    )
 
     # تبدیل به dict
     from .views import _product_to_dict

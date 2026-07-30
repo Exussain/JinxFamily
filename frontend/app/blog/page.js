@@ -9,7 +9,7 @@ import { ARTICLES } from '../../lib/articlesMockData.mjs';
 
 const BASE_URL = 'https://nubixshop.ir';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export async function generateMetadata() {
   const title = 'وبلاگ نوبیکس شاپ؛ مقالات و آموزش‌های گیمینگ';
@@ -70,7 +70,9 @@ async function getRealPosts() {
   const posts = [];
   // The API paginates (~10/page); pull the first couple of pages to cover all.
   for (let page = 1; page <= 3; page += 1) {
-    const data = await fetchApiJson(`/api/blog/articles?page=${page}`, { next: { revalidate: 120 } });
+    // Bump the key when the public-cover delivery path changes so stale ISR
+    // data cannot keep pointing visitors at the retired /media route.
+    const data = await fetchApiJson(`/api/blog/articles?page=${page}&cover_version=2`, { next: { revalidate: 120 } });
     const results = data?.results || [];
     posts.push(...results);
     if (!data || page >= (Number(data.pages) || 1)) break;

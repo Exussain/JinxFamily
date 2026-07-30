@@ -3,8 +3,10 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Navbar from "../../../components/Navbar";
 import PasswordInput from '../../../components/PasswordInput';
+import PlatformSelector from "../../../components/PlatformSelector";
 import SmartImage from "../../../components/SmartImage";
 import { useCart } from "../../../lib/useCart";
+import { getPlatformOption } from "../../../lib/platforms";
 import { resolveProductImage } from "../../../lib/productImageHelpers";
 import TelegramContact from "../../../components/TelegramContact";
 import { adminCacheBustHref } from "../../../lib/adminUrl.mjs";
@@ -136,21 +138,15 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
         }
       : { total: 0, rating: 0 }
   );
-  const [activeTab, setActiveTab] = useState("description");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState(null);
+  const [fortniteEmail, setFortniteEmail] = useState("");
+  const [fortnitePassword, setFortnitePassword] = useState("");
+  const [fortnitePlatform, setFortnitePlatform] = useState("epic");
   const todayFa = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numeric", month: "long", timeZone: "Asia/Tehran" }).format(new Date());
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-
-  const _2FA_COLORS = {
-    amber: { banner: { display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(180,83,9,0.06))", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 8, color: "#b45309", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s ease" } },
-    blue: { banner: { display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(30,64,175,0.06))", border: "1px solid rgba(37,99,235,0.4)", borderRadius: 8, color: "#2563eb", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s ease" } },
-    gray: { banner: { display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "linear-gradient(135deg, rgba(107,114,128,0.12), rgba(75,85,99,0.06))", border: "1px solid rgba(107,114,128,0.4)", borderRadius: 8, color: "#4b5563", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s ease" } },
-    red: { banner: { display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "linear-gradient(135deg, rgba(239,68,68,0.12), rgba(220,38,38,0.08))", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 8, color: "#dc2626", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s ease" } },
-  };
-
 
   useEffect(() => {
     if (!slug) return;
@@ -218,26 +214,18 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
   const descriptionLines = (product?.description || "")
     .split("\n")
     .filter((line) => line.trim().length > 0);
-  const deliveryLines = (product?.delivery_text || "")
-    .split("\n")
-    .filter((line) => line.trim().length > 0);
-  // Effective tab: the "نحوه تحویل" (delivery) tab is always available, but the
-  // "توضیحات" (description) tab only renders when there is a description. If the
-  // selected tab has no content (e.g. description tab on a product with no
-  // description), fall back to delivery so the panel never renders empty.
-  const effectiveTab = activeTab === 'description' && descriptionLines.length === 0
-    ? 'delivery'
-    : activeTab;
-
   const { imageBase, imageSrc } = resolveProductImage(product || {});
+  const heroImageSrc = product?.cover_16_9
+    ? (product.cover_16_9.startsWith("/media/")
+        ? `${(process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/+$/, "")}${product.cover_16_9}`
+        : product.cover_16_9)
+    : imageSrc;
   const customFields = Array.isArray(product?.custom_fields) ? product.custom_fields : [];
   const faqItems = Array.isArray(product?.faq) ? product.faq : [];
   const productCategory = (product?.category || "").toLowerCase();
   const productCategoryTitle = product?.category_title || "";
   const hasCustomFields = customFields.length > 0;
-  const needs2FA = product?.requires_2fa === true;
-  const disable2faColor = product?.disable_2fa_color || "amber";
-  const disable2faText = product?.disable_2fa_text || "2FA را قبل از خرید خاموش کنید";
+  const isFortnite = productCategory === 'fortnite';
   const isCrew = product?.slug === "fortnite-crew-pack";
   const isStarterPack = slug === "fortnite-starter-pack" || product?.slug === "fortnite-starter-pack";
   const variants = Array.isArray(product?.variants) ? product.variants : [];
@@ -261,21 +249,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
 
   const isFieldRequired = (field) => field.required === true;
 
-  const parseDeliveryLine = (line) => {
-    const cleanLine = line.replace(/^[\d\u06F0-\u06F9]+[\.\-\s\u2022]*/, '').trim();
-    const parts = cleanLine.split(/[:：\-]/);
-    if (parts.length > 1) {
-      return {
-        title: parts[0].trim(),
-        desc: parts.slice(1).join(':').trim()
-      };
-    }
-    return {
-      title: '',
-      desc: cleanLine
-    };
-  };
-
   const isFieldValid = (field, value) => {
     const v = (value || "").trim();
     if (isFieldRequired(field) && !v) return false;
@@ -287,7 +260,20 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
     if (!product) return;
     setShowValidation(true);
 
-    if (hasCustomFields) {
+    if (isFortnite) {
+      if (!fortnitePlatform) {
+        setFormError("پلتفرم را انتخاب کنید.");
+        return;
+      }
+      if (!fortniteEmail.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(fortniteEmail.trim())) {
+        setFormError("ایمیل معتبر وارد کنید.");
+        return;
+      }
+      if (!fortnitePassword.trim()) {
+        setFormError("رمز حساب را وارد کنید.");
+        return;
+      }
+    } else if (hasCustomFields) {
       for (const field of customFields) {
         const val = customFieldValues[field.key] || "";
         if (!isFieldValid(field, val)) {
@@ -318,7 +304,11 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
       image: productImage,
       category: product.category || "",
     };
-    if (hasCustomFields) {
+    if (isFortnite) {
+      item.account_email = fortniteEmail.trim();
+      item.account_type = fortnitePlatform;
+      item.account_password = fortnitePassword;
+    } else if (hasCustomFields) {
       item.custom_fields = {};
       for (const field of customFields) {
         item.custom_fields[field.key] = (customFieldValues[field.key] || "").trim();
@@ -372,7 +362,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                     // decodes — without it the img painted at 0px and pushed
                     // the whole viewport down once loaded (CLS 1.0 on mobile).
                     // Same reserved-square + contain pattern as /crewpack.
-                    aspectRatio: "1/1",
+                    aspectRatio: product?.cover_16_9 ? "16/9" : "1/1",
                     borderRadius: 18,
                     overflow: "hidden",
                     display: "flex",
@@ -381,7 +371,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                   }}
                 >
                   <img
-                    src={imageSrc}
+                    src={heroImageSrc}
                     alt={product.name_fa}
                     fetchPriority="high"
                     decoding="async"
@@ -392,7 +382,128 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
 
                 {isOutOfStock ? (
                   <StockAlertForm product={product} apiBase={apiBase} />
-                ) : (hasCustomFields || needs2FA) && (
+                ) : isFortnite ? (
+                  <div
+                    className="info-card"
+                    style={{
+                      borderRadius: 14,
+                      padding: 16,
+                      background: "var(--card)",
+                      border: "2px solid var(--line)",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", marginBottom: 12 }}>
+                      <span style={{ color: "var(--text)", fontSize: 15 }}>اطلاعات لازم برای فعال‌سازی</span>
+                    </div>
+
+                    <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
+                      <div style={{ display: "grid", gap: 6, fontSize: 13 }}>
+                        <span style={{ fontWeight: 700, color: "var(--text)", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                          پلتفرم شما
+                        </span>
+                        <PlatformSelector
+                          value={fortnitePlatform}
+                          onChange={(value) => {
+                            setFortnitePlatform(value);
+                            setFormError("");
+                            if (showValidation) setShowValidation(false);
+                          }}
+                        />
+                      </div>
+
+                      <label style={{ display: "grid", gap: 6, fontSize: 13 }}>
+                        <span style={{
+                          fontWeight: 700,
+                          color: showValidation && !fortniteEmail.trim() ? "#ef4444" : "var(--text)",
+                          fontSize: 13,
+                        }}>
+                          ایمیل حساب {getPlatformOption(fortnitePlatform).name}
+                          {getPlatformOption(fortnitePlatform).english && <span> ({getPlatformOption(fortnitePlatform).english})</span>}
+                        </span>
+                        <input
+                          required
+                          value={fortniteEmail}
+                          onChange={(e) => {
+                            setFortniteEmail(e.target.value);
+                            setFormError("");
+                            if (showValidation) setShowValidation(false);
+                          }}
+                          placeholder={getPlatformOption(fortnitePlatform).email}
+                          style={{
+                            border: showValidation && !fortniteEmail.trim() ? "2px solid #ef4444" : "2px solid var(--line)",
+                            borderRadius: 10,
+                            padding: "12px 14px",
+                            background: "var(--card)",
+                            color: "var(--text)",
+                            fontSize: 14,
+                            fontWeight: 500,
+                            outline: "none",
+                          }}
+                        />
+                      </label>
+
+                      <label style={{ display: "grid", gap: 6, fontSize: 13 }}>
+                        <span style={{
+                          fontWeight: 700,
+                          color: showValidation && !fortnitePassword.trim() ? "#ef4444" : "var(--text)",
+                          fontSize: 13,
+                        }}>
+                          رمز عبور {getPlatformOption(fortnitePlatform).name}
+                          {getPlatformOption(fortnitePlatform).english && <span> ({getPlatformOption(fortnitePlatform).english})</span>}
+                        </span>
+                        <PasswordInput
+                          value={fortnitePassword}
+                          onChange={(e) => {
+                            setFortnitePassword(e.target.value);
+                            setFormError("");
+                            if (showValidation) setShowValidation(false);
+                          }}
+                          placeholder={getPlatformOption(fortnitePlatform).pass}
+                          style={{
+                            border: showValidation && !fortnitePassword.trim() ? "2px solid #ef4444" : "2px solid var(--line)",
+                            borderRadius: 10,
+                            padding: "12px 44px 12px 14px",
+                            background: "var(--card)",
+                            color: "var(--text)",
+                            fontSize: 14,
+                            fontWeight: 500,
+                            outline: "none",
+                          }}
+                        />
+                      </label>
+
+                      {formError && (
+                        <div style={{
+                          color: "var(--danger)",
+                          fontWeight: 800,
+                          fontSize: 13,
+                          padding: "10px 12px",
+                          background: "rgba(239,68,68,0.1)",
+                          border: "1px solid rgba(239,68,68,0.3)",
+                          borderRadius: 8
+                        }}>
+                          {formError}
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        className="btn primary"
+                        onClick={handleAdd}
+                        style={{
+                          width: '100%',
+                          padding: '14px 20px',
+                          fontSize: '16px',
+                          fontWeight: 900,
+                          marginTop: 8
+                        }}
+                      >
+                        افزودن به سبد خرید
+                      </button>
+                    </div>
+                  </div>
+                ) : hasCustomFields && (
                   <div
                     className="info-card"
                     style={{
@@ -407,37 +518,16 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                       <span style={{ color: 'var(--text)', fontSize: 15 }}>اطلاعات لازم برای فعال‌سازی</span>
                     </div>
                     <div style={{ fontSize: 13, lineHeight: 1.7, display: "grid", gap: 8, marginBottom: 8 }}>
-                      {hasCustomFields && (
-                        <div style={{ color: "var(--text)" }}>
-                          <span style={{ fontWeight: 800, fontSize: 13 }}>لطفاً قبل از افزودن به سبد تکمیل کنید:</span>
-                          <ul style={{ paddingInlineStart: 18, margin: "6px 0", display: "grid", gap: 4, color: 'var(--muted)' }}>
-                            {customFields.map((f) => (
-                              <li key={f.key}>
-                                {f.label} {isFieldRequired(f) ? "(اجباری)" : "(اختیاری)"}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {needs2FA && (
-                        <a
-                          href="/guides/disable-2fa"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={(_2FA_COLORS[disable2faColor] || _2FA_COLORS.amber).banner}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                            <path d="M12 8v4"/>
-                            <path d="M12 16h.01"/>
-                          </svg>
-                          {disable2faText}
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M7 17L17 7"/>
-                            <path d="M7 7h10v10"/>
-                          </svg>
-                        </a>
-                      )}
+                      <div style={{ color: "var(--text)" }}>
+                        <span style={{ fontWeight: 800, fontSize: 13 }}>لطفاً قبل از افزودن به سبد تکمیل کنید:</span>
+                        <ul style={{ paddingInlineStart: 18, margin: "6px 0", display: "grid", gap: 4, color: 'var(--muted)' }}>
+                          {customFields.map((f) => (
+                            <li key={f.key}>
+                              {f.label} {isFieldRequired(f) ? "(اجباری)" : "(اختیاری)"}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                     <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
                       {customFields.map((field) => {
@@ -560,105 +650,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                       >
                         افزودن به سبد خرید
                       </button>
-                    </div>
-                  </div>
-                )}
-                {/* Guides Card - LEFT column copy: shown at medium-wide screens (960-1280px) when right col has more space */}
-                {productCategory === 'fortnite' && (
-                  <div className="guides-card guides-card-left hide-mobile" style={{ marginTop: 0 }}>
-                    <div className="guides-title">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                      </svg>
-                      صفحات مرتبط
-                    </div>
-                    <div style={{ display: "grid", gap: 10 }}>
-                      <a href="/guides/disable-2fa" target="_blank" rel="noopener noreferrer" className="guide-link-item">
-                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                          آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </a>
-                      <a href="/guides/link-unlink" target="_blank" rel="noopener noreferrer" className="guide-link-item">
-                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                          آموزش اتصال و لینک کردن اکانت
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </a>
-                      <a href="/guides/remove-restriction" target="_blank" rel="noopener noreferrer" className="guide-link-item">
-                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                          آموزش رفع محدودیت و ریستریکت اکانت
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </a>
-                    </div>
-                  </div>
-                )}
-                {/* Guides and Tutorials Card (Mobile Only) */}
-                {productCategory === 'fortnite' && (
-                  <div className="guides-card show-mobile">
-                    <div className="guides-title">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                      </svg>
-                      صفحات مرتبط
-                    </div>
-                    <div style={{ display: "grid", gap: 10 }}>
-                      <a
-                        href="/guides/disable-2fa"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="guide-link-item"
-                      >
-                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                          آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </a>
-
-                      <a
-                        href="/guides/link-unlink"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="guide-link-item"
-                      >
-                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                          آموزش اتصال و لینک کردن اکانت
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </a>
-
-                      <a
-                        href="/guides/remove-restriction"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="guide-link-item"
-                      >
-                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                          آموزش رفع محدودیت و ریستریکت اکانت
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </a>
                     </div>
                   </div>
                 )}
@@ -788,7 +779,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                     </div>
                   ) : (
                     <>
-                      {originalPrice && (
+                      {originalPrice > 0 && (
                         <div className="price-old" style={{ fontSize: 16, textDecoration: "line-through", color: "var(--muted)" }}>
                           {originalPrice.toLocaleString("fa-IR")} تومان
                         </div>
@@ -797,7 +788,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                         <span>{displayPrice.toLocaleString("fa-IR")}</span>
                         <span style={{ fontSize: 14, fontWeight: 700, WebkitTextFillColor: "var(--text)" }}>تومان</span>
                       </div>
-                      {originalPrice && originalPrice > displayPrice && (
+                      {originalPrice > displayPrice && (
                         <span className="price-discount-percent">
                           {Math.round((1 - (displayPrice / originalPrice)) * 100).toLocaleString("fa-IR")}٪ تخفیف ویژه
                         </span>
@@ -890,136 +881,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                         })}
                       </div>
                       <div className="desc-accordion-fade" aria-hidden="true" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Delivery section */}
-                <div className="product-tabs hide-mobile">
-                  <div className="delivery-header">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="1" y="3" width="15" height="13" />
-                      <path d="M16 8h4l3 3v5h-7V8z" />
-                      <circle cx="5.5" cy="18.5" r="2.5" />
-                      <circle cx="18.5" cy="18.5" r="2.5" />
-                    </svg>
-                    نحوه تحویل
-                  </div>
-
-                  <div className="tab-content">
-                    {(
-                      <div className="delivery-info" hidden={effectiveTab !== 'delivery'}>
-                        {deliveryLines.length > 0 ? (
-                          deliveryLines.map((line, i) => {
-                            const parsed = parseDeliveryLine(line);
-                            return (
-                              <div key={i} className="delivery-step">
-                                <div className="step-number">{(i + 1).toLocaleString("fa-IR")}</div>
-                                <div className="step-content-card">
-                                  {parsed.title ? (
-                                    <>
-                                      <div className="step-title">{parsed.title}</div>
-                                      <div className="step-desc">{parsed.desc}</div>
-                                    </>
-                                  ) : (
-                                    <div className="step-desc" style={{ color: "var(--text)", fontWeight: 700 }}>{parsed.desc}</div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <>
-                            <div className="delivery-step">
-                              <div className="step-number">۱</div>
-                              <div className="step-content-card">
-                                <div className="step-title">وارد کردن اطلاعات حساب</div>
-                                <div className="step-desc">پلتفرم، ایمیل و رمز حساب خود را وارد کنید</div>
-                              </div>
-                            </div>
-                            <div className="delivery-step">
-                              <div className="step-number">۲</div>
-                              <div className="step-content-card">
-                                <div className="step-title">پرداخت امن</div>
-                                <div className="step-desc">از طریق درگاه امن بانکی پرداخت کنید</div>
-                              </div>
-                            </div>
-                            <div className="delivery-step">
-                              <div className="step-number">۳</div>
-                              <div className="step-content-card">
-                                <div className="step-title">فعال‌سازی قانونی</div>
-                                <div className="step-desc">با کارت‌های فروشگاه خرید انجام و نتیجه به شما اعلام می‌شود</div>
-                              </div>
-                            </div>
-                            <div className="delivery-step">
-                              <div className="step-number">۴</div>
-                              <div className="step-content-card">
-                                <div className="step-title">تحویل و پشتیبانی</div>
-                                <div className="step-desc">در صورت نیاز، تا تکمیل سفارش همراهتان هستیم</div>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Guides and Tutorials Card (Desktop - RIGHT col) - shown at >1280px when left col has more space */}
-                {productCategory === 'fortnite' && (
-                  <div className="guides-card guides-card-right hide-mobile" style={{ marginTop: 16 }}>
-                    <div className="guides-title">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                      </svg>
-                      صفحات مرتبط
-                    </div>
-                    <div style={{ display: "grid", gap: 10 }}>
-                      <a
-                        href="/guides/disable-2fa"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="guide-link-item"
-                      >
-                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                          آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </a>
-
-                      <a
-                        href="/guides/link-unlink"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="guide-link-item"
-                      >
-                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                          آموزش اتصال و لینک کردن اکانت
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </a>
-
-                      <a
-                        href="/guides/remove-restriction"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="guide-link-item"
-                      >
-                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                          آموزش رفع محدودیت و ریستریکت اکانت
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                      </a>
                     </div>
                   </div>
                 )}
@@ -1142,51 +1003,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
               .image-stack {
                 display: grid;
                 gap: 16px;
-              }
-              .guides-card {
-                border: 2px solid var(--line);
-                background: var(--card);
-                border-radius: 14px;
-                padding: 16px;
-                display: grid;
-                gap: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-              }
-              .guides-title {
-                color: var(--text);
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 15px;
-                font-weight: 900;
-              }
-              .guide-link-item {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 10px 14px;
-                background: var(--bg);
-                border: 2px solid var(--line);
-                border-radius: 10px;
-                color: var(--text);
-                font-size: 13px;
-                font-weight: 700;
-                text-decoration: none;
-                transition: all 0.2s ease;
-              }
-              .guide-link-item:hover {
-                border-color: var(--primary);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(44,75,255,0.08);
-                background: var(--card);
-              }
-              .guide-link-item svg {
-                color: var(--muted);
-                transition: transform 0.2s ease, color 0.2s ease;
-              }
-              .guide-link-item:hover svg {
-                color: var(--primary);
-                transform: translateX(-4px);
               }
               /* Mobile Utilities */
               .hide-mobile {
@@ -1722,7 +1538,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                 .product-highlights { order: 7; }
                 .desc-accordion { order: 8; }
                 .product-tabs { order: 9; }
-                .guides-card { order: 10; }
                 .details-stack h1 {
                   font-size: 20px;
                 }
@@ -1765,20 +1580,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                 .highlight-desc {
                   font-size: 10px;
                 }
-              }
-              /* ── Responsive guides-card placement ──────────────────────────
-                 >1280px  : left col is spacious   → show in RIGHT col (under product-tabs)
-                 960-1280px: right col has more space → show in LEFT col (under info-card)
-              ──────────────────────────────────────────────────────────────── */
-              @media (min-width: 961px) {
-                /* Default (wide): left col spacious — show right, hide left */
-                .guides-card-left  { display: none !important; }
-                .guides-card-right { display: grid; }
-              }
-              @media (min-width: 961px) and (max-width: 1280px) {
-                /* Medium-wide: right col has more space — show left, hide right */
-                .guides-card-left  { display: grid !important; }
-                .guides-card-right { display: none !important; }
               }
               @media (max-width: 640px) {
                 .hide-mobile {
@@ -1902,8 +1703,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                 }
                 .plan-option-title {
                   font-size: 13px;
-                }
-              }
               }
             `}</style>
           </>

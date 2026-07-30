@@ -7,10 +7,7 @@
 // guides + CMS posts). Every card is rendered into the DOM so article links
 // stay crawlable; the category filter only toggles visual visibility.
 import React, { useMemo, useState } from 'react';
-import styles from '../../components/articles/articles.module.css';
-import FeaturedCarousel from '../../components/articles/FeaturedCarousel';
-import ArticleCard from '../../components/articles/ArticleCard';
-import FeatureStrip from '../../components/articles/FeatureStrip';
+import styles from './blogArchive.module.css';
 import { FILTER_TABS } from '../../lib/articlesMockData.mjs';
 
 export default function BlogArchiveClient({ featured = [], items = [] }) {
@@ -27,53 +24,39 @@ export default function BlogArchiveClient({ featured = [], items = [] }) {
     [filter, items]
   );
 
+  const hero = featured[0] || items[0];
+  const sideStories = (featured.length ? featured.slice(1, 3) : items.slice(1, 3));
+  const media = (article) => article?.image || article?.cover_image || null;
+  const storyCard = (article, className = styles.card) => (
+    <a href={`/blog/${article.slug}`} className={className} key={`${article.cat}-${article.slug}`}>
+      <div className={className === styles.sideCard ? styles.sideMedia : styles.cardMedia}>
+        {media(article) ? <img src={media(article)} alt="" /> : <span className={styles.fallback} />}
+      </div>
+      <div className={className === styles.sideCard ? styles.sideBody : styles.cardBody}>
+        <div className={styles.meta}><strong>{article.tag || 'راهنما'}</strong><span>{article.date}</span></div>
+        <h3>{article.title}</h3><p>{article.excerpt}</p>
+        {className !== styles.sideCard && <span className={styles.read}>خواندن مقاله ←</span>}
+      </div>
+    </a>
+  );
+
   return (
-    <div className={`${styles.section} ${styles.navOffset}`}>
-      <main className={styles.page}>
-        {featured.length > 0 && <FeaturedCarousel slides={featured} />}
-
-        <section className={styles.blockGap} aria-labelledby="archive-heading">
-          <div className={styles.sectionHead}>
-            <div>
-              <span className={styles.eyebrowFa}>دسته‌بندی بر اساس محصولات ما</span>
-              <h2 id="archive-heading">مقالات و آموزش‌ها</h2>
-            </div>
-            <span className={styles.sectionHeadMeta}>
-              {visibleCount.toLocaleString('fa-IR')} مطلب
-            </span>
-          </div>
-
-          <div className={styles.filters} role="tablist" aria-label="فیلتر دسته‌بندی">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                role="tab"
-                aria-selected={filter === tab.key}
-                className={`${styles.chip} ${filter === tab.key ? styles.chipActive : ''}`}
-                onClick={() => setFilter(tab.key)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Every card stays in the DOM (crawlable); the filter only hides. */}
-          <div className={styles.list} style={{ marginTop: 18 }}>
-            {items.map((article) => (
-              <ArticleCard
-                key={`${article.cat}-${article.slug}`}
-                article={article}
-                hidden={filter !== 'all' && article.cat !== filter}
-              />
-            ))}
-          </div>
+    <main className={styles.shell}>
+      <div className={styles.page}>
+        <header className={styles.intro}><span className={styles.eyebrow}>مجله نوبیکس</span><h1>راهنماهای روشن برای دنیای دیجیتال</h1><p>مقاله‌های کوتاه و کاربردی برای خرید آگاهانه، مدیریت بهتر حساب‌ها و استفاده مطمئن‌تر از سرویس‌های دیجیتال.</p></header>
+        {hero && <section className={styles.featured} aria-label="مقاله‌های پیشنهادی">
+          <a href={`/blog/${hero.slug}`} className={styles.lead}>
+            <div className={styles.leadMedia}>{media(hero) ? <img src={media(hero)} alt="" /> : <span className={styles.fallback} />}</div>
+            <div className={styles.leadBody}><div className={styles.meta}><strong>{hero.tag || 'راهنما'}</strong><span>{hero.date}</span></div><h2>{hero.title}</h2><p>{hero.excerpt}</p><span className={styles.read}>خواندن مقاله ←</span></div>
+          </a>
+          <div className={styles.side}>{sideStories.map((article) => storyCard(article, styles.sideCard))}</div>
+        </section>}
+        <section className={styles.archive} aria-labelledby="archive-heading">
+          <div className={styles.archiveHead}><div><h2 id="archive-heading">همه مقاله‌ها</h2><p>موضوع موردنظر خود را انتخاب کنید و با خیال راحت بخوانید.</p></div><span className={styles.count}>{visibleCount.toLocaleString('fa-IR')} مقاله</span></div>
+          <div className={styles.filters} role="tablist" aria-label="فیلتر دسته‌بندی">{tabs.map((tab) => <button key={tab.key} type="button" role="tab" aria-selected={filter === tab.key} className={filter === tab.key ? styles.active : ''} onClick={() => setFilter(tab.key)}>{tab.label}</button>)}</div>
+          <div className={styles.grid}>{items.map((article) => filter === 'all' || article.cat === filter ? storyCard(article) : null)}</div>
         </section>
-
-        <section className={styles.blockGap} aria-label="مزایای خرید">
-          <FeatureStrip />
-        </section>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

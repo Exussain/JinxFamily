@@ -101,6 +101,33 @@ class XboxOrderCredentialTests(TestCase):
         self.assertEqual(email_items[0]["account_email"], "player-xbox@example.com")
         self.assertEqual(email_items[0]["account_password"], "XboxPassword123")
 
+    def test_creating_pending_order_does_not_email_admin(self):
+        self.client.force_login(self.user)
+
+        with patch("shop.views.send_admin_new_order_email") as send_admin_email:
+            response = self.client.post(
+                "/api/orders",
+                data=json.dumps(
+                    {
+                        "items": [
+                            {
+                                "product_id": self.product.id,
+                                "slug": self.product.slug,
+                                "name": self.product.name_fa,
+                                "quantity": 1,
+                            }
+                        ],
+                        "contact": {"email": self.user.email},
+                    }
+                ),
+                content_type="application/json",
+            )
+
+        self.assertEqual(response.status_code, 201, response.content)
+        order = Order.objects.get(tracking_code=response.json()["tracking_code"])
+        self.assertEqual(order.status, "pending")
+        send_admin_email.assert_not_called()
+
     def test_gta6_xbox_credentials_do_not_require_created_xbox_account(self):
         gta6 = Product.objects.create(
             name_fa="پیش‌خرید GTA VI",
@@ -201,6 +228,47 @@ class XboxOrderCredentialTests(TestCase):
         body = response.json()
         self.assertTrue(body["email_sent"])
         self.assertEqual(body["status"], "completed")
+        mock_email.assert_called_once()
+
+    @patch("shop.views.send_status_update_email", return_value=True)
+    def test_admin_can_complete_xbox_order_after_explicitly_skipping_account_creation(self, mock_email):
+        admin = User.objects.create_user(username="xbox-admin", email="admin@example.com", password="x", is_staff=True)
+        order = Order.objects.create(
+            user=self.user,
+            status="paid",
+            epic_username="customer@example.com",
+            phone="09120000000",
+            amount=250000,
+            xbox_create_account=True,
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=self.product,
+            name=self.product.name_fa,
+            price=250000,
+            quantity=1,
+            account_type="xbox",
+        )
+
+        self.client.force_login(admin)
+        response = self.client.post(
+            f"/api/admin/orders/{order.tracking_code}/status",
+            data=json.dumps({
+                "status": "completed",
+                "send_email": True,
+                "send_sms": False,
+                "email_subject": "سفارش شما تکمیل شد",
+                "email_body": "سفارش تکمیل شد.",
+                "skip_xbox_account_creation": True,
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        order.refresh_from_db()
+        self.assertEqual(order.status, "completed")
+        self.assertTrue(order.xbox_account_creation_skipped)
+        self.assertFalse(_admin_order_dict(order)["requires_created_xbox_account"])
         mock_email.assert_called_once()
 
     def test_crewpack_rush_keeps_the_selected_duration_variant(self):
@@ -406,6 +474,67 @@ class XboxOrderCredentialTests(TestCase):
         order = Order.objects.get(tracking_code=tracking_code)
         self.assertEqual(order.created_xbox_email, "created-xbox@example.com")
         self.assertEqual(order.created_xbox_pass, "CreatedPassword123")
+
+    def test_admin_can_set_xbox_order_to_needs_tr_region_without_created_account_credentials(self):
+        self.client.force_login(self.user)
+        create_response = self.client.post(
+            "/api/orders",
+            data=json.dumps(
+                {
+                    "items": [
+                        {
+                            "product_id": self.product.id,
+                            "slug": self.product.slug,
+                            "name": self.product.name_fa,
+                            "quantity": 1,
+                            "account_type": "xbox",
+                            "account_email": "player-xbox@example.com",
+                            "account_password": "XboxPassword123",
+                        }
+                    ],
+                    "contact": {
+                        "xbox_email": "player-xbox@example.com",
+                        "xbox_pass": "XboxPassword123",
+                        "telegram": "@customer",
+                        "email": "customer@example.com",
+                    },
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(create_response.status_code, 201, create_response.content)
+        tracking_code = create_response.json()["tracking_code"]
+
+        admin = User.objects.create_user(
+            username="09120000003b",
+            email="admin3b@example.com",
+            password="password123",
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+
+        with patch("shop.email_service.send_xbox_account_email", return_value=True), patch(
+            "shop.views.send_status_update_email", return_value=True
+        ):
+            response = self.client.post(
+                f"/api/admin/orders/{tracking_code}/status",
+                data=json.dumps(
+                    {
+                        "status": "needs_tr_region",
+                        "send_email": True,
+                        "send_sms": False,
+                        "email_subject": "Region change needed",
+                        "email_body": "Please change your Epic Games region to Turkey.",
+                    }
+                ),
+                content_type="application/json",
+            )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        order = Order.objects.get(tracking_code=tracking_code)
+        self.assertEqual(order.status, "needs_tr_region")
+        self.assertFalse(order.created_xbox_email)
+        self.assertFalse(order.created_xbox_pass)
 
 
 class XboxArchiveAdminTests(TestCase):
@@ -685,6 +814,34 @@ class AdminProductManagementTests(TestCase):
         self.assertEqual(self.product.subtitle, "New subtitle")
         self.assertEqual(self.product.category, "AI")
 
+    def test_admin_price_update_syncs_the_default_crewpack_variant(self):
+        crewpack = Product.objects.create(
+            name_fa="کروپک فورتنایت",
+            slug="fortnite-crew-pack",
+            category="FORTNITE",
+            price=649000,
+            active=True,
+        )
+        default_variant = ProductVariant.objects.create(
+            product=crewpack, title="۱ ماهه", price=649000, sort_order=0
+        )
+        other_variant = ProductVariant.objects.create(
+            product=crewpack, title="۲ ماهه", price=1290000, sort_order=1
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.patch(
+            f"/api/admin/products/{crewpack.id}",
+            data=json.dumps({"price": 567000}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        default_variant.refresh_from_db()
+        other_variant.refresh_from_db()
+        self.assertEqual(default_variant.price, 567000)
+        self.assertEqual(other_variant.price, 1290000)
+
     def test_product_update_cors_preflight_allows_patch(self):
         response = self.client.options(
             f"/api/admin/products/{self.product.id}",
@@ -952,14 +1109,52 @@ class CustomerEngagementRewardsTests(TestCase):
 
         update = self.client.post(
             "/api/me/profile",
-            data=json.dumps({"name": "مشتری تست", "email": "customer@example.com"}),
+            data=json.dumps({"first_name": "مشتری", "last_name": "تست", "email": "customer@example.com"}),
             content_type="application/json",
         )
 
         self.assertEqual(update.status_code, 200, update.content)
+        self.assertEqual(update.json()["first_name"], "مشتری")
+        self.assertEqual(update.json()["last_name"], "تست")
         self.assertEqual(update.json()["profile_completion_award"], 0)
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.points_balance, 20)
+
+    def test_profile_can_update_first_and_last_name_but_not_email(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            "/api/me/profile",
+            data=json.dumps({"first_name": "علی", "last_name": "رضایی"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, "علی")
+        self.assertEqual(self.user.last_name, "رضایی")
+
+        rejected = self.client.post(
+            "/api/me/profile",
+            data=json.dumps({"email": "other@example.com"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(rejected.status_code, 400, rejected.content)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "customer@example.com")
+
+    def test_profile_password_change_keeps_the_current_session_authenticated(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            "/api/me/profile",
+            data=json.dumps({"password": "new-password-123", "password2": "new-password-123"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(self.client.get("/api/auth/me").status_code, 200)
 
     def test_purchase_points_default_to_all_products_and_are_idempotent(self):
         order = Order.objects.create(
@@ -1599,6 +1794,36 @@ class ResellerStatusSmsTests(TestCase):
 
     @patch.object(KavenegarService, "API_KEY", "test-api-key")
     @patch.object(KavenegarService, "_post")
+    def test_invalid_unit_does_not_move_parent_order_to_invalid_info(self, mock_post):
+        """A problem in one reseller unit must remain scoped to that unit."""
+        mock_response = Mock(status_code=200)
+        mock_response.json.return_value = {"return": {"status": 200}}
+        mock_post.return_value = mock_response
+
+        response = self.client.post(
+            f"/api/admin/order-accounts/{self.account.id}/status",
+            data=json.dumps({"status": "invalid_info"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.account.refresh_from_db()
+        self.order.refresh_from_db()
+        self.assertEqual(self.account.status, "invalid_info")
+        self.assertEqual(self.order.status, "paid")
+        mock_post.assert_called_once_with(
+            "https://api.kavenegar.com/v1/test-api-key/verify/lookup.json",
+            data={
+                "receptor": "09129999999",
+                "token": "https://vip-reseller.nubixshop.ir/reseller/orders",
+                "template": "nubix-re-wronginfo",
+                "type": "sms",
+            },
+            timeout=10,
+        )
+
+    @patch.object(KavenegarService, "API_KEY", "test-api-key")
+    @patch.object(KavenegarService, "_post")
     def test_admin_update_order_status_fallback_sms(self, mock_post):
         mock_response = Mock(status_code=200)
         mock_response.json.return_value = {"return": {"status": 200}}
@@ -2062,5 +2287,3 @@ class AbandonedCartReminderTests(TestCase):
         # 4. The cart should now be marked as converted
         cart.refresh_from_db()
         self.assertIsNotNone(cart.converted_at)
-
-

@@ -34,8 +34,9 @@ Treat changes as deploying to production, not a sandbox.
 - `npm run build` — production build.
 - `npm run deploy` — `next build && pm2 restart nubix-frontend` (same as the root `HardReload.sh`).
 - **After any frontend code change, run `/root/NubixShop/public/HardReload.sh`** (builds and
-  restarts the pm2 `nubix-frontend` process) so the change actually goes live, and log the change
-  in `frontend/CHANGELOG.md` (Persian, dated entries — see existing entries for format/style).
+  restarts the pm2 `nubix-frontend` process) so the change actually goes live.
+- **Pre-Deployment Check (MANDATORY)**: Before executing `HardReload.sh`, always check if a `HardReload.sh` or `next build` process is already running (`pgrep -a -f 'HardReload.sh|next build'`). If running, terminate it first (`pkill -TERM -f 'HardReload.sh'; pkill -9 -f 'HardReload.sh'`) before starting a fresh build.
+- Log the change in `frontend/CHANGELOG.md` (Persian, dated entries — see existing entries for format/style).
 - Tests are plain Node scripts using `node:assert/strict` (some also use `node:test`), colocated as
   `*.test.mjs` next to the module they cover (in `lib/` and `components/`). Run all of them with:
   `node --test lib/*.test.mjs components/*.test.mjs`

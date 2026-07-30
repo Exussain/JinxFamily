@@ -1,13 +1,16 @@
 "use client";
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import ProductCard from '../../components/ProductCard';
+import CategoriesSection from '../../components/CategoriesSection';
 
 const categoryGradients = {
   "FORTNITE": "linear-gradient(135deg, #8B5CF6, #EC4899)",
   "AI": "linear-gradient(135deg, #0ea5e9, #6366f1)",
   "GIFTCARDS": "linear-gradient(135deg, #F59E0B, #EF4444)",
   "GAMES": "linear-gradient(135deg, #10B981, #059669)",
+  "ROCKET_LEAGUE": "linear-gradient(135deg, #2563eb, #f97316)",
   "SUBSCRIPTIONS": "linear-gradient(135deg, #3B82F6, #06B6D4)",
 };
 
@@ -23,6 +26,9 @@ const categorySvgIcons = {
   ),
   "GAMES": (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+  ),
+  "ROCKET_LEAGUE": (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18"></path><path d="M8 8l8 8M16 8l-8 8"></path></svg>
   ),
   "SUBSCRIPTIONS": (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
@@ -42,10 +48,24 @@ const fortniteOrderMap = {
 };
 
 export default function ProductsClient({ categories = [] }) {
+  const searchParams = useSearchParams();
   const [activeCat, setActiveCat] = useState('FORTNITE');
   const [searchQuery, setSearchQuery] = useState('');
   const [showOutOfStock, setShowOutOfStock] = useState(true);
   const [sortBy, setSortBy] = useState('popularity');
+
+  // Automatically select active category if passed in URL (?category=... or ?cat=...)
+  useEffect(() => {
+    const rawCatParam = searchParams.get('category') || searchParams.get('cat') || '';
+    if (!rawCatParam) return;
+    const cleanParam = rawCatParam.trim();
+    const matchedCategory = categories.find(
+      cat => cat.code.toUpperCase() === cleanParam.toUpperCase() || cat.name === cleanParam
+    );
+    if (matchedCategory) {
+      setActiveCat(matchedCategory.code);
+    }
+  }, [searchParams, categories]);
 
   // Filter and sort products dynamically
   const filteredProducts = useMemo(() => {
@@ -113,8 +133,6 @@ export default function ProductsClient({ categories = [] }) {
   }, [categories, activeCat, searchQuery, showOutOfStock, sortBy]);
 
   const activeCategoryInfo = categories.find(cat => cat.code === activeCat);
-  const activeGradient = categoryGradients[activeCat] || "linear-gradient(135deg, #6366F1, #8B5CF6)";
-
   const styleContent = `
     .products-minimal-header {
       padding: 16px 0;
@@ -155,8 +173,8 @@ export default function ProductsClient({ categories = [] }) {
 
     .products-layout-wrapper {
       display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 32px;
+      grid-template-columns: 264px minmax(0, 1fr);
+      gap: 24px;
       margin-top: 32px;
       position: relative;
     }
@@ -167,61 +185,30 @@ export default function ProductsClient({ categories = [] }) {
       height: fit-content;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 0;
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 24px;
-      box-shadow: var(--shadow);
+      border-radius: 16px;
+      padding: 4px 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
     }
 
     .filter-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      padding: 14px 0;
+    }
+
+    .filter-group + .filter-group {
+      border-top: 1px solid var(--line);
     }
 
     .filter-title {
       font-size: 14px;
       font-weight: 800;
       color: var(--text);
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 8px;
       margin: 0;
-    }
-
-    .sidebar-cat-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .sidebar-cat-btn {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      border-radius: 14px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--text);
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      text-align: right;
-      transition: all 0.25s ease;
-      width: 100%;
-    }
-
-    .sidebar-cat-btn:hover {
-      background: color-mix(in srgb, var(--bg) 40%, transparent);
-    }
-
-    .sidebar-cat-btn.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
     }
 
     .search-input-wrapper {
@@ -280,6 +267,37 @@ export default function ProductsClient({ categories = [] }) {
       gap: 24px;
     }
 
+    .products-home-cta {
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--text);
+      display: flex;
+      font-size: 13px;
+      font-weight: 800;
+      gap: 8px;
+      justify-content: center;
+      margin: 0 0 12px;
+      min-height: 42px;
+      padding: 9px 16px;
+      text-decoration: none;
+      transition: border-color .2s ease, background-color .2s ease, color .2s ease;
+      width: 100%;
+    }
+
+    .products-home-cta:hover,
+    .products-home-cta:focus-visible {
+      background: color-mix(in srgb, var(--primary) 9%, var(--card));
+      border-color: var(--primary);
+      color: var(--primary);
+      outline: none;
+    }
+
+    .products-category-navigation {
+      margin-bottom: 24px;
+    }
+
     .cat-section-header {
       display: flex;
       align-items: center;
@@ -298,11 +316,15 @@ export default function ProductsClient({ categories = [] }) {
       width: 42px;
       height: 42px;
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 22px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .cat-section-gradient-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .cat-section-title-wrapper h2 {
@@ -321,17 +343,11 @@ export default function ProductsClient({ categories = [] }) {
       font-weight: 700;
     }
 
-    /* Grid Layout (منظم و مرتب) */
+    /* Keep the catalogue in two clear columns at every viewport width. */
     .products-clean-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 20px;
-    }
-
-    @media (max-width: 1200px) {
-      .products-clean-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
     }
 
     @media (max-width: 992px) {
@@ -343,8 +359,8 @@ export default function ProductsClient({ categories = [] }) {
       .products-sidebar-container {
         position: relative;
         top: 0;
-        padding: 20px;
-        border-radius: 20px;
+        padding: 4px 16px;
+        border-radius: 16px;
       }
 
       .products-clean-grid {
@@ -352,11 +368,6 @@ export default function ProductsClient({ categories = [] }) {
       }
     }
 
-    @media (max-width: 576px) {
-      .products-clean-grid {
-        grid-template-columns: 1fr;
-      }
-    }
   `;
 
   return (
@@ -365,16 +376,12 @@ export default function ProductsClient({ categories = [] }) {
 
       {/* Products Minimal Header */}
       <section className="products-minimal-header">
-        <div className="products-minimal-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+        <div className="products-minimal-top" style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
           <nav aria-label="مسیر صفحه" className="category-crumbs" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Link href="/" className="category-crumb-link" style={{ color: 'var(--muted)', fontSize: '13.5px', textDecoration: 'none' }}>نوبیکس شاپ</Link>
             <span className="category-crumb-sep" style={{ color: 'var(--muted)', fontSize: '12px' }}>/</span>
             <span className="category-crumb-current" style={{ color: 'var(--text)', fontSize: '13.5px', fontWeight: '700' }}>محصولات فروشگاه</span>
           </nav>
-          <Link href="/" className="category-home-btn" style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--text)', padding: '8px 16px', borderRadius: '10px', fontSize: '13px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <span className="category-home-btn-arrow">←</span>
-            <span>بازگشت به صفحه اصلی</span>
-          </Link>
         </div>
         <h1 className="products-minimal-title">محصولات نوبیکس شاپ</h1>
         <div className="products-fomo-subtitle">
@@ -382,6 +389,20 @@ export default function ProductsClient({ categories = [] }) {
           <span>هر روز تخفیف‌های ویژه برای تمام سرویس‌ها</span>
         </div>
       </section>
+
+      <Link href="/" className="products-home-cta">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+          <path d="M9 22V12h6v10" />
+        </svg>
+        <span>بازگشت به صفحه اصلی</span>
+      </Link>
+
+      <CategoriesSection
+        categories={categories.map((category) => category.name)}
+        variant="products"
+        className="products-category-navigation"
+      />
 
       <div className="products-layout-wrapper">
         {/* Sidebar Filters on the Right */}
@@ -403,33 +424,7 @@ export default function ProductsClient({ categories = [] }) {
             </div>
           </div>
 
-          {/* 2) Categories */}
-          <div className="filter-group">
-            <h3 className="filter-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-              <span>دسته‌بندی‌ها</span>
-            </h3>
-            <div className="sidebar-cat-list">
-              {categories.map((cat) => (
-                <button
-                  key={cat.code}
-                  type="button"
-                  className={`sidebar-cat-btn${activeCat === cat.code ? ' active' : ''}`}
-                  onClick={() => setActiveCat(cat.code)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
-                >
-                  <span className="sidebar-cat-icon-wrapper" style={{ display: 'flex', alignItems: 'center', color: activeCat === cat.code ? '#fff' : 'var(--muted)', transition: 'color 0.25s ease' }}>
-                    {categorySvgIcons[cat.code] || (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"></circle></svg>
-                    )}
-                  </span>
-                  <span>{cat.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 3) Stock Availability */}
+          {/* 2) Stock Availability */}
           <div className="filter-group">
             <h3 className="filter-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon><polygon points="12 12 21 6.92 21 17.08 12 22.08"></polygon><polygon points="12 2 3 6.92 12 12 21 6.92 12 2"></polygon><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
@@ -446,7 +441,7 @@ export default function ProductsClient({ categories = [] }) {
             </label>
           </div>
 
-          {/* 4) Sorting */}
+          {/* 3) Sorting */}
           <div className="filter-group">
             <h3 className="filter-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
@@ -470,10 +465,10 @@ export default function ProductsClient({ categories = [] }) {
           {activeCategoryInfo && (
             <div className="cat-section-header">
               <div className="cat-section-title-wrapper">
-                <div className="cat-section-gradient-icon" style={{ background: activeGradient, width: '42px', height: '42px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                  {categorySvgIcons[activeCat] || (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"></circle></svg>
-                  )}
+                <div className="cat-section-gradient-icon">
+                  {/* The API-provided image is the actual category artwork. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={activeCategoryInfo.image} alt="" />
                 </div>
                 <h2>{activeCategoryInfo.name}</h2>
               </div>

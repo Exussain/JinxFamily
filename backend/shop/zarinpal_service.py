@@ -5,6 +5,7 @@ import logging
 import os
 import requests
 from django.conf import settings
+from django.core.cache import cache
 from typing import Dict, Tuple, Optional
 
 
@@ -40,6 +41,166 @@ class ZarinPalService:
 
         self.logger = logging.getLogger(__name__)
         self._session = _no_proxy_session()
+
+    @property
+    def accounting_api_configured(self) -> bool:
+        return bool(
+            getattr(settings, "ZARINPAL_API_ACCESS_TOKEN", "")
+            or self.accounting_refresh_configured
+        )
+
+    @property
+    def accounting_refresh_configured(self) -> bool:
+        return all((
+            getattr(settings, "ZARINPAL_API_CLIENT_ID", ""),
+            getattr(settings, "ZARINPAL_API_CLIENT_SECRET", ""),
+            getattr(settings, "ZARINPAL_API_REFRESH_TOKEN", ""),
+        ))
+
+    def _accounting_cache_key(self) -> str:
+        merchant_suffix = (self.merchant_id or "unknown")[-8:]
+        return f"zarinpal:accounting-token:{merchant_suffix}"
+
+    def _refresh_accounting_access_token(self) -> str:
+        if not self.accounting_refresh_configured:
+            raise RuntimeError("اطلاعات تمدید خودکار توکن زرین‌پال کامل نیست.")
+
+        response = self._session.post(
+            "https://next.zarinpal.com/api/oauth/token",
+            json={
+                "grant_type": "refresh_token",
+                "client_id": getattr(settings, "ZARINPAL_API_CLIENT_ID", ""),
+                "client_secret": getattr(settings, "ZARINPAL_API_CLIENT_SECRET", ""),
+                "refresh_token": getattr(settings, "ZARINPAL_API_REFRESH_TOKEN", ""),
+                "scope": "*",
+            },
+            timeout=30,
+        )
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise RuntimeError("پاسخ احراز هویت زرین‌پال معتبر نبود.") from exc
+
+        access_token = payload.get("access_token")
+        if response.status_code >= 400 or not access_token:
+            self.logger.error(
+                "ZarinPal OAuth refresh failed: status=%s errors=%s",
+                response.status_code,
+                payload.get("errors"),
+            )
+            raise RuntimeError("تمدید دسترسی API زرین‌پال ناموفق بود.")
+
+        expires_in = max(300, int(payload.get("expires_in") or 3600))
+        cache.set(self._accounting_cache_key(), access_token, max(60, expires_in - 300))
+        return access_token
+
+    def _accounting_access_token(self, force_refresh: bool = False) -> str:
+        cache_key = self._accounting_cache_key()
+        if force_refresh:
+            cache.delete(cache_key)
+            if self.accounting_refresh_configured:
+                return self._refresh_accounting_access_token()
+            raise RuntimeError("توکن Bearer زرین‌پال نامعتبر یا منقضی شده است.")
+        token = cache.get(cache_key)
+        if token:
+            return token
+        direct_token = str(getattr(settings, "ZARINPAL_API_ACCESS_TOKEN", "") or "").strip()
+        if direct_token:
+            return direct_token
+        return self._refresh_accounting_access_token()
+
+    def _graphql(self, query: str, variables: Optional[Dict] = None) -> Dict:
+        token = self._accounting_access_token()
+        response = self._session.post(
+            "https://next.zarinpal.com/api/v4/graphql/",
+            headers={
+                "Accept": "application/json",
+                "Authorization": f"Bearer {token}",
+            },
+            json={"query": query, "variables": variables or {}},
+            timeout=30,
+        )
+        if response.status_code in (401, 403):
+            token = self._accounting_access_token(force_refresh=True)
+            response = self._session.post(
+                "https://next.zarinpal.com/api/v4/graphql/",
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"Bearer {token}",
+                },
+                json={"query": query, "variables": variables or {}},
+                timeout=30,
+            )
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise RuntimeError("پاسخ API حسابداری زرین‌پال معتبر نبود.") from exc
+        if response.status_code >= 400 or payload.get("errors"):
+            self.logger.error(
+                "ZarinPal GraphQL failed: status=%s errors=%s",
+                response.status_code,
+                payload.get("errors"),
+            )
+            raise RuntimeError("دریافت اطلاعات تسویه زرین‌پال ناموفق بود.")
+        return payload.get("data") or {}
+
+    def _resolve_accounting_terminal_id(self) -> str:
+        configured = str(getattr(settings, "ZARINPAL_API_TERMINAL_ID", "") or "").strip()
+        if configured:
+            return configured
+        data = self._graphql(
+            """
+            query AccountingTerminals {
+              Terminals { id status key domain }
+            }
+            """
+        )
+        terminals = data.get("Terminals") or []
+        merchant_id = str(self.merchant_id or "").strip()
+        matching = [
+            terminal for terminal in terminals
+            if str(terminal.get("key") or "").strip() == merchant_id
+        ]
+        active = next((terminal for terminal in matching if terminal.get("status") == "ACTIVE"), None)
+        selected = active or (matching[0] if matching else None)
+        if not selected or not selected.get("id"):
+            raise RuntimeError("ترمینال متناظر با مرچنت فعلی زرین‌پال پیدا نشد.")
+        return str(selected["id"])
+
+    def fetch_reconciliations(self, start_date, end_date) -> Tuple[str, list]:
+        """Fetch exact reconciliation rows through ZarinPal's OAuth GraphQL API."""
+        terminal_id = self._resolve_accounting_terminal_id()
+        data = self._graphql(
+            """
+            query AccountingReconciliations(
+              $terminal_id: ID,
+              $filter: ReconciliationStatusEnum,
+              $created_from_date: DateTime,
+              $created_to_date: DateTime
+            ) {
+              resource: Reconciliation(
+                terminal_id: $terminal_id,
+                filter: $filter,
+                created_from_date: $created_from_date,
+                created_to_date: $created_to_date
+              ) {
+                id
+                status
+                amount
+                payable_at
+                reference_id
+                reconciled_at
+              }
+            }
+            """,
+            {
+                "terminal_id": terminal_id,
+                "filter": "ALL",
+                "created_from_date": start_date.isoformat(),
+                "created_to_date": end_date.isoformat(),
+            },
+        )
+        return terminal_id, data.get("resource") or []
 
     def create_payment_request(
         self,

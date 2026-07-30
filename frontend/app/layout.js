@@ -67,6 +67,7 @@ import AnnouncementBar from "../components/AnnouncementBar";
 import Footer from "../components/Footer";
 import DeferredWidgets from "../components/DeferredWidgets";
 import AppShell from "../components/AppShell";
+import Script from "next/script";
 
 const themeInitScript = `
 (() => {
@@ -130,15 +131,34 @@ export default function RootLayout({ children }) {
     <html lang="fa" dir="rtl" data-theme="light" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* Preload the most-used Persian font weights (self-hosted) so text paints fast */}
+        <link rel="preload" href="/fonts/vazirmatn/vazirmatn-arabic-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/vazirmatn/vazirmatn-arabic-700.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body>
+        <Script id="yandex-metrika" strategy="lazyOnload">{`
+          (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+          (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+          ym(110900417, "init", {
+                clickmap:true,
+                trackLinks:true,
+                accurateTrackBounce:true,
+                ecommerce:"dataLayer"
+          });
+        `}</Script>
+        <noscript>
+          <div>
+            <img src="https://mc.yandex.ru/watch/110900417" style={{ position:'absolute', left:'-9999px' }} alt="" />
+          </div>
+        </noscript>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
         />
-        {/* Preload the most-used Persian font weights (self-hosted) so text paints fast */}
-        <link rel="preload" href="/fonts/vazirmatn/vazirmatn-arabic-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/vazirmatn/vazirmatn-arabic-700.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <ThemeProvider>
           <CartProvider>
             <div className="snow-overlay" aria-hidden="true" />

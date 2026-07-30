@@ -1,24 +1,21 @@
 import Navbar from "../components/Navbar";
-import ProductCard from "../components/ProductCard";
-import FilteredProducts from "../components/FilteredProducts";
 import HeroSlider from "../components/HeroSlider";
 import CounterStat from "../components/CounterStat";
 import CountUp from "../components/CountUp";
 import CategoriesSection from "../components/CategoriesSection";
-import ProductsHead from "../components/ProductsHead";
 import EnamadBadge from "../components/EnamadBadge";
 import ZarinpalBadge from "../components/ZarinpalBadge";
 import GiftcardsMenu from "../components/GiftcardsMenu";
-import SubcategoryNav from "../components/SubcategoryNav";
 import SocialLinksCard from "../components/SocialLinksCard";
 import HotProductsSection from "../components/HotProductsSection";
+import ProductSliders from "../components/ProductSliders";
+import HomeRecentBlogs from "../components/HomeRecentBlogs";
 import { placeholderFeatured } from "../lib/placeholderFeatured";
 import { dedupeProducts } from "../lib/dedupeProducts";
 import { productHref } from "../lib/productUrls.mjs";
 
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0; // Disable all caching, fetch fresh data on every request
+export const revalidate = 60;
 
 // Homepage-only canonical: the root layout intentionally does NOT set a
 // sitewide canonical (it would be inherited by every child route).
@@ -87,7 +84,7 @@ async function fetchJsonWithFallback(pathname, configureUrl) {
   for (const base of bases) {
     try {
       const url = new URL(relativePath, base);
-      const res = await fetch(url.toString(), { cache: "no-store" });
+      const res = await fetch(url.toString(), { next: { revalidate: 60 } });
       if (!res.ok) {
         lastError = new Error(`bad status ${res.status}`);
         continue;
@@ -130,6 +127,32 @@ async function getStats() {
   return 0;
 }
 
+function toFaDate(iso) {
+  try {
+    return new Date(iso).toLocaleDateString("fa-IR", { day: "numeric", month: "long" });
+  } catch {
+    return "";
+  }
+}
+
+async function getRecentBlogs() {
+  try {
+    const data = await fetchJsonWithFallback("/api/blog/articles", (url) => {
+      url.searchParams.set("page", "1");
+      url.searchParams.set("cover_version", "2");
+    });
+    return (data?.results || []).slice(0, 3).map((article) => ({
+      ...article,
+      date: toFaDate(article.created_at),
+      tag: article.category || "راهنما",
+      excerpt: article.summary,
+    }));
+  } catch (error) {
+    console.error("[SSR] Failed to fetch recent blog posts:", error.message);
+    return [];
+  }
+}
+
 export default async function Page(props) {
   const searchParamsInput = props?.searchParams;
   const searchParams = searchParamsInput && typeof searchParamsInput.then === 'function'
@@ -137,7 +160,7 @@ export default async function Page(props) {
     : (searchParamsInput || {});
   const q = (searchParams?.q || '').trim();
   // products and stats are independent — fetch in parallel to cut SSR time.
-  const [products, completedCountRaw] = await Promise.all([getProducts(q), getStats()]);
+  const [products, completedCountRaw, recentBlogs] = await Promise.all([getProducts(q), getStats(), getRecentBlogs()]);
   const activeSlugSet = new Set(
     (Array.isArray(products) ? products : [])
       .map((product) => (product?.slug || "").trim())
@@ -188,10 +211,11 @@ export default async function Page(props) {
 
   const categories = [
     "فورتنایت",
+    "راکت لیگ",
     "هوش مصنوعی",
-    "اشتراک‌ها",
     "گیفت کارت‌ها",
-    "بازی‌ها"
+    "بازی‌ها",
+    "اشتراک‌ها"
   ];
 
   // Static placeholders with categories (shared with navbar live search)
@@ -427,9 +451,7 @@ export default async function Page(props) {
         />
         <section className="hero-grid">
             <HeroSlider
-              trustCount={completedCount}
               heroProducts={featuredProducts}
-              heroSeed={Math.floor(Math.random() * 2147483647)}
             />
           <aside className="hero-side">
             <CounterStat to={completedCount} />
@@ -440,18 +462,9 @@ export default async function Page(props) {
 
         <HotProductsSection />
 
-        <section className="product-section" id="popular">
-          <div className="section-head">
-            <ProductsHead />
-            <a href="/checkout" className="ghost-btn">سبد خرید</a>
-          </div>
-          <SubcategoryNav />
-          <div className="cards">
-            <FilteredProducts all={featuredProducts} imageFit="cover" />
-          </div>
-        </section>
+        <ProductSliders products={visibleProducts} />
 
-        {/* بخش تازه‌ترین آپدیت‌ها به درخواست شما حذف شد */}
+        <HomeRecentBlogs articles={recentBlogs} />
 
         <section className="perks" id="perks">
           {perks.map((perk) => (

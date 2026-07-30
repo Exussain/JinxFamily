@@ -4,7 +4,7 @@ import { fetchApiJsonWithStatus } from '../../../lib/serverFetch.mjs';
 import { fetchReviewStats } from '../../../lib/seoJsonLd.mjs';
 import { normalizeSlug } from '../../../lib/productSlug.mjs';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 // Server component: pre-fetches the product so the initial HTML (what
 // crawlers and the first paint see) contains the full product content —
@@ -12,6 +12,11 @@ export const dynamic = 'force-dynamic';
 export default async function ProductPage({ params }) {
   const { slug: rawSlug } = await params;
   const slug = normalizeSlug(rawSlug);
+  
+  if (slug === '[slug]' || slug === '%5Bslug%5D') {
+    notFound();
+  }
+
   const [{ data: initialProduct, status }, productsPayload, stats] = await Promise.all([
     fetchApiJsonWithStatus(`/api/products/${encodeURIComponent(slug)}`),
     fetchApiJsonWithStatus("/api/products"),

@@ -118,11 +118,13 @@ export default function ReviewSection({ slug, initialStats = null, productTitle 
         });
         if (!res.ok) return;
         const data = await res.json();
-        if (cancelled || !data?.user) return;
-        setCurrentUser(data.user);
-        setIsAdminUser(Boolean(data.user.is_admin));
-        setCanReplyToComments(Boolean(data.user.is_admin || data.user.is_moderator || data.user.is_staff));
-        if (data.user.full_name) setReviewName(data.user.full_name);
+        if (cancelled) return;
+        const ud = data.user || data;
+        if (!ud) return;
+        setCurrentUser(ud);
+        setIsAdminUser(Boolean(ud.is_admin));
+        setCanReplyToComments(Boolean(ud.is_admin || ud.is_moderator || ud.is_staff));
+        if (ud.full_name) setReviewName(ud.full_name);
       } catch {
         // not logged in
       }

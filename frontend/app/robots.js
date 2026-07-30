@@ -17,6 +17,11 @@ export default function robots() {
           '/admin-cache-bust',
           '/nxd9k2m',
           '/api/',
+          '/?q=',
+          '/?cat=',
+          '/*?q=',
+          '/*?cat=',
+          '/fonts/',
           // Private reseller portal pages — the /reseller landing and
           // /reseller/apply stay crawlable.
           '/reseller/dashboard',

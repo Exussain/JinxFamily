@@ -101,19 +101,30 @@ export default function ResellerOrdersPage() {
                     <span className={`status-tag ${o.status}`}>{statusLabel(o.status)}</span>
                     {needsDetails && <div className="need-details-pill" style={{ marginTop: 4 }}>نیاز به تکمیل</div>}
                   </div>
-                  <div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center", width: "100%" }}>
                     {needsDetails ? (
                       <button
                         className="reseller-btn"
-                        style={{ padding: "6px 12px", fontSize: 12 }}
+                        style={{ padding: "6px 12px", fontSize: 12, width: "100%" }}
                         onClick={(e) => { e.stopPropagation(); setFillOrder(o); }}
                       >تکمیل اطلاعات</button>
                     ) : (
-                      it?.account_email && (
-                        <span className="copyable" title="کلیک برای کپی" onClick={(e) => { e.stopPropagation(); copyText(it.account_email); }}>
-                          {it.account_email}
-                        </span>
-                      )
+                      <>
+                        {it?.account_email && (
+                          <span className="copyable" title="کلیک برای کپی" style={{ maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", textAlign: "center" }} onClick={(e) => { e.stopPropagation(); copyText(it.account_email); }}>
+                            {it.account_email}
+                          </span>
+                        )}
+                        {["pending", "paid", "registered", "processing", "needs_2fa", "needs_tr_region", "invalid_info"].includes(o.status) && (
+                          <button
+                            className="reseller-btn outline"
+                            style={{ padding: "4px 8px", fontSize: 11, marginTop: 2, display: "inline-flex", alignItems: "center", gap: 4, width: "auto" }}
+                            onClick={(e) => { e.stopPropagation(); setFillOrder(o); }}
+                          >
+                            ✏️ ویرایش مشخصات
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

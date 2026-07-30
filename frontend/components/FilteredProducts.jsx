@@ -50,7 +50,7 @@ export default function FilteredProducts({ all = [], imageFit }) {
   })();
 
   const visible = useMemo(() => {
-    let base = all;
+    let base = all.filter((p) => !p || p.purchasable !== false);
 
     const filterBy = (needle) => base.filter((p) => (p.category || '').toLowerCase().includes(needle));
     if (catNorm === 'fortnite') {

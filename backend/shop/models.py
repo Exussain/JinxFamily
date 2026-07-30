@@ -11,6 +11,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class Product(models.Model):
     CATEGORY_CHOICES = [
         ("FORTNITE", "فورتنایت"),
+        ("ROCKET_LEAGUE", "راکت لیگ"),
         ("AI", "هوش مصنوعی"),
         ("GIFTCARDS", "گیفت کارت‌ها"),
         ("GAMES", "بازی‌ها"),
@@ -22,6 +23,7 @@ class Product(models.Model):
     category = models.CharField(max_length=32, choices=CATEGORY_CHOICES, default="FORTNITE")
     subcategory = models.CharField(max_length=50, blank=True, default="", help_text="زیردسته (کلید: ps, steam, xbox, ...)")
     image_url = models.URLField(blank=True)
+    cover_16_9 = models.URLField(blank=True, help_text="کاور 16:9 محصول (تصویر بزرگ در صفحه محصول)")
     price = models.PositiveIntegerField(default=0, help_text="Default price in IRR (for single/flat products)")
     original_price = models.PositiveIntegerField(default=0, help_text="Original/undiscounted price in IRR (0 = none)")
     price_lira = models.PositiveIntegerField(default=0, help_text="قیمت محصول به لیر")
@@ -141,6 +143,7 @@ class Order(models.Model):
         ("completed", "انجام شده"),
         ("needs_2fa", "نیاز به کد 2FA"),
         ("needs_tr_region", "نیاز به تغییر ریجن به ترکیه"),
+        ("needs_xbox_info", "مشکل ایکس باکس"),
         ("invalid_info", "اطلاعات غلط/ناقص"),
         ("canceled", "لغو شده"),
         ("refunded", "مسترد شده"),
@@ -178,6 +181,10 @@ class Order(models.Model):
         default=False,
         help_text="درخواست ساخت اکانت Xbox",
     )
+    xbox_account_creation_skipped = models.BooleanField(
+        default=False,
+        help_text="ادمین تأیید کرده که برای این سفارش اکانت Xbox ساخته نشده است",
+    )
     amount = models.PositiveIntegerField(default=0)
     wallet_used = models.PositiveIntegerField(default=0, help_text="[منسوخ] فقط برای سفارش‌های قدیمی قبل از حذف کیف پول")
     wallet_rewarded = models.BooleanField(default=False, help_text="[منسوخ] کش‌بک کیف پول حذف شده؛ این فیلد فقط تاریخی است")
@@ -195,6 +202,9 @@ class Order(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     settled = models.BooleanField(default=False, help_text="تسویه شده با همکار")
     settled_at = models.DateTimeField(null=True, blank=True, help_text="تاریخ تسویه")
+    reseller_info_updated = models.BooleanField(default=False, help_text="اطلاعات سفارش توسط همکار ویرایش شده و نیاز به بررسی مجدد دارد")
+    info_corrected = models.BooleanField(default=False, help_text="اطلاعات سفارش توسط کاربر اصلاح شده و در پنل ادمین پین شده است")
+    info_corrected_at = models.DateTimeField(null=True, blank=True, help_text="زمان اصلاح اطلاعات توسط کاربر")
 
     def save(self, *args, **kwargs):
         if self.pk is None and not self.user_id:
@@ -406,6 +416,10 @@ class UserProfile(models.Model):
     reseller_pricing_tour_seen_at = models.DateTimeField(
         null=True, blank=True, help_text="آخرین زمان مشاهده‌ی تور آموزشی قیمت‌گذاری همکاران توسط ادمین؛ null = هنوز دیده نشده"
     )
+    referral_notified_count = models.PositiveIntegerField(
+        default=0,
+        help_text="تعداد دعوت‌های موفقی که اعلان آن‌ها توسط کاربر دیده شده است"
+    )
 
     def __str__(self):
         return f"Profile for {self.user.username}"
@@ -491,8 +505,22 @@ class Payment(models.Model):
     card_hash = models.CharField(max_length=256, blank=True)
     fee = models.PositiveIntegerField(default=0)
     fee_type = models.CharField(max_length=20, blank=True)
+    verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="زمان قطعی تایید پرداخت؛ مبنای حسابداری نقدی",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if self.status in ("success", "verified", "refunded") and not self.verified_at:
+            self.verified_at = timezone.now()
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None and "verified_at" not in update_fields:
+                kwargs["update_fields"] = [*update_fields, "verified_at"]
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Payment {self.authority} - {self.status}"
@@ -800,6 +828,16 @@ class LiveChatSession(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="open")
     unread_admin = models.IntegerField(default=0, help_text="پیام‌های خوانده نشده برای ادمین")
     unread_user = models.IntegerField(default=0, help_text="پیام‌های خوانده نشده برای کاربر")
+    admin_typing_until = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="مهلت اعتبار وضعیت در حال نوشتن پشتیبان",
+    )
+    ai_typing_until = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="مهلت اعتبار وضعیت در حال فکر کردن دستیار هوش مصنوعی",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1078,6 +1116,63 @@ class SettlementBatch(models.Model):
         return f"Settlement Batch #{self.id} ({self.created_at.strftime('%Y-%m-%d %H:%M')})"
 
 
+class FinancialWeekClosure(models.Model):
+    """Immutable weekly accounting snapshot, closed only by an administrator."""
+    week_start = models.DateField(unique=True, help_text="شنبه شروع هفته مالی")
+    week_end = models.DateField(help_text="جمعه پایان هفته مالی")
+    gross_revenue = models.PositiveBigIntegerField(default=0)
+    refunds = models.PositiveBigIntegerField(default=0)
+    purchase_cost = models.PositiveBigIntegerField(default=0)
+    fixed_cost_share = models.PositiveBigIntegerField(default=0)
+    other_expenses = models.PositiveBigIntegerField(default=0)
+    other_income = models.PositiveBigIntegerField(default=0)
+    special_profit = models.BigIntegerField(default=0)
+    net_profit = models.BigIntegerField(default=0)
+    lira_rate = models.PositiveIntegerField(default=0)
+    settled_cash = models.PositiveBigIntegerField(default=0)
+    gateway_fees = models.PositiveBigIntegerField(default=0)
+    hidden_accounting_fee = models.PositiveBigIntegerField(default=0)
+    main_account_reserve = models.PositiveBigIntegerField(default=0)
+    available_purchase_cash = models.BigIntegerField(default=0)
+    snapshot = models.JSONField(default=dict, blank=True)
+    closed_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name="financial_week_closures")
+    closed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-week_start"]
+        verbose_name = "بستن پرونده مالی هفتگی"
+        verbose_name_plural = "پرونده‌های مالی هفتگی"
+
+    def __str__(self):
+        return f"Financial week {self.week_start}"
+
+
+class ZarinpalReconciliation(models.Model):
+    """Local, auditable copy of ZarinPal reconciliation records."""
+
+    external_id = models.CharField(max_length=64, unique=True)
+    terminal_id = models.CharField(max_length=64, blank=True, default="")
+    status = models.CharField(max_length=24, db_index=True)
+    amount = models.PositiveBigIntegerField(default=0, help_text="مبلغ نرمال‌شده به تومان")
+    payable_at = models.DateTimeField(null=True, blank=True)
+    reconciled_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    reference_id = models.CharField(max_length=160, blank=True, default="", db_index=True)
+    hidden_accounting_fee = models.PositiveBigIntegerField(default=0)
+    raw_payload = models.JSONField(default=dict, blank=True)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-reconciled_at", "-payable_at", "-id"]
+        indexes = [
+            models.Index(fields=["status", "reconciled_at"], name="shop_zprec_status_rec_idx"),
+        ]
+        verbose_name = "تسویه زرین‌پال"
+        verbose_name_plural = "تسویه‌های زرین‌پال"
+
+    def __str__(self):
+        return f"ZarinPal reconciliation {self.external_id} ({self.status})"
+
+
 class SiteNotification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_notifications', null=True, blank=True, help_text="Null for global announcements")
     title = models.CharField(max_length=200)
@@ -1162,4 +1257,43 @@ class AccountingTransaction(models.Model):
         return f"{self.title} - {self.get_entry_type_display()} ({self.amount} {self.currency})"
 
 
+class Ticket(models.Model):
+    STATUS_CHOICES = [
+        ("open", "در انتظار پاسخ پشتیبانی"),
+        ("answered", "پاسخ داده شده"),
+        ("user_replied", "پاسخ کاربر"),
+        ("closed", "بسته شده"),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tickets")
+    order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True, related_name="tickets")
+    subject = models.CharField(max_length=200)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="open")
+    is_auto_created = models.BooleanField(default=False, help_text="تیکت خودکار ایجاد شده برای اطلاعات غلط")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"Ticket #{self.id} - {self.subject} ({self.user.username})"
+
+
+class TicketMessage(models.Model):
+    SENDER_CHOICES = [
+        ("user", "کاربر"),
+        ("admin", "پشتیبانی نوبیکس"),
+    ]
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name="messages")
+    sender_type = models.CharField(max_length=10, choices=SENDER_CHOICES, default="user")
+    sender_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    message = models.TextField()
+    attachment_url = models.CharField(max_length=255, blank=True, default="")
+    is_admin_only = models.BooleanField(default=False, help_text="پیام فقط برای ادمین (پیش‌فرض هوش مصنوعی)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Message #{self.id} on Ticket #{self.ticket_id} by {self.sender_type}"

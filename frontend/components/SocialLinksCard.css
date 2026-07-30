@@ -1,10 +1,13 @@
-/* Desktop: lives in the hero aside below the testimonials.
-   Mobile: hidden there and shown at the end of the page instead. */
+/* Desktop: lives in the hero-side.
+   Mobile: hidden in hero-side and shown ONLY at the very bottom of the page. */
 .mobile-social-section {
   display: none;
 }
 
 @media (max-width: 1024px) {
+  .hero-side .social-links-card {
+    display: none !important;
+  }
   .mobile-social-section {
     display: block;
     margin: 24px auto 0;

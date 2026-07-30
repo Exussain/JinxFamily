@@ -223,24 +223,7 @@ function CatalogInner() {
   const [pendingAction, setPendingAction] = useState(null);
   const [epicRulesChecked, setEpicRulesChecked] = useState(false);
 
-  // Group cart state
-  const [cart, setCart] = useState([]);
-  const [cartBusy, setCartBusy] = useState(false);
-  const [cartSubmitStatus, setCartSubmitStatus] = useState("");
 
-  useEffect(() => {
-    const stored = localStorage.getItem("reseller_cart");
-    if (stored) {
-      try {
-        setCart(JSON.parse(stored) || []);
-      } catch (e) {}
-    }
-  }, []);
-
-  const saveCart = (newCart) => {
-    setCart(newCart);
-    localStorage.setItem("reseller_cart", JSON.stringify(newCart));
-  };
 
   const load = async () => {
     const [meR, catR] = await Promise.all([api("/api/reseller/me"), api("/api/reseller/catalog")]);
@@ -438,106 +421,7 @@ function CatalogInner() {
     }
   };
 
-  const addToCart = () => {
-    if (!selected) return;
-    setError(""); setOkMsg("");
-    if (reserveMode === "now" && !accountsValid) {
-      setError("لطفاً اطلاعات اکانت‌ها را تکمیل کنید.");
-      return;
-    }
-    if (needsEpicRules() && !epicRulesAcceptedRef.current) {
-      setPendingAction("addCart");
-      setEpicRulesChecked(false);
-      setShowEpicRulesModal(true);
-      return;
-    }
 
-    const itemPayload = payload();
-    const newCartItem = {
-      id: Date.now() + Math.random().toString(36).substr(2, 5),
-      product_name: selected.name_fa,
-      image: imgSrc,
-      quantity: qty,
-      total_price: total,
-      payload: itemPayload
-    };
-
-    const nextCart = [...cart, newCartItem];
-    saveCart(nextCart);
-
-    // Reset current form to defaults
-    setQty(1);
-    setAccounts([emptyAccount(1)]);
-    setOrderNote("");
-    setOkMsg("✅ محصول با موفقیت به سبد خرید اضافه شد.");
-    setTimeout(() => setOkMsg(""), 3000);
-  };
-
-  const submitCartWithWallet = async () => {
-    setCartBusy(true);
-    setError("");
-    let successCount = 0;
-    let failedItems = [];
-    const items = [...cart];
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      setCartSubmitStatus(`در حال ثبت سفارش ${i + 1} از ${items.length} (${item.product_name})...`);
-      try {
-        const res = await fetch("/api/reseller/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(item.payload),
-        });
-        const data = await res.json();
-        if (res.ok && data.order) {
-          successCount++;
-        } else {
-          failedItems.push({
-            ...item,
-            error: data?.message || "خطای نامشخص در ثبت سفارش"
-          });
-        }
-      } catch (err) {
-        failedItems.push({
-          ...item,
-          error: "خطای شبکه در ارتباط با سرور"
-        });
-      }
-    }
-
-    if (failedItems.length > 0) {
-      saveCart(failedItems);
-      setErrorModalMsg(`خطا در ثبت برخی سفارش‌ها:\n${failedItems.map(f => `• ${f.product_name}: ${f.error}`).join("\n")}`);
-    } else {
-      saveCart([]);
-      setOkMsg(`✅ همه ${successCount} سفارش با موفقیت ثبت شد.`);
-      load();
-    }
-    setCartBusy(false);
-    setCartSubmitStatus("");
-  };
-
-  const checkoutCartGateway = async (deficit) => {
-    setCartBusy(true);
-    setError("");
-    try {
-      const { ok, data } = await api("/api/reseller/wallet/topup", {
-        method: "POST",
-        body: JSON.stringify({ amount: deficit }),
-      });
-      if (!ok) {
-        setError(data?.message || "خطا در ایجاد تراکنش درگاه.");
-        setCartBusy(false);
-        return;
-      }
-      localStorage.setItem("reseller_cart_pending_submit", "true");
-      window.location.href = data.redirect_url;
-    } catch {
-      setError("خطای شبکه.");
-      setCartBusy(false);
-    }
-  };
 
   const handleEpicRulesCancel = () => {
     setShowEpicRulesModal(false);
@@ -555,7 +439,6 @@ function CatalogInner() {
     if (action === "wallet") payWallet();
     else if (action === "gateway") payGateway();
     else if (action === "deficit") payDeficitSingleOrder();
-    else if (action === "addCart") addToCart();
   };
 
   if (loading) {
@@ -682,114 +565,7 @@ function CatalogInner() {
         )}
       </div>
 
-      {/* ----- Group Shopping Cart UI ----- */}
-      {cart.length > 0 && (
-        <div className="reseller-card" style={{ border: "2px dashed var(--accent-primary)", position: "relative", marginTop: 20 }}>
-          <div style={{
-            position: "absolute",
-            top: -12,
-            right: 20,
-            background: "var(--bg-card)",
-            padding: "2px 10px",
-            borderRadius: 10,
-            fontSize: 12,
-            fontWeight: 700,
-            color: "var(--accent-primary)",
-            border: "1px solid var(--accent-primary)",
-            userSelect: "none"
-          }}>
-            سبد خرید موقت همکاران 🛒
-          </div>
-          <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700 }}>سبد خرید گروهی ({cart.length} آیتم)</h3>
-          <div className="acc-list" style={{ maxHeight: "none", marginBottom: 16 }}>
-            {cart.map((item) => (
-              <div key={item.id} className="acc-row done" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", marginBottom: 8, borderRadius: 8, background: "var(--bg-card)", border: "1px solid var(--line)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <img src={item.image} alt={item.product_name} style={{ width: 40, height: 40, objectFit: "contain", borderRadius: 6 }} />
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>{item.product_name} ({item.quantity} واحد)</div>
-                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
-                      {item.payload.reserve_mode === "later" ? "رزرو در کیف پول" : `اطلاعات وارد شده (${item.payload.accounts?.length || 0} اکانت)`}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <div style={{ fontWeight: 700, color: "var(--text)" }}>{fmtToman(item.total_price)} تومان</div>
-                  <button
-                    type="button"
-                    className="reseller-btn ghost"
-                    style={{ padding: "4px 8px", color: "#ef4444", fontSize: 13 }}
-                    onClick={() => {
-                      const next = cart.filter(c => c.id !== item.id);
-                      saveCart(next);
-                    }}
-                  >
-                    ✕ حذف
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
 
-          <div className="order-summary" style={{ background: "rgba(99, 102, 241, 0.05)", border: "1px solid rgba(99, 102, 241, 0.15)", borderRadius: 12, padding: 16 }}>
-            <div className="label">جمع کل سبد خرید:</div>
-            <div className="value total-row" style={{ color: "var(--accent-primary)" }}>
-              {fmtToman(cart.reduce((sum, c) => sum + c.total_price, 0))} تومان
-            </div>
-            <div className="label">موجودی کیف پول شما:</div>
-            <div className="value">{fmtToman(balance)} تومان</div>
-            
-            {balance < cart.reduce((sum, c) => sum + c.total_price, 0) ? (
-              <>
-                <div className="label" style={{ color: "#ef4444" }}>کسری موجودی:</div>
-                <div className="value" style={{ color: "#ef4444", fontWeight: 700 }}>
-                  {fmtToman(cart.reduce((sum, c) => sum + c.total_price, 0) - balance)} تومان
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="label" style={{ color: "#22c55e" }}>موجودی پس از پرداخت:</div>
-                <div className="value" style={{ color: "#22c55e" }}>
-                  {fmtToman(balance - cart.reduce((sum, c) => sum + c.total_price, 0))} تومان
-                </div>
-              </>
-            )}
-          </div>
-
-          <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
-            {balance >= cart.reduce((sum, c) => sum + c.total_price, 0) ? (
-              <button
-                className="reseller-btn lg"
-                style={{ flex: 1 }}
-                disabled={cartBusy}
-                onClick={submitCartWithWallet}
-              >
-                {cartBusy ? cartSubmitStatus || "در حال ثبت..." : `پرداخت و ثبت نهایی از کیف پول (${fmtToman(cart.reduce((sum, c) => sum + c.total_price, 0))} ت)`}
-              </button>
-            ) : (
-              <button
-                className="reseller-btn lg"
-                style={{ flex: 1, background: "linear-gradient(90deg, var(--accent-primary) 0%, #4f46e5 100%)" }}
-                disabled={cartBusy}
-                onClick={() => checkoutCartGateway(cart.reduce((sum, c) => sum + c.total_price, 0) - balance)}
-              >
-                {cartBusy ? "اتصال به درگاه..." : `پرداخت کسری از درگاه و ثبت نهایی (${fmtToman(cart.reduce((sum, c) => sum + c.total_price, 0) - balance)} ت)`}
-              </button>
-            )}
-            <button
-              className="reseller-btn outline"
-              disabled={cartBusy}
-              onClick={() => {
-                if (confirm("آیا مطمئن هستید که می‌خواهید سبد خرید را خالی کنید؟")) {
-                  saveCart([]);
-                }
-              }}
-            >
-              خالی کردن سبد
-            </button>
-          </div>
-        </div>
-      )}
 
       {selected && (
         <div className="reseller-card">
@@ -1073,26 +849,39 @@ function CatalogInner() {
           {okMsg && <div className="reseller-banner success" style={{ marginTop: 14 }}>{okMsg}</div>}
 
           <div className="pay-options" style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            <button type="button" className="reseller-btn lg" disabled={!baseValid || !accountsValid || !!busy} onClick={addToCart} style={{ background: "var(--accent-primary)", color: "#fff", flex: "1 1 200px" }}>
-              ➕ افزودن به سبد خرید گروهی
+            <button
+              type="button"
+              className="reseller-btn lg"
+              disabled={!baseValid || !accountsValid || !!busy || reserveMode === "later"}
+              onClick={payGateway}
+              style={{
+                background: "linear-gradient(135deg, var(--accent-primary) 0%, #4f46e5 100%)",
+                color: "#fff",
+                flex: "1 1 220px",
+                fontWeight: 700,
+                boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)"
+              }}
+            >
+              {reserveMode === "later"
+                ? "درگاه (فقط حالت اطلاعات هم‌اکنون)"
+                : busy === "gateway"
+                ? "در حال اتصال به درگاه..."
+                : `خرید مستقیم از درگاه 💳 (${fmtToman(total)} ت)`}
             </button>
             <button
               type="button"
               className="reseller-btn outline lg"
               disabled={!(canWallet || needsTopup) || !!busy}
               onClick={needsTopup ? payDeficitSingleOrder : payWallet}
-              style={{ flex: "1 1 200px" }}
+              style={{ flex: "1 1 220px" }}
             >
               {busy === "wallet"
                 ? "در حال ثبت..."
                 : needsTopup
-                ? `شارژ کسری و پرداخت (${fmtToman(total - balance)} ت)`
+                ? `شارژ کسری و پرداخت از کیف (${fmtToman(total - balance)} ت)`
                 : reserveMode === "later"
-                ? `reserve تک‌واحدی از کیف (${fmtToman(total)} ت)`
-                : `پرداخت مستقیم تک‌واحدی از کیف (${fmtToman(total)} ت)`}
-            </button>
-            <button type="button" className="reseller-btn outline lg" disabled={!baseValid || !accountsValid || !!busy || reserveMode === "later"} onClick={payGateway} style={{ flex: "1 1 200px" }}>
-              {reserveMode === "later" ? "درگاه (فقط حالت اطلاعات هم‌اکنون)" : (busy === "gateway" ? "در حال اتصال..." : "پرداخت تک‌واحدی از درگاه 💳")}
+                ? `رزرو از کیف پول (${fmtToman(total)} ت)`
+                : `پرداخت از کیف پول 👛 (${fmtToman(total)} ت)`}
             </button>
           </div>
           {reserveMode === "later" && (

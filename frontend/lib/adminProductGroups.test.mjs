@@ -23,3 +23,15 @@ assert.deepEqual(groups.find((group) => group.key === "other-games").products.ma
   "gta6",
   "steam-gift",
 ]);
+
+const activeSortGroups = groupAdminProducts([
+  { id: 10, name_fa: "آیتم غیرفعال الف", slug: "inactive-a", category: "FORTNITE", active: false },
+  { id: 11, name_fa: "آیتم فعال ی", slug: "active-z", category: "FORTNITE", active: true },
+  { id: 12, name_fa: "آیتم فعال ب", slug: "active-b", category: "FORTNITE", active: true },
+]);
+
+assert.deepEqual(activeSortGroups.find((group) => group.key === "fortnite").products.map((p) => p.slug), [
+  "active-b",
+  "active-z",
+  "inactive-a",
+]);

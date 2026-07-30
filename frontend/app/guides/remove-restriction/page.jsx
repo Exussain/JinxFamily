@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Navbar from "../../../components/Navbar";
-import { Suspense } from "react";
 import FaqSectionLayout from "../../../components/FaqSectionLayout";
 import HelpfulnessWidget from "../../faq/HelpfulnessWidget";
 
@@ -13,7 +11,7 @@ export default function RemoveRestrictionGuidePage() {
       subtitle="آموزش رفع محدودیت‌های امنیتی، قفل موقت و خطاهای ورود در حساب‌های Epic Games، Xbox و PlayStation"
       activeSection="remove-restriction"
     >
-      <div className="guide-article-container">
+      <article className="guide-article-container">
         <style jsx>{`
           .guide-article-container {
             display: flex;
@@ -106,6 +104,7 @@ export default function RemoveRestrictionGuidePage() {
             color: var(--text);
             font-size: 16px;
             line-height: 1.9;
+            overflow-wrap: anywhere;
           }
           
           .guide-intro {
@@ -335,26 +334,67 @@ export default function RemoveRestrictionGuidePage() {
           }
           
           @media (max-width: 768px) {
+            .guide-article-container {
+              gap: 16px;
+            }
+            .guide-article-box {
+              border-radius: 18px;
+            }
             .guide-article-banner {
-              height: 140px;
-              padding: 24px;
+              height: auto;
+              min-height: 132px;
+              padding: 20px 18px;
             }
             .guide-article-banner .page-banner-title {
               font-size: 20px;
+              line-height: 1.5;
             }
             .guide-article-info-bar {
-              padding: 12px 24px;
-              flex-wrap: wrap;
-              gap: 12px;
+              display: grid;
+              grid-template-columns: minmax(0, 1fr);
+              padding: 12px 16px;
+              gap: 8px;
             }
             .guide-article-content {
-              padding: 24px;
+              padding: 20px 16px;
+              font-size: 15px;
+            }
+            .guide-intro {
+              font-size: 15px;
+              line-height: 1.9;
+            }
+            .info-banner,
+            .prevention-box {
+              gap: 10px;
+              padding: 14px;
             }
             .platform-section {
-              padding: 20px 16px;
+              padding: 18px 14px;
+              border-radius: 16px;
             }
             .restriction-type {
-              padding: 16px;
+              padding: 14px;
+              border-radius: 14px;
+            }
+            .guide-footer {
+              padding: 20px 16px;
+              border-radius: 16px;
+            }
+            .support-btn {
+              width: 100%;
+              justify-content: center;
+              box-sizing: border-box;
+            }
+          }
+
+          @media (max-width: 380px) {
+            .guide-article-box {
+              border-radius: 16px;
+            }
+            .guide-article-banner-icon {
+              font-size: 56px;
+              top: 10px;
+              left: 12px;
             }
           }
         `}</style>
@@ -559,7 +599,7 @@ export default function RemoveRestrictionGuidePage() {
         </div>
 
         <HelpfulnessWidget />
-      </div>
+      </article>
     </FaqSectionLayout>
   );
 }

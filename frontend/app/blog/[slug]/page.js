@@ -9,7 +9,7 @@ import ArticleView from '../../../components/articles/ArticleView';
 import { getServerApiBases } from '../../../lib/serverFetch.mjs';
 import { getAuthoredArticle } from '../../../lib/articlesMockData.mjs';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const BASE_URL = 'https://nubixshop.ir';
 

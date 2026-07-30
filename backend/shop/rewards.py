@@ -5,13 +5,10 @@ Kept separate from the very large views.py so the spin / referral / points
 logic stays easy to read and test. All functions are import-cycle safe
 (reseller pricing is imported lazily).
 """
-import random
 import secrets
 import string
-from datetime import timedelta
 
 from django.db import transaction
-from django.utils import timezone
 
 from .models import (
     DiscountCode,
@@ -21,11 +18,10 @@ from .models import (
     UserProfile,
 )
 
-# Referral reward bounds + milestone (see plan).
-REFERRAL_POINTS_MIN = 15
-REFERRAL_POINTS_MAX = 50
-REFERRAL_MILESTONE_COUNT = 10
-REFERRAL_MILESTONE_AMOUNT = 150000
+# Referral milestone: award diamonds once when the referrer hits N successful
+# signups (no per-invite diamond drip).
+REFERRAL_MILESTONE_COUNT = 3
+REFERRAL_MILESTONE_POINTS = 50
 
 # Diamond (الماس) <-> Toman conversion for checkout redemption. 350 diamonds
 # = 110,000 toman; below MIN_DIAMONDS_TO_REDEEM a redeem attempt is ignored.
@@ -337,11 +333,13 @@ def award_profile_completion_points(user) -> int:
 
 
 def process_referral(new_user, ref_code: str):
-    """Credit a referrer when `new_user` registers via their code.
+    """Link a new signup to a referrer and credit the milestone reward.
 
     Idempotent per referee (the Referral.referee OneToOne also guards this).
-    Awards 15-50 points and, on the referrer's 10th successful invite, issues a
-    150,000-Toman milestone discount code. Returns points awarded, or None.
+    Invites 1..(N-1) only create a Referral row (0 diamonds). On the Nth
+    successful invite the referrer gets REFERRAL_MILESTONE_POINTS diamonds
+    once. Returns points awarded on this call (0 or 50), or None if the code
+    was invalid / already applied.
     """
     code = (ref_code or "").strip().upper()
     if not code:
@@ -359,20 +357,18 @@ def process_referral(new_user, ref_code: str):
     new_profile.referred_by = referrer
     new_profile.save(update_fields=["referred_by"])
 
-    pts = random.randint(REFERRAL_POINTS_MIN, REFERRAL_POINTS_MAX)
-    award_points(referrer, pts, "referral", note=f"معرفی کاربر {new_user.username}")
-    Referral.objects.create(referrer=referrer, referee=new_user, points_awarded=pts)
-
-    count = Referral.objects.filter(referrer=referrer).count()
-    if count == REFERRAL_MILESTONE_COUNT:
-        generate_discount_code(
-            amount=REFERRAL_MILESTONE_AMOUNT,
-            assigned_user=referrer,
-            single_use=True,
-            source="milestone",
-            prefix="GIFT",
-            expires_at=timezone.now() + timedelta(days=60),
+    # Count existing invites before inserting this one.
+    prior = Referral.objects.filter(referrer=referrer).count()
+    count = prior + 1
+    pts = REFERRAL_MILESTONE_POINTS if count == REFERRAL_MILESTONE_COUNT else 0
+    if pts:
+        award_points(
+            referrer,
+            pts,
+            "referral",
+            note=f"جایزه {REFERRAL_MILESTONE_COUNT} دعوت موفق",
         )
+    Referral.objects.create(referrer=referrer, referee=new_user, points_awarded=pts)
     return pts
 
 

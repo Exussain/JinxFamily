@@ -48,6 +48,7 @@ function brandFor(slug, product) {
   if (s.includes('spotify')) return 'Spotify';
   if (s.includes('telegram')) return 'Telegram';
   if (s.includes('gta')) return 'Rockstar Games';
+  if (cat === 'rocket_league' || s.includes('rocket-league')) return 'Psyonix';
   if (s.includes('استیم') || s.includes('steam')) return 'Steam';
   if (s.includes('پلی-استیشن') || s.includes('playstation') || s.includes('psn')) return 'PlayStation';
   if (s.includes('اپل') || s.includes('apple')) return 'Apple';
@@ -104,7 +105,7 @@ export async function generateMetadata({ params }) {
     ? `${product.name_fa} | ${product.subtitle}`
     : product.name_fa;
   const description = buildDescription(product);
-  const image = absolutize(product.image_url) || `${BASE_URL}/web_logo.webp`;
+  const image = absolutize(product.cover_16_9 || product.image_url) || `${BASE_URL}/web_logo.webp`;
   const canonicalPath = `/product/${encodeURIComponent(slug)}`;
 
   return {
@@ -162,6 +163,8 @@ export default async function ProductLayout({ children, params }) {
             highPrice: String(maxPrice),
             offerCount: variantPrices.length,
             priceCurrency: 'IRR',
+            validFrom: new Date().toISOString().slice(0, 10),
+            priceValidUntil,
             availability,
             url: productUrl,
             hasMerchantReturnPolicy: RETURN_POLICY,
@@ -172,6 +175,7 @@ export default async function ProductLayout({ children, params }) {
               '@type': 'Offer',
               price: String(minPrice),
               priceCurrency: 'IRR',
+              validFrom: new Date().toISOString().slice(0, 10),
               priceValidUntil,
               availability,
               url: productUrl,
@@ -185,7 +189,7 @@ export default async function ProductLayout({ children, params }) {
       '@type': 'Product',
       name: product.name_fa,
       description: buildDescription(product),
-      image: absolutize(product.image_url) || `${BASE_URL}/web_logo.webp`,
+      image: absolutize(product.cover_16_9 || product.image_url) || `${BASE_URL}/web_logo.webp`,
       url: productUrl,
       brand: { '@type': 'Brand', name: brandFor(slug, product) },
       ...(offers && { offers }),
@@ -219,7 +223,10 @@ export default async function ProductLayout({ children, params }) {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: BASE_URL },
-        { '@type': 'ListItem', position: 2, name: product.name_fa, item: productUrl },
+        ...(product.category === 'ROCKET_LEAGUE'
+          ? [{ '@type': 'ListItem', position: 2, name: 'راکت لیگ', item: `${BASE_URL}/category/rocket-league` }]
+          : []),
+        { '@type': 'ListItem', position: product.category === 'ROCKET_LEAGUE' ? 3 : 2, name: product.name_fa, item: productUrl },
       ],
     });
 

@@ -37,6 +37,7 @@ export default function FillAccountsModal({ order, onClose }) {
   const [savingIdx, setSavingIdx] = useState(null);
   const [error, setError] = useState("");
   const [okMsg, setOkMsg] = useState("");
+  const [editingIndices, setEditingIndices] = useState({});
 
   useEffect(() => {
     const item = order.items?.[0];
@@ -96,6 +97,7 @@ export default function FillAccountsModal({ order, onClose }) {
         status: x.status || "pending",
       }));
       setAccounts(fresh);
+      setEditingIndices((prev) => ({ ...prev, [idx]: false }));
       setSavingIdx(null);
       if (data.all_filled) {
         setOkMsg("✅ همه اکانت‌ها تکمیل شد. سفارش شروع می‌شود.");
@@ -214,6 +216,16 @@ export default function FillAccountsModal({ order, onClose }) {
           <div className="reseller-banner success">{okMsg}</div>
         ) : (
           <>
+            {order.status === "invalid_info" && (
+              <div className="reseller-banner error" style={{ fontSize: 13, marginBottom: 12 }}>
+                <span>❌</span>
+                <div>
+                  <strong>همکار گرامی، اطلاعات یکی از اکانت های شما اشتباه می باشد.</strong>
+                  <div style={{ marginTop: 4 }}>لطفا در اسرع وقت اقدام به اصلاح نمایید.</div>
+                </div>
+              </div>
+            )}
+
             {!diffLoading && diff?.applicable && (
               <div className={`reseller-banner ${diffExceeded ? "warning" : "info"}`} style={{ fontSize: 13 }}>
                 <span>💱</span>
@@ -255,7 +267,9 @@ export default function FillAccountsModal({ order, onClose }) {
 
             <div className="acc-list" style={{ maxHeight: "none" }}>
               {accounts.map((a) => {
-                const isFilled = a.status === "filled" || a.status === "completed";
+                const originalAccount = order.items?.[0]?.accounts?.find((x) => x.index === a.index);
+                const wasOriginallyFilled = originalAccount && (originalAccount.status === "filled" || originalAccount.status === "completed");
+                const isFilled = (a.status === "filled" || a.status === "completed") && !editingIndices[a.index];
                 const hasData = a.account_email.trim() && a.account_password.trim();
                 return (
                   <div className={`acc-row ${isFilled ? "done" : ""}`} key={a.index}>
@@ -308,8 +322,20 @@ export default function FillAccountsModal({ order, onClose }) {
                       )}
                     </div>
                     {isFilled ? (
-                      <div style={{ padding: "8px 0", color: "var(--muted)", fontSize: 13 }}>
-                        ✅ {a.account_email} ({a.account_type === "epic" ? "Epic Games" : a.account_type === "psn" ? "PSN" : "Xbox"}) — {a.status === "completed" ? "انجام شده" : "ذخیره شده"}
+                      <div style={{ padding: "8px 0", color: "var(--muted)", fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                        <span>
+                          ✅ {a.account_email} ({a.account_type === "epic" ? "Epic Games" : a.account_type === "psn" ? "PSN" : "Xbox"}) — {a.status === "completed" ? "انجام شده" : "ذخیره شده"}
+                        </span>
+                        {a.status !== "completed" && (
+                          <button
+                            type="button"
+                            className="reseller-btn outline"
+                            style={{ padding: "4px 10px", fontSize: 12, border: "1px solid var(--border)", background: "transparent" }}
+                            onClick={() => setEditingIndices((prev) => ({ ...prev, [a.index]: true }))}
+                          >
+                            ✏️ ویرایش مشخصات
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <>
@@ -379,7 +405,27 @@ export default function FillAccountsModal({ order, onClose }) {
                             </div>
                           ) : null}
                         </div>
-                        <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
+                        <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                          {wasOriginallyFilled && (
+                            <button
+                              type="button"
+                              className="reseller-btn outline"
+                              style={{ padding: "6px 16px", fontSize: 13 }}
+                              onClick={() => {
+                                update(a.index, {
+                                  mode: originalAccount.mode || "existing",
+                                  account_type: originalAccount.account_type || "epic",
+                                  account_email: originalAccount.account_email || "",
+                                  account_password: originalAccount.account_password || "",
+                                  xbox_email: originalAccount.xbox_email || "",
+                                  xbox_password: originalAccount.xbox_password || "",
+                                });
+                                setEditingIndices((prev) => ({ ...prev, [a.index]: false }));
+                              }}
+                            >
+                              انصراف
+                            </button>
+                          )}
                           <button
                             className="reseller-btn"
                             style={{ padding: "6px 16px", fontSize: 13 }}

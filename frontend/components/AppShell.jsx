@@ -6,6 +6,7 @@ import DeferredWidgets from "./DeferredWidgets";
 import FloatingCart from "./FloatingCart";
 import SpinWheelModal from "./SpinWheelModal";
 import ReferralCapture from "./ReferralCapture";
+import InvalidInfoGlobalNotifier from "./InvalidInfoGlobalNotifier";
 
 const MINIMAL_PREFIXES = ["/reseller"];
 
@@ -32,6 +33,7 @@ export default function AppShell({ children }) {
   return (
     <>
       <ReferralCapture />
+      <InvalidInfoGlobalNotifier />
       {!quiet && <AnnouncementBar />}
       {children}
       <Footer />

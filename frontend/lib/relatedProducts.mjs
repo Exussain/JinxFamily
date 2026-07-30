@@ -54,6 +54,7 @@ const RELATED_CATEGORY_GROUPS = {
   AI: ["AI", "SUBSCRIPTIONS"],
   SUBSCRIPTIONS: ["SUBSCRIPTIONS", "AI"],
   GAMES: ["GAMES", "FORTNITE"],
+  ROCKET_LEAGUE: ["ROCKET_LEAGUE", "GAMES"],
   GIFTCARDS: ["GIFTCARDS"],
 };
 
@@ -91,6 +92,7 @@ export function getRelatedProducts(currentProduct, allProducts, limit = 8) {
     if (!slug) return false;
     if (currentSlug && slug === currentSlug) return false;
     if (currentId && Number(product?.id) === currentId) return false;
+    if (product?.purchasable === false) return false;
     return true;
   });
 

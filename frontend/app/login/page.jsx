@@ -101,7 +101,9 @@ export default function LoginPage() {
   };
 
   const handlePhoneChange = (e) => {
-    const val = e.target.value.replace(/[^0-9\s]/g, "");
+    let val = e.target.value;
+    val = val.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+    val = val.replace(/[^0-9\s]/g, "");
     setEmail(val);
   };
 
@@ -121,6 +123,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     let finalEmail = email.trim();
+    finalEmail = finalEmail.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
     if (isMobile && activeTab === "phone") {
       finalEmail = finalEmail.replace(/\s+/g, "");
       if (/^\d{10}$/.test(finalEmail) && finalEmail.startsWith("9")) {

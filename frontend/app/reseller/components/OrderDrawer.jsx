@@ -18,6 +18,16 @@ export default function OrderDrawer({ order, onClose, onReorder, onFill, onRetur
         <span className={`status-tag ${statusLabel(order.status) ? order.status : ""}`}>{statusLabel(order.status)}</span>
         {isReservation && <span className="reservation-pill" style={{ marginInlineStart: 6 }}> reserve رزرو در کیف پول</span>}
 
+        {order.status === "invalid_info" && (
+          <div className="reseller-banner error" style={{ marginTop: 14, marginBottom: 0 }}>
+            <span>❌</span>
+            <div>
+              <strong>همکار گرامی، اطلاعات یکی از اکانت های شما اشتباه می باشد.</strong>
+              <div style={{ marginTop: 4 }}>لطفا در اسرع وقت اقدام به اصلاح نمایید.</div>
+            </div>
+          </div>
+        )}
+
         <div style={{ marginTop: 14 }}>
           <div className="drawer-row"><span className="k">تاریخ ثبت</span><span className="v">{formatDateTime(order.created_at)}</span></div>
           <div className="drawer-row"><span className="k">محصول</span><span className="v">{it?.name || "—"}</span></div>
@@ -91,9 +101,9 @@ export default function OrderDrawer({ order, onClose, onReorder, onFill, onRetur
           <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>یادداشت: {order.note}</div>
         )}
 
-        {needsDetails && onFill && (
+        {onFill && ["pending", "paid", "registered", "processing", "needs_2fa", "needs_tr_region", "invalid_info"].includes(order.status) && (
           <button className="reseller-btn full" style={{ marginTop: 14 }} onClick={() => onFill(order)}>
-            ✍️ تکمیل اطلاعات اکانت‌ها
+            ✍️ {needsDetails ? "تکمیل اطلاعات اکانت‌ها" : "ویرایش اطلاعات اکانت‌ها"}
           </button>
         )}
         {onReorder && it && (

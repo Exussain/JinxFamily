@@ -7,7 +7,7 @@ import {
   buildFaqJsonLd,
 } from "../../lib/seoJsonLd.mjs";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const GEMINI_SLUG = "gemini-subscription";
 const OG_DESCRIPTION =
@@ -60,7 +60,7 @@ export default async function GeminiPage() {
     path: "/gemini",
     name: productData?.name_fa || "اشتراک جیمینی (Google Gemini)",
     description: productData?.description || OG_DESCRIPTION,
-    image: productData?.image_url,
+    image: productData?.cover_16_9 || productData?.image_url,
     priceToman: productData?.min_price || productData?.price,
     stats,
     brand: "Google",

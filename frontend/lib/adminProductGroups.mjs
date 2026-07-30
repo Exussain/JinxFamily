@@ -31,6 +31,10 @@ function normalize(value) {
 
 function sortProducts(items = []) {
   return [...items].sort((a, b) => {
+    const activeA = a.active === false ? 0 : 1;
+    const activeB = b.active === false ? 0 : 1;
+    if (activeA !== activeB) return activeB - activeA;
+
     const nameA = normalize(a.name_fa || a.name);
     const nameB = normalize(b.name_fa || b.name);
     if (nameA !== nameB) return nameA.localeCompare(nameB, "fa");

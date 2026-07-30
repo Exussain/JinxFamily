@@ -17,7 +17,7 @@ CATEGORY_INFO = {
         "image": "/categories/category_ai.webp",
         "description": "اشتراک ChatGPT، Gemini و سایر ابزارهای هوش مصنوعی",
         "icon": "🤖",
-        "order": 2
+        "order": 3
     },
     "GIFTCARDS": {
         "name": "گیفت کارت‌ها",
@@ -25,7 +25,7 @@ CATEGORY_INFO = {
         "image": "/categories/category_giftcard.webp",
         "description": "گیفت کارت PlayStation، Xbox، Steam، Google Play و iTunes",
         "icon": "🎁",
-        "order": 3
+        "order": 4
     },
     "GAMES": {
         "name": "بازی‌ها",
@@ -33,7 +33,15 @@ CATEGORY_INFO = {
         "image": "/products/gta6/ps5-standard.webp",
         "description": "پیش‌خرید GTA VI و سایر بازی‌های روز",
         "icon": "🎯",
-        "order": 4
+        "order": 5
+    },
+    "ROCKET_LEAGUE": {
+        "name": "راکت لیگ",
+        "name_en": "Rocket League",
+        "image": "/categories/category_rocket_league.webp",
+        "description": "خرید کردیت راکت لیگ برای Rocket Pass، Blueprint و آیتم‌های بازی",
+        "icon": "🚗",
+        "order": 2
     },
     "SUBSCRIPTIONS": {
         "name": "اشتراک‌ها",
@@ -41,7 +49,7 @@ CATEGORY_INFO = {
         "image": "/categories/category_steam.webp",
         "description": "اشتراک Spotify و سایر سرویس‌ها",
         "icon": "⭐",
-        "order": 5
+        "order": 6
     }
 }
 

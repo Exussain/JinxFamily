@@ -46,6 +46,7 @@ STATUS_FA = {
     "completed": "انجام شد",
     "needs_2fa": "کد دو مرحله‌ای میخواد",
     "needs_tr_region": "باید ریجن ترکیه باشه",
+    "needs_xbox_info": "مشکل اکانت ایکس باکس",
     "invalid_info": "اطلاعات اشتباهه",
     "canceled": "لغو شده",
     "refunded": "مبلغ برگشت خورد",

@@ -2,7 +2,7 @@ import Gta6Client from "./Gta6Client";
 import { fetchReviewStats, buildProductJsonLd, buildBreadcrumbJsonLd, buildFaqJsonLd } from "../../lib/seoJsonLd.mjs";
 import { fetchApiJson } from "../../lib/serverFetch.mjs";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const OG_IMAGE = "https://nubixshop.ir/products/gta6/ps5-ultimate.webp";
 const OG_DESCRIPTION =
@@ -40,7 +40,7 @@ export default async function Gta6Page() {
     path: "/gta6",
     name: product?.name_fa || "پیش‌خرید GTA VI (Grand Theft Auto VI)",
     description: OG_DESCRIPTION,
-    image: product?.image_url || OG_IMAGE,
+    image: product?.cover_16_9 || product?.image_url || OG_IMAGE,
     priceToman: product?.min_price || product?.price,
     stats,
     brand: "Rockstar Games",

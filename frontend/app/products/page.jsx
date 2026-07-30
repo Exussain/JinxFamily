@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
 import { fetchApiJson } from '../../lib/serverFetch.mjs';
 import Navbar from '../../components/Navbar';
 import ProductsClient from './ProductsClient';
+import { categoryPathFromCode } from '../../lib/productCategoryRoutes';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 // Specific order for Fortnite products requested by user
 const fortniteOrderMap = {
@@ -66,6 +68,7 @@ export default async function ProductsPage() {
         name: cat.name,
         description: cat.description,
         icon: cat.icon || "🛍️",
+        image: cat.image,
         productCount: cat.product_count || 0,
         products: products,
       };
@@ -87,7 +90,7 @@ export default async function ProductsPage() {
         '@type': 'ListItem',
         position: i + 1,
         name: cat.name,
-        url: `https://nubixshop.ir/category/${cat.code.toLowerCase()}`
+        url: `https://nubixshop.ir${categoryPathFromCode(cat.code)}`
       }))
     }
   };
@@ -104,7 +107,7 @@ export default async function ProductsPage() {
   return (
     <>
       <Navbar />
-      <main className="container section" style={{ paddingTop: 100, paddingBottom: 80 }}>
+      <main className="container products-page-shell" style={{ paddingBottom: 80 }}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
@@ -113,7 +116,9 @@ export default async function ProductsPage() {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
         />
-        <ProductsClient categories={categorizedProducts} />
+        <Suspense fallback={<div>در حال بارگذاری...</div>}>
+          <ProductsClient categories={categorizedProducts} />
+        </Suspense>
       </main>
     </>
   );

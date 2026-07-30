@@ -32,6 +32,7 @@ STATUS_FA = {
     "completed": "انجام شده ✅",
     "needs_2fa": "نیاز به کد 2FA ❗",
     "needs_tr_region": "نیاز به تغییر ریجن به ترکیه ❗",
+    "needs_xbox_info": "مشکل ایکس باکس ❌",
     "invalid_info": "اطلاعات غلط/ناقص ❌",
     "canceled": "لغو شده",
     "refunded": "مسترد شده",

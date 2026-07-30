@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { isOutsideWorkingHours } from '../../../lib/workingHours';
 
 export default function PaymentSuccessClient() {
   const searchParams = useSearchParams();
@@ -44,6 +45,9 @@ export default function PaymentSuccessClient() {
   const refId = urlRefId || order?.payment_ref_id || '';
   const cardPan = order?.payment_card_pan || '';
   const items = order?.items || [];
+  const showOutsideNotice = (order && order.created_at)
+    ? isOutsideWorkingHours(order.created_at)
+    : isOutsideWorkingHours();
 
   return (
     <main className="container">
@@ -58,6 +62,32 @@ export default function PaymentSuccessClient() {
         <p style={{ marginTop: 12, fontSize: 16 }}>
           پرداخت شما با موفقیت انجام شد.
         </p>
+
+        {showOutsideNotice && (
+          <div className="outside-hours-alert" style={{
+            marginTop: 20,
+            marginBottom: 16,
+            padding: '16px 20px',
+            borderRadius: 14,
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(217, 119, 6, 0.08))',
+            border: '1px solid rgba(245, 158, 11, 0.4)',
+            textAlign: 'right',
+            direction: 'rtl',
+            boxShadow: '0 8px 24px rgba(245, 158, 11, 0.12)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 24, lineHeight: 1 }}>🌙</span>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#f59e0b' }}>
+                ثبت سفارش خارج از ساعت کاری
+              </h3>
+            </div>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--text, #e2e8f0)' }}>
+              سفارش شما خارج از ساعت کاری ثبت شده است و در ساعت کاری (<strong>۱۰ صبح تا ۱۲ شب</strong>) تکمیل می‌شود.
+              <br />
+              <strong>سفارش شما با اولویت زمان ثبت تکمیل می‌شود.</strong>
+            </p>
+          </div>
+        )}
 
         {loading && (
           <div className="muted" style={{ marginTop: 8 }}>در حال بارگذاری جزئیات سفارش…</div>

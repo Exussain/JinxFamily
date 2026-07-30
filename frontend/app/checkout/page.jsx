@@ -1076,17 +1076,41 @@ export default function CheckoutPage() {
                           !(it.account_type === 'xbox' && it.xbox_create_account) ? (
                             <div className="credentials-inputs-grid">
                               <div className="field">
-                                <label>ایمیل اکانت (اپیک گیمز)</label>
+                                <label>
+                                  {it.account_type === 'epic'
+                                    ? 'ایمیل اکانت اپیک گیمز'
+                                    : it.account_type === 'xbox'
+                                    ? 'ایمیل اکانت Xbox (Microsoft)'
+                                    : it.account_type === 'psn'
+                                    ? 'ایمیل اکانت PlayStation Network'
+                                    : `ایمیل اکانت (${getPlatformOption(it.account_type).shortLabel})`}
+                                </label>
                                 <input
                                   type="email"
                                   value={it.account_email || ''}
                                   onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_email: e.target.value })}
-                                  placeholder="example@email.com"
+                                  placeholder={
+                                    it.account_type === 'epic'
+                                      ? 'your@epicgames.com'
+                                      : it.account_type === 'xbox'
+                                      ? 'your@outlook.com'
+                                      : it.account_type === 'psn'
+                                      ? 'your@email.com'
+                                      : 'example@email.com'
+                                  }
                                   required
                                 />
                               </div>
                               <div className="field">
-                                <label>رمز عبور اکانت (اپیک گیمز)</label>
+                                <label>
+                                  {it.account_type === 'epic'
+                                    ? 'رمز عبور اکانت اپیک گیمز'
+                                    : it.account_type === 'xbox'
+                                    ? 'رمز عبور اکانت Xbox (Microsoft)'
+                                    : it.account_type === 'psn'
+                                    ? 'رمز عبور اکانت PlayStation Network'
+                                    : `رمز عبور اکانت (${getPlatformOption(it.account_type).shortLabel})`}
+                                </label>
                                 <PasswordInput
                                   value={it.account_password || ''}
                                   onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_password: e.target.value })}
@@ -1094,6 +1118,29 @@ export default function CheckoutPage() {
                                   required
                                 />
                               </div>
+                              {it.account_type === 'xbox' && (
+                                <>
+                                  <div className="field">
+                                    <label>پسکد Xbox (اختیاری)</label>
+                                    <input
+                                      type="text"
+                                      value={it.xbox_passkey || ''}
+                                      onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, 'xbox', { xbox_passkey: e.target.value })}
+                                      placeholder="پسکد ۶ رقمی (در صورت داشتن)"
+                                      maxLength={6}
+                                    />
+                                  </div>
+                                  <div className="field">
+                                    <label>گیمرتگ Xbox (اختیاری)</label>
+                                    <input
+                                      type="text"
+                                      value={it.xbox_gamertag || ''}
+                                      onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, 'xbox', { xbox_gamertag: e.target.value })}
+                                      placeholder="GamerTag شما"
+                                    />
+                                  </div>
+                                </>
+                              )}
                             </div>
                           ) : (
                             <div className="xbox-create-message">

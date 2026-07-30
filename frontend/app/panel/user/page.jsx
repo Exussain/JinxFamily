@@ -8,6 +8,18 @@ import Navbar from "../../../components/Navbar";
 import PasswordInput from '../../../components/PasswordInput';
 import { PRESET_AVATARS, compressImageFile, renderPresetAvatarBlob } from "../../../lib/avatarImage.mjs";
 import { productHref } from "../../../lib/productUrls.mjs";
+import { buildReferralNotification } from "../../../lib/referralNotifications.mjs";
+import {
+  REFERRAL_MILESTONE_COUNT,
+  REFERRAL_MILESTONE_POINTS,
+  buildReferralShareText,
+  buildTelegramShareUrl,
+  buildWhatsAppShareUrl,
+  copyText,
+  shareReferralInvite,
+} from "../../../lib/referralShare.mjs";
+import ReferralNotificationModal from "../../../components/ReferralNotificationModal";
+import { isOutsideWorkingHours } from "../../../lib/workingHours";
 
 export default function UserPanelPage() {
   const router = useRouter();
@@ -20,7 +32,8 @@ export default function UserPanelPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [profileSuccess, setProfileSuccess] = useState("");
-  const [profileName, setProfileName] = useState("");
+  const [profileFirstName, setProfileFirstName] = useState("");
+  const [profileLastName, setProfileLastName] = useState("");
   const [profileEmail, setProfileEmail] = useState("");
   const [profilePassword, setProfilePassword] = useState("");
   const [profilePassword2, setProfilePassword2] = useState("");
@@ -36,9 +49,258 @@ export default function UserPanelPage() {
   const [exchangeCode, setExchangeCode] = useState("");
   const [exchangeAmount, setExchangeAmount] = useState(350);
   const [referralData, setReferralData] = useState(null);
+  const [referralNotification, setReferralNotification] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [shareStatus, setShareStatus] = useState("");
+
+  // Editing order info state
+  const [editingTracking, setEditingTracking] = useState(null);
+  const [editEpicUsername, setEditEpicUsername] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editTelegram, setEditTelegram] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+  const [editSuccessMsg, setEditSuccessMsg] = useState("");
+  const [editErrorMsg, setEditErrorMsg] = useState("");
+
+  // Xbox Info Popup Modal State
+  const [xboxModalOrder, setXboxModalOrder] = useState(null);
+  const [xboxEmail, setXboxEmail] = useState("");
+  const [xboxPassword, setXboxPassword] = useState("");
+  const [xboxNote, setXboxNote] = useState("");
+  const [xboxSubmitting, setXboxSubmitting] = useState(false);
+  const [xboxSuccessMsg, setXboxSuccessMsg] = useState("");
+  const [xboxErrorMsg, setXboxErrorMsg] = useState("");
+
+  const openXboxModal = (o) => {
+    setXboxModalOrder(o);
+    setXboxEmail("");
+    setXboxPassword("");
+    setXboxNote("");
+    setXboxSuccessMsg("");
+    setXboxErrorMsg("");
+  };
+
+  const handleSaveXboxInfo = async () => {
+    if (!xboxModalOrder) return;
+    setXboxSubmitting(true);
+    setXboxErrorMsg("");
+    setXboxSuccessMsg("");
+    try {
+      const res = await fetch(`${apiBase}/api/me/orders/${xboxModalOrder.tracking_code}/update-info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          xbox_email: xboxEmail,
+          xbox_password: xboxPassword,
+          note: xboxNote,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || "خطا در ثبت اطلاعات ایکس باکس");
+      }
+      setXboxSuccessMsg("✓ اطلاعات اکانت ایکس باکس با موفقیت ثبت شد و سفارش جهت بررسی مجدد در اولویت قرار گرفت.");
+      const ordersRes = await fetch(`${apiBase}/api/me/orders`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      if (ordersRes.ok) {
+        const dataOrders = await ordersRes.json();
+        setOrders(dataOrders.results || []);
+      }
+      setTimeout(() => {
+        setXboxModalOrder(null);
+      }, 2000);
+    } catch (err) {
+      setXboxErrorMsg(err.message || "خطا در ثبت اطلاعات ایکس باکس");
+    } finally {
+      setXboxSubmitting(false);
+    }
+  };
+
+  const startEditOrder = (o) => {
+    setEditingTracking(o.tracking_code);
+    setEditEpicUsername(o.epic_username || "");
+    setEditPhone(o.phone || "");
+    setEditTelegram(o.telegram || "");
+    setEditNote("");
+    setEditSuccessMsg("");
+    setEditErrorMsg("");
+  };
+
+  const handleSaveOrderInfo = async (trackingCode) => {
+    setSubmittingEdit(true);
+    setEditErrorMsg("");
+    setEditSuccessMsg("");
+    try {
+      const res = await fetch(`${apiBase}/api/me/orders/${trackingCode}/update-info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          epic_username: editEpicUsername,
+          phone: editPhone,
+          telegram: editTelegram,
+          note: editNote,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || "خطا در ویرایش اطلاعات سفارش");
+      }
+      setEditSuccessMsg("✓ اطلاعات جدید با موفقیت ثبت شد و سفارش جهت بررسی مجدد در بالای لیست ادمین پین گردید.");
+      const ordersRes = await fetch(`${apiBase}/api/me/orders`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      if (ordersRes.ok) {
+        const dataOrders = await ordersRes.json();
+        setOrders(dataOrders.results || []);
+      }
+      setTimeout(() => {
+        setEditingTracking(null);
+      }, 2500);
+    } catch (err) {
+      setEditErrorMsg(err.message || "خطا در ثبت اطلاعات جدید");
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
+
+  // User Tickets state
+  const [userTickets, setUserTickets] = useState([]);
+  const [activeTicketId, setActiveTicketId] = useState(null);
+  const [activeTicketData, setActiveTicketData] = useState(null);
+  const [loadingTicketDetail, setLoadingTicketDetail] = useState(false);
+  const [showCreateTicketModal, setShowCreateTicketModal] = useState(false);
+  const [newTicketSubject, setNewTicketSubject] = useState("");
+  const [newTicketMessage, setNewTicketMessage] = useState("");
+  const [newTicketTracking, setNewTicketTracking] = useState("");
+  const [submittingNewTicket, setSubmittingNewTicket] = useState(false);
+  const [createTicketError, setCreateTicketError] = useState("");
+  const [userReplyText, setUserReplyText] = useState("");
+  const [submittingUserReply, setSubmittingUserReply] = useState(false);
+
+  const fetchUserTickets = async () => {
+    try {
+      const res = await fetch(`${apiBase}/api/me/tickets`, { cache: "no-store", credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setUserTickets(data.results || []);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const openTicketDetail = async (ticketId) => {
+    setActiveTicketId(ticketId);
+    setLoadingTicketDetail(true);
+    try {
+      const res = await fetch(`${apiBase}/api/me/tickets/${ticketId}`, { cache: "no-store", credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setActiveTicketData(data);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingTicketDetail(false);
+    }
+  };
+
+  const handleSendUserReply = async () => {
+    if (!userReplyText.trim() || !activeTicketId) return;
+    setSubmittingUserReply(true);
+    try {
+      const res = await fetch(`${apiBase}/api/me/tickets/${activeTicketId}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ message: userReplyText }),
+      });
+      if (res.ok) {
+        setUserReplyText("");
+        openTicketDetail(activeTicketId);
+        fetchUserTickets();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSubmittingUserReply(false);
+    }
+  };
+
+  const handleCreateTicketSubmit = async (e) => {
+    e.preventDefault();
+    if (!newTicketSubject.trim() || !newTicketMessage.trim()) {
+      setCreateTicketError("لطفاً عنوان و متن تیکت را وارد کنید.");
+      return;
+    }
+    setSubmittingNewTicket(true);
+    setCreateTicketError("");
+    try {
+      const res = await fetch(`${apiBase}/api/me/tickets/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          subject: newTicketSubject,
+          message: newTicketMessage,
+          tracking_code: newTicketTracking,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || "خطا در ثبت تیکت");
+      }
+      setShowCreateTicketModal(false);
+      setNewTicketSubject("");
+      setNewTicketMessage("");
+      setNewTicketTracking("");
+      fetchUserTickets();
+      if (data?.ticket?.id) {
+        openTicketDetail(data.ticket.id);
+      }
+    } catch (err) {
+      setCreateTicketError(err.message || "خطا در ایجاد تیکت");
+    } finally {
+      setSubmittingNewTicket(false);
+    }
+  };
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      const ticketParam = params.get("ticket_id") || params.get("ticket");
+      if (tabParam) {
+        setActiveTab(tabParam);
+      }
+      if (ticketParam) {
+        setActiveTab("tickets");
+        openTicketDetail(ticketParam);
+      }
+      const handleSwitchTab = (e) => {
+        if (e.detail) {
+          setActiveTab(e.detail);
+        }
+      };
+      window.addEventListener("nubix_switch_tab", handleSwitchTab);
+      return () => window.removeEventListener("nubix_switch_tab", handleSwitchTab);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "tickets") {
+      fetchUserTickets();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     const load = async () => {
@@ -53,8 +315,8 @@ export default function UserPanelPage() {
         }
         const me = await meRes.json();
         setUser(me);
-        const nextName = me.display_name || me.name || me.first_name || me.username || "";
-        setProfileName(nextName);
+        setProfileFirstName(me.first_name || "");
+        setProfileLastName(me.last_name || "");
         setProfileEmail(me.email || "");
 
         const ordersRes = await fetch(`${apiBase}/api/me/orders`, {
@@ -73,6 +335,7 @@ export default function UserPanelPage() {
         if (refRes.ok) {
           const rData = await refRes.json();
           setReferralData(rData);
+          setReferralNotification(buildReferralNotification(rData));
         }
       } finally {
         setLoading(false);
@@ -83,7 +346,8 @@ export default function UserPanelPage() {
 
   const statusClass = (s) => {
     if (s === "انجام شده") return "tag success";
-    if (s === "لغو شده") return "tag danger";
+    if (s === "لغو شده" || s === "مسترد شده" || s === "اطلاعات غلط/ناقص" || s === "اطلاعات غلط") return "tag danger";
+    if (s === "نیاز به کد 2FA" || s === "نیاز به تغییر ریجن به ترکیه") return "tag warning";
     return "tag";
   };
 
@@ -97,14 +361,42 @@ export default function UserPanelPage() {
     }
   };
 
-  const displayName = (profileName || user?.name || user?.first_name || "").trim();
+  const getStatusMessage = (status) => {
+    switch (status) {
+      case "pending":
+        return "نوبیکس شاپ منتظر پرداخته تا برات بفرسته 😉";
+      case "paid":
+      case "registered":
+        return "سفارش شما ثبت شد! نوبیکس شاپ به زودی شروع به انجامش می‌کنه 🧡";
+      case "processing":
+        return "نوبیکس شاپ داره برات می‌فرسته 😉";
+      case "completed":
+        return "سفارش شما با موفقیت تحویل داده شد! مبارکت باشه 😍🎉";
+      case "needs_2fa":
+        return "🔑 اکانتت نیاز به کد دو مرحله‌ای (2FA) داره. لطفا برامون بفرستش.";
+      case "needs_tr_region":
+        return "🌍 ریجن اکانتت با ریجن سفارش یکی نیست. لطفا با پشتیبانی چک کن.";
+      case "needs_xbox_info":
+        return "❌ مشکل اکانت ایکس باکس. لطفاً اطلاعات اکانت ایکس باکس خود را ارسال کنید.";
+      case "invalid_info":
+        return "❌ اطلاعات ورودت اشتباهه. لطفا اطلاعات صحیح رو برای پشتیبانی بفرست.";
+      case "canceled":
+        return "سفارش شما لغو شده است ✖";
+      case "refunded":
+        return "مبلغ سفارش به حساب شما مسترد شد 💸";
+      default:
+        return "پشتیبانی در حال بررسی سفارش شماست 🔎";
+    }
+  };
+
+  const displayName = `${profileFirstName} ${profileLastName}`.trim() || user?.name || user?.username || "";
   const phoneNumber = user?.phone_number || user?.phone || "";
   const displayPhone = loading ? "" : phoneNumber || "ثبت نشده";
   const ordersCount = Array.isArray(orders) ? orders.length : 0;
   const cartCount = Array.isArray(items) ? items.length : 0;
   const completedOrderItems = celebrationOrder?.items || [];
   const needsProfileCompletion =
-    !user?.avatar_url || !profileName.trim() || !profileEmail.trim();
+    !user?.avatar_url || !profileFirstName.trim() || !profileEmail.trim();
   const selectedAvatarIndex = Math.max(0, PRESET_AVATARS.findIndex((avatar) => avatar.id === selectedAvatarId));
   const selectedAvatar = PRESET_AVATARS[selectedAvatarIndex] || PRESET_AVATARS[0];
 
@@ -113,6 +405,16 @@ export default function UserPanelPage() {
     if (typeof window !== "undefined" && celebrationOrder?.tracking_code) {
       window.localStorage.setItem("nubix_last_celebration", celebrationOrder.tracking_code);
     }
+  };
+
+  const closeReferralNotification = async () => {
+    setReferralNotification(null);
+    try {
+      await fetch(`${apiBase}/api/me/referral/acknowledge`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {}
   };
 
   const handleLogout = async () => {
@@ -222,7 +524,8 @@ export default function UserPanelPage() {
     setSelectedAvatarId(PRESET_AVATARS[nextIndex].id);
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = async (event) => {
+    event?.preventDefault();
     setSavingProfile(true);
     setProfileError("");
     setProfileSuccess("");
@@ -232,8 +535,8 @@ export default function UserPanelPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          name: profileName,
-          email: profileEmail,
+          first_name: profileFirstName,
+          last_name: profileLastName,
           password: profilePassword,
           password2: profilePassword2,
         }),
@@ -248,7 +551,8 @@ export default function UserPanelPage() {
         avatar_url: data.avatar_url || prev?.avatar_url || "",
         points_balance: data.points_balance ?? prev?.points_balance ?? 0,
       }));
-      setProfileName(data.name || data.display_name || profileName);
+      setProfileFirstName(data.first_name ?? profileFirstName);
+      setProfileLastName(data.last_name ?? profileLastName);
       setProfileEmail(data.email || profileEmail);
       setProfilePassword("");
       setProfilePassword2("");
@@ -382,9 +686,12 @@ export default function UserPanelPage() {
     );
   }
 
+  const ticketsUnreadCount = userTickets.filter((t) => t.unread).length;
+
   const TABS = [
     { id: "profile", label: "پروفایل من", icon: "👤" },
     { id: "orders", label: "سفارش‌های من", icon: "🧾", badge: ordersCount },
+    { id: "tickets", label: "تیکت‌های پشتیبانی", icon: "🎫", badge: ticketsUnreadCount },
     { id: "club", label: "کلوپ الماس", icon: "💎" },
     { id: "cart", label: "سبد خرید", icon: "🛒", badge: cartCount },
   ];
@@ -443,7 +750,16 @@ export default function UserPanelPage() {
               className={`tab ${activeTab === t.id ? "active" : ""}`}
               onClick={() => setActiveTab(t.id)}
             >
-              <span className="tab__icon">{t.icon}</span>
+              <span className="tab__icon">
+                {t.id === "tickets" ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle" }}>
+                    <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>
+                    <path d="M12 5v14"/>
+                  </svg>
+                ) : (
+                  t.icon
+                )}
+              </span>
               <span className="tab__label">{t.label}</span>
               {typeof t.badge === "number" && t.badge > 0 && (
                 <span className="tab__badge">{t.badge.toLocaleString("fa-IR")}</span>
@@ -460,52 +776,70 @@ export default function UserPanelPage() {
                   <p className="kicker">ویرایش اطلاعات</p>
                   <h3>پروفایل من</h3>
                 </div>
-                <button type="button" className="btn-primary" disabled={savingProfile} onClick={handleSaveProfile}>
+                <button type="submit" form="user-profile-form" className="btn-primary" disabled={savingProfile}>
                   {savingProfile ? "در حال ذخیره…" : "ذخیره پروفایل"}
                 </button>
               </div>
 
-              <div className="profile-grid">
-                <div className="field">
-                  <label>نام نمایشی</label>
-                  <input
-                    value={profileName}
-                    onChange={(e) => setProfileName(e.target.value)}
-                    placeholder="خالی می‌ماند تا زمانی که ثبت کنید"
-                  />
+              <form id="user-profile-form" onSubmit={handleSaveProfile}>
+                <div className="profile-grid">
+                  <div className="field">
+                    <label htmlFor="profile-first-name">نام</label>
+                    <input
+                      id="profile-first-name"
+                      value={profileFirstName}
+                      onChange={(e) => setProfileFirstName(e.target.value)}
+                      autoComplete="given-name"
+                      placeholder="نام"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="profile-last-name">نام خانوادگی</label>
+                    <input
+                      id="profile-last-name"
+                      value={profileLastName}
+                      onChange={(e) => setProfileLastName(e.target.value)}
+                      autoComplete="family-name"
+                      placeholder="نام خانوادگی"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="profile-email">ایمیل (ثابت)</label>
+                    <input
+                      id="profile-email"
+                      type="email"
+                      value={profileEmail}
+                      readOnly
+                      autoComplete="email"
+                      title="ایمیل حساب قابل تغییر نیست."
+                    />
+                  </div>
+                  <div className="field">
+                    <label>شماره موبایل (ثابت)</label>
+                    <input value={displayPhone} readOnly placeholder="" />
+                  </div>
+                  <div className="field">
+                    <label>رمز عبور جدید (اختیاری)</label>
+                    <PasswordInput
+                      value={profilePassword}
+                      onChange={(e) => setProfilePassword(e.target.value)}
+                      autoComplete="new-password"
+                      placeholder="اگر نمی‌خواهید عوض شود خالی بگذارید"
+                    />
+                  </div>
+                  <div className="field">
+                    <label>تکرار رمز عبور جدید</label>
+                    <PasswordInput
+                      value={profilePassword2}
+                      onChange={(e) => setProfilePassword2(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </div>
                 </div>
-                <div className="field">
-                  <label>ایمیل</label>
-                  <input
-                    type="email"
-                    value={profileEmail}
-                    onChange={(e) => setProfileEmail(e.target.value)}
-                    placeholder="you@example.com"
-                  />
-                </div>
-                <div className="field">
-                  <label>شماره موبایل (ثابت)</label>
-                  <input value={displayPhone} readOnly placeholder="" />
-                </div>
-                <div className="field">
-                  <label>رمز عبور جدید (اختیاری)</label>
-                  <PasswordInput
-                    value={profilePassword}
-                    onChange={(e) => setProfilePassword(e.target.value)}
-                    placeholder="اگر نمی‌خواهید عوض شود خالی بگذارید"
-                  />
-                </div>
-                <div className="field">
-                  <label>تکرار رمز عبور جدید</label>
-                  <PasswordInput
-                    value={profilePassword2}
-                    onChange={(e) => setProfilePassword2(e.target.value)}
-                  />
-                </div>
-              </div>
 
-              {profileError && <div className="inline-note danger">{profileError}</div>}
-              {profileSuccess && <div className="inline-note ok">{profileSuccess}</div>}
+                {profileError && <div className="inline-note danger">{profileError}</div>}
+                {profileSuccess && <div className="inline-note ok">{profileSuccess}</div>}
+              </form>
 
               <div className="avatar-lab">
                 <div className="avatar-lab__preview">
@@ -642,54 +976,539 @@ export default function UserPanelPage() {
               )}
               {orders.length > 0 && (
                 <div className="orders-list">
-                  {orders.map((o) => (
-                    <div key={o.id} className="order-card">
-                      <div className="order-card__top">
-                        <div className="order-chip">{o.tracking_code}</div>
-                        <span className={statusClass(o.status_fa)}>{o.status_fa}</span>
-                      </div>
-                      <div className="order-card__body">
-                        <div className="order-thumb">
-                          {o.first_item_image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={o.first_item_image} alt={o.first_item_name || "محصول"} />
-                          ) : (
-                            <div className="order-thumb__fallback">
-                              {(o.first_item_name || "سفارش")?.[0] || "?"}
+                  {orders.map((o) => {
+                    const isStep1Done = o.status !== "pending" && o.status !== "canceled";
+                    const isStep2Active = ["paid", "registered", "processing", "needs_2fa", "needs_tr_region", "invalid_info"].includes(o.status);
+                    const isStep2Done = o.status === "completed";
+                    const isStep3Done = o.status === "completed";
+
+                    const isLine1Active = isStep1Done && (isStep2Active || isStep2Done);
+                    const isLine2Active = isStep2Done && isStep3Done;
+
+                    return (
+                      <div key={o.id} className="order-card">
+                        <div className="order-card__header">
+                          {/* Left: Status and price */}
+                          <div className="order-card__left">
+                            <span className={statusClass(o.status_fa)}>{o.status_fa}</span>
+                            <div className="order-price">{o.amount.toLocaleString("fa-IR")} تومان</div>
+                            {o.diamonds_used > 0 && (
+                              <div className="order-diamonds">
+                                تخفیف الماس: {o.diamonds_used.toLocaleString("fa-IR")} 💎
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right: Info text and image */}
+                          <div className="order-card__right">
+                            <div className="order-info-text">
+                              <div className="order-title-row">
+                                <span className="order-title">{o.first_item_name || "سفارش"}</span>
+                                <span className="order-id-chip">{o.tracking_code}</span>
+                              </div>
+                              <span className="order-date">{formatDate(o.created_at)}</span>
                             </div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="order-title">{o.first_item_name || "سفارش"}</div>
-                          <div className="muted-sm">{formatDate(o.created_at)}</div>
-                        </div>
-                        <div className="order-amount">
-                          <div className="price">{o.amount.toLocaleString("fa-IR")} تومان</div>
-                          {o.diamonds_used > 0 && (
-                            <div className="muted-xs">
-                              تخفیف الماس: {o.diamonds_used.toLocaleString("fa-IR")} 💎
+                            <div className="order-thumbnail">
+                              {o.first_item_image ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={o.first_item_image} alt={o.first_item_name || "محصول"} />
+                              ) : (
+                                <div className="order-thumb-fallback">
+                                  {(o.first_item_name || "سفارش")?.[0] || "?"}
+                                </div>
+                              )}
                             </div>
-                          )}
+                          </div>
                         </div>
+
+                        {isOutsideWorkingHours(o.created_at) && ['paid', 'registered', 'processing', 'pending'].includes(o.status) && (
+                          <div style={{
+                            marginTop: 10,
+                            padding: '8px 14px',
+                            borderRadius: 10,
+                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.06))',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            color: '#f59e0b',
+                            fontSize: 12,
+                            lineHeight: 1.6,
+                            direction: 'rtl'
+                          }}>
+                            🌙 <strong>ثبت در خارج از ساعت کاری:</strong> این سفارش خارج از ساعت کاری ثبت شده است و در ساعت کاری (۱۰ صبح تا ۱۲ شب) با اولویت زمان ثبت تکمیل می‌شود.
+                          </div>
+                        )}
+
+                        {o.status === "needs_xbox_info" && (
+                          <div className="order-invalid-info-banner" style={{ background: "rgba(147, 51, 234, 0.08)", borderColor: "rgba(147, 51, 234, 0.3)" }}>
+                            <div className="banner-title" style={{ color: "#a855f7" }}>
+                              <span className="banner-icon">❌</span>
+                              <strong>مشکل اکانت ایکس باکس ( کروپک قبلی / لینک ایکس باکس )</strong>
+                            </div>
+                            <p className="banner-desc" style={{ color: "var(--fg, #e2e8f0)" }}>
+                              ما سفارشاتو با اپیک میزنیم کروپک قبلی شما از ایکس باکس تکمیل شده و اپیک گیمز اجازه خرید نمیده لطف کنید اطلاعات اکانت ایکس باکس لینک به اپیک گیمزتون رو بفرستید و یا از اخرین فروشگاهی که خرید کردید بگیرید و برای پشتیبانی بفرستید
+                            </p>
+                            <button
+                              type="button"
+                              className="btn-edit-trigger"
+                              style={{ background: "linear-gradient(135deg, #a855f7, #7e22ce)", color: "#ffffff" }}
+                              onClick={() => openXboxModal(o)}
+                            >
+                              🎮 ثبت اطلاعات اکانت ایکس باکس
+                            </button>
+                          </div>
+                        )}
+
+                        {o.status === "invalid_info" && (
+                          <div className="order-invalid-info-banner">
+                            <div className="banner-title">
+                              <span className="banner-icon">❌</span>
+                              <strong>اطلاعات ورود یا تماس این سفارش اشتباه ثبت شده است</strong>
+                            </div>
+                            <p className="banner-desc">
+                              پشتیبانی نوبیکس شاپ نتوانسته با اطلاعات فوق وارد اکانت شما شود یا اطلاعات تماس نادرست است. لطفاً جهت تسریع در انجام سفارش، اطلاعات صحیح را از طریق دکمه زیر ویرایش و ثبت کنید تا سفارش شما مجدداً در اولویت قرار گیرد.
+                            </p>
+                            {editingTracking !== o.tracking_code && (
+                              <button
+                                type="button"
+                                className="btn-edit-trigger"
+                                onClick={() => startEditOrder(o)}
+                              >
+                                ✏️ اصلاح و ویرایش اطلاعات سفارش
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {o.info_corrected && o.status !== "invalid_info" && o.status !== "needs_xbox_info" && (
+                          <div className="order-corrected-badge">
+                            📌 اطلاعات سفارش توسط شما ویرایش شد و در اولویت بررسی پشتیبانی پین گردید.
+                          </div>
+                        )}
+
+                        {editingTracking === o.tracking_code && (
+                          <div className="order-edit-form-box">
+                            <h4 className="edit-form-title">✏️ ویرایش و اصلاح اطلاعات سفارش #{o.tracking_code}</h4>
+                            <p className="edit-form-sub">اطلاعات صحیح جدید را وارد کنید تا سفارش مستقیماً در بالای صف ادمین پین شود.</p>
+                            
+                            <div className="edit-form-group">
+                              <label>ایمیل / نام کاربری اکانت:</label>
+                              <input
+                                type="text"
+                                className="edit-input"
+                                value={editEpicUsername}
+                                onChange={(e) => setEditEpicUsername(e.target.value)}
+                                placeholder="نام کاربری یا ایمیل اکانت"
+                              />
+                            </div>
+
+                            <div className="edit-form-row">
+                              <div className="edit-form-group">
+                                <label>شماره تماس:</label>
+                                <input
+                                  type="text"
+                                  className="edit-input"
+                                  value={editPhone}
+                                  onChange={(e) => setEditPhone(e.target.value)}
+                                  placeholder="09123456789"
+                                />
+                              </div>
+                              <div className="edit-form-group">
+                                <label>آیدی تلگرام:</label>
+                                <input
+                                  type="text"
+                                  className="edit-input"
+                                  value={editTelegram}
+                                  onChange={(e) => setEditTelegram(e.target.value)}
+                                  placeholder="@username"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="edit-form-group">
+                              <label>رمز جدید اکانت / یادداشت اصلاحی:</label>
+                              <textarea
+                                rows={3}
+                                className="edit-textarea"
+                                value={editNote}
+                                onChange={(e) => setEditNote(e.target.value)}
+                                placeholder="رمز جدید، کد 2FA، یا توضیحات ورود به اکانت..."
+                              />
+                            </div>
+
+                            {editErrorMsg && <div className="edit-msg error">{editErrorMsg}</div>}
+                            {editSuccessMsg && <div className="edit-msg success">{editSuccessMsg}</div>}
+
+                            <div className="edit-form-actions">
+                              <button
+                                type="button"
+                                className="btn-save-edit"
+                                onClick={() => handleSaveOrderInfo(o.tracking_code)}
+                                disabled={submittingEdit}
+                              >
+                                {submittingEdit ? "در حال ارسال..." : "💾 ثبت و ارسال اطلاعات اصلاح‌شده"}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-cancel-edit"
+                                onClick={() => setEditingTracking(null)}
+                                disabled={submittingEdit}
+                              >
+                                انصراف
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Stepper container */}
+                        <div className="order-stepper-box">
+                          <div className="stepper-track-container">
+                            {/* Connector Line */}
+                            <div className="stepper-progress-track">
+                              <div className={`progress-segment ${isLine1Active ? 'active' : ''}`} />
+                              <div className={`progress-segment ${isLine2Active ? 'active' : ''}`} />
+                            </div>
+
+                            {/* Stepper nodes */}
+                            <div className="stepper-nodes">
+                              {/* Step 3: Delivered (left-most in RTL) */}
+                              <div className={`stepper-node-wrapper ${isStep3Done ? 'done' : ''}`}>
+                                <div className="node-circle">۳</div>
+                                <span className="node-label">تحویل شد 🎉</span>
+                              </div>
+
+                              {/* Step 2: In progress (center) */}
+                              <div className={`stepper-node-wrapper ${isStep2Done ? 'done' : isStep2Active ? 'active' : ''}`}>
+                                <div className="node-circle">۲</div>
+                                <span className="node-label">در حال انجام ⚡</span>
+                              </div>
+
+                              {/* Step 1: Paid (right-most in RTL) */}
+                              <div className={`stepper-node-wrapper ${isStep1Done ? 'done' : ''}`}>
+                                <div className="node-circle">۱</div>
+                                <span className="node-label">پرداخت شد 💖</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Status Message */}
+                          <div className="stepper-status-msg">
+                            <span className="msg-icon">🎁</span>
+                            <span className="msg-label">وضعیت آیتم:</span>
+                            <span className="msg-content">{getStatusMessage(o.status)}</span>
+                          </div>
+                        </div>
+
+                        {o.can_cancel && (
+                          <div className="order-card__actions">
+                            <button
+                              className="btn-cancel"
+                              onClick={() => handleCancelOrder(o.tracking_code)}
+                              disabled={cancellingOrder === o.tracking_code}
+                            >
+                              {cancellingOrder === o.tracking_code ? "در حال لغو..." : "لغو سفارش"}
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      {o.can_cancel && (
-                        <div className="order-card__actions">
-                          <button
-                            className="btn-cancel"
-                            onClick={() => handleCancelOrder(o.tracking_code)}
-                            disabled={cancellingOrder === o.tracking_code}
-                          >
-                            {cancellingOrder === o.tracking_code ? "در حال لغو..." : "لغو سفارش"}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </section>
           )}
 
+          {activeTab === "tickets" && (
+            <section className="card section tickets-section-main">
+              {/* Header Hero Banner */}
+              <div className="tickets-hero-banner">
+                <div className="hero-text-side">
+                  <span className="tickets-kicker">پشتیبانی اختصاصی نوبیکس</span>
+                  <h3 className="tickets-title">مرکز پاسخگویی و تیکت‌ها</h3>
+                  <p className="tickets-subtitle">
+                    پاسخگویی سریع و پیگیری سفارشات شما در کمترین زمان ممکن
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-create-ticket-hero"
+                  onClick={() => { setShowCreateTicketModal(true); setCreateTicketError(""); }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>ایجاد تیکت جدید</span>
+                </button>
+              </div>
+
+              {/* Create Ticket Glass Modal */}
+              {showCreateTicketModal && (
+                <div className="modal-backdrop-glass" onClick={(e) => { if (e.target === e.currentTarget) setShowCreateTicketModal(false); }}>
+                  <div className="create-ticket-modal-card">
+                    <div className="modal-top-bar">
+                      <div className="modal-title-group">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9"/>
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                        <h4>ثبت تیکت پشتیبانی جدید</h4>
+                      </div>
+                      <button type="button" className="btn-close-modal" onClick={() => setShowCreateTicketModal(false)}>✕</button>
+                    </div>
+
+                    <form onSubmit={handleCreateTicketSubmit} className="ticket-modal-form">
+                      <div className="t-form-group">
+                        <label>موضوع یا عنوان تیکت <span className="req">*</span></label>
+                        <input
+                          type="text"
+                          className="t-input-styled"
+                          placeholder="مثال: سوال درباره اطلاعات ورود به اکانت"
+                          value={newTicketSubject}
+                          onChange={(e) => setNewTicketSubject(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="t-form-group">
+                        <label>ارتباط با سفارش (اختیاری)</label>
+                        <select
+                          className="t-select-styled"
+                          value={newTicketTracking}
+                          onChange={(e) => setNewTicketTracking(e.target.value)}
+                        >
+                          <option value="">-- بدون ارتباط با سفارش خاص --</option>
+                          {orders.map((o) => (
+                            <option key={o.id} value={o.tracking_code}>
+                              سفارش #{o.tracking_code} ({o.first_item_name || "محصول"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="t-form-group">
+                        <label>شرح کامل پیام شما <span className="req">*</span></label>
+                        <textarea
+                          rows={4}
+                          className="t-textarea-styled"
+                          placeholder="توضیحات و مشخصات یا سوال خود را با جزئیات وارد کنید..."
+                          value={newTicketMessage}
+                          onChange={(e) => setNewTicketMessage(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      {createTicketError && <div className="t-error-alert">⚠️ {createTicketError}</div>}
+
+                      <div className="t-modal-footer">
+                        <button type="submit" className="btn-submit-t" disabled={submittingNewTicket}>
+                          {submittingNewTicket ? "در حال ثبت تیکت..." : "🚀 ثبت و ارسال تیکت"}
+                        </button>
+                        <button type="button" className="btn-cancel-t" onClick={() => setShowCreateTicketModal(false)}>
+                          انصراف
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Master-Detail Split Dashboard Layout */}
+              <div className="tickets-split-dashboard">
+                {/* Left Side: Ticket List */}
+                <div className={`tickets-sidebar-column ${activeTicketId ? "hide-on-mobile" : ""}`}>
+                  <div className="sidebar-list-header">
+                    <h4>تیکت‌های شما ({userTickets.length})</h4>
+                  </div>
+
+                  {userTickets.length === 0 ? (
+                    <div className="tickets-empty-box">
+                      <div className="empty-icon-wrapper" style={{ display: "inline-flex", padding: "16px", borderRadius: "20px", background: "color-mix(in srgb, var(--primary) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--primary) 20%, transparent)", marginBottom: "14px" }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>
+                          <path d="M12 5v14"/>
+                        </svg>
+                      </div>
+                      <h5>تیکتی ثبت نشده است</h5>
+                      <p>چنانچه سوالی دارید یا مشکلی در سفارش وجود دارد تیکت ارسال کنید.</p>
+                      <button
+                        type="button"
+                        className="btn-create-first-ticket"
+                        onClick={() => setShowCreateTicketModal(true)}
+                      >
+                        ثبت اولین تیکت
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="tickets-cards-scroll">
+                      {userTickets.map((t) => {
+                        const isSelected = activeTicketId === t.id;
+                        return (
+                          <div
+                            key={t.id}
+                            className={`ticket-nav-card ${isSelected ? "selected" : ""} ${t.unread ? "has-unread" : ""}`}
+                            onClick={() => openTicketDetail(t.id)}
+                          >
+                            <div className="card-top-row">
+                              <span className="ticket-id-tag">#{t.id}</span>
+                              <span className={`status-pill status-${t.status}`}>
+                                {t.status_fa}
+                              </span>
+                            </div>
+
+                            <h5 className="card-subject-text">{t.subject}</h5>
+
+                            {t.is_auto_created && (
+                              <div className="auto-created-chip">
+                                🤖 تیکت خودکار (نیاز به اصلاح اطلاعات)
+                              </div>
+                            )}
+
+                            <p className="card-excerpt">{t.last_message || "بدون پیام"}</p>
+
+                            <div className="card-bottom-row">
+                              <span className="card-date-str">🕒 {formatDate(t.created_at)}</span>
+                              {t.tracking_code && (
+                                <span className="card-order-str">سفارش #{t.tracking_code}</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Side: Chat Detail View */}
+                <div className={`tickets-chat-column ${!activeTicketId ? "hide-on-mobile" : ""}`}>
+                  {!activeTicketId ? (
+                    <div className="no-ticket-selected-placeholder">
+                      <div className="placeholder-icon" style={{ width: "72px", height: "72px", borderRadius: "50%", background: "linear-gradient(135deg, color-mix(in srgb, var(--primary) 15%, transparent), color-mix(in srgb, var(--accent) 15%, transparent))", border: "1px solid color-mix(in srgb, var(--primary) 30%, transparent)", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                      </div>
+                      <h4>یک تیکت را برای مشاهده گفتگو انتخاب کنید</h4>
+                      <p>از لیست سمت راست روی هر تیکت کلیک کنید تا سابقه پیام‌ها و چت پشتیبانی نمایش داده شود.</p>
+                    </div>
+                  ) : loadingTicketDetail ? (
+                    <div className="chat-loading-state">
+                      <div className="spinner-dots"></div>
+                      <p>در حال بارگذاری گفتگو...</p>
+                    </div>
+                  ) : activeTicketData?.ticket ? (
+                    <div className="active-chat-frame">
+                      {/* Chat View Header */}
+                      <div className="chat-frame-header">
+                        <button
+                          type="button"
+                          className="btn-back-mobile"
+                          onClick={() => { setActiveTicketId(null); setActiveTicketData(null); }}
+                        >
+                          ← لیست تیکت‌ها
+                        </button>
+                        <div className="chat-header-main">
+                          <h4 className="chat-header-title">{activeTicketData.ticket.subject}</h4>
+                          <div className="chat-header-meta">
+                            <span className="meta-chip">کد تیکت: #{activeTicketData.ticket.id}</span>
+                            {activeTicketData.ticket.tracking_code && (
+                              <span className="meta-chip order-chip">
+                                📦 سفارش: #{activeTicketData.ticket.tracking_code}
+                              </span>
+                            )}
+                            <span className={`status-pill status-${activeTicketData.ticket.status}`}>
+                              {activeTicketData.ticket.status_fa}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Chat Messages Stream */}
+                      <div className="chat-messages-stream">
+                        {activeTicketData.messages.map((m) => {
+                          const isAdmin = m.sender_type === "admin";
+                          return (
+                            <div key={m.id} className={`chat-bubble-row ${isAdmin ? "admin-side" : "user-side"}`}>
+                              <div className="avatar-wrapper">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={m.sender_avatar || "/web_logo.webp"} alt={m.sender_name} />
+                                {isAdmin && <span className="online-indicator"></span>}
+                              </div>
+
+                              <div className="bubble-content-box">
+                                <div className="bubble-sender-title">
+                                  <span className="name">{m.sender_name}</span>
+                                  {isAdmin && <span className="verified-badge">پشتیبانی نوبیکس شاپ ✓</span>}
+                                </div>
+                                <div className="bubble-message-text">{m.message}</div>
+                                <div className="bubble-timestamp">{formatDate(m.created_at)}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Chat Reply Bottom Bar */}
+                      {activeTicketData.ticket.status !== "closed" ? (
+                        <div className="chat-reply-bar">
+                          <textarea
+                            rows={2}
+                            className="chat-reply-input"
+                            placeholder="پاسخ خود را بنویسید..."
+                            value={userReplyText}
+                            onChange={(e) => setUserReplyText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendUserReply();
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="btn-send-message"
+                            onClick={handleSendUserReply}
+                            disabled={submittingUserReply || !userReplyText.trim()}
+                          >
+                            {submittingUserReply ? (
+                              <span>ارسال...</span>
+                            ) : (
+                              <>
+                                <span>ارسال</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="chat-closed-notice">
+                          🔒 این تیکت توسط پشتیبانی بسته‌شده است. در صورت نیاز می‌توانید تیکت جدیدی ایجاد کنید.
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="no-ticket-selected-placeholder">
+                      <p>تیکت مورد نظر پیدا نشد.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Floating Action Button (FAB) for Mobile */}
+              <button
+                type="button"
+                className="fab-create-ticket-mobile"
+                onClick={() => { setShowCreateTicketModal(true); setCreateTicketError(""); }}
+                title="ایجاد تیکت جدید"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            </section>
+          )}
           {activeTab === "club" && (
             <section className="card section">
               <div className="section-head">
@@ -756,16 +1575,22 @@ export default function UserPanelPage() {
 
                 {/* Referral */}
                 <div className="club-col">
-                  <h4 className="club-col__title"><span>🤝</span> کسب پورسانت و الماس رایگان</h4>
+                  <h4 className="club-col__title"><span>🤝</span> کسب الماس با دعوت دوستان</h4>
                   <p className="club-col__desc">
-                    لینک یا کد دعوت اختصاصی خود را برای دوستانتان بفرستید. در صورتی که با کد شما در سایت ثبت‌نام کنند و <strong>خرید انجام دهند</strong>، پورسانت به صورت الماس به حساب شما اضافه می‌شود.
+                    لینک یا کد دعوت را برای دوستانتان بفرستید. وقتی با کد شما <strong>ثبت‌نام</strong> کنند و به{" "}
+                    <strong>{REFERRAL_MILESTONE_COUNT.toLocaleString("fa-IR")} نفر</strong> برسید،{" "}
+                    <strong>{REFERRAL_MILESTONE_POINTS.toLocaleString("fa-IR")} الماس</strong> یک‌جا می‌گیرید.
                   </p>
 
                   <div className="club-note">
-                    <span className="club-note__title">🎁 توضیحات پورسانت:</span>
+                    <span className="club-note__title">🎁 قوانین دعوت:</span>
                     <ul>
-                      <li>دریافت <strong>۱۵ تا ۵۰ الماس رایگان</strong> به ازای اولین خرید موفق هر دوست دعوت‌شده.</li>
-                      <li>دریافت <strong>کد تخفیف ۱۵۰,۰۰۰ تومانی بدون حداقل خرید</strong> به محض رسیدن به ۱۰ دعوت موفق.</li>
+                      <li>فقط با <strong>ثبت‌نام موفق</strong> با کد/لینک شما دعوت شمرده می‌شود.</li>
+                      <li>
+                        با رسیدن به{" "}
+                        <strong>{REFERRAL_MILESTONE_COUNT.toLocaleString("fa-IR")} دعوت موفق</strong>،{" "}
+                        <strong>{REFERRAL_MILESTONE_POINTS.toLocaleString("fa-IR")} الماس</strong> یک‌جا به حسابتان اضافه می‌شود.
+                      </li>
                     </ul>
                   </div>
 
@@ -773,27 +1598,112 @@ export default function UserPanelPage() {
                     <div className="club-stack">
                       <div className="club-field">
                         <label>کد معرف شما</label>
-                        <div className="club-code">{referralData.referral_code}</div>
+                        <div className="club-link-row">
+                          <div className="club-code" style={{ flex: 1 }}>{referralData.referral_code}</div>
+                          <button
+                            type="button"
+                            className="btn-primary btn-primary--sm"
+                            onClick={async () => {
+                              if (!referralData.referral_code) return;
+                              const ok = await copyText(referralData.referral_code);
+                              if (ok) {
+                                setCopiedCode(true);
+                                setTimeout(() => setCopiedCode(false), 1800);
+                              }
+                            }}
+                          >
+                            {copiedCode ? "کپی شد ✓" : "کپی کد"}
+                          </button>
+                        </div>
                       </div>
                       <div className="club-field">
                         <label>لینک دعوت اختصاصی</label>
                         <div className="club-link-row">
-                          <input readOnly value={referralData.link} className="club-link-input" dir="ltr" />
+                          <input
+                            readOnly
+                            value={referralData.link}
+                            className="club-link-input"
+                            dir="ltr"
+                            onFocus={(e) => { try { e.target.select(); } catch {} }}
+                            onClick={async (e) => {
+                              try { e.target.select(); } catch {}
+                              if (!referralData.link) return;
+                              const ok = await copyText(referralData.link);
+                              if (ok) {
+                                setCopiedLink(true);
+                                setTimeout(() => setCopiedLink(false), 1800);
+                              }
+                            }}
+                          />
                           <button
+                            type="button"
                             className="btn-primary btn-primary--sm"
                             onClick={async () => {
                               if (!referralData.link) return;
-                              try {
-                                await navigator.clipboard.writeText(referralData.link);
+                              const ok = await copyText(referralData.link);
+                              if (ok) {
                                 setCopiedLink(true);
                                 setTimeout(() => setCopiedLink(false), 1800);
-                              } catch {}
+                              }
                             }}
                           >
                             {copiedLink ? "کپی شد ✓" : "کپی لینک"}
                           </button>
                         </div>
                       </div>
+                      <div className="club-share-row">
+                        <button
+                          type="button"
+                          className="btn-primary btn-primary--sm"
+                          onClick={async () => {
+                            const text = buildReferralShareText({
+                              link: referralData.link,
+                              code: referralData.referral_code,
+                            });
+                            const result = await shareReferralInvite({
+                              title: "دعوت به نوبیکس شاپ",
+                              text,
+                              url: referralData.link,
+                            });
+                            setShareStatus(
+                              result === "shared"
+                                ? "شیت اشتراک‌گذاری باز شد"
+                                : result === "copied"
+                                  ? "متن دعوت کپی شد ✓"
+                                  : "اشتراک‌گذاری لغو شد",
+                            );
+                            setTimeout(() => setShareStatus(""), 2200);
+                          }}
+                        >
+                          📤 اشتراک‌گذاری
+                        </button>
+                        <a
+                          className="btn-ghost btn-ghost--sm"
+                          href={buildWhatsAppShareUrl(buildReferralShareText({
+                            link: referralData.link,
+                            code: referralData.referral_code,
+                          }))}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          واتساپ
+                        </a>
+                        <a
+                          className="btn-ghost btn-ghost--sm"
+                          href={buildTelegramShareUrl({
+                            url: referralData.link,
+                            text: buildReferralShareText({
+                              link: referralData.link,
+                              code: referralData.referral_code,
+                            }),
+                          })}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          تلگرام
+                        </a>
+                      </div>
+                      {shareStatus && <p className="club-share-status">{shareStatus}</p>}
                       <div className="club-stats">
                         <div className="club-stat">
                           <div className="club-stat__value">{referralData.invites_count.toLocaleString("fa-IR")}</div>
@@ -868,7 +1778,121 @@ export default function UserPanelPage() {
         </div>
       </main>
 
-      {showCelebration && celebrationOrder && (
+      {xboxModalOrder && (
+        <div className="celebration-overlay" role="dialog" aria-modal="true" aria-label="ثبت اطلاعات اکانت ایکس باکس" onClick={() => !xboxSubmitting && setXboxModalOrder(null)}>
+          <div className="celebration-card" style={{ maxWidth: 540, width: "92%", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+            <button className="celebration-close" onClick={() => !xboxSubmitting && setXboxModalOrder(null)} aria-label="بستن">
+              ×
+            </button>
+            <div className="celebration-badge" style={{ background: "rgba(168, 85, 247, 0.2)", color: "#c084fc", borderColor: "rgba(168, 85, 247, 0.4)", marginBottom: 12 }}>
+              🎮 پشتیبانی نوبیکس شاپ
+            </div>
+            <h3 style={{ color: "#c084fc", margin: "0 0 12px 0", fontSize: 18, fontWeight: 800 }}>
+              ثبت اطلاعات اکانت ایکس باکس #{xboxModalOrder.tracking_code}
+            </h3>
+            
+            <div style={{
+              padding: "14px 16px",
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(168, 85, 247, 0.14), rgba(126, 34, 206, 0.08))",
+              border: "1px solid rgba(168, 85, 247, 0.35)",
+              color: "#e9d5ff",
+              fontSize: 13,
+              lineHeight: 1.8,
+              marginBottom: 18,
+              direction: "rtl",
+              textAlign: "right"
+            }}>
+              ما سفارشاتو با اپیک میزنیم کروپک قبلی شما از ایکس باکس تکمیل شده و اپیک گیمز اجازه خرید نمیده لطف کنید اطلاعات اکانت ایکس باکس لینک به اپیک گیمزتون رو بفرستید و یا از اخرین فروشگاهی که خرید کردید بگیرید و برای پشتیبانی بفرستید
+            </div>
+
+            {xboxErrorMsg && (
+              <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#f87171", fontSize: 13, marginBottom: 14 }}>
+                {xboxErrorMsg}
+              </div>
+            )}
+            {xboxSuccessMsg && (
+              <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)", color: "#34d399", fontSize: 13, marginBottom: 14 }}>
+                {xboxSuccessMsg}
+              </div>
+            )}
+
+            {!xboxSuccessMsg && (
+              <form onSubmit={(e) => { e.preventDefault(); handleSaveXboxInfo(); }}>
+                <div style={{ marginBottom: 14, textAlign: "right" }}>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#cbd5e1", marginBottom: 6 }}>
+                    ایمیل / نام کاربری اکانت ایکس باکس (Xbox Email): <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    dir="ltr"
+                    value={xboxEmail}
+                    onChange={(e) => setXboxEmail(e.target.value)}
+                    placeholder="example@outlook.com"
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255, 255, 255, 0.15)", background: "rgba(0, 0, 0, 0.3)", color: "#fff", fontSize: 14, boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 14, textAlign: "right" }}>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#cbd5e1", marginBottom: 6 }}>
+                    رمز عبور اکانت ایکس باکس (Xbox Password): <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    dir="ltr"
+                    value={xboxPassword}
+                    onChange={(e) => setXboxPassword(e.target.value)}
+                    placeholder="••••••••"
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255, 255, 255, 0.15)", background: "rgba(0, 0, 0, 0.3)", color: "#fff", fontSize: 14, boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 18, textAlign: "right" }}>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#cbd5e1", marginBottom: 6 }}>
+                    توضیحات تکمیلی (اختیاری):
+                  </label>
+                  <input
+                    type="text"
+                    value={xboxNote}
+                    onChange={(e) => setXboxNote(e.target.value)}
+                    placeholder="کد پشتیبان / آیدی تلگرام / شماره تماس..."
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255, 255, 255, 0.15)", background: "rgba(0, 0, 0, 0.3)", color: "#fff", fontSize: 14, boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
+                  <button
+                    type="button"
+                    onClick={() => setXboxModalOrder(null)}
+                    disabled={xboxSubmitting}
+                    style={{ padding: "10px 18px", borderRadius: 10, background: "rgba(255, 255, 255, 0.08)", border: "1px solid rgba(255, 255, 255, 0.15)", color: "#e2e8f0", cursor: "pointer", fontWeight: 600 }}
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={xboxSubmitting}
+                    style={{ padding: "10px 22px", borderRadius: 10, background: "linear-gradient(135deg, #a855f7, #7e22ce)", border: "none", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+                  >
+                    {xboxSubmitting ? "در حال ثبت..." : "ثبت و ارسال اطلاعات اکانت ایکس باکس"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {referralNotification && (
+        <ReferralNotificationModal
+          notification={referralNotification}
+          onClose={closeReferralNotification}
+        />
+      )}
+
+      {!referralNotification && showCelebration && celebrationOrder && (
         <div className="celebration-overlay" role="dialog" aria-modal="true" aria-label="مبارک! سفارش شما تکمیل شد">
           <div className="celebration-card">
             <button className="celebration-close" onClick={handleCelebrationClose} aria-label="بستن">
@@ -999,13 +2023,13 @@ export default function UserPanelPage() {
         }
         .pill.subtle { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.72); }
         .pill.danger {
-          background: rgba(255, 255, 255, 0.1);
-          color: #ffe1e1;
-          border-color: rgba(255, 255, 255, 0.28);
+          background: rgba(239, 68, 68, 0.85);
+          color: #fff;
+          border-color: rgba(239, 68, 68, 0.3);
           cursor: pointer;
           transition: background .2s ease, color .2s ease;
         }
-        .pill.danger:hover { background: rgba(239, 68, 68, 0.9); color: #fff; border-color: transparent; }
+        .pill.danger:hover { background: rgba(239, 68, 68, 1); color: #fff; border-color: transparent; }
 
         .account-hero__stats {
           display: flex;
@@ -1165,6 +2189,7 @@ export default function UserPanelPage() {
         }
         .btn-ghost:hover { background: color-mix(in srgb, var(--primary) 14%, transparent); }
         .btn-ghost--full { width: 100%; }
+        .btn-ghost--sm { height: 40px; padding: 0 12px; font-size: 12.5px; }
 
         /* ===== Empty states ===== */
         .empty-state {
@@ -1346,43 +2371,350 @@ export default function UserPanelPage() {
         .avatar-upload span { color: var(--primary); font-size: 13px; font-weight: 900; }
         .avatar-upload small { color: var(--muted); font-size: 11px; }
         .avatar-upload.busy { opacity: 0.7; cursor: wait; }
-
         /* ===== Orders ===== */
-        .orders-list { display: grid; gap: 12px; margin-top: 14px; }
+        .orders-list { display: grid; gap: 16px; margin-top: 14px; }
         .order-card {
           border: 1px solid var(--line);
           border-radius: 16px;
           background: var(--bg);
-          padding: 14px;
-          display: grid;
-          gap: 10px;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
         }
-        .order-card__top { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .order-chip {
-          background: color-mix(in srgb, var(--primary) 10%, transparent);
-          border: 1px solid var(--line);
-          padding: 6px 10px;
-          border-radius: 10px;
+        .order-invalid-info-banner {
+          background: rgba(239, 68, 68, 0.08);
+          border: 1px solid rgba(239, 68, 68, 0.35);
+          border-radius: 12px;
+          padding: 12px 14px;
+          direction: rtl;
+        }
+        .order-invalid-info-banner .banner-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #ef4444;
+          font-size: 14px;
           font-weight: 800;
-          font-size: 12px;
-          color: var(--primary);
+          margin-bottom: 6px;
         }
-        .order-card__body { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
-        .order-amount { text-align: left; }
-        .order-title { font-weight: 800; font-size: 15px; color: var(--text); }
-        .order-thumb {
-          width: 62px;
-          height: 62px;
+        .order-invalid-info-banner .banner-desc {
+          margin: 0;
+          color: var(--text);
+          font-size: 13px;
+          line-height: 1.7;
+          opacity: 0.9;
+        }
+        .btn-edit-trigger {
+          margin-top: 10px;
+          padding: 8px 14px;
+          border: 0;
+          border-radius: 10px;
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          color: #fff;
+          font-weight: 800;
+          font-size: 13px;
+          cursor: pointer;
+          transition: transform 0.15s, opacity 0.15s;
+        }
+        .btn-edit-trigger:hover {
+          transform: translateY(-1px);
+        }
+        .order-corrected-badge {
+          background: rgba(245, 158, 11, 0.12);
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          border-radius: 12px;
+          padding: 10px 14px;
+          color: #f59e0b;
+          font-weight: 800;
+          font-size: 13px;
+          direction: rtl;
+        }
+        .order-edit-form-box {
+          background: var(--card);
+          border: 1px solid var(--primary);
+          border-radius: 16px;
+          padding: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          direction: rtl;
+        }
+        .edit-form-title {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 900;
+          color: var(--text);
+        }
+        .edit-form-sub {
+          margin: 0;
+          font-size: 12.5px;
+          color: var(--muted);
+        }
+        .edit-form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .edit-form-group label {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text);
+        }
+        .edit-form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+        .edit-input, .edit-textarea {
+          width: 100%;
+          padding: 10px 12px;
+          border-radius: 10px;
+          border: 1px solid var(--line);
+          background: var(--bg);
+          color: var(--text);
+          font-size: 13.5px;
+          font-family: inherit;
+        }
+        .edit-msg {
+          padding: 10px 12px;
+          border-radius: 10px;
+          font-size: 13px;
+          font-weight: 800;
+        }
+        .edit-msg.error { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .edit-msg.success { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .edit-form-actions {
+          display: flex;
+          gap: 10px;
+          margin-top: 4px;
+        }
+        .btn-save-edit {
+          flex: 1;
+          padding: 10px 16px;
+          border: 0;
+          border-radius: 10px;
+          background: var(--primary);
+          color: #fff;
+          font-weight: 800;
+          font-size: 13.5px;
+          cursor: pointer;
+        }
+        .btn-cancel-edit {
+          padding: 10px 16px;
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: transparent;
+          color: var(--muted);
+          font-weight: 700;
+          font-size: 13px;
+          cursor: pointer;
+        }
+        .order-card__header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          direction: rtl;
+        }
+        
+        /* Left Header Section */
+        .order-card__left {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 6px;
+        }
+        .order-price {
+          font-weight: 900;
+          font-size: 16px;
+          color: var(--text);
+          margin-top: 4px;
+        }
+        .order-diamonds {
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--muted);
+        }
+
+        /* Right Header Section */
+        .order-card__right {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .order-info-text {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 6px;
+        }
+        .order-title-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .order-title {
+          font-weight: 800;
+          font-size: 16px;
+          color: var(--text);
+          direction: rtl;
+        }
+        .order-id-chip {
+          background: rgba(6, 182, 212, 0.12);
+          border: 1px solid rgba(6, 182, 212, 0.25);
+          color: #06b6d4;
+          padding: 4px 8px;
+          border-radius: 8px;
+          font-weight: 800;
+          font-size: 11px;
+        }
+        .order-date {
+          font-size: 12px;
+          color: var(--muted);
+        }
+        .order-thumbnail {
+          width: 58px;
+          height: 58px;
           border-radius: 12px;
           overflow: hidden;
           border: 1px solid var(--line);
           background: color-mix(in srgb, var(--primary) 8%, transparent);
           display: grid;
           place-items: center;
+          flex-shrink: 0;
         }
-        .order-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .order-thumb__fallback { font-weight: 900; color: var(--primary); }
-        .price { font-weight: 900; color: var(--text); }
+        .order-thumbnail img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .order-thumb-fallback {
+          font-weight: 900;
+          color: var(--primary);
+          font-size: 16px;
+        }
+
+        /* ===== Cool Order Stepper ===== */
+        .order-stepper-box {
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          background: rgba(30, 41, 59, 0.15);
+          padding: 16px;
+          direction: rtl;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .stepper-track-container {
+          position: relative;
+          padding: 10px 0 16px;
+        }
+        .stepper-progress-track {
+          position: absolute;
+          top: 26px; /* half of 32px node height + padding */
+          right: 32px;
+          left: 32px;
+          height: 3px;
+          background: var(--line);
+          border-radius: 2px;
+          z-index: 1;
+          display: flex;
+        }
+        .progress-segment {
+          flex: 1;
+          height: 100%;
+          background: transparent;
+          transition: background-color 0.4s ease, box-shadow 0.4s ease;
+        }
+        .progress-segment.active {
+          background: var(--primary);
+          box-shadow: 0 0 10px var(--primary);
+        }
+        .stepper-nodes {
+          display: flex;
+          justify-content: space-between;
+          position: relative;
+          z-index: 2;
+        }
+        .stepper-node-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          width: 80px;
+        }
+        .node-circle {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: var(--bg);
+          border: 2px solid var(--line);
+          color: var(--muted);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 800;
+          font-size: 14px;
+          transition: all 0.3s ease;
+        }
+        .stepper-node-wrapper.active .node-circle {
+          border-color: var(--primary);
+          color: var(--primary);
+          background: color-mix(in srgb, var(--primary) 10%, var(--bg));
+          box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 50%, transparent);
+          animation: pulseGlow 2s infinite ease-in-out;
+        }
+        .stepper-node-wrapper.done .node-circle {
+          border-color: var(--primary);
+          background: var(--primary);
+          color: #fff;
+          box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 50%, transparent);
+        }
+        .node-label {
+          font-size: 11px;
+          font-weight: 800;
+          color: var(--muted);
+          white-space: nowrap;
+          transition: color 0.3s ease;
+        }
+        .stepper-node-wrapper.active .node-label,
+        .stepper-node-wrapper.done .node-label {
+          color: var(--text);
+        }
+        @keyframes pulseGlow {
+          0%, 100% {
+            box-shadow: 0 0 6px color-mix(in srgb, var(--primary) 40%, transparent);
+          }
+          50% {
+            box-shadow: 0 0 16px color-mix(in srgb, var(--primary) 80%, transparent);
+          }
+        }
+        .stepper-status-msg {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text);
+          justify-content: center;
+          padding: 8px 12px;
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 8px;
+        }
+        .msg-icon {
+          font-size: 15px;
+        }
+        .msg-label {
+          color: var(--muted);
+        }
+        .msg-content {
+          color: var(--primary);
+          text-shadow: 0 0 8px color-mix(in srgb, var(--primary) 20%, transparent);
+        }
+
+        .tag.warning { background: rgba(245, 158, 11, 0.14); color: #f59e0b; }
+
         .order-card__actions { padding-top: 10px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; }
         .btn-cancel {
           padding: 8px 16px;
@@ -1397,6 +2729,7 @@ export default function UserPanelPage() {
         }
         .btn-cancel:hover:not(:disabled) { background: rgba(239, 68, 68, 0.18); transform: translateY(-1px); }
         .btn-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
+
         .tag {
           padding: 5px 12px;
           border-radius: 999px;
@@ -1461,8 +2794,28 @@ export default function UserPanelPage() {
           letter-spacing: 1px;
           font-size: 14px;
         }
-        .club-link-row { display: flex; gap: 8px; }
+        .club-link-row { display: flex; gap: 8px; align-items: center; }
+        .club-share-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .club-share-row a,
+        .club-share-row button {
+          flex: 1;
+          min-width: 90px;
+          text-align: center;
+          text-decoration: none;
+        }
+        .club-share-status {
+          margin: 0;
+          color: var(--accent);
+          font-size: 12px;
+          font-weight: 700;
+        }
         .club-link-input {
+          cursor: pointer;
+
           flex: 1;
           min-width: 0;
           height: 40px;
@@ -1577,8 +2930,525 @@ export default function UserPanelPage() {
           .tab__label { display: none; }
           .tab { padding: 12px; }
           .avatar-lab__preview { grid-template-columns: 1fr; text-align: center; justify-items: center; }
-          .order-card__body { grid-template-columns: 1fr; gap: 6px; }
-          .order-amount { text-align: right; }
+          .order-card__header { flex-direction: column-reverse; align-items: stretch; gap: 12px; }
+          .order-card__right { justify-content: flex-end; }
+          .order-price { margin-top: 0; }
+        }
+
+        /* ===== Tickets System Modern CSS ===== */
+        .tickets-section-main {
+          padding: 24px;
+          border-radius: 20px;
+          background: color-mix(in srgb, var(--card) 95%, transparent);
+          border: 1px solid var(--line);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+        }
+        .tickets-hero-banner {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          padding: 20px 24px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 18%, transparent), color-mix(in srgb, var(--accent) 12%, transparent));
+          border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+          margin-bottom: 24px;
+          direction: rtl;
+        }
+        .tickets-kicker {
+          font-size: 11.5px;
+          font-weight: 900;
+          color: var(--accent);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .tickets-title {
+          margin: 4px 0 6px;
+          font-size: 20px;
+          font-weight: 900;
+          color: var(--text);
+        }
+        .tickets-subtitle {
+          margin: 0;
+          font-size: 13px;
+          color: var(--muted);
+        }
+        .btn-create-ticket-hero {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 22px;
+          border: 0;
+          border-radius: 14px;
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          color: #fff;
+          font-weight: 900;
+          font-size: 14px;
+          cursor: pointer;
+          box-shadow: 0 8px 24px color-mix(in srgb, var(--primary) 35%, transparent);
+          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        .btn-create-ticket-hero:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 12px 30px color-mix(in srgb, var(--primary) 50%, transparent);
+        }
+
+        /* Glass Modal for Create Ticket */
+        .modal-backdrop-glass {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          z-index: 999;
+          display: grid;
+          place-items: center;
+          padding: 20px;
+          direction: rtl;
+          animation: fadeIn 0.2s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .create-ticket-modal-card {
+          background: var(--card);
+          border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+          border-radius: 20px;
+          width: min(560px, 100%);
+          padding: 24px;
+          animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-top-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid var(--line);
+          padding-bottom: 14px;
+          margin-bottom: 18px;
+        }
+        .modal-title-group {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .modal-title-group h4 { margin: 0; font-size: 17px; font-weight: 900; color: var(--text); }
+        .btn-close-modal {
+          background: transparent;
+          border: 0;
+          color: var(--muted);
+          font-size: 18px;
+          cursor: pointer;
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          display: grid;
+          place-items: center;
+          transition: background 0.15s;
+        }
+        .btn-close-modal:hover { background: var(--line); color: var(--text); }
+        .ticket-modal-form { display: flex; flex-direction: column; gap: 14px; }
+        .t-form-group { display: flex; flex-direction: column; gap: 6px; }
+        .t-form-group label { font-size: 13px; font-weight: 800; color: var(--text); }
+        .t-form-group label .req { color: #ef4444; }
+        .t-input-styled, .t-select-styled, .t-textarea-styled {
+          width: 100%;
+          padding: 12px 14px;
+          border-radius: 12px;
+          border: 1px solid var(--line);
+          background: var(--bg);
+          color: var(--text);
+          font-size: 14px;
+          font-family: inherit;
+          transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .t-input-styled:focus, .t-select-styled:focus, .t-textarea-styled:focus {
+          border-color: var(--primary);
+          outline: none;
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+        }
+        .t-error-alert {
+          padding: 10px 14px;
+          border-radius: 10px;
+          background: rgba(239, 68, 68, 0.12);
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          color: #ef4444;
+          font-size: 13px;
+          font-weight: 700;
+        }
+        .t-modal-footer { display: flex; gap: 10px; margin-top: 8px; }
+        .btn-submit-t {
+          flex: 1;
+          padding: 12px;
+          border: 0;
+          border-radius: 12px;
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          color: #fff;
+          font-weight: 900;
+          font-size: 14px;
+          cursor: pointer;
+          box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 30%, transparent);
+        }
+        .btn-cancel-t {
+          padding: 12px 20px;
+          border: 1px solid var(--line);
+          border-radius: 12px;
+          background: transparent;
+          color: var(--muted);
+          font-weight: 700;
+          font-size: 13.5px;
+          cursor: pointer;
+        }
+
+        /* Split Dashboard Layout */
+        .tickets-split-dashboard {
+          display: grid;
+          grid-template-columns: 340px 1fr;
+          gap: 20px;
+          min-height: 520px;
+          direction: rtl;
+        }
+        .sidebar-list-header h4 {
+          margin: 0 0 14px;
+          font-size: 15px;
+          font-weight: 900;
+          color: var(--text);
+        }
+        .tickets-cards-scroll {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          max-height: 540px;
+          overflow-y: auto;
+          padding-left: 4px;
+        }
+        .ticket-nav-card {
+          background: var(--bg);
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          padding: 14px 16px;
+          cursor: pointer;
+          transition: transform 0.15s, border-color 0.15s, background 0.15s;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          position: relative;
+        }
+        .ticket-nav-card:hover {
+          border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+          transform: translateY(-1px);
+        }
+        .ticket-nav-card.selected {
+          border-color: var(--primary);
+          background: color-mix(in srgb, var(--primary) 8%, var(--bg));
+          box-shadow: 0 4px 16px color-mix(in srgb, var(--primary) 15%, transparent);
+        }
+        .ticket-nav-card.has-unread {
+          border-right: 4px solid var(--accent);
+        }
+        .card-top-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .ticket-id-tag {
+          font-size: 11.5px;
+          font-weight: 800;
+          color: var(--muted);
+        }
+        .status-pill {
+          padding: 3px 10px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 800;
+          border: 1px solid transparent;
+        }
+        .status-pill.status-open {
+          background: rgba(245, 158, 11, 0.15);
+          color: #f59e0b;
+          border-color: rgba(245, 158, 11, 0.3);
+        }
+        .status-pill.status-answered {
+          background: rgba(16, 185, 129, 0.15);
+          color: #10b981;
+          border-color: rgba(16, 185, 129, 0.3);
+        }
+        .status-pill.status-user_replied {
+          background: rgba(99, 102, 241, 0.15);
+          color: #6366f1;
+          border-color: rgba(99, 102, 241, 0.3);
+        }
+        .status-pill.status-closed {
+          background: rgba(100, 116, 139, 0.15);
+          color: #94a3b8;
+          border-color: rgba(100, 116, 139, 0.3);
+        }
+        .card-subject-text {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 800;
+          color: var(--text);
+          line-height: 1.4;
+        }
+        .auto-created-chip {
+          display: inline-flex;
+          align-items: center;
+          padding: 3px 8px;
+          border-radius: 6px;
+          background: rgba(239, 68, 68, 0.12);
+          color: #ef4444;
+          font-size: 11px;
+          font-weight: 800;
+          border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .card-excerpt {
+          margin: 0;
+          font-size: 12.5px;
+          color: var(--muted);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .card-bottom-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 4px;
+        }
+
+        /* Empty & Placeholder States */
+        .tickets-empty-box {
+          text-align: center;
+          padding: 40px 20px;
+          background: var(--bg);
+          border: 1px dashed var(--line);
+          border-radius: 16px;
+        }
+        .empty-icon-wrapper { font-size: 42px; margin-bottom: 10px; }
+        .tickets-empty-box h5 { margin: 0 0 6px; font-size: 16px; font-weight: 800; }
+        .tickets-empty-box p { margin: 0 0 16px; font-size: 13px; color: var(--muted); }
+        .btn-create-first-ticket {
+          padding: 10px 18px;
+          border: 0;
+          border-radius: 12px;
+          background: var(--primary);
+          color: #fff;
+          font-weight: 800;
+          font-size: 13px;
+          cursor: pointer;
+        }
+
+        .no-ticket-selected-placeholder {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          min-height: 400px;
+          background: var(--bg);
+          border: 1px dashed var(--line);
+          border-radius: 16px;
+          padding: 30px;
+          text-align: center;
+        }
+        .placeholder-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.8; }
+        .no-ticket-selected-placeholder h4 { margin: 0 0 6px; font-size: 17px; font-weight: 800; }
+        .no-ticket-selected-placeholder p { margin: 0; font-size: 13px; color: var(--muted); max-width: 340px; }
+
+        /* Chat View */
+        .active-chat-frame {
+          background: var(--bg);
+          border: 1px solid var(--line);
+          border-radius: 16px;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          overflow: hidden;
+        }
+        .chat-frame-header {
+          padding: 16px 20px;
+          border-bottom: 1px solid var(--line);
+          background: var(--card);
+        }
+        .btn-back-mobile {
+          display: none;
+          background: transparent;
+          border: 0;
+          color: var(--primary);
+          font-weight: 800;
+          font-size: 13px;
+          cursor: pointer;
+          margin-bottom: 8px;
+        }
+        .chat-header-title { margin: 0 0 8px; font-size: 17px; font-weight: 900; color: var(--text); }
+        .chat-header-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .meta-chip { font-size: 12px; color: var(--muted); background: var(--bg); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line); }
+        .meta-chip.order-chip { color: var(--primary); font-weight: 800; border-color: color-mix(in srgb, var(--primary) 30%, transparent); }
+
+        .chat-messages-stream {
+          flex: 1;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          overflow-y: auto;
+          max-height: 440px;
+        }
+        .chat-bubble-row {
+          display: flex;
+          gap: 12px;
+          max-width: 82%;
+        }
+        .chat-bubble-row.user-side {
+          align-self: flex-start;
+          flex-direction: row;
+        }
+        .chat-bubble-row.admin-side {
+          align-self: flex-end;
+          flex-direction: row-reverse;
+        }
+        .avatar-wrapper {
+          position: relative;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          overflow: visible;
+          flex-shrink: 0;
+        }
+        .avatar-wrapper img {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid var(--line);
+        }
+        .online-indicator {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          width: 11px;
+          height: 11px;
+          border-radius: 50%;
+          background: #10b981;
+          border: 2px solid var(--bg);
+        }
+        .bubble-content-box {
+          background: var(--card);
+          border: 1px solid var(--line);
+          border-radius: 16px;
+          padding: 12px 16px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .chat-bubble-row.admin-side .bubble-content-box {
+          background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, var(--card)), color-mix(in srgb, var(--accent) 8%, var(--card)));
+          border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+        }
+        .bubble-sender-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 6px;
+        }
+        .bubble-sender-title .name { font-size: 12px; font-weight: 800; color: var(--text); }
+        .verified-badge {
+          font-size: 10.5px;
+          font-weight: 800;
+          color: #10b981;
+          background: rgba(16, 185, 129, 0.12);
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+        .bubble-message-text {
+          font-size: 14px;
+          color: var(--text);
+          line-height: 1.65;
+          white-space: pre-wrap;
+        }
+        .bubble-timestamp {
+          font-size: 10.5px;
+          color: var(--muted);
+          margin-top: 6px;
+          text-align: left;
+        }
+
+        .chat-reply-bar {
+          padding: 14px 18px;
+          background: var(--card);
+          border-top: 1px solid var(--line);
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
+        .chat-reply-input {
+          flex: 1;
+          padding: 10px 14px;
+          border-radius: 12px;
+          border: 1px solid var(--line);
+          background: var(--bg);
+          color: var(--text);
+          font-family: inherit;
+          font-size: 13.5px;
+          resize: none;
+        }
+        .chat-reply-input:focus {
+          border-color: var(--primary);
+          outline: none;
+        }
+        .btn-send-message {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 20px;
+          border: 0;
+          border-radius: 12px;
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          color: #fff;
+          font-weight: 800;
+          font-size: 13.5px;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+        .chat-closed-notice {
+          padding: 14px;
+          text-align: center;
+          background: color-mix(in srgb, var(--muted) 10%, transparent);
+          color: var(--muted);
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        /* Mobile Floating Action Button (FAB) */
+        .fab-create-ticket-mobile {
+          display: none;
+          position: fixed;
+          bottom: 24px;
+          left: 24px;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          color: #fff;
+          font-size: 24px;
+          border: 0;
+          box-shadow: 0 10px 28px color-mix(in srgb, var(--primary) 50%, transparent);
+          z-index: 99;
+          cursor: pointer;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* Mobile Breakpoints */
+        @media (max-width: 868px) {
+          .tickets-hero-banner { flex-direction: column; text-align: center; align-items: stretch; gap: 12px; }
+          .btn-create-ticket-hero { justify-content: center; width: 100%; }
+          .tickets-split-dashboard { grid-template-columns: 1fr; }
+          .tickets-sidebar-column.hide-on-mobile { display: none; }
+          .tickets-chat-column.hide-on-mobile { display: none; }
+          .btn-back-mobile { display: inline-flex; }
+          .fab-create-ticket-mobile { display: flex; }
         }
       `}</style>
 

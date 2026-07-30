@@ -228,7 +228,11 @@ export default function ResellerPricingEditor({
             loadedScopeTiers = overrideRows;
           } else {
             setHasOwnOverride(false);
-            loadedScopeTiers = [];
+            // یک پلن اختصاصی از پلن عمومی شروع می‌شود. بنابراین ادمین می‌تواند
+            // فقط یک پله‌ی بهتر به آن اضافه کند و با ذخیره‌سازی همان لحظه override
+            // اختصاصی ساخته می‌شود؛ بدون این‌که ابتدا قیمت‌های صفر/هوشمند ناخواسته
+            // برای همکار ثبت شود.
+            loadedScopeTiers = loadedGlobalTiers;
           }
         } else {
           setHasOwnOverride(false);
@@ -322,6 +326,23 @@ export default function ResellerPricingEditor({
 
   const addTier = () => {
     const sorted = normalizeEditableTiers(editingTiers);
+    const standardPlan = sorted.length === 2
+      && sorted[0].min_quantity === 1
+      && sorted[1].min_quantity === 10;
+    if (standardPlan) {
+      const [singleTier, tenTier] = sorted;
+      setEditingTiers([
+        ...sorted,
+        {
+          min_quantity: 5,
+          price: Math.round((singleTier.price + tenTier.price) / 2000) * 1000,
+          active: true,
+        },
+      ]);
+      setSaved(false);
+      setNotice("پلهٔ میانی ۵+ به پلن اضافه شد؛ قیمت پیشنهادی را در صورت نیاز ویرایش کنید.");
+      return;
+    }
     const last = sorted[sorted.length - 1];
     const nextQty = last ? Math.max(last.min_quantity + 1, last.min_quantity + Math.round(last.min_quantity * 0.5)) : 1;
     const nextPrice = last
@@ -720,7 +741,7 @@ export default function ResellerPricingEditor({
 
           <div className="rpe-footer-actions">
             <button type="button" className="rpe-btn rpe-btn-soft" onClick={addTier} disabled={loading || busy}>
-              افزودن پله
+              افزودن پله {scopeResellerId && !hasOwnOverride ? "اختصاصی" : ""}
             </button>
             <button type="button" className="rpe-btn rpe-btn-ai" onClick={applySmartPricing} disabled={!canSmartPrice || loading || busy}>
               قیمت‌گذاری هوشمند محصول

@@ -1,6 +1,6 @@
 "use client";
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCart } from '../lib/useCart';
 import { adminCacheBustHref } from '../lib/adminUrl.mjs';
@@ -53,7 +53,7 @@ export default function Navbar() {
   const authMenuRef = useRef(null);
   const searchListRef = useRef(null);
   const router = useRouter();
-  const params = useSearchParams();
+  // Removed params to fix ISR
   const apiBase = '';
   const { items, total, addItem, setQty, removeItem } = useCart();
   const { theme, toggleTheme } = useTheme();
@@ -124,9 +124,18 @@ export default function Navbar() {
     }
   };
 
-  useEffect(() => {
-    setQ(params?.get('q') || '');
-  }, [params]);
+  const prevSearchParamRef = useRef(null);
+  function SearchParamSync() {
+    const params = useSearchParams();
+    useEffect(() => {
+      const urlQ = params?.get('q') || '';
+      if (prevSearchParamRef.current !== urlQ) {
+        prevSearchParamRef.current = urlQ;
+        setQ(urlQ);
+      }
+    }, [params]);
+    return null;
+  }
 
   useEffect(() => {
     const loadMe = async () => {
@@ -412,6 +421,9 @@ export default function Navbar() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <SearchParamSync />
+      </Suspense>
       <header className="site-header">
         <nav className="navbar fortnite-nav">
           <div className="container nav-inner">
@@ -580,7 +592,7 @@ export default function Navbar() {
               </div>
               {user && (
                 <Link
-                  href={user.is_admin ? "/panel/admin" : "/panel/user"}
+                  href="/panel/user"
                   className="icon-btn nav-user-shortcut-btn"
                   aria-label="داشبورد"
                   title="داشبورد"
@@ -707,8 +719,16 @@ export default function Navbar() {
             </div>
 
             {/* Center: Search */}
-            <div className="search fortnite-search search-with-preview">
-              <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5m-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
+            <div 
+              className="search fortnite-search search-with-preview"
+              onClick={(e) => {
+                const inputEl = e.currentTarget.querySelector('input');
+                if (inputEl && document.activeElement !== inputEl) {
+                  inputEl.focus();
+                }
+              }}
+            >
+              <svg className="search-icon" style={{ pointerEvents: 'none' }} width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5m-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
               <input
                 placeholder="دنبال چی میگردی؟ جستجو در محصولات…"
                 value={q}
@@ -931,13 +951,13 @@ export default function Navbar() {
               </li>
 
               <li>
-                <Link href="/reseller" onClick={() => setShowMobileMenu(false)}>
+                <Link href="/reseller" prefetch={false} onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                   <span>همکاری با ما</span>
                 </Link>
               </li>
               <li>
-                <Link href="/blog" onClick={() => setShowMobileMenu(false)}>
+                <Link href="/blog" prefetch={false} onClick={() => setShowMobileMenu(false)}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                   <span>وبلاگ و مقالات</span>
                 </Link>
@@ -1011,14 +1031,10 @@ export default function Navbar() {
           
           <button
             type="button"
-            className={`bottom-nav-item ${pathname.includes('cat') ? 'active' : ''}`}
+            className={`bottom-nav-item ${pathname === '/products' || pathname.includes('category') ? 'active' : ''}`}
             onClick={() => {
               setShowSearchMobileOverlay(false);
-              if (pathname !== '/') {
-                router.push('/?openCatSidebar=true');
-              } else {
-                window.dispatchEvent(new CustomEvent('open-category-sidebar'));
-              }
+              router.push('/products');
             }}
           >
             <div className="bottom-nav-icon-container">

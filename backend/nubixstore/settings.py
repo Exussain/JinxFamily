@@ -156,11 +156,21 @@ CAPTCHA_RISK_WINDOW = int(os.environ.get('CAPTCHA_RISK_WINDOW', '900'))
 ZARINPAL_MERCHANT_ID = os.environ.get('ZARINPAL_MERCHANT_ID', 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
 ZARINPAL_SANDBOX = os.environ.get('ZARINPAL_SANDBOX', '1') == '1'  # Use sandbox for test
 ZARINPAL_CURRENCY = os.environ.get('ZARINPAL_CURRENCY', 'IRT')  # Default: IRT
+ZARINPAL_API_ACCESS_TOKEN = os.environ.get('ZARINPAL_API_ACCESS_TOKEN', '')
+ZARINPAL_API_CLIENT_ID = os.environ.get('ZARINPAL_API_CLIENT_ID', '')
+ZARINPAL_API_CLIENT_SECRET = os.environ.get('ZARINPAL_API_CLIENT_SECRET', '')
+ZARINPAL_API_REFRESH_TOKEN = os.environ.get('ZARINPAL_API_REFRESH_TOKEN', '')
+ZARINPAL_API_TERMINAL_ID = os.environ.get('ZARINPAL_API_TERMINAL_ID', '')
+ZARINPAL_RECONCILIATION_CURRENCY = os.environ.get(
+    'ZARINPAL_RECONCILIATION_CURRENCY',
+    ZARINPAL_CURRENCY,
+).upper()
 
 # Test users - use sandbox mode and no wallet rewards
 # Phone numbers that should use sandbox payment and skip wallet rewards
 TEST_USER_PHONES = [
-    "09924002533",
+    "09923960513",
+    "09202440480",
 ]
 
 # Frontend URL for payment callbacks

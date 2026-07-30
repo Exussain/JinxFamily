@@ -10,6 +10,233 @@ import ResellerTabContent from "../../../components/ResellerTabContent";
 
 const LIRA_RATE_MARKUP_TOMAN = 140;
 
+function DailyLiraPurchaseDashboard({ apiBase, setReport }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [config, setConfig] = useState({
+    costs: { kavenegar: 0, server: 0, cloud: 0 },
+    payers: {
+      kavenegar: { source: "main", label: "حساب اصلی" },
+      server: { source: "main", label: "حساب اصلی" },
+      cloud: { source: "external", label: "ایلیا" },
+    },
+  });
+
+  const format = (value, fraction = 0) => Number(value || 0).toLocaleString("fa-IR", { maximumFractionDigits: fraction });
+  const formatMoney = (value) => value === null || value === undefined ? "—" : `${format(value)} تومان`;
+  const formatPayoutTime = (value) => {
+    if (!value) return "بدون واریزی امروز";
+    return new Date(value).toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" });
+  };
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/accounting/daily-lira-purchase`, { cache: "no-store", credentials: "include" });
+      const next = await res.json();
+      if (!res.ok) throw new Error(next.detail || "خطا در دریافت برنامه خرید روزانه");
+      setData(next);
+      setConfig({
+        costs: {
+          kavenegar: next.weekly.fixed_costs.kavenegar || 0,
+          server: next.weekly.fixed_costs.server || 0,
+          cloud: next.weekly.fixed_costs.cloud || 0,
+        },
+        payers: next.weekly.fixed_cost_payers,
+      });
+    } catch (err) {
+      setReport?.({ kind: "error", title: err.message || "خطا در دریافت برنامه خرید روزانه" });
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => { refresh(); }, [apiBase]);
+
+  const saveConfig = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/accounting/financial-config`, {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fixed_costs: {
+            kavenegar: Number(config.costs.kavenegar) || 0,
+            server: Number(config.costs.server) || 0,
+            cloud: Number(config.costs.cloud) || 0,
+          },
+          fixed_cost_payers: config.payers,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || "ذخیره تنظیمات ناموفق بود");
+      setReport?.({ kind: "success", title: "هزینه‌های ماهانه و پرداخت‌کننده‌ها ذخیره شد" });
+      refresh();
+    } catch (err) {
+      setReport?.({ kind: "error", title: err.message || "خطا در ذخیره تنظیمات" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const closeWeek = async () => {
+    if (!confirm("پرونده هفته گذشته بسته شود؟ این گزارش به‌صورت نهایی ذخیره می‌شود.")) return;
+    setClosing(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/accounting/close-week`, { method: "POST", credentials: "include" });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || "بستن پرونده ناموفق بود");
+      setReport?.({ kind: "success", title: result.message, description: `سود خالص ثبت‌شده: ${format(result.closure.net_profit)} تومان` });
+      refresh();
+    } catch (err) {
+      setReport?.({ kind: "error", title: err.message || "خطا در بستن پرونده" });
+    } finally {
+      setClosing(false);
+    }
+  };
+
+  if (loading && !data) return <div className="section-card" style={{ marginBottom: 24 }}>در حال محاسبه خرید لیر روزانه...</div>;
+  if (!data) return null;
+  const { open_lira: open, forecast, zarinpal_payout: payout, weekly } = data;
+  const fieldStyle = { width: "100%", minWidth: 110, padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(148,163,184,.25)", background: "rgba(15,23,42,.52)", color: "var(--text)" };
+  const registeredPurchaseCost = open.registered_lira * data.lira_rate;
+  const summaryRows = [
+    {
+      title: "خرید لیر جاری",
+      status: `${format(open.count)} سفارش تکمیل‌نشده`,
+      lira: `${format(open.total_lira, 2)} ₺`,
+      amount: formatMoney(open.purchase_cost),
+      color: "#f59e0b",
+    },
+    {
+      title: "ثبت‌شده و در صف",
+      status: `${format(open.registered_count)} سفارش ثبت‌شده`,
+      lira: `${format(open.registered_lira, 2)} ₺`,
+      amount: formatMoney(registeredPurchaseCost),
+      color: "#38bdf8",
+    },
+    {
+      title: "پیش‌بینی خرید امروز",
+      status: "مدل ۸۰/۲۰ سینوسی ماهانه",
+      lira: `${format(forecast.lira, 2)} ₺`,
+      amount: formatMoney(forecast.lira * data.lira_rate),
+      color: "#8b5cf6",
+    },
+    {
+      title: "واریزی واقعی زرین‌پال امروز",
+      status: payout.sync_ok
+        ? `${format(payout.settlement_count)} واریزی · ${formatPayoutTime(payout.last_reconciled_at)}`
+        : "اتصال API برقرار نیست",
+      lira: "—",
+      amount: formatMoney(payout.settled_today),
+      color: payout.sync_ok ? "#10b981" : "#f87171",
+    },
+    {
+      title: "بودجه آزاد خرید این هفته",
+      status: `${new Date(`${weekly.week_start}T00:00:00`).toLocaleDateString("fa-IR")} تا امروز`,
+      lira: "—",
+      amount: formatMoney(weekly.available_purchase_cash),
+      color: "#34d399",
+    },
+    {
+      title: "سود خالص این هفته",
+      status: "پس از تمام کسورات و استردادها",
+      lira: "—",
+      amount: formatMoney(weekly.net_profit),
+      color: "#e879f9",
+    },
+  ];
+  const costLabels = { kavenegar: "کاوه‌نگار", server: "سرور", cloud: "کلود" };
+
+  return (
+    <section className="section-card" style={{ marginBottom: 24, border: "1px solid rgba(129,140,248,.32)", background: "linear-gradient(145deg, rgba(30,41,59,.88), rgba(15,23,42,.94))" }}>
+      <div className="section-header" style={{ alignItems: "flex-start", gap: 12 }}>
+        <div>
+          <h3 style={{ marginBottom: 6 }}>خرید لیر روزانه و کنترل مالی</h3>
+          <div className="muted">برنامه عملیاتی امروز بر پایه سفارش‌های واقعی، استردادها و چرخه مالی شنبه تا جمعه</div>
+        </div>
+        <button type="button" className="btn secondary" onClick={refresh} disabled={loading} style={{ whiteSpace: "nowrap" }}>{loading ? "در حال بروزرسانی..." : "↻ بروزرسانی"}</button>
+      </div>
+
+      <div className="accounting-table-wrapper daily-finance-table-wrapper" style={{ marginTop: 16 }}>
+        <table className="accounting-table daily-finance-table">
+          <thead><tr><th>عنوان</th><th>وضعیت / تعداد</th><th>مقدار لیر</th><th>مبلغ نهایی</th></tr></thead>
+          <tbody>
+            {summaryRows.map((row) => (
+              <tr key={row.title}>
+                <td style={{ fontWeight: 800, color: row.color }}>{row.title}</td>
+                <td style={{ color: "var(--muted)", fontSize: 12 }}>{row.status}</td>
+                <td style={{ fontWeight: 800 }}>{row.lira}</td>
+                <td style={{ color: row.color, fontWeight: 900 }}>{row.amount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {!payout.sync_ok && <div style={{ marginTop: 10, color: "#fca5a5", fontSize: 12 }}>{payout.error}</div>}
+
+      <details style={{ marginTop: 14, border: "1px solid rgba(148,163,184,.18)", borderRadius: 10, padding: "10px 12px", background: "rgba(15,23,42,.32)" }}>
+        <summary style={{ cursor: "pointer", fontWeight: 800, fontSize: 13 }}>تنظیم هزینه‌های ماهانه و پرداخت‌کننده‌ها</summary>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 12, marginTop: 14 }}>
+          {Object.entries(costLabels).map(([key, label]) => (
+            <div key={key} style={{ display: "grid", gap: 7 }}>
+              <label style={{ fontSize: 12 }}>{label} (ماهانه / تومان)
+                <input type="number" min="0" value={config.costs[key]} onChange={(e) => setConfig((old) => ({ ...old, costs: { ...old.costs, [key]: e.target.value } }))} style={{ ...fieldStyle, marginTop: 5 }} />
+              </label>
+              <select value={config.payers[key].source} onChange={(e) => setConfig((old) => ({ ...old, payers: { ...old.payers, [key]: { ...old.payers[key], source: e.target.value } } }))} style={fieldStyle}>
+                <option value="main">پرداخت از حساب اصلی</option>
+                <option value="external">پرداخت از حساب دیگر</option>
+              </select>
+              <input type="text" value={config.payers[key].label} onChange={(e) => setConfig((old) => ({ ...old, payers: { ...old.payers, [key]: { ...old.payers[key], label: e.target.value } } }))} placeholder="نام پرداخت‌کننده" style={fieldStyle} />
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+          <button type="button" className="btn secondary" onClick={saveConfig} disabled={saving}>{saving ? "در حال ذخیره..." : "ذخیره تنظیمات"}</button>
+          <span style={{ fontSize: 12, color: "var(--muted)" }}>سهم هفتگی کل: <strong>{format(weekly.weekly_fixed_cost)} تومان</strong> · ذخیره حساب اصلی: <strong>{format(weekly.main_account_reserve)} تومان</strong></span>
+        </div>
+      </details>
+
+      <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+        <button type="button" className="btn primary" onClick={closeWeek} disabled={!weekly.can_close || closing}>{closing ? "در حال بستن..." : "بستن پرونده مالی هفته گذشته"}</button>
+        <span style={{ fontSize: 12, color: weekly.can_close ? "#34d399" : "var(--muted)" }}>
+          {weekly.can_close ? "گزارش زرین‌پال همگام است و هفته گذشته آماده بستن است." : payout.sync_ok ? "بستن پرونده فقط شنبه فعال می‌شود." : "برای بستن هفته، اتصال زرین‌پال باید برقرار باشد."}
+        </span>
+      </div>
+      <style jsx>{`
+        .daily-finance-table {
+          table-layout: fixed;
+          width: 100%;
+          min-width: 0;
+        }
+        @media (max-width: 640px) {
+          .daily-finance-table-wrapper {
+            overflow-x: hidden;
+          }
+          .daily-finance-table {
+            font-size: 10.5px;
+          }
+          .daily-finance-table th,
+          .daily-finance-table td {
+            padding: 9px 5px;
+            line-height: 1.65;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+          }
+          .daily-finance-table th {
+            font-size: 10px;
+          }
+          .daily-finance-table th:nth-child(1) { width: 27%; }
+          .daily-finance-table th:nth-child(2) { width: 29%; }
+          .daily-finance-table th:nth-child(3) { width: 18%; }
+          .daily-finance-table th:nth-child(4) { width: 26%; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 function AccountDetailsRow({ account_email, account_password, account_type, copyToClipboard, copiedField }) {
   const [showPass, setShowPass] = useState(false);
   if (!account_email && !account_password) return null;
@@ -56,6 +283,7 @@ function AccountDetailsRow({ account_email, account_password, account_type, copy
 function AccountUnitRow({ acc, onStatusChange, copyToClipboard, copiedField }) {
   const [showPass, setShowPass] = useState(false);
   const [showXboxPass, setShowXboxPass] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const statusLabels = {
     pending: "در انتظار مشخصات",
@@ -95,6 +323,19 @@ function AccountUnitRow({ acc, onStatusChange, copyToClipboard, copiedField }) {
 
   const selStyles = getStatusStyles(acc.status || "pending");
 
+  const handleStatusSelect = async (event) => {
+    event.stopPropagation();
+    const nextStatus = event.target.value;
+    if (isUpdating || nextStatus === (acc.status || "pending")) return;
+
+    setIsUpdating(true);
+    try {
+      await onStatusChange(acc.id, nextStatus);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="item-account-unit" style={{ padding: "12px 0", borderBottom: "1px dashed rgba(255,255,255,0.08)", fontSize: 12 }}>
       {/* Header row */}
@@ -114,26 +355,44 @@ function AccountUnitRow({ acc, onStatusChange, copyToClipboard, copiedField }) {
           )}
         </div>
 
-        <select
-          value={acc.status || "pending"}
-          onChange={(e) => onStatusChange(acc.id, e.target.value)}
-          style={{
-            padding: "4px 10px",
-            borderRadius: 8,
-            background: selStyles.bg,
-            color: selStyles.color,
-            border: selStyles.border,
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: "pointer",
-            outline: "none",
-            transition: "all 0.2s"
-          }}
-        >
-          {Object.entries(statusLabels).map(([k, v]) => (
-            <option key={k} value={k} style={{ background: "#1f2937", color: "#fff" }}>{v}</option>
-          ))}
-        </select>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }} aria-busy={isUpdating}>
+          <select
+            value={acc.status || "pending"}
+            disabled={isUpdating}
+            onChange={handleStatusSelect}
+            style={{
+              padding: "4px 10px",
+              borderRadius: 8,
+              background: selStyles.bg,
+              color: selStyles.color,
+              border: selStyles.border,
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: isUpdating ? "wait" : "pointer",
+              opacity: isUpdating ? 0.65 : 1,
+              outline: "none",
+              transition: "all 0.2s"
+            }}
+          >
+            {Object.entries(statusLabels).map(([k, v]) => (
+              <option key={k} value={k} style={{ background: "#1f2937", color: "#fff" }}>{v}</option>
+            ))}
+          </select>
+          {isUpdating && (
+            <span
+              role="status"
+              aria-label="در حال بروزرسانی وضعیت واحد"
+              style={{
+                width: 12,
+                height: 12,
+                border: "2px solid rgba(96, 165, 250, 0.25)",
+                borderTopColor: "#60a5fa",
+                borderRadius: "50%",
+                animation: "spin 0.7s linear infinite",
+              }}
+            />
+          )}
+        </span>
       </div>
 
       {/* Account credentials */}
@@ -1084,7 +1343,7 @@ function XboxArchiveCards({
   );
 }
 
-export default function AdminPanelPage() {
+export default function AdminPanelPage({ initialTab = "orders" }) {
   const router = useRouter();
   const { items, total } = useCart();
   const [user, setUser] = useState(null);
@@ -1106,6 +1365,7 @@ export default function AdminPanelPage() {
     subtitle: "",
     category: "FORTNITE",
     image_url: "",
+    cover_16_9: "",
     price: 0,
     original_price: 0,
     price_lira: 0,
@@ -1126,7 +1386,9 @@ export default function AdminPanelPage() {
   };
   const [newProduct, setNewProduct] = useState(emptyProductForm);
   const [newProductCoverFile, setNewProductCoverFile] = useState(null);
+  const [newProductCover16_9File, setNewProductCover16_9File] = useState(null);
   const [productCoverFiles, setProductCoverFiles] = useState({});
+  const [productCover16_9Files, setProductCover16_9Files] = useState({});
   const [notifications, setNotifications] = useState([]);
   
   // Announcements states
@@ -1158,11 +1420,16 @@ export default function AdminPanelPage() {
   const [discountBusy, setDiscountBusy] = useState({ code: null, action: null });
   const [loading, setLoading] = useState(true);
   const [savingStatusId, setSavingStatusId] = useState(null);
+  const [updatingOrderIds, setUpdatingOrderIds] = useState(() => new Set());
+  // State updates are asynchronous, so keep a synchronous mutex as well. This
+  // prevents two status mutations for the same order from being dispatched by
+  // quick successive selections before the card has re-rendered as disabled.
+  const updatingOrderIdsRef = useRef(new Set());
   const [accountingSettlingId, setAccountingSettlingId] = useState(null);
   const [accountingSettlingAll, setAccountingSettlingAll] = useState(false);
   const [accountingExpandedOrder, setAccountingExpandedOrder] = useState([]);
   const [accountingUnitSettlingId, setAccountingUnitSettlingId] = useState(null);
-  const [activeTab, setActiveTab] = useState("orders");
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [orderFilter, setOrderFilter] = useState("active");
   const [orderSearch, setOrderSearch] = useState("");
   // سفارش‌های عادی/همکار: all | customer | reseller
@@ -1244,6 +1511,288 @@ export default function AdminPanelPage() {
     customerPhone: "",
     saving: false,
   });
+
+  // Onboarding tour state for support buttons
+  const [showSupportTour, setShowSupportTour] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const seen = localStorage.getItem("admin_support_buttons_tour_v1");
+      if (!seen) {
+        setShowSupportTour(true);
+      }
+    }
+  }, []);
+
+  const dismissSupportTour = () => {
+    setShowSupportTour(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("admin_support_buttons_tour_v1", "true");
+    }
+  };
+
+  // Direct Live Chat Modal State
+  const [directChatModal, setDirectChatModal] = useState({
+    open: false,
+    orderId: null,
+    tracking: "",
+    userEmail: "",
+    userPhone: "",
+    message: "",
+    sendSms: true,
+    submitting: false,
+  });
+
+  const openDirectChatModal = (o) => {
+    setDirectChatModal({
+      open: true,
+      orderId: o.id,
+      tracking: o.tracking_code,
+      userEmail: o.user_email || o.epic_username || "",
+      userPhone: o.phone || "",
+      message: "",
+      sendSms: true,
+      submitting: false,
+    });
+  };
+
+  const handleSendDirectChat = async () => {
+    if (!directChatModal.message.trim()) return;
+    setDirectChatModal(m => ({ ...m, submitting: true }));
+    try {
+      const res = await fetch(`${apiBase}/api/admin/orders/${directChatModal.tracking}/direct-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          message: directChatModal.message,
+          send_sms: directChatModal.sendSms,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "خطا در ارسال پیام مستقیم");
+
+      setReport({
+        title: "پیام مستقیم با موفقیت به چت سایت ارسال شد 💬",
+        emailStatus: "پیام در چت زنده پشتیبانی و تیکت کاربر ثبت گردید",
+        smsStatus: data.sms_sent ? "پیامک اطلاع‌رسانی ارسال شد" : data.sms_error ? `پیامک: ${data.sms_error}` : "پیامک ارسال نشد",
+        kind: "success",
+      });
+      setDirectChatModal(m => ({ ...m, open: false }));
+    } catch (err) {
+      setReport({ kind: "error", title: err.message || "خطا در ارسال پیام به چت" });
+    } finally {
+      setDirectChatModal(m => ({ ...m, submitting: false }));
+    }
+  };
+
+  // Emergency Ticket Modal State & Presets
+  const EMERGENCY_PRESETS = [
+    {
+      key: "xbox_link",
+      label: "🎮 مشکل کروپک قبلی / لینک اکانت ایکس باکس",
+      subject: "🚨 نیاز به اطلاعات اکانت ایکس باکس ( کروپک قبلی / لینک ایکس باکس )",
+      message: "ما سفارشاتو با اپیک میزنیم کروپک قبلی شما از ایکس باکس تکمیل شده و اپیک گیمز اجازه خرید نمیده. لطف کنید اطلاعات اکانت ایکس باکس لینک به اپیک گیمزتون (ایمیل و رمز عبور ایکس باکس) رو همین‌جا بفرستید و یا از اخرین فروشگاهی که خرید کردید بگیرید و برای پشتیبانی بفرستید.",
+    },
+    {
+      key: "invalid_pass",
+      label: "❌ اطلاعات ورود اشتباه (ایمیل / رمز عبور)",
+      subject: "🚨 اصلاح اطلاعات ورود اکانت سفارش",
+      message: "اطلاعات ورود ثبت‌شده برای سفارش شما اشتباه می‌باشد و پشتیبانی امکان ورود به اکانت را ندارد. لطفاً ایمیل/نام‌کاربری و رمز عبور صحیح را ارسال نمایید.",
+    },
+    {
+      key: "2fa_code",
+      label: "🔑 نیاز به کد ۲ مرحله‌ای (2FA)",
+      subject: "🚨 ارسال کد دو مرحله‌ای (2FA) برای سفارش",
+      message: "اکانت شما دارای تایید دو مرحله‌ای فعال می‌باشد. لطفاً کد تایید ارسال شده یا کدهای پشتیبان (Backup Codes) اکانت خود را ارسال فرمایید.",
+    },
+    {
+      key: "region_mismatch",
+      label: "🌍 مغایرت ریجن اکانت / ریجن سفارش",
+      subject: "🚨 بررسی و تایید تغییر ریجن اکانت",
+      message: "ریجن اکانت شما با ریجن محصول خریداری‌شده یکسان نمی‌باشد. لطفاً جهت تغییر ریجن یا هماهنگی با پشتیبانی پاسخ دهید.",
+    },
+    {
+      key: "custom",
+      label: "✏️ سوال یا پیام اضطراری دلخواه",
+      subject: "🚨 تیکت اضطراری پشتیبانی",
+      message: "",
+    },
+  ];
+
+  const [emergencyTicketModal, setEmergencyTicketModal] = useState({
+    open: false,
+    orderId: null,
+    tracking: "",
+    userEmail: "",
+    userPhone: "",
+    subject: "",
+    message: "",
+    sendSms: true,
+    presetKey: "xbox_link",
+    submitting: false,
+  });
+
+  const openEmergencyTicketModal = (o) => {
+    const defaultPreset = EMERGENCY_PRESETS[0];
+    setEmergencyTicketModal({
+      open: true,
+      orderId: o.id,
+      tracking: o.tracking_code,
+      userEmail: o.user_email || o.epic_username || "",
+      userPhone: o.phone || "",
+      subject: defaultPreset.subject.replace("#{tracking_code}", `#${o.tracking_code}`),
+      message: defaultPreset.message,
+      sendSms: true,
+      presetKey: defaultPreset.key,
+      submitting: false,
+    });
+  };
+
+  const handleSendEmergencyTicket = async () => {
+    if (!emergencyTicketModal.message.trim()) return;
+    setEmergencyTicketModal(m => ({ ...m, submitting: true }));
+    try {
+      const res = await fetch(`${apiBase}/api/admin/orders/${emergencyTicketModal.tracking}/emergency-ticket`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          subject: emergencyTicketModal.subject,
+          message: emergencyTicketModal.message,
+          send_sms: emergencyTicketModal.sendSms,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "خطا در ایجاد تیکت اضطراری");
+
+      setReport({
+        title: `تیکت اضطراری #${data.ticket_id} ایجاد شد 🚨`,
+        emailStatus: "تیکت اضطراری برای کاربر ثبت گردید",
+        smsStatus: data.sms_sent ? "پیامک اطلاع‌رسانی با لینک تیکت ارسال شد" : data.sms_error ? `پیامک: ${data.sms_error}` : "پیامک ارسال نشد",
+        kind: "success",
+      });
+      setEmergencyTicketModal(m => ({ ...m, open: false }));
+    } catch (err) {
+      setReport({ kind: "error", title: err.message || "خطا در ساخت تیکت اضطراری" });
+    } finally {
+      setEmergencyTicketModal(m => ({ ...m, submitting: false }));
+    }
+  };
+
+  const handleAiVerifyInfo = async (order, action) => {
+    try {
+      const res = await fetch(`${apiBase}/api/admin/orders/${order.tracking_code}/ai-verify-info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action, send_sms: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "خطا در ارزیابی اطلاعات توسط هوش مصنوعی");
+
+      setReport({
+        title: action === "approve" ? "تایید هوش مصنوعی: اطلاعات کاربر تایید شد ✅" : "رد هوش مصنوعی: اطلاعات هنوز غلط اعلام شد ❌",
+        emailStatus: data.message,
+        smsStatus: data.sms_sent ? "پیامک اطلاع‌رسانی ارسال شد" : data.sms_error ? `پیامک: ${data.sms_error}` : "پیامک ارسال نشد",
+        kind: action === "approve" ? "success" : "warning",
+      });
+      await loadOrders();
+    } catch (err) {
+      setReport({ kind: "error", title: err.message || "خطا در ارزیابی اطلاعات" });
+    }
+  };
+
+  // Admin Ticket System State
+  const [adminTickets, setAdminTickets] = useState([]);
+  const [adminTicketCount, setAdminTicketCount] = useState(0);
+  const [unansweredTicketsCount, setUnansweredTicketsCount] = useState(0);
+  const [ticketStatusFilter, setTicketStatusFilter] = useState("");
+  const [ticketSearchQuery, setTicketSearchQuery] = useState("");
+  const [selectedAdminTicketId, setSelectedAdminTicketId] = useState(null);
+  const [selectedAdminTicketData, setSelectedAdminTicketData] = useState(null);
+  const [loadingAdminTicketDetail, setLoadingAdminTicketDetail] = useState(false);
+  const [adminReplyText, setAdminReplyText] = useState("");
+  const [submittingAdminReply, setSubmittingAdminReply] = useState(false);
+
+  const loadAdminTickets = async () => {
+    try {
+      const query = new URLSearchParams();
+      if (ticketStatusFilter) query.set("status", ticketStatusFilter);
+      if (ticketSearchQuery) query.set("q", ticketSearchQuery);
+
+      const res = await fetch(`${apiBase}/api/admin/tickets?${query.toString()}`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAdminTickets(data.results || []);
+        setAdminTicketCount(data.count || 0);
+        setUnansweredTicketsCount(data.unanswered_count || 0);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const loadAdminTicketDetail = async (ticketId) => {
+    setSelectedAdminTicketId(ticketId);
+    setLoadingAdminTicketDetail(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/tickets/${ticketId}`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedAdminTicketData(data);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingAdminTicketDetail(false);
+    }
+  };
+
+  const handleAdminSendReply = async () => {
+    if (!adminReplyText.trim() || !selectedAdminTicketId) return;
+    setSubmittingAdminReply(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/tickets/${selectedAdminTicketId}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ message: adminReplyText }),
+      });
+      if (res.ok) {
+        setAdminReplyText("");
+        loadAdminTicketDetail(selectedAdminTicketId);
+        loadAdminTickets();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSubmittingAdminReply(false);
+    }
+  };
+
+  const handleAdminChangeTicketStatus = async (ticketId, newStatus) => {
+    try {
+      const res = await fetch(`${apiBase}/api/admin/tickets/${ticketId}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        loadAdminTicketDetail(ticketId);
+        loadAdminTickets();
+      }
+    } catch {
+      // ignore
+    }
+  };
   // Product vitrine (showcase) modal — drag-and-drop reorder for the homepage
   const [productVitrineOpen, setProductVitrineOpen] = useState(false);
   const [vitrineOrder, setVitrineOrder] = useState([]);
@@ -1348,6 +1897,7 @@ export default function AdminPanelPage() {
     { value: "completed", label: "انجام شده", color: "#10b981" },
     { value: "needs_2fa", label: "نیاز به کد 2FA", color: "#f97316" },
     { value: "needs_tr_region", label: "نیاز به تغییر ریجن ترکیه", color: "#ea580c" },
+    { value: "needs_xbox_info", label: "مشکل ایکس باکس ❌", color: "#a855f7" },
     { value: "invalid_info", label: "اطلاعات غلط/ناقص", color: "#dc2626" },
     { value: "canceled", label: "لغو شده", color: "#ef4444" },
     { value: "refunded", label: "مسترد شده", color: "#0ea5e9" },
@@ -1422,6 +1972,10 @@ export default function AdminPanelPage() {
 
 فروشگاه آنلاین Nubix Shop`
     },
+    needs_xbox_info: {
+      subject: "مشکل اکانت ایکس باکس ❌",
+      body: `ما سفارشاتو با اپیک میزنیم کروپک قبلی شما از ایکس باکس تکمیل شده و اپیک گیمز اجازه خرید نمیده لطف کنید اطلاعات اکانت ایکس باکس لینک به اپیک گیمزتون رو بفرستید و یا از اخرین فروشگاهی که خرید کردید بگیرید و برای پشتیبانی بفرستید`
+    },
     completed: {
       subject: "سفارش شما تکمیل شد 🎉",
       body: `سفارشتون با موفقیت تکمیل شد و الان توی وضعیت «تکمیل شده» قرار گرفته.
@@ -1473,6 +2027,7 @@ export default function AdminPanelPage() {
     { value: "AI", label: "AI / هوش مصنوعی" },
     { value: "SUBSCRIPTIONS", label: "Subscriptions / اشتراک‌ها" },
     { value: "GAMES", label: "Games / بازی‌ها" },
+    { value: "ROCKET_LEAGUE", label: "Rocket League / راکت لیگ" },
     { value: "GIFTCARDS", label: "Giftcards / گیفت‌کارت‌ها" },
   ];
   const adminPhones = ["09339732325", "09123101634"];
@@ -1483,6 +2038,10 @@ export default function AdminPanelPage() {
   }, [report]);
 
   const loadOrders = async (useLoader = true, isPoll = false) => {
+    // A polling response can otherwise arrive during a status mutation with an
+    // older status and overwrite the stable card state shown to the admin.
+    if (isPoll && updatingOrderIdsRef.current.size > 0) return;
+
     if (isPoll) {
       const orderTypeParam = orderTypeFilter && orderTypeFilter !== "all" ? `&type=${orderTypeFilter}` : "";
       const limitParam = activeTab === "orders" ? "200" : "10";
@@ -2058,8 +2617,12 @@ export default function AdminPanelPage() {
   useEffect(() => {
     if (activeTab === "accounting") {
       fetchSettlementHistory();
+      fetchAccountingData();
     }
-  }, [activeTab]);
+    if (activeTab === "tickets" || activeTab === "orders") {
+      loadAdminTickets();
+    }
+  }, [activeTab, ticketStatusFilter]);
 
   useEffect(() => {
     loadOrders(true);
@@ -2742,11 +3305,13 @@ export default function AdminPanelPage() {
     .filter((o) => o.status === "needs_2fa")
     .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
   const invalidInfoOrders = orders
-    .filter((o) => o.status === "invalid_info")
+    .filter((o) => o.status === "invalid_info" || o.status === "needs_xbox_info")
     .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
   const activeNonPendingOrders = orders
-    .filter((o) => o.status !== "pending" && o.status !== "needs_2fa" && o.status !== "invalid_info")
+    .filter((o) => o.status !== "pending" && o.status !== "needs_2fa" && o.status !== "invalid_info" && o.status !== "needs_xbox_info")
     .sort((a, b) => {
+      const pinDiff = Number(!!b.info_corrected) - Number(!!a.info_corrected);
+      if (pinDiff !== 0) return pinDiff;
       const rushDiff = Number(!!b.rush_order) - Number(!!a.rush_order);
       if (rushDiff !== 0) return rushDiff;
       return new Date(b.created_at || 0) - new Date(a.created_at || 0);
@@ -3058,6 +3623,8 @@ export default function AdminPanelPage() {
   };
 
   const handleStatusChange = async (order, nextStatus, listType, xboxCredentials = null) => {
+    if (!order || nextStatus === order.status) return true;
+
     if (nextStatus === "completed" && orderRequiresCreatedXboxAccount(order) && !order.created_xbox_email && !xboxCredentials) {
       setXboxModal({
         open: true,
@@ -3069,15 +3636,9 @@ export default function AdminPanelPage() {
       return;
     }
 
-    // Optimistically update local list
-    const updateList = (setter) =>
-      setter((prev) => prev.map((ord) => (ord.id === order.id ? { ...ord, status: nextStatus } : ord)));
-
-    if (listType === "active" || listType === "pending" || listType === "twofa") updateList(setOrders);
-    if (listType === "invalid") updateList(setOrders);
-    if (listType === "completed") updateList(setPreviousOrders);
-    if (listType === "canceled") updateList(setCanceledOrders);
-    if (listType === "refunded") updateList(setRefundedOrders);
+    if (updatingOrderIdsRef.current.has(order.id)) return false;
+    updatingOrderIdsRef.current.add(order.id);
+    setUpdatingOrderIds((previous) => new Set(previous).add(order.id));
 
     const tmpl = emailTemplates[nextStatus] || { subject: "", body: "" };
 
@@ -3110,6 +3671,7 @@ export default function AdminPanelPage() {
           email_body: emailBody,
           created_xbox_email: xboxCredentials?.createdEmail || "",
           created_xbox_pass: xboxCredentials?.createdPass || "",
+          skip_xbox_account_creation: Boolean(xboxCredentials?.skipCreation),
         }),
       });
       const data = await res.json();
@@ -3118,12 +3680,13 @@ export default function AdminPanelPage() {
       }
       await loadOrders();
       const emailStatus = data.email_sent ? "ایمیل ارسال شد" : data.email_error ? `ایمیل: ${data.email_error}` : "ایمیل ارسال نشد";
-      const smsStatus = data.sms_sent ? "پیامک ارسال شد" : data.sms_error ? `پیامک: ${data.sms_error}` : "پیامک ارسال نشد";
+      const ticketNotice = data.ticket_created ? ` | 🎫 تیکت خودکار #${data.ticket_id} ایجاد شد` : "";
+      const smsStatus = (data.sms_sent ? "پیامک ارسال شد" : data.sms_error ? `پیامک: ${data.sms_error}` : "پیامک ارسال نشد") + ticketNotice;
       setReport({
-        title: "بروزرسانی موفق",
+        title: data.ticket_created ? `بروزرسانی موفق (تیکت #${data.ticket_id} ایجاد شد)` : "بروزرسانی موفق",
         emailStatus,
         smsStatus,
-        kind: data.email_sent && data.sms_sent ? "success" : "warning",
+        kind: "success",
         preview: {
           email: {
             to: order.user_email || order.epic_username || "—",
@@ -3136,6 +3699,7 @@ export default function AdminPanelPage() {
           },
         },
       });
+      return true;
     } catch (err) {
       setReport({
         title: "خطا",
@@ -3143,9 +3707,55 @@ export default function AdminPanelPage() {
         smsStatus: "",
         kind: "error",
       });
+      return false;
     } finally {
-      setSavingStatusId(null);
+      updatingOrderIdsRef.current.delete(order.id);
+      setUpdatingOrderIds((previous) => {
+        const next = new Set(previous);
+        next.delete(order.id);
+        return next;
+      });
+      setSavingStatusId((current) => (current === order.id ? null : current));
     }
+  };
+
+  const renderOrderStatusSelect = (order, listType) => {
+    const isUpdating = updatingOrderIds.has(order.id);
+
+    return (
+      <span
+        className="status-select-control"
+        aria-busy={isUpdating}
+        style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+      >
+        <select
+          className="status-select"
+          value={order.status}
+          disabled={isUpdating}
+          aria-label={`تغییر وضعیت سفارش ${order.tracking_code}`}
+          onChange={async (event) => {
+            // Keep clicks inside this card from reaching surrounding modal/card
+            // listeners. The controlled value stays unchanged until the API
+            // confirms the transition, so the card cannot move mid-request.
+            event.stopPropagation();
+            const nextStatus = event.target.value;
+            await handleStatusChange(order, nextStatus, listType);
+          }}
+        >
+          {statusOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        {isUpdating && (
+          <span
+            className="status-update-spinner"
+            role="status"
+            aria-label="در حال بروزرسانی وضعیت"
+            title="در حال بروزرسانی وضعیت"
+          />
+        )}
+      </span>
+    );
   };
 
   const handleXboxArchiveCreate = async () => {
@@ -3465,6 +4075,21 @@ export default function AdminPanelPage() {
     return data;
   };
 
+  const uploadProductCover16_9Request = async (productId, file) => {
+    const formData = new FormData();
+    formData.append("cover", file);
+    const res = await fetch(`${apiBase}/api/admin/products/${productId}/cover-16-9`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.message || "خطا در آپلود کاور 16:9");
+    }
+    return data;
+  };
+
   const productPayload = (product) => {
     const allVariants = (product.variants || []).map((v, idx) => ({ ...v, sort_order: idx }));
     return {
@@ -3473,6 +4098,7 @@ export default function AdminPanelPage() {
       subtitle: (product.subtitle || "").trim(),
       category: product.category || "FORTNITE",
       image_url: (product.image_url || "").trim(),
+      cover_16_9: (product.cover_16_9 || "").trim(),
       price: Number(product.price) || 0,
       original_price: Number(product.original_price) || 0,
       price_lira: Number(product.price_lira) || 0,
@@ -3537,6 +4163,9 @@ export default function AdminPanelPage() {
       if (newProductCoverFile) {
         createdProduct = await uploadProductCoverRequest(data.id, newProductCoverFile);
       }
+      if (newProductCover16_9File) {
+        createdProduct = await uploadProductCover16_9Request(data.id, newProductCover16_9File);
+      }
       setProducts((prev) => [createdProduct, ...prev]);
       setActiveProductGroup(
         createdProduct.category === "AI"
@@ -3549,6 +4178,7 @@ export default function AdminPanelPage() {
       );
       setNewProduct(emptyProductForm);
       setNewProductCoverFile(null);
+      setNewProductCover16_9File(null);
       setReport({ kind: "success", title: "محصول جدید ساخته شد", context: "products" });
     } catch (err) {
       setReport({ kind: "error", title: err.message || "خطا در ساخت محصول", context: "products" });
@@ -3572,10 +4202,20 @@ export default function AdminPanelPage() {
       }
       let savedProduct = data;
       const coverFile = productCoverFiles[product.id];
+      const cover16_9File = productCover16_9Files[product.id];
       if (coverFile) {
         setProductUploading(product.id);
         savedProduct = await uploadProductCoverRequest(product.id, coverFile);
         setProductCoverFiles((prev) => {
+          const next = { ...prev };
+          delete next[product.id];
+          return next;
+        });
+      }
+      if (cover16_9File) {
+        setProductUploading(product.id);
+        savedProduct = await uploadProductCover16_9Request(product.id, cover16_9File);
+        setProductCover16_9Files((prev) => {
           const next = { ...prev };
           delete next[product.id];
           return next;
@@ -3588,7 +4228,7 @@ export default function AdminPanelPage() {
       );
       setReport({
         kind: "success",
-        title: coverFile ? "محصول و کاور بروزرسانی شد" : "محصول بروزرسانی شد",
+        title: coverFile || cover16_9File ? "محصول و کاور بروزرسانی شد" : "محصول بروزرسانی شد",
         context: "products",
       });
     } catch (err) {
@@ -4092,6 +4732,20 @@ export default function AdminPanelPage() {
               <span className="tab-text">سفارشات</span>
               <span className="tab-count">{(orderCounts.active ?? orders.length).toLocaleString("fa-IR")}</span>
             </button>
+            <button className={`tab ${activeTab === "tickets" ? "active" : ""}`} onClick={() => { setActiveTab("tickets"); loadAdminTickets(); }}>
+              <span className="tab-ic">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle" }}>
+                  <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>
+                  <path d="M12 5v14"/>
+                </svg>
+              </span>
+              <span className="tab-text">تیکت‌ها</span>
+              {unansweredTicketsCount > 0 && (
+                <span className="tab-count danger" style={{ background: "#ef4444", color: "#fff", padding: "2px 6px", borderRadius: "10px", fontSize: "11px", fontWeight: "800" }}>
+                  {unansweredTicketsCount}
+                </span>
+              )}
+            </button>
             <button className={`tab ${activeTab === "products" ? "active" : ""}`} onClick={() => setActiveTab("products")}>
               <span className="tab-ic">📦</span>
               <span className="tab-text">محصولات</span>
@@ -4131,13 +4785,13 @@ export default function AdminPanelPage() {
               <span className="tab-text">همکاران</span>
               <span className="tab-count">{resellers.length}</span>
             </button>
-            <button className={`tab ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")}>
-              <span className="tab-ic">⚙️</span>
-              <span className="tab-text">تنظیمات</span>
-            </button>
             <button className={`tab ${activeTab === "accounting" ? "active" : ""}`} onClick={() => setActiveTab("accounting")}>
               <span className="tab-ic">📊</span>
               <span className="tab-text">حسابداری</span>
+            </button>
+            <button className={`tab ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")}>
+              <span className="tab-ic">⚙️</span>
+              <span className="tab-text">تنظیمات</span>
             </button>
             <button className={`tab ${activeTab === "subcategories" ? "active" : ""}`} onClick={() => { setActiveTab("subcategories"); loadSubcategories(); }}>
               <span className="tab-ic">🏷️</span>
@@ -4269,7 +4923,7 @@ export default function AdminPanelPage() {
                 )}
                 {visibleActiveNonPendingOrders.length > 0 && (
                   <div className="orders-list">
-                    {visibleActiveNonPendingOrders.map((o) => (
+                    {visibleActiveNonPendingOrders.map((o, idx) => (
                       <div key={o.id} className={`order-item ${o.rush_order ? "rush-item" : ""}`}>
                         <div className="order-item-header">
                           <div className="order-item-title">
@@ -4278,6 +4932,11 @@ export default function AdminPanelPage() {
                             <div className="order-time">ثبت: {formatDateTime(o.created_at)}</div>
                             {o.rush_order && (
                               <div className="rush-pill">👑 VIP (هزینه اضافی پرداخت شده)</div>
+                            )}
+                            {o.info_corrected && (
+                              <div className="corrected-pill" style={{ background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", border: "1px solid rgba(245, 158, 11, 0.35)", padding: "4px 10px", borderRadius: "8px", fontWeight: "800", fontSize: "12px", marginTop: "4px" }}>
+                                📌 اطلاعات توسط کاربر اصلاح شد (پین‌شده در بالای لیست)
+                              </div>
                             )}
                           </div>
                           <div className="order-price">{o.amount.toLocaleString("fa-IR")} تومان</div>
@@ -4300,14 +4959,65 @@ export default function AdminPanelPage() {
 
                         {renderPaymentDetails(o)}
 
-                        {o.note && (
-                          <div className="order-note">
-                            <strong>یادداشت/اطلاعات لاگین:</strong>
-                            <pre>{o.note}</pre>
+                        {o.info_corrected && (
+                          <div style={{
+                            width: "100%",
+                            background: "linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9))",
+                            border: "2px solid #06b6d4",
+                            borderRadius: 12,
+                            padding: "12px 14px",
+                            margin: "10px 0",
+                            boxShadow: "0 4px 15px rgba(6, 182, 212, 0.25)",
+                            direction: "rtl",
+                            textAlign: "right"
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                              <span style={{ fontSize: 18 }}>🤖</span>
+                              <strong style={{ color: "#22d3ee", fontSize: 13, fontWeight: 800 }}>
+                                اهرم اطمینان هوش مصنوعی - ارزیابی اطلاعات جدید کاربر
+                              </strong>
+                              <span style={{ background: "rgba(6, 182, 212, 0.2)", color: "#06b6d4", fontSize: 11, padding: "2px 8px", borderRadius: 6, fontWeight: 700 }}>
+                                پیش‌فرض ادمین
+                              </span>
+                            </div>
+                            <p style={{ color: "#cbd5e1", fontSize: 12, lineHeight: 1.6, margin: "0 0 10px 0" }}>
+                              کاربر اطلاعات جدیدی برای این سفارش ثبت کرده است. هوش مصنوعی پیام خودکار به کاربر را تا تایید ادمین متوقف کرده است. لطفاً وضعیت اطلاعات را تایید فرمايید:
+                            </p>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                              <button
+                                type="button"
+                                className="btn primary-btn-sm"
+                                style={{ background: "linear-gradient(135deg, #10b981, #059669)", border: "none", color: "#fff", fontWeight: 800, padding: "6px 14px", borderRadius: 8, cursor: "pointer", fontSize: 12 }}
+                                onClick={() => handleAiVerifyInfo(o, "approve")}
+                              >
+                                ✅ اطلاعات درست بود (تایید و تشکر از کاربر)
+                              </button>
+                              <button
+                                type="button"
+                                className="btn danger-btn-sm"
+                                style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)", border: "none", color: "#fff", fontWeight: 800, padding: "6px 14px", borderRadius: 8, cursor: "pointer", fontSize: 12 }}
+                                onClick={() => handleAiVerifyInfo(o, "reject")}
+                              >
+                                ❌ اطلاعات هنوز غلط است (اطلاع مجدد به کاربر)
+                              </button>
+                            </div>
                           </div>
                         )}
 
                         <div className="order-actions">
+                          {o.info_corrected && (
+                            <button
+                              type="button"
+                              className="btn ghost-btn-sm"
+                              style={{ color: "#f59e0b", borderColor: "#f59e0b" }}
+                              onClick={async () => {
+                                await fetch(`/api/admin/orders/${o.tracking_code}/unpin`, { method: "POST", credentials: "include" });
+                                loadOrders();
+                              }}
+                            >
+                              برداشتن پین 📌
+                            </button>
+                          )}
                           <div className="status-badge" style={{ background: `${getStatusColor(o.status)}20`, color: getStatusColor(o.status) }}>
                             {o.status_fa}
                           </div>
@@ -4324,24 +5034,70 @@ export default function AdminPanelPage() {
                           >
                             {savingStatusId === o.id ? "..." : "🛍️ بازگشت وجه به کیف پول"}
                           </button>
+                          {idx === 0 && showSupportTour && (
+                            <div style={{
+                              width: "100%",
+                              background: "linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(168, 85, 247, 0.15))",
+                              border: "2px solid #a855f7",
+                              borderRadius: 12,
+                              padding: "12px 14px",
+                              margin: "8px 0 12px",
+                              boxShadow: "0 6px 20px rgba(168, 85, 247, 0.3)",
+                              direction: "rtl",
+                              textAlign: "right"
+                            }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  <span style={{ fontSize: 16 }}>↙️</span>
+                                  <strong style={{ color: "#e9d5ff", fontSize: 13, fontWeight: 800 }}>
+                                    ✨ قابلیت‌های جدید ارتباط با کاربر (چت چت‌سایت + تیکت اضطراری)
+                                  </strong>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={dismissSupportTour}
+                                  style={{
+                                    background: "rgba(255, 255, 255, 0.12)",
+                                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                                    color: "#fff",
+                                    borderRadius: 6,
+                                    padding: "2px 8px",
+                                    fontSize: 11,
+                                    cursor: "pointer",
+                                    fontWeight: 700
+                                  }}
+                                >
+                                  متوجه شدم ✕
+                                </button>
+                              </div>
+                              <p style={{ color: "#cbd5e1", fontSize: 12, lineHeight: 1.6, margin: 0 }}>
+                                <strong>💬 پیام مستقیم:</strong> پیام زنده مانند تلگرام مستقیماً داخل چت آنلاین وب‌سایت کاربر ارسال می‌شود تا سریع پاسخ دهد.<br/>
+                                <strong>🚨 تیکت اضطراری:</strong> ساخت فوری تیکت رسمی به همراه سوالات مشخص و ارسال پیامک لینک تیکت به کاربر.
+                              </p>
+                            </div>
+                          )}
+
                           <button
                             className="btn ghost-btn-sm"
                             onClick={() => openTelegramModal(o)}
                           >
                             📨 پیام تلگرام
                           </button>
-                          <select
-                            className="status-select"
-                            value={o.status}
-                            onChange={(e) => {
-                              const nextStatus = e.target.value;
-                              handleStatusChange(o, nextStatus, "active");
-                            }}
+                          <button
+                            className="btn ghost-btn-sm"
+                            style={{ borderColor: "#06b6d4", color: "#06b6d4" }}
+                            onClick={() => openDirectChatModal(o)}
                           >
-                            {statusOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                            💬 پیام مستقیم (سایت)
+                          </button>
+                          <button
+                            className="btn ghost-btn-sm"
+                            style={{ borderColor: "#f43f5e", color: "#f43f5e" }}
+                            onClick={() => openEmergencyTicketModal(o)}
+                          >
+                            🚨 تیکت اضطراری
+                          </button>
+                          {renderOrderStatusSelect(o, "active")}
                           <button
                             className="btn primary-btn-sm"
                             disabled={savingStatusId === o.id}
@@ -4364,22 +5120,42 @@ export default function AdminPanelPage() {
                           </button>
                           <button
                             className="btn ghost-btn-sm"
-                          onClick={() => {
-                            const tmpl = emailTemplates["invalid_info"] || { subject: "", body: "" };
-                            setEmailModal({
-                              ...defaultEmailModal,
-                              open: true,
-                              orderId: o.id,
-                              tracking: o.tracking_code,
-                              email: o.user_email || "",
-                              subject: tmpl.subject,
-                              body: tmpl.body,
-                              status: "invalid_info",
-                              listType: "active",
-                            });
-                          }}
+                            onClick={() => {
+                              const tmpl = emailTemplates["invalid_info"] || { subject: "", body: "" };
+                              setEmailModal({
+                                ...defaultEmailModal,
+                                open: true,
+                                orderId: o.id,
+                                tracking: o.tracking_code,
+                                email: o.user_email || "",
+                                subject: tmpl.subject,
+                                body: tmpl.body,
+                                status: "invalid_info",
+                                listType: "active",
+                              });
+                            }}
                           >
                             اطلاعات غلط (ایمیل)
+                          </button>
+                          <button
+                            className="btn ghost-btn-sm"
+                            style={{ borderColor: "#a855f7", color: "#a855f7" }}
+                            onClick={() => {
+                              const tmpl = emailTemplates["needs_xbox_info"] || { subject: "", body: "" };
+                              setEmailModal({
+                                ...defaultEmailModal,
+                                open: true,
+                                orderId: o.id,
+                                tracking: o.tracking_code,
+                                email: o.user_email || "",
+                                subject: tmpl.subject,
+                                body: tmpl.body,
+                                status: "needs_xbox_info",
+                                listType: "active",
+                              });
+                            }}
+                          >
+                            مشکل ایکس باکس❌
                           </button>
                           <button
                             className="btn danger-btn-sm"
@@ -4477,18 +5253,7 @@ export default function AdminPanelPage() {
                           >
                             📨 پیام تلگرام
                           </button>
-                          <select
-                            className="status-select"
-                            value={o.status}
-                            onChange={(e) => {
-                              const nextStatus = e.target.value;
-                              handleStatusChange(o, nextStatus, "pending");
-                            }}
-                          >
-                            {statusOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                          {renderOrderStatusSelect(o, "pending")}
                           <button
                             className="btn primary-btn-sm"
                             disabled={savingStatusId === o.id}
@@ -4626,18 +5391,7 @@ export default function AdminPanelPage() {
                           >
                             📨 پیام تلگرام
                           </button>
-                          <select
-                            className="status-select"
-                            value={o.status}
-                            onChange={(e) => {
-                              const nextStatus = e.target.value;
-                              handleStatusChange(o, nextStatus, "twofa");
-                            }}
-                          >
-                            {statusOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                          {renderOrderStatusSelect(o, "twofa")}
                           <button
                             className="btn primary-btn-sm"
                             disabled={savingStatusId === o.id}
@@ -4767,18 +5521,7 @@ export default function AdminPanelPage() {
                           >
                             📨 پیام تلگرام
                           </button>
-                          <select
-                            className="status-select"
-                            value={o.status}
-                            onChange={(e) => {
-                              const nextStatus = e.target.value;
-                              handleStatusChange(o, nextStatus, "invalid");
-                            }}
-                          >
-                            {statusOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                          {renderOrderStatusSelect(o, "invalid")}
                           <button
                             className="btn primary-btn-sm"
                             disabled={savingStatusId === o.id}
@@ -4917,18 +5660,7 @@ export default function AdminPanelPage() {
                           >
                             📨 پیام تلگرام
                           </button>
-                          <select
-                            className="status-select"
-                            value={o.status}
-                            onChange={(e) => {
-                              const nextStatus = e.target.value;
-                              handleStatusChange(o, nextStatus, "completed");
-                            }}
-                          >
-                            {statusOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                          {renderOrderStatusSelect(o, "completed")}
                           <button
                             className="btn primary-btn-sm"
                             disabled={savingStatusId === o.id}
@@ -5049,18 +5781,7 @@ export default function AdminPanelPage() {
                           >
                             📨 پیام تلگرام
                           </button>
-                          <select
-                            className="status-select"
-                            value={o.status}
-                            onChange={(e) => {
-                              const nextStatus = e.target.value;
-                              handleStatusChange(o, nextStatus, "refunded");
-                            }}
-                          >
-                            {statusOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                          {renderOrderStatusSelect(o, "refunded")}
                           <button
                             className="btn primary-btn-sm"
                             disabled={savingStatusId === o.id}
@@ -5165,18 +5886,7 @@ export default function AdminPanelPage() {
                           >
                             📨 پیام تلگرام
                           </button>
-                          <select
-                            className="status-select"
-                            value={o.status}
-                            onChange={(e) => {
-                              const nextStatus = e.target.value;
-                              handleStatusChange(o, nextStatus, "canceled");
-                            }}
-                          >
-                            {statusOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                          {renderOrderStatusSelect(o, "canceled")}
                           <button
                             className="btn primary-btn-sm"
                             disabled={savingStatusId === o.id}
@@ -5244,6 +5954,198 @@ export default function AdminPanelPage() {
                         {expandedOrders.includes(o.id) && renderCartBox(o)}
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!loading && activeTab === "tickets" && (
+            <div className="orders-content">
+              <div className="section-card">
+                <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                  <div>
+                    <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>
+                        <path d="M12 5v14"/>
+                      </svg>
+                      <span>تیکت‌های پشتیبانی</span>
+                    </h3>
+                    <div className="muted">کل تیکت‌ها: {adminTicketCount} • نیازمند پاسخ: {unansweredTicketsCount}</div>
+                  </div>
+                  
+                  {/* Filters and search */}
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="جستجوی عنوان، کاربر، شماره..."
+                      value={ticketSearchQuery}
+                      onChange={(e) => setTicketSearchQuery(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") loadAdminTickets(); }}
+                      style={{ padding: "6px 12px", fontSize: "13px" }}
+                    />
+                    <select
+                      className="input"
+                      value={ticketStatusFilter}
+                      onChange={(e) => setTicketStatusFilter(e.target.value)}
+                      style={{ padding: "6px 12px", fontSize: "13px" }}
+                    >
+                      <option value="">همه وضعیت‌ها</option>
+                      <option value="open">در انتظار پاسخ پشتیبانی</option>
+                      <option value="user_replied">پاسخ کاربر</option>
+                      <option value="answered">پاسخ داده شده</option>
+                      <option value="closed">بسته شده</option>
+                    </select>
+                    <button className="btn primary-btn-sm" onClick={loadAdminTickets}>
+                      جستجو 🔍
+                    </button>
+                  </div>
+                </div>
+
+                {/* Ticket Detail Drawer/View OR Ticket List */}
+                {selectedAdminTicketId ? (
+                  <div className="admin-ticket-detail-view" style={{ marginTop: "16px" }}>
+                    <button
+                      className="btn ghost-btn-sm"
+                      onClick={() => { setSelectedAdminTicketId(null); setSelectedAdminTicketData(null); }}
+                      style={{ marginBottom: "14px" }}
+                    >
+                      ← بازگشت به لیست تیکت‌ها
+                    </button>
+
+                    {loadingAdminTicketDetail ? (
+                      <div>در حال بارگذاری تیکت...</div>
+                    ) : selectedAdminTicketData?.ticket ? (
+                      <div className="ticket-admin-card" style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: "14px", padding: "20px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", borderBottom: "1px solid var(--line)", paddingBottom: "14px", marginBottom: "16px" }}>
+                          <div>
+                            <h4 style={{ margin: "0 0 6px", fontSize: "17px", fontWeight: "900" }}>{selectedAdminTicketData.ticket.subject}</h4>
+                            <div style={{ display: "flex", gap: "14px", fontSize: "13px", color: "var(--muted)" }}>
+                              <span>تیکت #{selectedAdminTicketData.ticket.id}</span>
+                              <span>کاربر: <strong>{selectedAdminTicketData.ticket.user_name}</strong> ({selectedAdminTicketData.ticket.user_phone || "بدون شماره"})</span>
+                              {selectedAdminTicketData.ticket.tracking_code && <span>سفارش: #{selectedAdminTicketData.ticket.tracking_code}</span>}
+                            </div>
+                          </div>
+
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <span style={{ fontWeight: "800", color: "#f59e0b" }}>{selectedAdminTicketData.ticket.status_fa}</span>
+                            <select
+                              value={selectedAdminTicketData.ticket.status}
+                              onChange={(e) => handleAdminChangeTicketStatus(selectedAdminTicketData.ticket.id, e.target.value)}
+                              className="input"
+                              style={{ padding: "4px 8px", fontSize: "12px" }}
+                            >
+                              <option value="open">در انتظار پاسخ پشتیبانی</option>
+                              <option value="user_replied">پاسخ کاربر</option>
+                              <option value="answered">پاسخ داده شده</option>
+                              <option value="closed">بسته شده</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Messages stream */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "14px", maxHeight: "500px", overflowY: "auto", paddingRight: "6px", marginBottom: "20px" }}>
+                          {selectedAdminTicketData.messages.map((m) => {
+                            const isAdmin = m.sender_type === "admin";
+                            return (
+                              <div key={m.id} style={{ display: "flex", gap: "10px", alignSelf: isAdmin ? "flex-start" : "flex-end", flexDirection: isAdmin ? "row" : "row-reverse", maxWidth: "80%" }}>
+                                <div style={{ width: "36px", height: "36px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "1px solid var(--line)" }}>
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={m.sender_avatar || "/web_logo.webp"} alt={m.sender_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                </div>
+                                <div style={{ background: isAdmin ? "rgba(34, 197, 94, 0.1)" : "var(--bg)", border: "1px solid var(--line)", borderRadius: "12px", padding: "10px 14px" }}>
+                                  <div style={{ fontSize: "11px", fontWeight: "800", color: "var(--muted)", marginBottom: "4px" }}>{m.sender_name} ({isAdmin ? "ادمین/پشتیبانی" : "کاربر"})</div>
+                                  <div style={{ fontSize: "13.5px", whiteSpace: "pre-wrap", lineHeight: "1.6" }}>{m.message}</div>
+                                  <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "4px", textAlign: "left" }}>{formatDateTime(m.created_at)}</div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Admin Reply Box */}
+                        <div style={{ borderTop: "1px solid var(--line)", paddingTop: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                          <textarea
+                            rows={3}
+                            className="input"
+                            placeholder="پاسخ پشتیبانی ادمین را اینجا بنویسید..."
+                            value={adminReplyText}
+                            onChange={(e) => setAdminReplyText(e.target.value)}
+                            style={{ width: "100%", padding: "10px 14px", fontFamily: "inherit" }}
+                          />
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <button
+                              type="button"
+                              className="btn primary-btn-sm"
+                              onClick={handleAdminSendReply}
+                              disabled={submittingAdminReply || !adminReplyText.trim()}
+                            >
+                              {submittingAdminReply ? "در حال ارسال..." : "ارسال پاسخ پشتیبانی 📤"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn ghost-btn-sm"
+                              onClick={() => handleAdminChangeTicketStatus(selectedAdminTicketData.ticket.id, "closed")}
+                            >
+                              بستن تیکت 🔒
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>تیکت یافت نشد.</div>
+                    )}
+                  </div>
+                ) : (
+                  /* Tickets List Table */
+                  <div style={{ marginTop: "16px" }}>
+                    {adminTickets.length === 0 ? (
+                      <div className="empty-state">تیکتی یافت نشد.</div>
+                    ) : (
+                      <div className="orders-list">
+                        {adminTickets.map((t) => (
+                          <div
+                            key={t.id}
+                            className="order-item"
+                            style={t.unread ? { border: "1px solid #ef4444", background: "rgba(239, 68, 68, 0.04)" } : { cursor: "pointer" }}
+                            onClick={() => loadAdminTicketDetail(t.id)}
+                          >
+                            <div className="order-item-header">
+                              <div className="order-item-title">
+                                <div className="order-name">
+                                  {t.subject}
+                                  {t.is_auto_created && <span className="rush-pill" style={{ background: "#ef444420", color: "#ef4444" }}>🤖 خودکار (اطلاعات غلط)</span>}
+                                </div>
+                                <div className="order-code">تیکت #{t.id} {t.tracking_code ? `| سفارش #${t.tracking_code}` : ""}</div>
+                                <div className="order-time">به‌روزرسانی: {formatDateTime(t.updated_at)}</div>
+                              </div>
+                              <div className="status-badge" style={{ background: t.unread ? "#ef444420" : "rgba(255,255,255,0.08)", color: t.unread ? "#ef4444" : "var(--text)" }}>
+                                {t.status_fa}
+                              </div>
+                            </div>
+
+                            <div className="order-item-details">
+                              <div className="detail-row">
+                                <span className="detail-label">کاربر:</span>
+                                <span className="detail-value">{t.user_name} ({t.user_phone || "بدون شماره"})</span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="detail-label">آخرین پیام:</span>
+                                <span className="detail-value">{t.last_message || "—"}</span>
+                              </div>
+                            </div>
+
+                            <div className="order-actions">
+                              <button className="btn primary-btn-sm" onClick={() => loadAdminTicketDetail(t.id)}>
+                                مشاهده و پاسخ 💬
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -6570,6 +7472,29 @@ export default function AdminPanelPage() {
                       </div>
                     </label>
                     <label className="product-edit-field product-edit-field-wide">
+                      <span>کاور 16:9</span>
+                      <div className="cover-upload-row">
+                        <input
+                          type="text"
+                          dir="ltr"
+                          value={newProduct.cover_16_9}
+                          onChange={(e) => handleNewProductChange("cover_16_9", e.target.value)}
+                          placeholder="/media/products/... (اختیاری)"
+                        />
+                        <label className="cover-upload-btn">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              setNewProductCover16_9File(file);
+                            }}
+                          />
+                          {newProductCover16_9File ? "انتخاب شد" : "آپلود"}
+                        </label>
+                      </div>
+                    </label>
+                    <label className="product-edit-field product-edit-field-wide">
                       <span>زیرعنوان</span>
                       <input
                         type="text"
@@ -6821,30 +7746,30 @@ export default function AdminPanelPage() {
 
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 6 }}>
                           <label className="product-content-field" style={{ marginBottom: 0 }}>
-                            <span>محدودیت روزانه کل (۰ = بدون محدودیت)</span>
+                            <span>محدودیت روزانه کل (-۱ = بدون محدودیت)</span>
                             <input
                               type="number"
-                              min="0"
-                              value={newProduct.daily_order_limit ?? 0}
-                              onChange={(e) => handleNewProductChange("daily_order_limit", parseInt(e.target.value) || 0)}
+                              min="-1"
+                              value={newProduct.daily_order_limit ?? -1}
+                              onChange={(e) => handleNewProductChange("daily_order_limit", parseInt(e.target.value) || -1)}
                             />
                           </label>
                           <label className="product-content-field" style={{ marginBottom: 0 }}>
-                            <span>محدودیت روزانه همکاران</span>
+                            <span>محدودیت روزانه همکاران (-۱ = بدون محدودیت)</span>
                             <input
                               type="number"
-                              min="0"
-                              value={newProduct.reseller_daily_order_limit ?? 0}
-                              onChange={(e) => handleNewProductChange("reseller_daily_order_limit", parseInt(e.target.value) || 0)}
+                              min="-1"
+                              value={newProduct.reseller_daily_order_limit ?? -1}
+                              onChange={(e) => handleNewProductChange("reseller_daily_order_limit", parseInt(e.target.value) || -1)}
                             />
                           </label>
                           <label className="product-content-field" style={{ marginBottom: 0 }}>
-                            <span>محدودیت روزانه مشتریان</span>
+                            <span>محدودیت روزانه مشتریان (-۱ = بدون محدودیت)</span>
                             <input
                               type="number"
-                              min="0"
-                              value={newProduct.customer_daily_order_limit ?? 0}
-                              onChange={(e) => handleNewProductChange("customer_daily_order_limit", parseInt(e.target.value) || 0)}
+                              min="-1"
+                              value={newProduct.customer_daily_order_limit ?? -1}
+                              onChange={(e) => handleNewProductChange("customer_daily_order_limit", parseInt(e.target.value) || -1)}
                             />
                           </label>
                         </div>
@@ -6877,10 +7802,10 @@ export default function AdminPanelPage() {
                     {visibleProducts.map((p) => (
                       <div key={p.id} className={`product-card ${!p.active ? 'inactive' : ''}`}>
                         <div className="product-card-header">
-                          {p.image_url && (
+                          {(p.image_url || p.cover_16_9) && (
                             <div className="product-image">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={resolveAdminImageUrl(p.image_url)} alt={p.name_fa} />
+                              <img src={resolveAdminImageUrl(p.cover_16_9 || p.image_url)} alt={p.name_fa} />
                             </div>
                           )}
                           <div className="product-info">
@@ -6908,7 +7833,7 @@ export default function AdminPanelPage() {
                             <div className="quick-price-title-wrap" style={{ display: 'grid', gap: '2px' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <span className="quick-price-icon">⚡</span>
-                                <span className="quick-price-label">تغییر قیمت فوری (نسبی):</span>
+                                <span className="quick-price-label">قیمت نهایی:</span>
                               </div>
                               <span className="quick-price-current-info" style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: 'bold' }}>
                                 قیمت فعلی: {Number(p.price || 0).toLocaleString("fa-IR")} تومان
@@ -6921,11 +7846,11 @@ export default function AdminPanelPage() {
                                 value={
                                   quickPrices[p.id] !== undefined
                                     ? quickPrices[p.id]
-                                    : (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000)
+                                    : Number(p.price || 0)
                                 }
                                 min="-9999999"
                                 onChange={(e) => setQuickPrices({ ...quickPrices, [p.id]: Number(e.target.value || 0) })}
-                                placeholder="مقدار تغییر"
+                                placeholder="قیمت نهایی به تومان"
                                 style={{ padding: '0 45px 0 25px', textAlign: 'right', direction: 'ltr' }}
                               />
                               <span className="quick-price-unit">تومان</span>
@@ -6936,11 +7861,10 @@ export default function AdminPanelPage() {
                                 className={`quick-price-btn ${productSaving === p.id ? "saving" : ""}`}
                                 disabled={productSaving === p.id}
                                 onClick={async () => {
-                                  const adjustment =
+                                  const finalPrice =
                                     quickPrices[p.id] !== undefined
                                       ? quickPrices[p.id]
-                                      : (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000);
-                                  const finalPrice = Math.max(0, Number(p.price || 0) + adjustment);
+                                      : Number(p.price || 0);
                                   const updatedProduct = { ...p, price: finalPrice };
                                   await saveQuickPrice(updatedProduct);
                                   setQuickPrices((prev) => {
@@ -6953,7 +7877,7 @@ export default function AdminPanelPage() {
                                 {productSaving === p.id ? "در حال ثبت..." : "ثبت فوری"}
                               </button>
                               <span style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: 'bold', textAlign: 'center' }}>
-                                خروجی: {Math.max(0, Number(p.price || 0) + (quickPrices[p.id] !== undefined ? quickPrices[p.id] : (p.slug?.includes("crew") || p.name_fa?.includes("کروپک") ? 95000 : 79000))).toLocaleString("fa-IR")}
+                                قیمت ثبت‌شونده: {Math.max(0, Number(quickPrices[p.id] !== undefined ? quickPrices[p.id] : p.price || 0)).toLocaleString("fa-IR")} تومان
                               </span>
                             </div>
                           </div>
@@ -7014,6 +7938,35 @@ export default function AdminPanelPage() {
                                   {productUploading === p.id
                                     ? "در حال آپلود..."
                                     : productCoverFiles[p.id]
+                                      ? "انتخاب شد"
+                                      : "آپلود"}
+                                </label>
+                              </div>
+                            </label>
+                            <label className="product-edit-field product-edit-field-wide">
+                              <span>کاور 16:9</span>
+                              <div className="cover-upload-row">
+                                <input
+                                  type="text"
+                                  dir="ltr"
+                                  value={p.cover_16_9 || ""}
+                                  onChange={(e) => handleProductChange(p.id, "cover_16_9", e.target.value)}
+                                  placeholder="/media/products/... (اختیاری)"
+                                />
+                                <label className={`cover-upload-btn ${productUploading === p.id ? "uploading" : ""}`}>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    disabled={productSaving === p.id || productUploading === p.id}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0] || null;
+                                      e.target.value = "";
+                                      setProductCover16_9Files((prev) => ({ ...prev, [p.id]: file }));
+                                    }}
+                                  />
+                                  {productUploading === p.id
+                                    ? "در حال آپلود..."
+                                    : productCover16_9Files[p.id]
                                       ? "انتخاب شد"
                                       : "آپلود"}
                                 </label>
@@ -7281,30 +8234,30 @@ export default function AdminPanelPage() {
 
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 6 }}>
                                   <label className="product-content-field" style={{ marginBottom: 0 }}>
-                                    <span>محدودیت روزانه کل (۰ = بدون محدودیت)</span>
+                                    <span>محدودیت روزانه کل (-۱ = بدون محدودیت)</span>
                                     <input
                                       type="number"
-                                      min="0"
-                                      value={p.daily_order_limit ?? 0}
-                                      onChange={(e) => handleProductChange(p.id, "daily_order_limit", parseInt(e.target.value) || 0)}
+                                      min="-1"
+                                      value={p.daily_order_limit ?? -1}
+                                      onChange={(e) => handleProductChange(p.id, "daily_order_limit", parseInt(e.target.value) || -1)}
                                     />
                                   </label>
                                   <label className="product-content-field" style={{ marginBottom: 0 }}>
-                                    <span>محدودیت روزانه همکاران</span>
+                                    <span>محدودیت روزانه همکاران (-۱ = بدون محدودیت)</span>
                                     <input
                                       type="number"
-                                      min="0"
-                                      value={p.reseller_daily_order_limit ?? 0}
-                                      onChange={(e) => handleProductChange(p.id, "reseller_daily_order_limit", parseInt(e.target.value) || 0)}
+                                      min="-1"
+                                      value={p.reseller_daily_order_limit ?? -1}
+                                      onChange={(e) => handleProductChange(p.id, "reseller_daily_order_limit", parseInt(e.target.value) || -1)}
                                     />
                                   </label>
                                   <label className="product-content-field" style={{ marginBottom: 0 }}>
-                                    <span>محدودیت روزانه مشتریان</span>
+                                    <span>محدودیت روزانه مشتریان (-۱ = بدون محدودیت)</span>
                                     <input
                                       type="number"
-                                      min="0"
-                                      value={p.customer_daily_order_limit ?? 0}
-                                      onChange={(e) => handleProductChange(p.id, "customer_daily_order_limit", parseInt(e.target.value) || 0)}
+                                      min="-1"
+                                      value={p.customer_daily_order_limit ?? -1}
+                                      onChange={(e) => handleProductChange(p.id, "customer_daily_order_limit", parseInt(e.target.value) || -1)}
                                     />
                                   </label>
                                 </div>
@@ -7613,6 +8566,7 @@ export default function AdminPanelPage() {
           {/* Accounting Tab */}
           {!loading && activeTab === "accounting" && (
             <div className="accounting-content">
+              <DailyLiraPurchaseDashboard apiBase={apiBase} setReport={setReport} />
               <div className="section-card">
                 <div className="section-header">
                   <h3>گزارش حسابداری</h3>
@@ -7661,6 +8615,13 @@ export default function AdminPanelPage() {
                     </button>
                   </div>
                 </div>
+
+                {accountingLoading && !accountingData && (
+                  <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--muted)" }}>
+                    <div className="spinner" style={{ margin: "0 auto 12px", width: 28, height: 28 }} />
+                    <div>در حال دریافت و محاسبه اطلاعات مالی...</div>
+                  </div>
+                )}
 
                 {accountingData && (() => {
                   const settledCount = accountingData.orders.filter(o => o.settled).length;
@@ -8486,6 +9447,189 @@ export default function AdminPanelPage() {
           </div>
         )}
 
+        {directChatModal.open && (
+          <div className="modal-overlay" onClick={() => setDirectChatModal(m => ({ ...m, open: false }))}>
+            <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 540 }}>
+              <div className="modal-header">
+                <div>
+                  <h3 className="modal-title">💬 پیام مستقیم به چت زنده سایت</h3>
+                  <div className="modal-subtitle">
+                    سفارش #{directChatModal.tracking} | ایمیل/کاربر: {directChatModal.userEmail || "—"}
+                  </div>
+                </div>
+                <button className="modal-close" onClick={() => setDirectChatModal(m => ({ ...m, open: false }))}>✕</button>
+              </div>
+
+              <div className="modal-body">
+                <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6, marginBottom: 14 }}>
+                  این پیام دقیقاً همانند چت تلگرام مستقیماً داخل چت پشتیبانی زنده روی وب‌سایت برای کاربر ارسال می‌شود و کاربر امکان پاسخگویی لحظه‌ای خواهد داشت.
+                </p>
+
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ display: "block", fontSize: 12, color: "#cbd5e1", marginBottom: 6 }}>پیش‌فرض سریع:</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    <button
+                      type="button"
+                      className="btn ghost-btn-sm"
+                      style={{ fontSize: 11, padding: "3px 8px" }}
+                      onClick={() => setDirectChatModal(m => ({ ...m, message: "سلام عزیز، لطفاً جهت ادامه سفارش پیام بگذارید." }))}
+                    >
+                      👋 سلام، پیام بگذارید
+                    </button>
+                    <button
+                      type="button"
+                      className="btn ghost-btn-sm"
+                      style={{ fontSize: 11, padding: "3px 8px" }}
+                      onClick={() => setDirectChatModal(m => ({ ...m, message: "سلام عزیز، کد تایید دو مرحله‌ای (2FA) ارسال شده را لطفا ارسال کنید." }))}
+                    >
+                      🔑 ارسال کد 2FA
+                    </button>
+                    <button
+                      type="button"
+                      className="btn ghost-btn-sm"
+                      style={{ fontSize: 11, padding: "3px 8px" }}
+                      onClick={() => setDirectChatModal(m => ({ ...m, message: "سلام، اطلاعات ورود ثبت‌شده نادرست است. لطفاً رمز صحیح را ارسال فرمایید." }))}
+                    >
+                      ❌ رمز عبور نادرست
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 14 }}>
+                  <label className="form-label">متن پیام مستقیم به چت کاربر:</label>
+                  <textarea
+                    rows={4}
+                    className="form-textarea"
+                    value={directChatModal.message}
+                    onChange={(e) => setDirectChatModal(m => ({ ...m, message: e.target.value }))}
+                    placeholder="متن پیام زنده به کاربر..."
+                  />
+                </div>
+
+                <div style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    id="sendSmsDirectCheck"
+                    checked={directChatModal.sendSms}
+                    onChange={(e) => setDirectChatModal(m => ({ ...m, sendSms: e.target.checked }))}
+                  />
+                  <label htmlFor="sendSmsDirectCheck" style={{ fontSize: 13, color: "#cbd5e1", cursor: "pointer" }}>
+                    📱 ارسال پیامک اطلاع‌رسانی به همراه لینک مستقیم تیکت/چت
+                  </label>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn ghost-btn"
+                  onClick={() => setDirectChatModal(m => ({ ...m, open: false }))}
+                >
+                  انصراف
+                </button>
+                <button
+                  className="btn primary-btn"
+                  disabled={directChatModal.submitting}
+                  onClick={handleSendDirectChat}
+                  style={{ background: "linear-gradient(135deg, #06b6d4, #0891b2)", borderColor: "#06b6d4" }}
+                >
+                  {directChatModal.submitting ? "در حال ارسال..." : "💬 ارسال پیام به چت سایت"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {emergencyTicketModal.open && (
+          <div className="modal-overlay" onClick={() => setEmergencyTicketModal(m => ({ ...m, open: false }))}>
+            <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 580 }}>
+              <div className="modal-header">
+                <div>
+                  <h3 className="modal-title" style={{ color: "#f43f5e" }}>🚨 ایجاد تیکت اضطراری</h3>
+                  <div className="modal-subtitle">
+                    سفارش #{emergencyTicketModal.tracking} | کاربر: {emergencyTicketModal.userEmail || "—"}
+                  </div>
+                </div>
+                <button className="modal-close" onClick={() => setEmergencyTicketModal(m => ({ ...m, open: false }))}>✕</button>
+              </div>
+
+              <div className="modal-body">
+                <div className="form-group" style={{ marginBottom: 14 }}>
+                  <label className="form-label">انتخاب سناریو / علت اضطراری:</label>
+                  <select
+                    className="form-select"
+                    value={emergencyTicketModal.presetKey}
+                    onChange={(e) => {
+                      const key = e.target.value;
+                      const preset = EMERGENCY_PRESETS.find(p => p.key === key);
+                      if (preset) {
+                        setEmergencyTicketModal(m => ({
+                          ...m,
+                          presetKey: key,
+                          subject: preset.subject.replace("#{tracking_code}", `#${m.tracking}`),
+                          message: preset.message,
+                        }));
+                      }
+                    }}
+                  >
+                    {EMERGENCY_PRESETS.map(p => (
+                      <option key={p.key} value={p.key}>{p.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 14 }}>
+                  <label className="form-label">عنوان تیکت اضطراری:</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={emergencyTicketModal.subject}
+                    onChange={(e) => setEmergencyTicketModal(m => ({ ...m, subject: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 14 }}>
+                  <label className="form-label">متن تیکت اضطراری (سوالات/درخواست از کاربر):</label>
+                  <textarea
+                    rows={5}
+                    className="form-textarea"
+                    value={emergencyTicketModal.message}
+                    onChange={(e) => setEmergencyTicketModal(m => ({ ...m, message: e.target.value }))}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    id="sendSmsEmergCheck"
+                    checked={emergencyTicketModal.sendSms}
+                    onChange={(e) => setEmergencyTicketModal(m => ({ ...m, sendSms: e.target.checked }))}
+                  />
+                  <label htmlFor="sendSmsEmergCheck" style={{ fontSize: 13, color: "#cbd5e1", cursor: "pointer" }}>
+                    📱 ارسال پیامک فوری به همراه لینک مستقیم تیکت اضطراری
+                  </label>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn ghost-btn"
+                  onClick={() => setEmergencyTicketModal(m => ({ ...m, open: false }))}
+                >
+                  انصراف
+                </button>
+                <button
+                  className="btn danger-btn"
+                  disabled={emergencyTicketModal.submitting}
+                  onClick={handleSendEmergencyTicket}
+                  style={{ background: "linear-gradient(135deg, #f43f5e, #be123c)", borderColor: "#f43f5e" }}
+                >
+                  {emergencyTicketModal.submitting ? "در حال ثبت..." : "🚨 ایجاد تیکت اضطراری و ارسال"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {emailModal.open && (
           <div className="modal-overlay" onClick={() => setEmailModal((m) => ({ ...m, open: false }))}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -8661,12 +9805,13 @@ export default function AdminPanelPage() {
                   }
 
                       const emailStatus = data.email_sent ? "ایمیل ارسال شد" : data.email_error ? `ایمیل: ${data.email_error}` : "ایمیل ارسال نشد";
-                      const smsStatus = data.sms_sent ? "پیامک ارسال شد" : data.sms_error ? `پیامک: ${data.sms_error}` : "پیامک ارسال نشد";
+                      const ticketNotice = data.ticket_created ? ` | 🎫 تیکت خودکار #${data.ticket_id} ایجاد شد` : "";
+                      const smsStatus = (data.sms_sent ? "پیامک ارسال شد" : data.sms_error ? `پیامک: ${data.sms_error}` : "پیامک ارسال نشد") + ticketNotice;
                       setReport({
-                        title: "بروزرسانی موفق",
+                        title: data.ticket_created ? `بروزرسانی موفق (تیکت #${data.ticket_id} ایجاد شد)` : "بروزرسانی موفق",
                         emailStatus,
                         smsStatus,
-                        kind: data.email_sent && data.sms_sent ? "success" : "warning",
+                        kind: "success",
                         preview: {
                           email: {
                             to: emailModal.email || "—",
@@ -8743,11 +9888,12 @@ export default function AdminPanelPage() {
                   className="btn ghost-btn"
                   style={{ borderColor: "#ef4444", color: "#ef4444" }}
                   onClick={async () => {
-                    await handleStatusChange(xboxModal.order, "completed", xboxModal.listType, {
-                      createdEmail: "",
-                      createdPass: "",
+                    const saved = await handleStatusChange(xboxModal.order, "completed", xboxModal.listType, {
+                      skipCreation: true,
                     });
-                    setXboxModal({ open: false, order: null, listType: "", createdEmail: "", createdPass: "" });
+                    if (saved) {
+                      setXboxModal({ open: false, order: null, listType: "", createdEmail: "", createdPass: "" });
+                    }
                   }}
                   disabled={savingStatusId === xboxModal.order?.id}
                 >
@@ -10427,6 +11573,25 @@ export default function AdminPanelPage() {
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
             transform: translateY(-1px);
+          }
+
+          .status-select:disabled {
+            cursor: wait;
+            opacity: 0.62;
+            transform: none;
+          }
+
+          .status-update-spinner {
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(99, 102, 241, 0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: status-update-spin 0.7s linear infinite;
+          }
+
+          @keyframes status-update-spin {
+            to { transform: rotate(360deg); }
           }
 
           .sms-settings {
@@ -12691,7 +13856,6 @@ export default function AdminPanelPage() {
           .accounting-table tbody tr:last-child td {
             border-bottom: none;
           }
-
           /* Settle button styles */
           .order-price-settle {
             display: flex;
@@ -13878,7 +15042,7 @@ export default function AdminPanelPage() {
                 </div>
                 <div className="congrats-row">
                   <span className="congrats-label">مبلغ کل:</span>
-                  <span className="congrats-value" style={{ color: "#34d399", fontWeight: 800 }}>{fmtToman(c.amount)} تومان</span>
+                  <span className="congrats-value" style={{ color: "#34d399", fontWeight: 800 }}>{formatToman(c.amount)}</span>
                 </div>
                 <div className="congrats-row">
                   <span className="congrats-label">کاربر:</span>

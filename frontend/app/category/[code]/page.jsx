@@ -1,15 +1,18 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '../../../components/Navbar';
-import ProductCard from '../../../components/ProductCard';
+import CategoriesSection from '../../../components/CategoriesSection';
+import CategoryProductGrid from '../../../components/CategoryProductGrid';
 import { fetchApiJson } from '../../../lib/serverFetch.mjs';
+import { categoryPathFromCode } from '../../../lib/productCategoryRoutes';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const BASE_URL = 'https://nubixshop.ir';
 
 // URL codes are lowercase; the backend category codes are uppercase.
-const KNOWN_CODES = new Set(['fortnite', 'ai', 'giftcards', 'games', 'subscriptions']);
+const KNOWN_CODES = new Set(['fortnite', 'rocket-league', 'ai', 'giftcards', 'games', 'subscriptions']);
+const CATEGORY_NAVIGATION = ['فورتنایت', 'راکت لیگ', 'هوش مصنوعی', 'گیفت کارت‌ها', 'بازی‌ها', 'اشتراک‌ها'];
 
 // Persian buying-intent titles per category (fallback: generic pattern).
 const TITLES = {
@@ -17,12 +20,13 @@ const TITLES = {
   ai: 'خرید اشتراک هوش مصنوعی؛ ChatGPT و Gemini',
   giftcards: 'خرید گیفت کارت؛ پلی‌استیشن، استیم، ایکس‌باکس و گوگل پلی',
   games: 'خرید محصولات بازی‌ها؛ جم، سکه و آیتم',
+  'rocket-league': 'خرید کردیت راکت لیگ؛ شارژ سریع و قانونی',
   subscriptions: 'خرید اشتراک‌های دیجیتال با فعال‌سازی قانونی',
 };
 
 async function getCategory(code) {
   if (!KNOWN_CODES.has(code)) return null;
-  return fetchApiJson(`/api/categories/${code.toUpperCase()}`);
+  return fetchApiJson(`/api/categories/${code.toUpperCase().replace(/-/g, '_')}`);
 }
 
 export function generateStaticParams() {
@@ -52,9 +56,17 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function CategoryPage({ params }) {
+export default async function CategoryPage({ params, canonicalCode = null }) {
   const { code: rawCode } = await params;
   const code = (rawCode || '').toLowerCase();
+  const categoryCode = canonicalCode || code.toUpperCase().replace(/-/g, '_');
+  const canonicalPath = categoryPathFromCode(categoryCode);
+
+  // The former English-code addresses are retained only as permanent aliases;
+  // a category has one indexable, Persian human-readable address.
+  if (!canonicalCode) {
+    permanentRedirect(encodeURI(canonicalPath));
+  }
   const data = await getCategory(code);
 
   if (!data?.category) {
@@ -70,7 +82,7 @@ export default async function CategoryPage({ params }) {
     '@type': 'CollectionPage',
     name: title,
     description: cat.description,
-    url: `${BASE_URL}/category/${code}`,
+    url: `${BASE_URL}${canonicalPath}`,
     inLanguage: 'fa-IR',
     isPartOf: { '@id': `${BASE_URL}/#website` },
     mainEntity: {
@@ -91,14 +103,14 @@ export default async function CategoryPage({ params }) {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: BASE_URL },
-      { '@type': 'ListItem', position: 2, name: cat.name, item: `${BASE_URL}/category/${code}` },
+      { '@type': 'ListItem', position: 2, name: cat.name, item: `${BASE_URL}${canonicalPath}` },
     ],
   };
 
   return (
     <>
       <Navbar />
-      <main className="container section" style={{ paddingTop: 100, paddingBottom: 80 }}>
+      <main className="container section" style={{ paddingTop: 20, paddingBottom: 80 }}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
@@ -108,8 +120,8 @@ export default async function CategoryPage({ params }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
         />
 
-        <section className="category-hero">
-          <div className="category-hero-glow" aria-hidden="true" />
+        <section className="category-page-top">
+          <h1 className="sr-only">{title}</h1>
           <div className="category-hero-top">
             <nav aria-label="مسیر صفحه" className="category-crumbs">
               <Link href="/" className="category-crumb-link">نوبیکس شاپ</Link>
@@ -121,26 +133,21 @@ export default async function CategoryPage({ params }) {
               <span>بازگشت به صفحه اصلی</span>
             </Link>
           </div>
-          <div className="category-hero-body">
-            <div className="category-kicker">{cat.icon} دسته‌بندی ویژه</div>
-            <h1 className="category-title">{title}</h1>
-            <p className="category-description">
-              {cat.description} — همه محصولات این دسته با فعال‌سازی قانونی روی اکانت شما، پرداخت امن
-              زرین‌پال و پشتیبانی ۲۴ ساعته نوبیکس شاپ ارائه می‌شوند.
-            </p>
-          </div>
         </section>
+
+        <CategoriesSection
+          categories={CATEGORY_NAVIGATION}
+          variant="products"
+          className="category-page-navigation"
+          activeCategoryCode={categoryCode}
+        />
 
         {products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--muted)' }}>
             محصولی در این دسته‌بندی فعال نیست.
           </div>
         ) : (
-          <div className="cards">
-            {products.map((p) => (
-              <ProductCard key={p.id || p.slug} p={p} imageFit="cover" />
-            ))}
-          </div>
+          <CategoryProductGrid products={products} />
         )}
 
         <section style={{ marginTop: 40 }}>
@@ -151,7 +158,7 @@ export default async function CategoryPage({ params }) {
             {[...KNOWN_CODES]
               .filter((c) => c !== code)
               .map((c) => (
-                <Link key={c} href={`/category/${c}`} className="ghost-btn">
+                <Link key={c} href={categoryPathFromCode(c.toUpperCase().replace(/-/g, '_'))} className="ghost-btn">
                   {TITLES[c].split('؛')[0]}
                 </Link>
               ))}
