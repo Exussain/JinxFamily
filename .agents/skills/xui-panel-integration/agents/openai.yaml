@@ -1,0 +1,4 @@
+interface:
+  display_name: "XUI Panel Integration"
+  short_description: "3x-ui API checks and app integration patterns"
+  default_prompt: "Use $xui-panel-integration to verify a 3x-ui panel API and integrate it safely into this project."

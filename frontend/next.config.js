@@ -1,21 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: ['172.24.37.105', 'localhost', '127.0.0.1', '0.0.0.0'],
   distDir: process.env.NEXT_DIST_DIR || '.next',
   turbopack: {},
   webpack: (config, { dev }) => {
     if (dev) {
-      // Prevent Webpack from climbing up parent directories on Z: drive and hanging.
-      // Also ignore next.config.js itself to avoid false "config changed" restarts
-      // caused by unreliable file metadata on the network (Z:) drive.
       config.watchOptions = {
         ...config.watchOptions,
         ignored: [
           '**/node_modules/**',
+          '**/.next/**',
           '**/next.config.js',
-          'Z:/root/!(Projects)/**',
-          'Z:/root/Projects/!(NubixShop)/**',
-          'Z:/root/Projects/NubixShop/!(frontend)/**',
-          'Z:/root/Projects/NubixShop/frontend/!(app|components|lib|public)/**',
         ],
       };
     }
@@ -23,6 +18,7 @@ const nextConfig = {
   },
   outputFileTracingRoot: __dirname,
   images: {
+    qualities: [75, 85, 95],
     remotePatterns: [
       {
         protocol: 'https',

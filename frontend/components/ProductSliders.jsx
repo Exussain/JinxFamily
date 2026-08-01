@@ -1,31 +1,44 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
 import ProductCard from "./ProductCard";
 
 function Arrow({ direction }) {
-  return direction === "next" ? "‹" : "›";
+  const Icon = direction === "next" ? FiArrowRight : FiArrowLeft;
+  return <Icon aria-hidden="true" />;
 }
 
-function ProductRail({ title, description, products, tone }) {
+function ProductRail({ title, products, tone }) {
   const railRef = useRef(null);
   const move = (direction) => {
     railRef.current?.scrollBy({ left: direction * -360, behavior: "smooth" });
   };
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return undefined;
+
+    const handleWheel = (event) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX) || rail.scrollWidth <= rail.clientWidth) return;
+
+      event.preventDefault();
+      rail.scrollBy({ left: -event.deltaY, behavior: "auto" });
+    };
+
+    rail.addEventListener("wheel", handleWheel, { passive: false });
+    return () => rail.removeEventListener("wheel", handleWheel);
+  }, []);
 
   if (!products.length) return null;
 
   return (
     <section className={`product-rail product-rail--${tone}`} aria-label={title}>
       <div className="product-rail__head">
-        <div>
-          <span className="product-rail__eyebrow">انتخاب نوبیکس</span>
-          <h2>{title}</h2>
-          <p>{description}</p>
-        </div>
+        <h2>{title}</h2>
         <div className="product-rail__actions" aria-label={`کنترل ${title}`}>
-          <button type="button" onClick={() => move(-1)} aria-label="محصولات قبلی"><Arrow direction="previous" /></button>
-          <button type="button" onClick={() => move(1)} aria-label="محصولات بعدی"><Arrow direction="next" /></button>
+          <button className="product-rail__arrow" type="button" onClick={() => move(-1)} aria-label="محصولات قبلی"><Arrow direction="previous" /></button>
+          <button className="product-rail__arrow" type="button" onClick={() => move(1)} aria-label="محصولات بعدی"><Arrow direction="next" /></button>
         </div>
       </div>
       <div className="product-rail__viewport" ref={railRef}>
@@ -46,8 +59,8 @@ export default function ProductSliders({ products = [] }) {
 
   return (
     <div className="product-rails" id="popular">
-      <ProductRail title="محبوب‌ترین‌های فورتنایت" description="آیتم‌هایی که همین حالا بیشترین انتخاب را دارند." products={firstRow.length ? firstRow : purchasable.slice(0, 12)} tone="violet" />
-      <ProductRail title="برای بازی و زندگی دیجیتال" description="اشتراک‌ها، گیفت‌کارت‌ها و آیتم‌های تازه در یک نگاه." products={secondRow.length ? secondRow : purchasable.slice(12, 24)} tone="blue" />
+      <ProductRail title="محبوب‌ترین‌های فورتنایت" products={firstRow.length ? firstRow : purchasable.slice(0, 12)} tone="violet" />
+      <ProductRail title="برای بازی و زندگی دیجیتال" products={secondRow.length ? secondRow : purchasable.slice(12, 24)} tone="blue" />
     </div>
   );
 }

@@ -1,0 +1,130 @@
+- generic [active] [ref=f25e1]:
+  - link "Jump to content" [ref=f25e2] [cursor=pointer]:
+    - /url: "#bodyContent"
+  - banner [ref=f25e4]:
+    - generic [ref=f25e5]:
+      - navigation "Site" [ref=f25e6]:
+        - generic "Main menu" [ref=f25e7]:
+          - button "Main menu" [ref=f25e8] [cursor=pointer]
+      - link [ref=f25e12] [cursor=pointer]:
+        - /url: /wiki/Main_Page
+        - img "Wikimedia Commons" [ref=f25e15]
+    - generic [ref=f25e16]:
+      - search [ref=f25e17]:
+        - generic [ref=f25e20]:
+          - searchbox "Search Wikimedia Commons" [ref=f25e23]
+          - button "Search" [ref=f25e25]
+      - navigation "Personal tools" [ref=f25e26]:
+        - generic [ref=f25e27]:
+          - list [ref=f25e30]:
+            - listitem [ref=f25e31]:
+              - link "English" [ref=f25e32] [cursor=pointer]:
+                - /url: "#"
+          - list [ref=f25e37]:
+            - listitem [ref=f25e38]:
+              - link "Donate" [ref=f25e39] [cursor=pointer]:
+                - /url: https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=commons.wikimedia.org&uselang=en
+            - listitem [ref=f25e40]:
+              - link "Create account" [ref=f25e41] [cursor=pointer]:
+                - /url: /w/index.php?title=Special:CreateAccount&returnto=Special%3AMediaSearch&returntoquery=search%3Drainbow%2Bsix%2Bsiege%2Blogo%26type%3Dimage
+            - listitem [ref=f25e42]:
+              - link "Log in" [ref=f25e43] [cursor=pointer]:
+                - /url: /w/index.php?title=Special:UserLogin&returnto=Special%3AMediaSearch&returntoquery=search%3Drainbow%2Bsix%2Bsiege%2Blogo%26type%3Dimage
+  - generic [ref=f25e45]:
+    - main [ref=f25e49]:
+      - generic [ref=f25e50]:
+        - heading "Search media" [level=1] [ref=f25e51]
+        - generic [ref=f25e52]:
+          - link "Switch to Special:Search" [ref=f25e54] [cursor=pointer]:
+            - /url: https://commons.wikimedia.org/w/index.php?title=Special%3ASearch&search=rainbow+six+siege+logo
+          - link "Help" [ref=f25e56] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/wiki/Special:MyLanguage/Help:MediaSearch
+      - generic [ref=f25e58]:
+        - generic:
+          - navigation "Namespaces"
+        - generic [ref=f25e59]:
+          - navigation "Views"
+          - navigation "Page tools" [ref=f25e60]:
+            - generic [ref=f25e61]:
+              - button "Tools" [ref=f25e62] [cursor=pointer]
+              - generic [ref=f25e63]: Tools
+      - navigation "Appearance" [ref=f25e68]:
+        - generic [ref=f25e71]:
+          - generic [ref=f25e72]: Appearance
+          - button "Hide Appearance" [ref=f25e73] [cursor=pointer]: hide
+      - generic "Search media" [ref=f25e74]:
+        - generic [ref=f25e75]:
+          - generic [ref=f25e77]:
+            - generic [ref=f25e78]:
+              - generic [ref=f25e79]: Search media
+              - textbox "Search media Search media" [ref=f25e81]:
+                - /placeholder: Search for images, audio, video and more
+                - text: rainbow six siege logo
+            - button "Search" [ref=f25e83]
+          - generic [ref=f25e85]:
+            - tablist [ref=f25e88]:
+              - tab "Images" [selected] [ref=f25e89]
+              - tab "Audio" [ref=f25e90]
+              - tab "Video" [ref=f25e91]
+              - tab "Other Media" [ref=f25e92]
+              - tab "Categories and Pages" [ref=f25e93]
+            - tabpanel [ref=f25e95]:
+              - generic [ref=f25e96]: 5 results
+              - generic [ref=f25e99]:
+                - generic [ref=f25e100]:
+                  - link "Rainbow Six siege photo 2014-06-14 17-51.jpg" [ref=f25e101] [cursor=pointer]:
+                    - /url: https://commons.wikimedia.org/wiki/File:Rainbow_Six_siege_photo_2014-06-14_17-51.jpg
+                    - img "Rainbow Six siege photo 2014-06-14 17-51.jpg"
+                  - link "Rainbow Six Siege X logo.svg" [ref=f25e102] [cursor=pointer]:
+                    - /url: https://commons.wikimedia.org/wiki/File:Rainbow_Six_Siege_X_logo.svg
+                    - img "Rainbow Six Siege X logo.svg"
+                  - link "Tom Clancy's Rainbow Six logo.svg" [ref=f25e103] [cursor=pointer]:
+                    - /url: https://commons.wikimedia.org/wiki/File:Tom_Clancy%27s_Rainbow_Six_logo.svg
+                    - img "Tom Clancy's Rainbow Six logo.svg"
+                  - link "Tokyo-Game-Show-2023-Day3-2023-09-23 254.jpg" [ref=f25e104] [cursor=pointer]:
+                    - /url: https://commons.wikimedia.org/wiki/File:Tokyo-Game-Show-2023-Day3-2023-09-23_254.jpg
+                    - img "Tokyo-Game-Show-2023-Day3-2023-09-23 254.jpg"
+                  - link "Tokyo-Game-Show-2023-Day3-2023-09-23 253.jpg" [ref=f25e105] [cursor=pointer]:
+                    - /url: https://commons.wikimedia.org/wiki/File:Tokyo-Game-Show-2023-Day3-2023-09-23_253.jpg
+                    - img "Tokyo-Game-Show-2023-Day3-2023-09-23 253.jpg"
+                - paragraph [ref=f25e107]: No more results found
+    - contentinfo [ref=f25e109]:
+      - list:
+        - listitem [ref=f25e110]:
+          - link "Privacy policy" [ref=f25e111] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+        - listitem [ref=f25e112]:
+          - link "About Wikimedia Commons" [ref=f25e113] [cursor=pointer]:
+            - /url: /wiki/Commons:Welcome
+        - listitem [ref=f25e114]:
+          - link "Disclaimers" [ref=f25e115] [cursor=pointer]:
+            - /url: /wiki/Commons:General_disclaimer
+        - listitem [ref=f25e116]:
+          - link "Legal & safety contacts" [ref=f25e117] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Wikimedia_Foundation_Legal_and_Safety_Contact_Information
+        - listitem [ref=f25e118]:
+          - link "Code of Conduct" [ref=f25e119] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Universal_Code_of_Conduct
+        - listitem [ref=f25e120]:
+          - link "Developers" [ref=f25e121] [cursor=pointer]:
+            - /url: https://developer.wikimedia.org
+        - listitem [ref=f25e122]:
+          - link "Statistics" [ref=f25e123] [cursor=pointer]:
+            - /url: https://stats.wikimedia.org/#/commons.wikimedia.org
+        - listitem [ref=f25e124]:
+          - link "Cookie statement" [ref=f25e125] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Cookie_statement
+        - listitem [ref=f25e126]:
+          - link "Mobile view" [ref=f25e127] [cursor=pointer]:
+            - /url: //commons.wikimedia.org/w/index.php?title=Special:MediaSearch&search=rainbow+six+siege+logo&type=image&mobileaction=toggle_view_mobile
+      - list [ref=f25e128]:
+        - listitem [ref=f25e129]:
+          - link [ref=f25e130] [cursor=pointer]:
+            - /url: https://www.wikimedia.org/
+            - img "Wikimedia Foundation" [ref=f25e132]
+        - listitem [ref=f25e133]:
+          - link [ref=f25e134] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/
+            - img "Powered by MediaWiki" [ref=f25e136]
+  - generic [ref=f25e137]:
+    - list

@@ -6,10 +6,21 @@ import { categoryPathFromCode } from '../lib/productCategoryRoutes';
 
 const categoryCodes = {
   "فورتنایت": "FORTNITE",
-  "راکت لیگ": "ROCKET_LEAGUE",
-  "هوش مصنوعی": "AI",
-  "گیفت کارت‌ها": "GIFTCARDS",
+  "ولورانت": "VALORANT",
   "بازی‌ها": "GAMES",
+  "هوش مصنوعی": "AI",
+  "راکت لیگ": "ROCKET_LEAGUE",
+  "کلش اف کلنز": "CLASH_OF_CLANS",
+  "کلش رویال": "CLASH_ROYALE",
+  "پابجی": "PUBG",
+  "کالاف دیوتی": "COD_MOBILE",
+  "براول استارز": "BRAWL_STARS",
+  "فری فایر": "FREE_FIRE",
+  "رینبو سیکس": "RAINBOW_SIX",
+  "مارول ریوالز": "MARVEL_RIVALS",
+  "سرویس کاهش پینگ": "PING_REDUCTION",
+  "بازی‌های موبایل": "MOBILE_GAMES",
+  "گیفت کارت‌ها": "GIFTCARDS",
   "اشتراک‌ها": "SUBSCRIPTIONS",
 };
 
@@ -17,6 +28,54 @@ const categoryData = {
   "فورتنایت": {
     icon: "/categories/category_fortnite.webp",
     gradient: "linear-gradient(135deg, #334155, #111827)",
+  },
+  "پابجی": {
+    icon: "/categories/category_pubg.webp",
+    gradient: "linear-gradient(135deg, #ea580c, #ca8a04)",
+  },
+  "کالاف دیوتی": {
+    icon: "/categories/category_cod.webp",
+    gradient: "linear-gradient(135deg, #111827, #4b5563)",
+  },
+  "کلش رویال": {
+    icon: "/categories/category_clash_royal.webp",
+    gradient: "linear-gradient(135deg, #2563eb, #7c3aed)",
+  },
+  "کلش اف کلنز": {
+    icon: "/categories/category_coc.webp",
+    gradient: "linear-gradient(135deg, #f97316, #f59e0b)",
+  },
+  "براول استارز": {
+    icon: "/categories/category_brawl_stars.webp",
+    gradient: "linear-gradient(135deg, #eab308, #ef4444)",
+  },
+  "فری فایر": {
+    icon: "/categories/category_freefire.webp",
+    gradient: "linear-gradient(135deg, #dc2626, #b91c1c)",
+  },
+  "ولورانت": {
+    icon: "/categories/category_valorant.webp",
+    gradient: "linear-gradient(135deg, #ff4655, #0f1923)",
+  },
+  "رینبو سیکس": {
+    icon: "/categories/category_rainbow.webp",
+    gradient: "linear-gradient(135deg, #1e293b, #0f172a)",
+  },
+  "مارول ریوالز": {
+    icon: "/categories/category_marvel_rivals.webp",
+    gradient: "linear-gradient(135deg, #e11d48, #be123c)",
+  },
+  "سرویس کاهش پینگ": {
+    icon: "/categories/category_ping.webp",
+    gradient: "linear-gradient(135deg, #0284c7, #0369a1)",
+  },
+  "بازی‌های موبایل": {
+    icon: "/categories/category_mobile_games.webp",
+    gradient: "linear-gradient(135deg, #ec4899, #8b5cf6)",
+  },
+  "راکت لیگ": {
+    icon: "/categories/category_rocket_league.webp",
+    gradient: "linear-gradient(135deg, #2563eb, #f97316)",
   },
   "هوش مصنوعی": {
     icon: "/categories/category_ai.webp",
@@ -30,29 +89,9 @@ const categoryData = {
     icon: "/products/gta6/ps5-standard.webp",
     gradient: "linear-gradient(135deg, #10B981, #059669)",
   },
-  "راکت لیگ": {
-    icon: "/categories/category_rocket_league.webp",
-    gradient: "linear-gradient(135deg, #2563eb, #f97316)",
-  },
   "اشتراک‌ها": {
     icon: "/categories/category_subscriptions.webp",
     gradient: "linear-gradient(135deg, #3B82F6, #06B6D4)",
-  },
-  "کلش آف کلنز": {
-    icon: "/categories/category_coc.webp",
-    gradient: "linear-gradient(135deg, #f97316, #f59e0b)",
-  },
-  "کلش رویال": {
-    icon: "/categories/category_clash_royal.webp",
-    gradient: "linear-gradient(135deg, #2563eb, #7c3aed)",
-  },
-  "کالاف دیوتی": {
-    icon: "/categories/category_cod.webp",
-    gradient: "linear-gradient(135deg, #111827, #4b5563)",
-  },
-  "بتلفیلد": {
-    icon: "/categories/category_battlefield6.webp",
-    gradient: "linear-gradient(135deg, #0ea5e9, #38bdf8)",
   },
 };
 
@@ -203,6 +242,9 @@ export default function CategoriesSection({
     return activeCat === cat || catParam === cat;
   };
 
+  const DEFAULT_CATEGORIES = Object.keys(categoryCodes);
+  const targetCategories = Array.isArray(categories) && categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+
   return (
     <section
       id="category-navigation-section"
@@ -253,7 +295,7 @@ export default function CategoriesSection({
         role="navigation"
         aria-label="لیست دسته‌بندی‌ها"
       >
-        {categories.map((cat) => {
+        {targetCategories.map((cat) => {
           const catData = categoryData[cat] || { icon: "/categories/category_fortnite.webp", gradient: "linear-gradient(135deg, #6366F1, #8B5CF6)" };
           return (
             <Link
@@ -316,7 +358,7 @@ export default function CategoriesSection({
                     <polyline points="9 18 15 12 9 6"></polyline>
                   </svg>
                 </Link>
-                {categories.map((cat) => {
+                {targetCategories.map((cat) => {
                   const catData = categoryData[cat] || { icon: "/categories/category_fortnite.webp", gradient: "linear-gradient(135deg, #6366F1, #8B5CF6)" };
                   return (
                     <Link

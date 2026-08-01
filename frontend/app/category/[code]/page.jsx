@@ -11,16 +11,37 @@ export const revalidate = 60;
 const BASE_URL = 'https://nubixshop.ir';
 
 // URL codes are lowercase; the backend category codes are uppercase.
-const KNOWN_CODES = new Set(['fortnite', 'rocket-league', 'ai', 'giftcards', 'games', 'subscriptions']);
-const CATEGORY_NAVIGATION = ['فورتنایت', 'راکت لیگ', 'هوش مصنوعی', 'گیفت کارت‌ها', 'بازی‌ها', 'اشتراک‌ها'];
+const KNOWN_CODES = new Set([
+  'fortnite', 'pubg', 'cod-mobile', 'clash-royale', 'clash-of-clans',
+  'brawl-stars', 'free-fire', 'valorant', 'rainbow-six', 'marvel-rivals',
+  'ping-reduction', 'mobile-games', 'rocket-league', 'ai', 'giftcards',
+  'games', 'subscriptions'
+]);
+const CATEGORY_NAVIGATION = [
+  'فورتنایت', 'ولورانت', 'بازی‌ها', 'هوش مصنوعی', 'راکت لیگ',
+  'کلش اف کلنز', 'کلش رویال', 'پابجی', 'کالاف دیوتی', 'براول استارز',
+  'فری فایر', 'رینبو سیکس', 'مارول ریوالز', 'سرویس کاهش پینگ',
+  'بازی‌های موبایل', 'گیفت کارت‌ها', 'اشتراک‌ها'
+];
 
 // Persian buying-intent titles per category (fallback: generic pattern).
 const TITLES = {
   fortnite: 'خرید محصولات فورتنایت؛ وی باکس، کروپک و بتل پس',
+  pubg: 'خرید یوسی و آفرهای پابجی موبایل؛ شارژ سریع و قانونی',
+  'cod-mobile': 'خرید سی پی و آفرهای کالاف دیوتی موبایل',
+  'clash-royale': 'خرید رویال پس و آفرهای کلش رویال',
+  'clash-of-clans': 'خرید بلیت طلایی و جم کلش اف کلنز',
+  'brawl-stars': 'خرید جم و براول پس براول استارز',
+  'free-fire': 'خرید جم و آفرهای فری فایر',
+  valorant: 'خرید ولورانت پوینت (VP) و آیتم‌های ولورانت',
+  'rainbow-six': 'خرید ممبرشیپ و کردیت رینبو سیکس سیج',
+  'marvel-rivals': 'خرید لاتیس و آیتم‌های مارول ریوالز',
+  'ping-reduction': 'خرید اشتراک سرویس کاهش پینگ و رفع تحریم',
+  'mobile-games': 'خرید آنلاین جم، یوسی و سکه بازی‌های موبایل',
+  'rocket-league': 'خرید کردیت راکت لیگ؛ شارژ سریع و قانونی',
   ai: 'خرید اشتراک هوش مصنوعی؛ ChatGPT و Gemini',
   giftcards: 'خرید گیفت کارت؛ پلی‌استیشن، استیم، ایکس‌باکس و گوگل پلی',
-  games: 'خرید محصولات بازی‌ها؛ جم، سکه و آیتم',
-  'rocket-league': 'خرید کردیت راکت لیگ؛ شارژ سریع و قانونی',
+  games: 'خرید محصولات بازی‌ها؛ پیش‌خرید GTA VI و بازی روز',
   subscriptions: 'خرید اشتراک‌های دیجیتال با فعال‌سازی قانونی',
 };
 

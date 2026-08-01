@@ -1,0 +1,28 @@
+- generic [ref=f19e2]:
+  - banner [ref=f19e3]:
+    - heading [level=1] [ref=f19e4]:
+      - link "/tmp/files" [ref=f19e5] [cursor=pointer]:
+        - /url: /
+    - heading "Temporary File Hosting" [level=2] [ref=f19e6]
+  - generic [ref=f19e8]:
+    - heading "tmpfiles_up.png" [level=2] [ref=f19e9]
+    - paragraph [ref=f19e11]:
+      - link "Download (35.62 KB)" [ref=f19e12] [cursor=pointer]:
+        - /url: https://tmpfiles.org/dl/1785455622.a5265377cc02f9a1/wIwoi4Gnje4r/tmpfiles_up.png
+    - paragraph [ref=f19e13]: File expires in 59 minutes
+  - contentinfo [ref=f19e14]:
+    - list [ref=f19e15]:
+      - listitem [ref=f19e16]:
+        - link "Upload" [ref=f19e17] [cursor=pointer]:
+          - /url: /
+      - listitem [ref=f19e18]:
+        - link "API" [ref=f19e19] [cursor=pointer]:
+          - /url: /api
+      - listitem [ref=f19e20]:
+        - link "About" [ref=f19e21] [cursor=pointer]:
+          - /url: /about
+      - listitem [ref=f19e22]:
+        - link "ToS" [ref=f19e23] [cursor=pointer]:
+          - /url: /tos
+    - link "Telegram Bot" [ref=f19e25] [cursor=pointer]:
+      - /url: https://t.me/tmpfiles_org_bot

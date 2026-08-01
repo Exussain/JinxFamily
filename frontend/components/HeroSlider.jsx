@@ -403,7 +403,7 @@ export default function HeroSlider({ heroProducts = [] }) {
             }[p.slug] || `/product/${p.slug}`;
 
             return (
-              <div key={p.slug || p.id || heroIdx} className="discount-product-card">
+              <div key={`${p.slug || p.id || 'hero'}-${heroIdx}`} className="discount-product-card">
                 {p.badge_label && (
                   <div className="card-popular-badge">
                     {p.badge_label}

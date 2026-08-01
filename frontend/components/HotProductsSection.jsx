@@ -84,7 +84,7 @@ export default function HotProductsSection() {
           align-items: center;
           justify-content: space-between;
           padding: 24px 32px;
-          padding-left: 210px; /* Space for absolute 3D chest on left */
+          padding-left: 174px; /* Space for the floating chest on the left */
           position: relative;
           z-index: 3;
           direction: rtl;
@@ -95,10 +95,10 @@ export default function HotProductsSection() {
           border-radius: 24px;
           border: 1.5px solid rgba(254, 240, 138, 0.85);
           box-shadow: 0 16px 40px rgba(217, 119, 6, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.85);
-          overflow: visible !important;
+          overflow: visible;
         }
 
-        /* Shine Reflection Effect on the Inner Gold Card */
+        /* Shine reflection on the gold card. */
         .spin-banner-inner::before {
           content: '';
           position: absolute;
@@ -117,7 +117,7 @@ export default function HotProductsSection() {
           100% { left: 200%; }
         }
 
-        /* Sparkle particles on the Inner Gold Card */
+        /* Sparkle particles on the gold card. */
         .spin-banner-inner::after {
           content: '';
           position: absolute;
@@ -218,14 +218,14 @@ export default function HotProductsSection() {
           align-items: center;
         }
         .spin-banner-btn {
-          background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
-          color: #fde68a;
-          border: 1px solid rgba(253, 230, 138, 0.35);
+          background: linear-gradient(135deg, #8b5cf6 0%, #4f46e5 100%);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.38);
           padding: 12px 28px;
           border-radius: 14px;
           font-weight: 900;
           font-size: 14.5px;
-          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.35);
+          box-shadow: 0 10px 24px rgba(79, 70, 229, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.22);
           cursor: pointer;
           transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease, background 0.25s ease;
           display: inline-flex;
@@ -237,10 +237,10 @@ export default function HotProductsSection() {
           will-change: transform;
         }
         .spin-banner:hover .spin-banner-btn {
-          background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+          background: linear-gradient(135deg, #a78bfa 0%, #5b21b6 100%);
           color: #ffffff;
           transform: scale(1.08) translateY(-2px);
-          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.5);
+          box-shadow: 0 14px 30px rgba(91, 33, 182, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.24);
         }
         .spin-banner-btn:active {
           transform: scale(0.96) translateY(1px);
@@ -277,58 +277,51 @@ export default function HotProductsSection() {
           background: linear-gradient(135deg, #4f46e5, #4338ca);
           box-shadow: 0 10px 24px rgba(99, 102, 241, 0.45);
         }
-        :global(:root[data-theme="light"]) .spin-banner.is-wednesday .spin-banner-inner {
-          background:
-            radial-gradient(circle at 18% 50%, rgba(255, 255, 255, 0.65), transparent 18%),
-            linear-gradient(135deg, #fff7ed 0%, #fde68a 48%, #f59e0b 100%);
-          border-color: rgba(217, 119, 6, 0.4);
-          box-shadow: 0 18px 42px rgba(217, 119, 6, 0.22);
-        }
-
-        /* 3D Wheel Image Asset & Positioning - Escaping Boundaries */
+        /* The desktop chest is vertically centered and pops from the left edge. */
         .spin-banner-image-container {
           position: absolute;
-          left: 10px;
-          top: -40px;
-          width: 200px;
-          height: 200px;
+          left: 16px;
+          top: 50%;
+          width: 120px;
+          height: 120px;
+          transform: translateY(-50%);
           display: flex;
           align-items: center;
           justify-content: center;
           pointer-events: none;
           z-index: 10;
-          overflow: visible !important;
+          overflow: visible;
         }
         .spin-banner-image-container::before {
           content: '';
           position: absolute;
-          width: 170px;
-          height: 170px;
+          width: 110px;
+          height: 110px;
           background: radial-gradient(circle, rgba(245, 158, 11, 0.65) 0%, rgba(168, 85, 247, 0.35) 50%, transparent 70%);
           z-index: -1;
           animation: pulse-glow 3s ease-in-out infinite alternate;
           pointer-events: none;
-          transform: translateZ(0);
+          transform: scale(1.02) translateZ(0);
         }
         .spin-banner-wheel-img {
           width: 100%;
           height: 100%;
           object-fit: contain;
-          transform: scale(1.3) translateZ(0);
+          transform: translateZ(0);
           animation: float-chest 4s ease-in-out infinite;
-          filter: drop-shadow(0 20px 38px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 24px rgba(245, 158, 11, 0.5));
+          filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.65)) drop-shadow(0 0 18px rgba(245, 158, 11, 0.45));
           transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.4s ease;
           will-change: transform, filter;
         }
         .spin-banner:hover .spin-banner-wheel-img {
-          transform: scale(1.45) translateY(-14px) rotate(-5deg);
-          filter: drop-shadow(0 30px 60px rgba(168, 85, 247, 0.55)) drop-shadow(0 24px 50px rgba(0, 0, 0, 0.85));
+          transform: scale(1.1) translateY(-8px) rotate(-3deg);
+          filter: drop-shadow(0 22px 40px rgba(168, 85, 247, 0.45)) drop-shadow(0 18px 36px rgba(0, 0, 0, 0.75));
         }
 
         @keyframes float-chest {
-          0% { transform: scale(1.28) translateY(0px) rotate(0deg); }
-          50% { transform: scale(1.28) translateY(-16px) rotate(3deg); }
-          100% { transform: scale(1.28) translateY(0px) rotate(0deg); }
+          0% { transform: scale(1.02) translateY(0) rotate(0deg); }
+          50% { transform: scale(1.02) translateY(-8px) rotate(2deg); }
+          100% { transform: scale(1.02) translateY(0) rotate(0deg); }
         }
 
         @keyframes pulse-glow {
@@ -339,14 +332,14 @@ export default function HotProductsSection() {
         /* Responsive Breakpoints Optimization */
         @media (max-width: 900px) {
           .spin-banner-inner {
-            padding-left: 170px;
+            padding-left: 132px;
             padding-right: 24px;
           }
           .spin-banner-image-container {
-            width: 160px;
-            height: 160px;
-            top: -25px;
-            left: 8px;
+            width: 105px;
+            height: 105px;
+            top: -28px;
+            left: 16px;
           }
         }
 

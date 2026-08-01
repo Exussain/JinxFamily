@@ -1,0 +1,15 @@
+- generic [active] [ref=f11e1]:
+  - main [ref=f11e2]:
+    - link [ref=f11e3] [cursor=pointer]:
+      - /url: https://www.wikimedia.org
+      - img "Wikimedia" [ref=f11e4]
+    - generic [ref=f11e5]:
+      - heading "Error" [level=1] [ref=f11e6]
+      - paragraph [ref=f11e7]: Use thumbnail sizes listed on https://w.wiki/GHai
+  - generic [ref=f11e8]:
+    - paragraph [ref=f11e9]: If you report this error to the Wikimedia System Administrators, please include the details below.
+    - paragraph [ref=f11e10]:
+      - code [ref=f11e11]: "Request served via cp6006 cp6006, Varnish XID 473118214Upstream caches: cp6006 intError: 400, Use thumbnail sizes listed on https://w.wiki/GHai at Thu, 30 Jul 2026 23:27:23 GMT"
+    - group [ref=f11e12]:
+      - code [ref=f11e14] [cursor=pointer]: Sensitive client information
+    - paragraph

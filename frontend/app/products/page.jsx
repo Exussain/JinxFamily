@@ -107,7 +107,7 @@ export default async function ProductsPage() {
   return (
     <>
       <Navbar />
-      <main className="container products-page-shell" style={{ paddingBottom: 80 }}>
+      <main className="container section products-page-shell" style={{ paddingTop: 20, paddingBottom: 80 }}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}

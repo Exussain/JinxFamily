@@ -83,3 +83,9 @@ Thumbs.db
 # Scoped to the root so real website image assets in subfolders are unaffected.
 /*.jpg
 .worktrees/
+
+# ============================================================
+# Secrets & local data (never push)
+# ============================================================
+backend/.env
+backend/db.sqlite3

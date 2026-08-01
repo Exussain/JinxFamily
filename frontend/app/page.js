@@ -3,6 +3,7 @@ import HeroSlider from "../components/HeroSlider";
 import CounterStat from "../components/CounterStat";
 import CountUp from "../components/CountUp";
 import CategoriesSection from "../components/CategoriesSection";
+import GamePromoBanner from "../components/GamePromoBanner";
 import EnamadBadge from "../components/EnamadBadge";
 import ZarinpalBadge from "../components/ZarinpalBadge";
 import GiftcardsMenu from "../components/GiftcardsMenu";
@@ -211,10 +212,21 @@ export default async function Page(props) {
 
   const categories = [
     "فورتنایت",
-    "راکت لیگ",
-    "هوش مصنوعی",
-    "گیفت کارت‌ها",
+    "ولورانت",
     "بازی‌ها",
+    "هوش مصنوعی",
+    "راکت لیگ",
+    "کلش اف کلنز",
+    "کلش رویال",
+    "پابجی",
+    "کالاف دیوتی",
+    "براول استارز",
+    "فری فایر",
+    "رینبو سیکس",
+    "مارول ریوالز",
+    "سرویس کاهش پینگ",
+    "بازی‌های موبایل",
+    "گیفت کارت‌ها",
     "اشتراک‌ها"
   ];
 
@@ -449,6 +461,8 @@ export default async function Page(props) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
+        <GamePromoBanner />
+
         <section className="hero-grid">
             <HeroSlider
               heroProducts={featuredProducts}
