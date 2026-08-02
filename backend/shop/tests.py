@@ -15,7 +15,9 @@ from .models import (
     ProductComment,
     ProductVariant,
     OrderItem,
+    Payment,
     PointsTransaction,
+    RefundCreditTransaction,
     ResellerPriceTier,
     ResellerProfile,
     ResellerWalletTxn,
@@ -2362,3 +2364,81 @@ class RefundCreditTests(TestCase):
 
         order.refresh_from_db()
         self.assertEqual(order.status, "refunded")
+
+    def test_refund_returns_actual_tender_and_diamonds_once(self):
+        from shop.rewards import process_order_refund
+
+        self.user.profile.points_balance = 40
+        self.user.profile.save(update_fields=["points_balance"])
+        order = Order.objects.create(
+            user=self.user,
+            status="completed",
+            epic_username="player-mixed",
+            phone="09124445555",
+            amount=652000,
+            refund_credit_used=100000,
+            diamonds_used=25,
+            rush_order=True,
+            rush_fee=89000,
+        )
+        Payment.objects.create(order=order, status="verified", amount=652000, authority="mixed-auth")
+
+        result = process_order_refund(order, previous_status="completed")
+        self.assertTrue(result["processed"])
+        self.assertEqual(result["credit_added"], 752000)
+        self.assertEqual(result["diamonds_restored"], 25)
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.refund_credit, 752000)
+        self.assertEqual(self.user.profile.points_balance, 65)
+        self.assertEqual(RefundCreditTransaction.objects.filter(related_order=order, kind="refund").count(), 1)
+
+        again = process_order_refund(order, previous_status="refunded")
+        self.assertTrue(again["already_processed"])
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.refund_credit, 752000)
+        self.assertEqual(self.user.profile.points_balance, 65)
+
+    def test_zero_payment_request_marks_wallet_funded_order_paid(self):
+        order = Order.objects.create(
+            user=self.user,
+            status="pending",
+            epic_username="wallet-player",
+            phone="09124445555",
+            amount=0,
+            refund_credit_used=250000,
+        )
+        self.client.force_login(self.user)
+        with patch("shop.views._notify_customer_payment_success"), patch("shop.rewards.award_purchase_points"):
+            response = self.client.post(f"/api/payment/request/{order.tracking_code}")
+        self.assertEqual(response.status_code, 200, response.content)
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        self.assertFalse(payload["payment_required"])
+        order.refresh_from_db()
+        self.assertEqual(order.status, "paid")
+
+    def test_discount_preview_exposes_server_maximums(self):
+        product = Product.objects.create(
+            name_fa="Preview product",
+            slug="preview-refund-credit-product",
+            price=652000,
+            active=True,
+        )
+        self.user.profile.points_balance = 500
+        self.user.profile.refund_credit = 300000
+        self.user.profile.save(update_fields=["points_balance", "refund_credit"])
+        self.client.force_login(self.user)
+        response = self.client.post(
+            "/api/discounts/validate",
+            data=json.dumps({
+                "items": [{"product_id": product.id, "slug": product.slug, "quantity": 1}],
+                "diamonds_use": 0,
+                "refund_credit_use": 0,
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        payload = response.json()
+        self.assertIn("diamonds_max", payload)
+        self.assertIn("refund_credit_max", payload)
+        self.assertEqual(payload["refund_credit_balance"], 300000)

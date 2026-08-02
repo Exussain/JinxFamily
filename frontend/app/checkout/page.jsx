@@ -65,8 +65,10 @@ export default function CheckoutPage() {
   const [appliedDiscountCode, setAppliedDiscountCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState(0);
   const [backendDiamondDiscount, setBackendDiamondDiscount] = useState(0);
-  const [backendDiamondsApplied, setBackendDiamondsApplied] = useState(0);
-  const [backendRefundCredit, setBackendRefundCredit] = useState(0);
+  const [backendDiamondsMax, setBackendDiamondsMax] = useState(null);
+  const [backendRefundCredit, setBackendRefundCredit] = useState(null);
+  const [backendRefundCreditMax, setBackendRefundCreditMax] = useState(null);
+  const [backendFinalAmount, setBackendFinalAmount] = useState(null);
   const [refundCreditUse, setRefundCreditUse] = useState(0);
   const [isValidating, setIsValidating] = useState(false);
   const [discountFlat, setDiscountFlat] = useState(0);
@@ -226,20 +228,25 @@ export default function CheckoutPage() {
     : (discountPercent > 0 ? Math.floor((baseTotal + rushFee) * discountPercent / 100) : 0);
   const subtotalAfterDiscount = Math.max(0, baseTotal + rushFee - discountAmount);
   const diamondsBalance = me?.points_balance || 0;
-  const refundCreditBalance = me?.refund_credit || backendRefundCredit || 0;
+  const refundCreditBalance = me?.refund_credit ?? backendRefundCredit ?? 0;
   const diamondsCap = Math.min(diamondsBalance, tomanToDiamondsCeil(subtotalAfterDiscount));
+  const diamondsMaxAllowed = backendDiamondsMax == null
+    ? diamondsCap
+    : Math.min(diamondsCap, Math.max(0, Number(backendDiamondsMax) || 0));
   const diamondDiscount = diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? backendDiamondDiscount : 0;
-  const refundCreditMax = Math.min(refundCreditBalance, Math.max(0, subtotalAfterDiscount - diamondDiscount));
+  const refundCreditMax = backendRefundCreditMax == null
+    ? Math.min(refundCreditBalance, Math.max(0, subtotalAfterDiscount - diamondDiscount))
+    : Math.min(refundCreditBalance, Math.max(0, Number(backendRefundCreditMax) || 0));
   const refundCreditDiscount = Math.min(refundCreditUse, refundCreditMax);
   const finalTotal = Math.max(0, subtotalAfterDiscount - diamondDiscount - refundCreditDiscount);
-  const diamondsLimitExceeded = diamondsUse > 0 && diamondsUse > backendDiamondsApplied;
+  const diamondsLimitExceeded = diamondsUse > diamondsMaxAllowed;
 
   const handleRefundCreditToggle = () => {
     setRefundCreditUse(currentUse => (currentUse > 0 ? 0 : refundCreditMax));
   };
 
   const handleDiamondToggle = () => {
-    setDiamondsUse(currentUse => nextDiamondUse(currentUse, diamondsBalance, diamondsCap));
+    setDiamondsUse(currentUse => nextDiamondUse(currentUse, diamondsBalance, diamondsMaxAllowed));
     const nextMessage = discountMessageAfterDiamondToggle(discountMessageKind, discountMessage);
     setDiscountMessage(nextMessage);
     if (!nextMessage) setDiscountMessageKind('');
@@ -250,6 +257,7 @@ export default function CheckoutPage() {
     const validateCartState = async () => {
       if (!items || items.length === 0) return;
       setIsValidating(true);
+      setBackendFinalAmount(null);
       try {
         const validationItems = items.map((it) => ({
           product_id: it.product_id || it.id,
@@ -266,15 +274,18 @@ export default function CheckoutPage() {
             rush_order: rushOrder,
             rush_fee: rushFee,
             diamonds_use: diamondsUse,
+            refund_credit_use: refundCreditUse,
           }),
         });
         if (res.ok && active) {
           const data = await res.json();
           setBackendDiamondDiscount(data.diamond_discount || 0);
-          setBackendDiamondsApplied(data.diamonds_applied || 0);
+          if (typeof data.diamonds_max === "number") setBackendDiamondsMax(data.diamonds_max);
           if (typeof data.refund_credit_balance === "number") {
             setBackendRefundCredit(data.refund_credit_balance);
           }
+          if (typeof data.refund_credit_max === "number") setBackendRefundCreditMax(data.refund_credit_max);
+          if (typeof data.final_amount === "number") setBackendFinalAmount(data.final_amount);
         }
       } catch (err) {
         console.error("Failed to validate cart state:", err);
@@ -285,7 +296,7 @@ export default function CheckoutPage() {
 
     validateCartState();
     return () => { active = false; };
-  }, [items, rushOrder, appliedDiscountCode, diamondsUse, rushFee]);
+  }, [items, rushOrder, appliedDiscountCode, diamondsUse, refundCreditUse, rushFee]);
 
   // Check if name is required but not provided
   const nameRequired = needsName && !fullName.trim();
@@ -303,13 +314,13 @@ export default function CheckoutPage() {
         : "زمان تقریبی انجام: ۱۵ دقیقه تا ۸ ساعت کاری");
 
   useEffect(() => {
-    const effectiveCap = backendDiamondsApplied > 0
-      ? Math.min(diamondsCap, backendDiamondsApplied)
-      : diamondsCap;
-    if (diamondsUse > effectiveCap) {
-      setDiamondsUse(effectiveCap);
+    if (diamondsUse > diamondsMaxAllowed) {
+      setDiamondsUse(diamondsMaxAllowed);
     }
-  }, [diamondsCap, diamondsUse, backendDiamondsApplied]);
+    if (refundCreditUse > refundCreditMax) {
+      setRefundCreditUse(refundCreditMax);
+    }
+  }, [diamondsMaxAllowed, diamondsUse, refundCreditMax, refundCreditUse]);
 
   useEffect(() => {
     if (discountCode && !discountOpen) {
@@ -650,9 +661,13 @@ export default function CheckoutPage() {
       });
       const payData = await res.json().catch(() => ({}));
 
-      if (res.ok && payData?.success && payData?.payment_url) {
+      if (res.ok && payData?.success && payData?.payment_required && payData?.payment_url) {
         window.location.href = payData.payment_url;
         return true;
+      }
+
+      if (res.ok && payData?.success && payData?.payment_required === false) {
+        return false;
       }
 
       setError(payData?.message || 'خطا در ایجاد لینک پرداخت');
@@ -866,8 +881,9 @@ export default function CheckoutPage() {
         body: JSON.stringify({ 
           items: orderItems,
           contact: contactPayload,
-          diamonds_use: Math.min(diamondsUse, Math.max(0, backendDiamondsApplied)),
+          diamonds_use: Math.min(diamondsUse, Math.max(0, diamondsMaxAllowed)),
           refund_credit_use: Math.min(refundCreditUse, Math.max(0, refundCreditMax)),
+          ...(backendFinalAmount != null ? { expected_amount: backendFinalAmount } : {}),
           rush_order: rushOrder,
           rush_fee: rushFee,
           discount_code: appliedDiscountCode || undefined,
@@ -897,13 +913,11 @@ export default function CheckoutPage() {
 
       clear();
 
-      if (data.amount > 0) {
-        const redirected = await requestPaymentAndRedirect(data.tracking_code);
-        if (redirected) {
-          sessionStorage.removeItem("checkout_form_draft");
-          sessionStorage.removeItem("return_to_checkout");
-          return;
-        }
+      const redirected = await requestPaymentAndRedirect(data.tracking_code);
+      if (redirected) {
+        sessionStorage.removeItem("checkout_form_draft");
+        sessionStorage.removeItem("return_to_checkout");
+        return;
       }
 
       sessionStorage.removeItem("checkout_form_draft");
@@ -1495,7 +1509,7 @@ export default function CheckoutPage() {
                       className={`sidebar-discount-action-btn ${diamondsUse > 0 ? 'active' : ''}`}
                       onClick={handleDiamondToggle}
                     >
-                      <span>💎 استفاده از الماس ({diamondsBalance.toLocaleString('fa-IR')})</span>
+                      <span>💎 استفاده از الماس (حداکثر {diamondsMaxAllowed.toLocaleString('fa-IR')})</span>
                     </button>
                   )}
 
@@ -1505,7 +1519,7 @@ export default function CheckoutPage() {
                       className={`sidebar-discount-action-btn ${refundCreditUse > 0 ? 'active' : ''}`}
                       onClick={handleRefundCreditToggle}
                     >
-                      <span>💰 استفاده از اعتبار بازگشتی ({refundCreditBalance.toLocaleString('fa-IR')} تومان)</span>
+                      <span>💰 استفاده از اعتبار بازگشتی (حداکثر {refundCreditMax.toLocaleString('fa-IR')} تومان)</span>
                     </button>
                   )}
 
@@ -1521,22 +1535,11 @@ export default function CheckoutPage() {
 
                 {diamondsUse > 0 && me && diamondsBalance > 0 && (
                   <div className="sidebar-diamond-use-box">
-                    <div className="wallet-input-inner">
-                      <input
-                        type="number"
-                        min={0}
-                        max={diamondsCap}
-                        value={diamondsUse}
-                        onChange={(e) => setDiamondsUse(Math.min(diamondsCap, Math.max(0, Number(e.target.value) || 0)))}
-                        placeholder="تعداد الماس"
-                      />
-                      <span className="wallet-input-unit">💎</span>
+                    <div className="wallet-limit-copy">
+                      <span>حداکثر قابل استفاده: <strong>{diamondsMaxAllowed.toLocaleString('fa-IR')} الماس</strong></span>
+                      <span>انتخاب فعلی: {diamondsUse.toLocaleString('fa-IR')} الماس</span>
                     </div>
-                    {diamondsLimitExceeded ? (
-                      <span className="diamond-discount-tag error" style={{ color: '#ef4444', fontWeight: 'bold' }}>
-                        ⚠️ بیشتر از حد مجاز (حداکثر {backendDiamondsApplied} الماس)
-                      </span>
-                    ) : diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? (
+                    {diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? (
                       <span className="diamond-discount-tag">
                         ✅ {diamondsToToman(diamondsUse).toLocaleString('fa-IR')} تومان تخفیف
                       </span>
@@ -1550,16 +1553,9 @@ export default function CheckoutPage() {
 
                 {refundCreditUse > 0 && me && refundCreditBalance > 0 && (
                   <div className="sidebar-diamond-use-box">
-                    <div className="wallet-input-inner">
-                      <input
-                        type="number"
-                        min={0}
-                        max={refundCreditMax}
-                        value={refundCreditUse}
-                        onChange={(e) => setRefundCreditUse(Math.min(refundCreditMax, Math.max(0, Number(e.target.value) || 0)))}
-                        placeholder="مبلغ به تومان"
-                      />
-                      <span className="wallet-input-unit">💰</span>
+                    <div className="wallet-limit-copy">
+                      <span>حداکثر قابل مصرف: <strong>{refundCreditMax.toLocaleString('fa-IR')} تومان</strong></span>
+                      <span>انتخاب فعلی: {refundCreditUse.toLocaleString('fa-IR')} تومان</span>
                     </div>
                     <span className="diamond-discount-tag">
                       ✅ {refundCreditDiscount.toLocaleString('fa-IR')} تومان از اعتبار شما کسر می‌شود
@@ -4105,31 +4101,6 @@ export default function CheckoutPage() {
           color: var(--muted);
         }
 
-        .wallet-input-inner {
-          position: relative;
-          display: flex;
-          align-items: center;
-          flex: 1;
-        }
-
-        .wallet-input-inner input {
-          width: 100%;
-          background: transparent;
-          border: none !important;
-          outline: none !important;
-          padding: 8px 0;
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--text);
-          text-align: left;
-          direction: ltr;
-        }
-
-        .wallet-input-unit {
-          font-size: 16px;
-          margin-right: 8px;
-        }
-
         .wallet-warning-hint {
           color: #f59e0b;
           font-size: 12px;
@@ -4922,28 +4893,25 @@ export default function CheckoutPage() {
           align-items: center;
           justify-content: space-between;
           gap: 8px;
+          flex-wrap: wrap;
           padding-top: 8px;
           border-top: 1px dashed rgba(139, 92, 246, 0.15);
         }
 
-        .sidebar-diamond-use-box .wallet-input-inner {
+        .wallet-limit-copy {
           display: flex;
-          align-items: center;
-          width: 100px;
-          background: var(--bg);
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          padding: 2px 8px;
+          flex-direction: column;
+          gap: 3px;
+          flex: 1;
+          min-width: 170px;
+          color: var(--muted);
+          font-size: 11px;
+          line-height: 1.7;
         }
 
-        .sidebar-diamond-use-box input {
-          width: 100%;
-          border: none;
-          background: none;
+        .wallet-limit-copy strong {
           color: var(--text);
-          font-size: 12px;
-          font-weight: 700;
-          outline: none;
+          font-weight: 800;
         }
 
         .diamond-discount-tag {

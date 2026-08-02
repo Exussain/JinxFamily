@@ -19,6 +19,7 @@ from .models import (
     OrderBotUpdate,
     XboxAccount,
     PointsTransaction,
+    RefundCreditTransaction,
 )
 from .kavenegar_service import KavenegarService
 from .email_service import send_xbox_account_email
@@ -421,7 +422,7 @@ class PaymentAdmin(admin.ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "tier", "points_balance", "wallet_balance")
+    list_display = ("user", "tier", "points_balance", "wallet_balance", "refund_credit")
     list_filter = ("tier",)
 
 
@@ -432,6 +433,14 @@ class PointsTransactionAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__email", "note")
     readonly_fields = ("created_at",)
     search_fields = ("user__username", "user__email")
+
+
+@admin.register(RefundCreditTransaction)
+class RefundCreditTransactionAdmin(admin.ModelAdmin):
+    list_display = ("user", "amount", "kind", "balance_after", "related_order", "created_at")
+    list_filter = ("kind", "created_at")
+    search_fields = ("user__username", "user__email", "idempotency_key", "note")
+    readonly_fields = ("created_at",)
 
 
 @admin.register(OTPVerification)

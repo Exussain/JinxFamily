@@ -72,6 +72,8 @@ class Order(models.Model):
     refund_confirmed = models.BooleanField(default=False, help_text="تایید واریز مبلغ استرداد")
     refund_amount = models.PositiveIntegerField(default=0, help_text="مبلغ استرداد شده (تومان)")
     refund_date = models.DateTimeField(null=True, blank=True, help_text="تاریخ واریز استرداد")
+    refund_processed_at = models.DateTimeField(null=True, blank=True, help_text="زمان پردازش اعتبار ریفاند")
+    refund_credit_granted_amount = models.PositiveIntegerField(default=0, help_text="اعتبار ریالی اعطاشده بابت این ریفاند")
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     settled = models.BooleanField(default=False, help_text="تسویه شده با همکار")
@@ -83,6 +85,10 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         if self.pk is None and not self.user_id:
             raise ValueError("Orders must be linked to an authenticated user.")
+        # Defensive default for rows created by older admin/import paths that
+        # do not hydrate fields added after the original order schema.
+        if self.refund_credit_granted_amount is None:
+            self.refund_credit_granted_amount = 0
         if not self.tracking_code:
             import sys
             for attempt in range(50):

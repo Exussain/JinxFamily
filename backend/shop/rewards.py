@@ -7,12 +7,14 @@ logic stays easy to read and test. All functions are import-cycle safe
 """
 import secrets
 import string
+import uuid
 
 from django.db import transaction
 
 from .models import (
     DiscountCode,
     PointsTransaction,
+    RefundCreditTransaction,
     Referral,
     SiteSetting,
     UserProfile,
@@ -163,7 +165,7 @@ def award_points(user, amount: int, reason: str, related_order=None, note: str =
         return txn
 
 
-def credit_refund_credit(user, amount_toman: int, *, related_order=None, note: str = "") -> int | None:
+def credit_refund_credit(user, amount_toman: int, *, related_order=None, note: str = "", idempotency_key: str | None = None, kind: str = "refund") -> int | None:
     """Add refund credit (Toman) to a user's spendable balance atomically.
 
     Returns the new balance, or None if nothing was credited. Refund credit is
@@ -172,45 +174,123 @@ def credit_refund_credit(user, amount_toman: int, *, related_order=None, note: s
     """
     if not user or not amount_toman or amount_toman <= 0:
         return None
+    key = idempotency_key or f"{kind}:manual:{uuid.uuid4().hex}"
     with transaction.atomic():
         profile, _ = UserProfile.objects.select_for_update().get_or_create(user=user)
+        existing = RefundCreditTransaction.objects.filter(idempotency_key=key).first()
+        if existing:
+            return profile.refund_credit
         profile.refund_credit = max(0, int(profile.refund_credit) + int(amount_toman))
         profile.save(update_fields=["refund_credit"])
-        PointsTransaction.objects.create(
+        RefundCreditTransaction.objects.create(
             user=user,
             amount=int(amount_toman),
-            reason="refund_credit",
+            kind=kind,
             balance_after=profile.refund_credit,
             related_order=related_order,
+            idempotency_key=key,
             note=note or f"اعتبار بازگشتی {amount_toman:,} تومان",
         )
         return profile.refund_credit
 
 
-def spend_refund_credit(user, amount_toman: int, *, related_order=None, note: str = "") -> int:
+def spend_refund_credit(user, amount_toman: int, *, related_order=None, note: str = "", idempotency_key: str | None = None) -> int:
     """Deduct refund credit (Toman); returns the actually-spent amount (>=0).
 
     Never goes negative — the balance is floored at 0.
     """
     if not user or not amount_toman or amount_toman <= 0:
         return 0
+    key = idempotency_key or f"spend:manual:{uuid.uuid4().hex}"
     with transaction.atomic():
         profile, _ = UserProfile.objects.select_for_update().get_or_create(user=user)
+        existing = RefundCreditTransaction.objects.filter(idempotency_key=key).first()
+        if existing:
+            return max(0, -int(existing.amount))
         spent = min(int(amount_toman), int(profile.refund_credit))
         if spent <= 0:
             return 0
         new_balance = max(0, int(profile.refund_credit) - spent)
         profile.refund_credit = new_balance
         profile.save(update_fields=["refund_credit"])
-        PointsTransaction.objects.create(
+        RefundCreditTransaction.objects.create(
             user=user,
             amount=-spent,
-            reason="refund_use",
+            kind="spend",
             balance_after=new_balance,
             related_order=related_order,
+            idempotency_key=key,
             note=note or f"مصرف اعتبار بازگشتی {spent:,} تومان",
         )
         return spent
+
+
+def process_order_refund(order, *, previous_status: str | None = None) -> dict:
+    """Atomically return an order's actual tender and redeemed diamonds once.
+
+    `previous_status` is supplied by admin status transitions. An order already
+    marked refunded is intentionally a no-op, protecting historical bank
+    refunds and repeated admin clicks from accidental wallet credits.
+    """
+    from django.utils import timezone
+    from .models import Order, Payment
+
+    if not order or not getattr(order, "user_id", None):
+        return {"processed": False, "already_processed": False, "credit_added": 0, "diamonds_restored": 0}
+    if previous_status == "refunded":
+        return {"processed": False, "already_processed": True, "credit_added": 0, "diamonds_restored": 0}
+
+    with transaction.atomic():
+        locked = Order.objects.select_for_update().get(pk=order.pk)
+        if locked.refund_processed_at:
+            return {
+                "processed": False,
+                "already_processed": True,
+                "credit_added": locked.refund_credit_granted_amount,
+                "diamonds_restored": 0,
+            }
+
+        # `amount` is the actual gateway amount after discounts/diamonds. Add
+        # any prior refund-credit or legacy wallet tender consumed by the order.
+        credit_amount = max(0, int(locked.amount or 0))
+        credit_amount += max(0, int(locked.refund_credit_used or 0))
+        credit_amount += max(0, int(locked.wallet_used or 0))
+        credit_added = 0
+        if credit_amount > 0:
+            credit_added = credit_refund_credit(
+                locked.user,
+                credit_amount,
+                related_order=locked,
+                idempotency_key=f"refund:{locked.pk}",
+                note=f"استرداد سفارش {locked.tracking_code} به اعتبار بازگشتی",
+                kind="refund",
+            ) or 0
+
+        diamonds_restored = max(0, int(locked.diamonds_used or 0))
+        if diamonds_restored:
+            award_points(
+                locked.user,
+                diamonds_restored,
+                "adjust",
+                related_order=locked,
+                note=f"بازگشت الماس سفارش مستردشده {locked.tracking_code}",
+            )
+
+        latest_payment = locked.payments.order_by("-created_at").first()
+        if latest_payment and latest_payment.status != "refunded":
+            latest_payment.status = "refunded"
+            latest_payment.save(update_fields=["status"])
+
+        locked.status = "refunded"
+        locked.refund_processed_at = timezone.now()
+        locked.refund_credit_granted_amount = credit_amount
+        locked.save(update_fields=["status", "refund_processed_at", "refund_credit_granted_amount"])
+        return {
+            "processed": True,
+            "already_processed": False,
+            "credit_added": credit_amount,
+            "diamonds_restored": diamonds_restored,
+        }
 
 
 # ---------------------------------------------------------------------------

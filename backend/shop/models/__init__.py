@@ -32,6 +32,7 @@ from .resellers import (
 )
 from .rewards import (
     PointsTransaction,
+    RefundCreditTransaction,
     SpinResult,
     Referral,
 )
@@ -80,6 +81,7 @@ __all__ = [
     "ResellerWalletTxn",
     "ResellerPriceTier",
     "PointsTransaction",
+    "RefundCreditTransaction",
     "SpinResult",
     "Referral",
     "LiveChatSession",

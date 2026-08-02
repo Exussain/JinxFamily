@@ -237,6 +237,10 @@ def _discount_preview_from_cart_payload(payload, dc, user=None):
 
     diamonds_applied = 0
     diamond_discount = 0
+    diamonds_max = 0
+    refund_credit_balance = 0
+    refund_credit_max = 0
+    refund_credit_applied = 0
     if user is not None and user.is_authenticated:
         try:
             is_reseller = user.profile.tier == "reseller"
@@ -245,8 +249,19 @@ def _discount_preview_from_cart_payload(payload, dc, user=None):
         if not is_reseller:
             from .rewards import diamonds_to_toman, toman_to_diamonds_ceil, MIN_DIAMONDS_TO_REDEEM
             profile, _ = UserProfile.objects.get_or_create(user=user)
+            try:
+                from .rewards import line_items_cost
+                total_cost = line_items_cost(line_items)
+                allowed_diamond_discount = max(0, amount_after_code - total_cost)
+            except Exception:
+                logger.exception("profit guardrail for maximum diamonds failed in preview")
+                allowed_diamond_discount = amount_after_code
+            diamonds_max = min(
+                int(profile.points_balance or 0),
+                toman_to_diamonds_ceil(allowed_diamond_discount),
+            )
             if diamonds_use >= MIN_DIAMONDS_TO_REDEEM:
-                usable_diamonds = min(diamonds_use, profile.points_balance)
+                usable_diamonds = min(diamonds_use, diamonds_max)
                 diamond_discount = min(diamonds_to_toman(usable_diamonds), amount_after_code)
 
                 # Profit guardrail for diamonds: never sell below cost, but the
@@ -256,7 +271,6 @@ def _discount_preview_from_cart_payload(payload, dc, user=None):
                     from .rewards import line_items_cost
                     total_cost = line_items_cost(line_items)
 
-                    allowed_diamond_discount = max(0, amount_after_code - total_cost)
                     diamond_discount = min(diamond_discount, allowed_diamond_discount)
                 except Exception:
                     logger.exception("profit guardrail for diamonds failed in preview")
@@ -267,6 +281,18 @@ def _discount_preview_from_cart_payload(payload, dc, user=None):
                     else toman_to_diamonds_ceil(diamond_discount)
                 )
 
+            refund_credit_balance = int(profile.refund_credit or 0)
+
+    refund_credit_max = min(
+        refund_credit_balance,
+        max(0, amount_after_code - diamond_discount),
+    )
+    try:
+        refund_credit_requested = max(0, int(payload.get("refund_credit_use") or 0))
+    except (TypeError, ValueError):
+        refund_credit_requested = 0
+    refund_credit_applied = min(refund_credit_requested, refund_credit_max)
+
     return {
         "gross_amount": gross_amount,
         "percent": discount_percent,
@@ -276,8 +302,11 @@ def _discount_preview_from_cart_payload(payload, dc, user=None):
         "guardrail": warning,
         "diamond_discount": diamond_discount,
         "diamonds_applied": diamonds_applied,
-        "refund_credit_balance": getattr(getattr(user, "profile", None), "refund_credit", 0) if user else 0,
-        "final_amount": max(0, amount_after_code - diamond_discount),
+        "diamonds_max": diamonds_max,
+        "refund_credit_balance": refund_credit_balance,
+        "refund_credit_max": refund_credit_max,
+        "refund_credit_applied": refund_credit_applied,
+        "final_amount": max(0, amount_after_code - diamond_discount - refund_credit_applied),
     }
 
 # Canonical identifiers for Fortnite Crew pack (used across capacity / limits)
@@ -1654,7 +1683,9 @@ def create_order(request):
             from .rewards import spend_refund_credit
             refund_credit_used = spend_refund_credit(
                 user, min(refund_credit_requested, payable),
-                related_order=order, note=f"مصرف اعتبار بازگشتی در سفارش {order.tracking_code}",
+                related_order=order,
+                idempotency_key=f"spend:{order.pk}",
+                note=f"مصرف اعتبار بازگشتی در سفارش {order.tracking_code}",
             )
             payable -= refund_credit_used
 
@@ -1678,7 +1709,10 @@ def create_order(request):
                     from .rewards import credit_refund_credit
                     credit_refund_credit(
                         user, refund_credit_used,
-                        related_order=order, note="بازگرداندن اعتبار بازگشتی به دلیل عدم ثبت سفارش",
+                        related_order=order,
+                        idempotency_key=f"restore:expected:{order.pk}",
+                        kind="restore",
+                        note="بازگرداندن اعتبار بازگشتی به دلیل عدم ثبت سفارش",
                     )
                 # rollback discount code used_count if any
                 if order.discount_code:
@@ -2853,6 +2887,7 @@ def my_orders(request):
             "amount": o.amount,
             "wallet_used": o.wallet_used,
             "diamonds_used": o.diamonds_used,
+            "refund_credit_used": o.refund_credit_used,
             "created_at": o.created_at.isoformat(),
             "first_item_name": first_item.name if first_item else "",
             "first_item_image": image_url,
@@ -3014,7 +3049,10 @@ def cancel_order(request, tracking):
         from .rewards import credit_refund_credit
         credit_refund_credit(
             order.user, order.refund_credit_used,
-            related_order=order, note=f"بازگشت اعتبار بازگشتی سفارش لغوشده {order.tracking_code}",
+            related_order=order,
+            idempotency_key=f"restore:cancel:{order.pk}",
+            kind="restore",
+            note=f"بازگشت اعتبار بازگشتی سفارش لغوشده {order.tracking_code}",
         )
 
     # Permanently delete the canceled order (cascades to OrderItem + Payment)
@@ -3077,6 +3115,8 @@ def _admin_order_dict(o: Order):
         "amount": o.amount,
         "wallet_used": o.wallet_used,
         "diamonds_used": o.diamonds_used,
+        "refund_credit_used": o.refund_credit_used,
+        "refund_credit_granted_amount": o.refund_credit_granted_amount,
         "discount_code": o.discount_code,
         "discount_percent": o.discount_percent,
         "discount_amount": o.discount_amount,
@@ -4527,55 +4567,22 @@ def admin_refund_notify(request, tracking):
     order = get_object_or_404(Order, tracking_code=tracking)
 
     previous_status = order.status
-    if previous_status != "refunded":
-        order.status = "refunded"
-        
-        # 1. Update latest payment to refunded
-        latest_payment = order.payments.order_by("-created_at").first()
-        if latest_payment and latest_payment.status != "refunded":
-            latest_payment.status = "refunded"
-            latest_payment.save(update_fields=["status"])
-            
-        # 2. Refund the amount to the user as spendable refund credit (Toman).
-        total_paid = (order.amount or 0)
-        if total_paid > 0 and order.user:
-            from .rewards import credit_refund_credit
-            credit_refund_credit(
-                order.user, total_paid,
-                related_order=order, note=f"استرداد سفارش {order.tracking_code} به اعتبار بازگشتی",
-            )
-        # 2b. Return any refund credit that was spent on this order.
-        if order.refund_credit_used > 0 and order.user:
-            from .rewards import credit_refund_credit
-            credit_refund_credit(
-                order.user, order.refund_credit_used,
-                related_order=order, note=f"بازگشت اعتبار بازگشتی مصرف‌شده سفارش {order.tracking_code}",
-            )
-
-        # 3. Maintain global completed orders counter
-        if previous_status == "completed":
-            _increment_setting_int("completed_orders_count", delta=-1, default=907)
-            
-        order.save(update_fields=["status"])
+    from .rewards import process_order_refund
+    refund_result = process_order_refund(order, previous_status=previous_status)
+    if refund_result.get("processed") and previous_status == "completed":
+        _increment_setting_int("completed_orders_count", delta=-1, default=907)
+    if refund_result.get("already_processed"):
+        return JsonResponse({
+            "tracking_code": order.tracking_code,
+            "success": True,
+            "refund": refund_result,
+            "message": "این ریفاند قبلاً به اعتبار کیف پول اضافه شده است.",
+        })
 
     # Prepare customer info
     customer_email = ""
     customer_name = ""
     latest_payment = order.payments.order_by("-created_at").first()
-    card_pan = latest_payment.card_pan if latest_payment else (getattr(order, "payment_card_pan", "") or "")
-    def _mask_pan(pan: str):
-        digits = (pan or "").replace(" ", "").replace("-", "")
-        if not digits:
-            return ""
-        masked = digits
-        if len(digits) >= 10:
-            masked = f"{digits[:4]}****{digits[-4:]}"
-        elif len(digits) >= 6:
-            masked = f"{digits[:6]}****"
-        # Group with hyphens in 4-char chunks for clarity
-        grouped = "-".join([masked[i:i+4] for i in range(0, len(masked), 4)])
-        return grouped
-    masked_pan = _mask_pan(card_pan)
     if order.user:
         customer_email = order.user.email or ""
         customer_name = order.user.get_full_name() or order.user.username or ""
@@ -4587,20 +4594,17 @@ def admin_refund_notify(request, tracking):
     customer_email = _order_notify_email(order) or customer_email
 
     # Email content
-    email_subject = "عودت وجه سفارش شما"
+    email_subject = "اعتبار ریفاند به کیف پول شما اضافه شد"
     email_body_text = f"""{customer_name} عزیز،
-درخواست عودت وجه سفارش {order.tracking_code} ثبت شد.
-کارت شما برای واریز: {masked_pan or 'نامشخص'}
-در صورت نیاز به اطلاعات بیشتر با پشتیبانی در ارتباط باشید.
+مبلغ {refund_result.get('credit_added', 0):,} تومان بابت ریفاند سفارش {order.tracking_code} به اعتبار کیف پول شما اضافه شد.
+این اعتبار در checkout قابل استفاده است و تا سقف مبلغ سفارش از پرداخت کم می‌شود.
 """
     email_body_html = f"""
     <div style="direction:rtl;font-family:Tahoma, Arial,sans-serif;">
       <p>{customer_name} عزیز،</p>
-      <p>درخواست عودت وجه سفارش <b>{order.tracking_code}</b> ثبت شد.</p>
-      <p>کارت برای واریز: <b>{masked_pan or 'نامشخص'}</b></p>
-      <p>در صورت نیاز به اطلاعات بیشتر با پشتیبانی در ارتباط باشید.</p>
+      <p>مبلغ <b>{refund_result.get('credit_added', 0):,} تومان</b> بابت ریفاند سفارش <b>{order.tracking_code}</b> به اعتبار کیف پول شما اضافه شد.</p>
+      <p>این اعتبار در checkout قابل استفاده است و تا سقف مبلغ سفارش از پرداخت کم می‌شود.</p>
       <p style="margin-top:12px;font-size:13px;color:#64748b;">
-        لطفاً از تماس یا مراجعه بی‌مورد به پشتیبانی خودداری کنید؛ این کار تنها باعث تعویق سفارش شما و سایرین خواهد شد.<br/>
         تیم نوبیکس
       </p>
     </div>
@@ -4637,6 +4641,7 @@ def admin_refund_notify(request, tracking):
 
     return JsonResponse({
         "tracking_code": order.tracking_code,
+        "refund": refund_result,
         "email_sent": email_sent,
         "email_error": email_error,
         "sms_sent": sms_sent,
@@ -5615,27 +5620,10 @@ def admin_update_order_status(request, tracking):
     elif previous_status == "completed" and status != "completed":
         _increment_setting_int("completed_orders_count", delta=-1, default=907)
 
-    # اگر وضعیت به مسترد شده تغییر کرد:
-    # ۱) آخرین پرداخت را refunded می‌کنیم
-    # ۲) مبلغ سفارش به‌صورت اعتبار بازگشتی (تومان) به کاربر برمی‌گردد
-    if status == "refunded":
-        latest_payment = order.payments.order_by("-created_at").first()
-        if latest_payment and latest_payment.status != "refunded":
-            latest_payment.status = "refunded"
-            latest_payment.save(update_fields=["status"])
-        total_paid = (order.amount or 0)
-        if total_paid > 0 and order.user:
-            from .rewards import credit_refund_credit
-            credit_refund_credit(
-                order.user, total_paid,
-                related_order=order, note=f"استرداد سفارش {order.tracking_code} به اعتبار بازگشتی",
-            )
-        if order.refund_credit_used > 0 and order.user:
-            from .rewards import credit_refund_credit
-            credit_refund_credit(
-                order.user, order.refund_credit_used,
-                related_order=order, note=f"بازگشت اعتبار بازگشتی مصرف‌شده سفارش {order.tracking_code}",
-            )
+    refund_result = {"processed": False, "already_processed": False, "credit_added": 0, "diamonds_restored": 0}
+    if status == "refunded" and previous_status != "refunded":
+        from .rewards import process_order_refund
+        refund_result = process_order_refund(order, previous_status=previous_status)
 
     paid_transitioned = previous_status != "paid" and status == "paid"
     email_sent = False
@@ -5861,7 +5849,7 @@ def admin_update_order_status(request, tracking):
             # پیامک برای مسترد شدن (فقط اگه وضعیت واقعاً تغییر کرده باشه)
             elif status == "refunded" and previous_status != "refunded":
                 # استفاده از قالب جدید با مبلغ
-                refund_amount = order.amount or 0
+                refund_amount = refund_result.get("credit_added") or order.amount or 0
                 ok, sms_msg = KavenegarService.send_refund_sms(
                     phone_number=phone,
                     amount=refund_amount,
@@ -6015,6 +6003,7 @@ def admin_update_order_status(request, tracking):
         "tracking_code": order.tracking_code,
         "status": order.status,
         "status_fa": dict(Order.STATUS_CHOICES).get(order.status, order.status),
+        "refund": refund_result,
         "email_sent": email_sent,
         "email_error": email_error,
         "sms_sent": sms_sent,
@@ -6317,6 +6306,10 @@ def discount_validate(request):
             "guardrail": preview["guardrail"],
             "diamond_discount": preview["diamond_discount"],
             "diamonds_applied": preview["diamonds_applied"],
+            "diamonds_max": preview["diamonds_max"],
+            "refund_credit_balance": preview["refund_credit_balance"],
+            "refund_credit_max": preview["refund_credit_max"],
+            "refund_credit_applied": preview["refund_credit_applied"],
             "final_amount": preview["final_amount"],
         })
         response["applicable"] = (preview["discount_amount"] > 0) or (preview["diamond_discount"] > 0)
@@ -6345,15 +6338,20 @@ def payment_request(request, tracking):
 
     # اگر مبلغ صفر باشد، نیازی به پرداخت نیست
     if order.amount == 0:
+        transitioned = order.status != 'paid'
         order.status = 'paid'
-        order.save()
+        order.save(update_fields=["status"])
         try:
-            from .rewards import award_purchase_points
-            award_purchase_points(order)
+            if transitioned:
+                from .rewards import award_purchase_points
+                award_purchase_points(order)
         except Exception:
             logger.exception("purchase points (zero-amount order) failed for %s", order.tracking_code)
-        _notify_customer_payment_success(order, ref_id="")
+        if transitioned:
+            _notify_customer_payment_success(order, ref_id="")
         return JsonResponse({
+            "success": True,
+            "payment_required": False,
             "message": "سفارش بدون پرداخت ثبت شد (مبلغ صفر)",
             "tracking_code": order.tracking_code,
             "status": order.status
@@ -6401,6 +6399,7 @@ def payment_request(request, tracking):
 
         return JsonResponse({
             "success": True,
+            "payment_required": True,
             "payment_url": data['payment_url'],
             "authority": data['authority']
         })
@@ -9980,5 +9979,3 @@ def admin_verify_ai_info(request, tracking):
             "sms_sent": sms_sent,
             "sms_error": sms_error,
         })
-
-

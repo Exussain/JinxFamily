@@ -31,6 +31,33 @@ class PointsTransaction(models.Model):
         return f"{self.user_id} {self.reason} {self.amount:+d}"
 
 
+class RefundCreditTransaction(models.Model):
+    """Separate toman ledger for money returned from refunded orders."""
+
+    KIND_CHOICES = [
+        ("refund", "بازگشت وجه"),
+        ("spend", "مصرف اعتبار بازگشتی"),
+        ("restore", "بازگردانی اعتبار"),
+        ("legacy_conversion", "تبدیل ریفاند قدیمی"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="refund_credit_txns")
+    amount = models.IntegerField(help_text="مثبت = افزایش اعتبار، منفی = مصرف اعتبار")
+    kind = models.CharField(max_length=24, choices=KIND_CHOICES)
+    balance_after = models.PositiveIntegerField(default=0)
+    related_order = models.ForeignKey("Order", on_delete=models.SET_NULL, null=True, blank=True)
+    idempotency_key = models.CharField(max_length=120, unique=True)
+    note = models.CharField(max_length=240, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["user", "-created_at"], name="shop_refund_user_idx")]
+
+    def __str__(self):
+        return f"{self.user_id} {self.kind} {self.amount:+d}"
+
+
 class SpinResult(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="spin_results")
     segment_index = models.PositiveSmallIntegerField(default=0)
