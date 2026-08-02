@@ -2024,11 +2024,22 @@ export default function AdminPanelPage({ initialTab = "orders" }) {
   };
   const productCategories = [
     { value: "FORTNITE", label: "Fortnite / فورتنایت" },
-    { value: "AI", label: "AI / هوش مصنوعی" },
-    { value: "SUBSCRIPTIONS", label: "Subscriptions / اشتراک‌ها" },
-    { value: "GAMES", label: "Games / بازی‌ها" },
+    { value: "PUBG", label: "PUBG / پابجی" },
+    { value: "COD_MOBILE", label: "Call of Duty Mobile / کالاف دیوتی" },
+    { value: "CLASH_ROYALE", label: "Clash Royale / کلش رویال" },
+    { value: "CLASH_OF_CLANS", label: "Clash of Clans / کلش اف کلنز" },
+    { value: "BRAWL_STARS", label: "Brawl Stars / براول استارز" },
+    { value: "FREE_FIRE", label: "Free Fire / فری فایر" },
+    { value: "VALORANT", label: "Valorant / ولورانت" },
+    { value: "RAINBOW_SIX", label: "Rainbow Six / رینبو سیکس" },
+    { value: "MARVEL_RIVALS", label: "Marvel Rivals / مارول ریوالز" },
+    { value: "PING_REDUCTION", label: "Ping Reduction / سرویس کاهش پینگ" },
+    { value: "MOBILE_GAMES", label: "Mobile Games / بازی‌های موبایل" },
     { value: "ROCKET_LEAGUE", label: "Rocket League / راکت لیگ" },
+    { value: "AI", label: "AI / هوش مصنوعی" },
     { value: "GIFTCARDS", label: "Giftcards / گیفت‌کارت‌ها" },
+    { value: "GAMES", label: "Games / بازی‌ها" },
+    { value: "SUBSCRIPTIONS", label: "Subscriptions / اشتراک‌ها" },
   ];
   const adminPhones = ["09339732325", "09123101634"];
   useEffect(() => {
@@ -4167,15 +4178,10 @@ export default function AdminPanelPage({ initialTab = "orders" }) {
         createdProduct = await uploadProductCover16_9Request(data.id, newProductCover16_9File);
       }
       setProducts((prev) => [createdProduct, ...prev]);
-      setActiveProductGroup(
-        createdProduct.category === "AI"
-          ? "ai"
-          : createdProduct.category === "SUBSCRIPTIONS"
-            ? "subscriptions"
-            : createdProduct.category === "FORTNITE"
-              ? "fortnite"
-              : "other-games"
+      const createdGroup = productGroups.find((group) =>
+        group.categories.includes((createdProduct.category || "").toString().toUpperCase())
       );
+      setActiveProductGroup(createdGroup ? createdGroup.key : "fortnite");
       setNewProduct(emptyProductForm);
       setNewProductCoverFile(null);
       setNewProductCover16_9File(null);
@@ -7800,7 +7806,7 @@ export default function AdminPanelPage({ initialTab = "orders" }) {
                   {visibleProducts.length > 0 && (
                   <div className="products-grid">
                     {visibleProducts.map((p) => (
-                      <div key={p.id} className={`product-card ${!p.active ? 'inactive' : ''}`}>
+                      <div key={p.id} className={`product-card ${!p.active ? 'inactive' : ''} ${p.ordering_disabled ? 'coming-soon' : ''}`}>
                         <div className="product-card-header">
                           {(p.image_url || p.cover_16_9) && (
                             <div className="product-image">
@@ -7816,7 +7822,7 @@ export default function AdminPanelPage({ initialTab = "orders" }) {
                             </span>
                           </div>
                           <div className="product-meta">
-                            <label className="status-toggle">
+                            <label className="status-toggle status-toggle-hidden">
                               <input
                                 type="checkbox"
                                 checked={!!p.active}
@@ -7824,6 +7830,15 @@ export default function AdminPanelPage({ initialTab = "orders" }) {
                               />
                               <span className="toggle-slider"></span>
                               <span className="toggle-text">{p.active ? "فعال" : "غیرفعال"}</span>
+                            </label>
+                            <label className={`status-toggle coming-soon-toggle ${p.ordering_disabled ? "on" : ""}`}>
+                              <input
+                                type="checkbox"
+                                checked={!!p.ordering_disabled}
+                                onChange={(e) => handleProductChange(p.id, "ordering_disabled", e.target.checked)}
+                              />
+                              <span className="toggle-slider"></span>
+                              <span className="toggle-text">{p.ordering_disabled ? "به زودی..." : "فعال"}</span>
                             </label>
                           </div>
                         </div>
@@ -12155,6 +12170,42 @@ export default function AdminPanelPage({ initialTab = "orders" }) {
             box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
           }
 
+          .product-group-pubg.active,
+          .product-group-cod-mobile.active {
+            background: linear-gradient(135deg, #ea580c, #f97316);
+            box-shadow: 0 8px 20px rgba(234, 88, 12, 0.25);
+          }
+
+          .product-group-clash-royale.active,
+          .product-group-clash-of-clans.active,
+          .product-group-brawl-stars.active {
+            background: linear-gradient(135deg, #0891b2, #06b6d4);
+            box-shadow: 0 8px 20px rgba(8, 145, 178, 0.25);
+          }
+
+          .product-group-free-fire.active {
+            background: linear-gradient(135deg, #dc2626, #f59e0b);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);
+          }
+
+          .product-group-valorant.active,
+          .product-group-rainbow-six.active,
+          .product-group-marvel-rivals.active {
+            background: linear-gradient(135deg, #ef4444, #e11d48);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25);
+          }
+
+          .product-group-ping-reduction.active,
+          .product-group-mobile-games.active {
+            background: linear-gradient(135deg, #10b981, #84cc16);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+          }
+
+          .product-group-rocket-league.active {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.25);
+          }
+
           .quick-price-row {
             display: flex;
             align-items: center;
@@ -12349,6 +12400,15 @@ export default function AdminPanelPage({ initialTab = "orders" }) {
             opacity: 0.8;
           }
 
+          .product-card.coming-soon {
+            border-color: rgba(245, 158, 11, 0.55);
+          }
+
+          .product-card.coming-soon:hover {
+            border-color: rgba(245, 158, 11, 0.8);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+          }
+
           /* Card Header */
           .product-card-header {
             padding: 16px 20px;
@@ -12458,6 +12518,10 @@ export default function AdminPanelPage({ initialTab = "orders" }) {
             font-size: 12px;
           }
 
+          .status-toggle-hidden {
+            display: none;
+          }
+
           .status-toggle input {
             display: none;
           }
@@ -12499,6 +12563,15 @@ export default function AdminPanelPage({ initialTab = "orders" }) {
 
           .status-toggle input:checked ~ .toggle-text {
             color: #10b981;
+          }
+
+          /* Coming Soon (به زودی) toggle — amber when active */
+          .coming-soon-toggle input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          }
+
+          .coming-soon-toggle input:checked ~ .toggle-text {
+            color: #f59e0b;
           }
 
           /* Card Body */

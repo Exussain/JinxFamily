@@ -249,14 +249,14 @@ def _discount_preview_from_cart_payload(payload, dc, user=None):
                 usable_diamonds = min(diamonds_use, profile.points_balance)
                 diamond_discount = min(diamonds_to_toman(usable_diamonds), amount_after_code)
 
-                # Profit guardrail for diamonds:
+                # Profit guardrail for diamonds: never sell below cost, but the
+                # customer's own balance isn't subject to the promo profit floor
+                # (see rewards.py "Wallet credit ... NOT capped here").
                 try:
-                    from .rewards import line_items_cost, get_profit_floor
+                    from .rewards import line_items_cost
                     total_cost = line_items_cost(line_items)
-                    floor = get_profit_floor(line_items, amount_after_code)
-                    min_payable = total_cost + floor
 
-                    allowed_diamond_discount = max(0, amount_after_code - min_payable)
+                    allowed_diamond_discount = max(0, amount_after_code - total_cost)
                     diamond_discount = min(diamond_discount, allowed_diamond_discount)
                 except Exception:
                     logger.exception("profit guardrail for diamonds failed in preview")
@@ -276,6 +276,7 @@ def _discount_preview_from_cart_payload(payload, dc, user=None):
         "guardrail": warning,
         "diamond_discount": diamond_discount,
         "diamonds_applied": diamonds_applied,
+        "refund_credit_balance": getattr(getattr(user, "profile", None), "refund_credit", 0) if user else 0,
         "final_amount": max(0, amount_after_code - diamond_discount),
     }
 
@@ -1609,18 +1610,18 @@ def create_order(request):
                 usable_diamonds = min(diamonds_use, profile.points_balance)
                 diamond_discount = min(diamonds_to_toman(usable_diamonds), amount)
                 
-                # Profit guardrail for diamonds:
+                # Profit guardrail for diamonds: never sell below cost, but the
+                # customer's own balance isn't subject to the promo profit floor
+                # (see rewards.py "Wallet credit ... NOT capped here").
                 try:
-                    from .rewards import line_items_cost, get_profit_floor
+                    from .rewards import line_items_cost
                     cost_lines = [
                         (it.product, it.variant, it.quantity)
                         for it in order.items.select_related("product", "variant").all()
                     ]
                     total_cost = line_items_cost(cost_lines)
-                    floor = get_profit_floor(cost_lines, amount)
-                    min_payable = total_cost + floor
-                    
-                    allowed_diamond_discount = max(0, amount - min_payable)
+
+                    allowed_diamond_discount = max(0, amount - total_cost)
                     diamond_discount = min(diamond_discount, allowed_diamond_discount)
                 except Exception:
                     logger.exception("profit guardrail for diamonds failed")
@@ -1636,8 +1637,30 @@ def create_order(request):
                     award_points(user, -diamonds_applied, "redeem", related_order=order, note="تبدیل الماس به تخفیف خرید")
     payable = amount - diamond_discount
 
+    # Apply refund credit (اعتبار بازگشتی) — the customer's own returned money,
+    # spendable up to 100% of the payable. Never below zero, never overdraws.
+    refund_credit_used = 0
+    try:
+        refund_credit_requested = int(payload.get('refund_credit_use') or 0)
+    except (TypeError, ValueError):
+        refund_credit_requested = 0
+    refund_credit_requested = max(0, refund_credit_requested)
+    if refund_credit_requested > 0 and payable > 0 and user is not None:
+        try:
+            is_reseller = user.profile.tier == "reseller"
+        except Exception:
+            is_reseller = False
+        if not is_reseller:
+            from .rewards import spend_refund_credit
+            refund_credit_used = spend_refund_credit(
+                user, min(refund_credit_requested, payable),
+                related_order=order, note=f"مصرف اعتبار بازگشتی در سفارش {order.tracking_code}",
+            )
+            payable -= refund_credit_used
+
     order.amount = payable
     order.diamonds_used = diamonds_applied
+    order.refund_credit_used = refund_credit_used
     order.save()
 
     # Verify expected_amount matches calculated order.amount to prevent silent price mismatch
@@ -1650,6 +1673,13 @@ def create_order(request):
                 if diamonds_applied > 0:
                     from .rewards import award_points
                     award_points(user, diamonds_applied, "adjust", note="بازگرداندن الماس به دلیل عدم ثبت سفارش")
+                # rollback refund credit if any
+                if refund_credit_used > 0:
+                    from .rewards import credit_refund_credit
+                    credit_refund_credit(
+                        user, refund_credit_used,
+                        related_order=order, note="بازگرداندن اعتبار بازگشتی به دلیل عدم ثبت سفارش",
+                    )
                 # rollback discount code used_count if any
                 if order.discount_code:
                     try:
@@ -1665,8 +1695,8 @@ def create_order(request):
             pass
 
     logger.info(
-        "Order saved: tracking=%s, amount=%s, rush_order=%s, rush_fee=%s, diamonds_applied=%s",
-        order.tracking_code, order.amount, order.rush_order, order.rush_fee, diamonds_applied
+        "Order saved: tracking=%s, amount=%s, rush_order=%s, rush_fee=%s, diamonds_applied=%s, refund_credit_used=%s",
+        order.tracking_code, order.amount, order.rush_order, order.rush_fee, diamonds_applied, refund_credit_used
     )
 
     # Check if order contains crew pack to show special message
@@ -1922,6 +1952,8 @@ def login_view(request):
         "phone": user.username,
         "is_admin": _is_admin_user(user),
         "wallet_balance": profile.wallet_balance,
+        "points_balance": profile.points_balance,
+        "refund_credit": profile.refund_credit,
         "avatar_url": avatar_url,
     })
 
@@ -1965,6 +1997,7 @@ def me(request):
         "is_admin": is_admin,
         "wallet_balance": profile.wallet_balance,
         "points_balance": profile.points_balance,
+        "refund_credit": profile.refund_credit,
         "avatar_url": avatar_url,
     }
     if is_admin:
@@ -2137,6 +2170,7 @@ def update_profile(request):
         "is_admin": profile.tier == "admin" or user.is_staff,
         "wallet_balance": profile.wallet_balance,
         "points_balance": profile.points_balance,
+        "refund_credit": profile.refund_credit,
         "avatar_url": avatar_url,
         "profile_completion_award": profile_completion_award,
     })
@@ -2973,6 +3007,14 @@ def cancel_order(request, tracking):
         award_points(
             order.user, order.diamonds_used, "redeem",
             related_order=order, note=f"بازگشت الماس سفارش لغوشده {order.tracking_code}",
+        )
+
+    # Refund refund-credit if used on the canceled order
+    if order.refund_credit_used > 0 and order.user:
+        from .rewards import credit_refund_credit
+        credit_refund_credit(
+            order.user, order.refund_credit_used,
+            related_order=order, note=f"بازگشت اعتبار بازگشتی سفارش لغوشده {order.tracking_code}",
         )
 
     # Permanently delete the canceled order (cascades to OrderItem + Payment)
@@ -4494,13 +4536,20 @@ def admin_refund_notify(request, tracking):
             latest_payment.status = "refunded"
             latest_payment.save(update_fields=["status"])
             
-        # 2. Refund the amount to the user as diamonds (wallet cash-back is retired)
+        # 2. Refund the amount to the user as spendable refund credit (Toman).
         total_paid = (order.amount or 0)
         if total_paid > 0 and order.user:
-            from .rewards import award_points, toman_to_diamonds_ceil
-            award_points(
-                order.user, toman_to_diamonds_ceil(total_paid), "adjust",
-                related_order=order, note=f"استرداد سفارش {order.tracking_code} به الماس",
+            from .rewards import credit_refund_credit
+            credit_refund_credit(
+                order.user, total_paid,
+                related_order=order, note=f"استرداد سفارش {order.tracking_code} به اعتبار بازگشتی",
+            )
+        # 2b. Return any refund credit that was spent on this order.
+        if order.refund_credit_used > 0 and order.user:
+            from .rewards import credit_refund_credit
+            credit_refund_credit(
+                order.user, order.refund_credit_used,
+                related_order=order, note=f"بازگشت اعتبار بازگشتی مصرف‌شده سفارش {order.tracking_code}",
             )
 
         # 3. Maintain global completed orders counter
@@ -5568,7 +5617,7 @@ def admin_update_order_status(request, tracking):
 
     # اگر وضعیت به مسترد شده تغییر کرد:
     # ۱) آخرین پرداخت را refunded می‌کنیم
-    # ۲) مبلغ سفارش به‌صورت الماس به کاربر برمی‌گردد (کش‌بک کیف پول حذف شده)
+    # ۲) مبلغ سفارش به‌صورت اعتبار بازگشتی (تومان) به کاربر برمی‌گردد
     if status == "refunded":
         latest_payment = order.payments.order_by("-created_at").first()
         if latest_payment and latest_payment.status != "refunded":
@@ -5576,10 +5625,16 @@ def admin_update_order_status(request, tracking):
             latest_payment.save(update_fields=["status"])
         total_paid = (order.amount or 0)
         if total_paid > 0 and order.user:
-            from .rewards import award_points, toman_to_diamonds_ceil
-            award_points(
-                order.user, toman_to_diamonds_ceil(total_paid), "adjust",
-                related_order=order, note=f"استرداد سفارش {order.tracking_code} به الماس",
+            from .rewards import credit_refund_credit
+            credit_refund_credit(
+                order.user, total_paid,
+                related_order=order, note=f"استرداد سفارش {order.tracking_code} به اعتبار بازگشتی",
+            )
+        if order.refund_credit_used > 0 and order.user:
+            from .rewards import credit_refund_credit
+            credit_refund_credit(
+                order.user, order.refund_credit_used,
+                related_order=order, note=f"بازگشت اعتبار بازگشتی مصرف‌شده سفارش {order.tracking_code}",
             )
 
     paid_transitioned = previous_status != "paid" and status == "paid"

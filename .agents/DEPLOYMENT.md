@@ -2,10 +2,10 @@
 
 ## Overview
 
-Before starting any deployment, we must **always** check for any existing `HardReload.sh` or its
-`next build --webpack` child processes. If an older/stale deployment is still running, we terminate
+Before starting any deployment, we must **always** check for any existing `HardReload.sh` or
+`next build` child processes. If an older/stale deployment is still running, we terminate
 it completely first, verify that it has stopped, and then start **exactly one fresh**
-`/root/NubixShop/public/frontend/HardReload.sh`.
+`/root/NubixShop/public/HardReload.sh`.
 
 This prevents multiple builds from running concurrently and **racing/corrupting** the
 `.next-build`, `.next-prev`, and `.next` build directories.
@@ -39,7 +39,7 @@ If it returns PIDs → continue to **Step 2**.
 
 ```bash
 pkill -TERM -f 'HardReload.sh'
-pkill -TERM -f 'next build --webpack'
+pkill -TERM -f 'next build'
 ```
 
 Wait a moment for graceful shutdown:
@@ -52,7 +52,7 @@ If processes are still alive after 5 seconds, escalate to `SIGKILL`:
 
 ```bash
 pkill -KILL -f 'HardReload.sh'
-pkill -KILL -f 'next build --webpack'
+pkill -KILL -f 'next build'
 ```
 
 ### Step 3 — Verify all stale processes are gone
@@ -66,7 +66,7 @@ pgrep -f 'HardReload.sh|next build' || echo 'All clear — safe to deploy'
 ### Step 4 — Start exactly one fresh deployment
 
 ```bash
-/root/NubixShop/public/frontend/HardReload.sh
+/root/NubixShop/public/HardReload.sh
 ```
 
 ---
@@ -74,9 +74,9 @@ pgrep -f 'HardReload.sh|next build' || echo 'All clear — safe to deploy'
 ## Quick One-Liner (Copy-Paste Safe)
 
 ```bash
-pkill -TERM -f 'HardReload.sh'; pkill -TERM -f 'next build --webpack'; sleep 5; \
+pkill -TERM -f 'HardReload.sh'; pkill -TERM -f 'next build'; sleep 5; \
 pgrep -f 'HardReload.sh|next build' && echo 'WARNING: processes still alive!' \
-|| (echo 'All clear — starting fresh deployment' && /root/NubixShop/public/frontend/HardReload.sh)
+|| (echo 'All clear — starting fresh deployment' && /root/NubixShop/public/HardReload.sh)
 ```
 
 ---
@@ -97,4 +97,4 @@ overwrite each other at any rotation step, producing broken deployments.
 ## Related Files
 
 - [AGENTS.md](./AGENTS.md) — Top-level project rules (includes a summary of this policy)
-- [HardReload.sh](../frontend/HardReload.sh) — The deployment script itself
+- [HardReload.sh](../HardReload.sh) — The deployment script itself

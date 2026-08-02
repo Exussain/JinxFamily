@@ -111,7 +111,6 @@ def ensure_referral_code(user) -> str | None:
 # ---------------------------------------------------------------------------
 def award_points(user, amount: int, reason: str, related_order=None, note: str = "") -> PointsTransaction | None:
     """Add (or subtract, if amount<0) points and write a ledger row atomically.
-
     Balance is floored at 0 so a debit can never push it negative.
     """
     if not user or not amount:
@@ -162,6 +161,56 @@ def award_points(user, amount: int, reason: str, related_order=None, note: str =
         except Exception:
             pass
         return txn
+
+
+def credit_refund_credit(user, amount_toman: int, *, related_order=None, note: str = "") -> int | None:
+    """Add refund credit (Toman) to a user's spendable balance atomically.
+
+    Returns the new balance, or None if nothing was credited. Refund credit is
+    the customer's own money returned to them, so it is tracked separately from
+    loyalty diamonds (points_balance) and can be spent up to 100% of an order.
+    """
+    if not user or not amount_toman or amount_toman <= 0:
+        return None
+    with transaction.atomic():
+        profile, _ = UserProfile.objects.select_for_update().get_or_create(user=user)
+        profile.refund_credit = max(0, int(profile.refund_credit) + int(amount_toman))
+        profile.save(update_fields=["refund_credit"])
+        PointsTransaction.objects.create(
+            user=user,
+            amount=int(amount_toman),
+            reason="refund_credit",
+            balance_after=profile.refund_credit,
+            related_order=related_order,
+            note=note or f"اعتبار بازگشتی {amount_toman:,} تومان",
+        )
+        return profile.refund_credit
+
+
+def spend_refund_credit(user, amount_toman: int, *, related_order=None, note: str = "") -> int:
+    """Deduct refund credit (Toman); returns the actually-spent amount (>=0).
+
+    Never goes negative — the balance is floored at 0.
+    """
+    if not user or not amount_toman or amount_toman <= 0:
+        return 0
+    with transaction.atomic():
+        profile, _ = UserProfile.objects.select_for_update().get_or_create(user=user)
+        spent = min(int(amount_toman), int(profile.refund_credit))
+        if spent <= 0:
+            return 0
+        new_balance = max(0, int(profile.refund_credit) - spent)
+        profile.refund_credit = new_balance
+        profile.save(update_fields=["refund_credit"])
+        PointsTransaction.objects.create(
+            user=user,
+            amount=-spent,
+            reason="refund_use",
+            balance_after=new_balance,
+            related_order=related_order,
+            note=note or f"مصرف اعتبار بازگشتی {spent:,} تومان",
+        )
+        return spent
 
 
 # ---------------------------------------------------------------------------

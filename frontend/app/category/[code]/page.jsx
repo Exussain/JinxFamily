@@ -63,14 +63,15 @@ export async function generateMetadata({ params }) {
   const cat = data.category;
   const title = TITLES[code.toLowerCase()] || `خرید محصولات ${cat.name}`;
   const description = `${cat.description} — خرید با فعال‌سازی قانونی، تحویل سریع و پشتیبانی ۲۴/۷ از نوبیکس شاپ. ${data.count} محصول فعال.`;
+  const canonicalPath = categoryPathFromCode(code.toUpperCase().replace(/-/g, '_'));
   return {
     title,
     description,
-    alternates: { canonical: `/category/${code.toLowerCase()}` },
+    alternates: { canonical: canonicalPath },
     openGraph: {
       title: `${title} | نوبیکس شاپ`,
       description,
-      url: `${BASE_URL}/category/${code.toLowerCase()}`,
+      url: `${BASE_URL}${canonicalPath}`,
       type: 'website',
       locale: 'fa_IR',
     },
@@ -86,7 +87,7 @@ export default async function CategoryPage({ params, canonicalCode = null }) {
   // The former English-code addresses are retained only as permanent aliases;
   // a category has one indexable, Persian human-readable address.
   if (!canonicalCode) {
-    permanentRedirect(encodeURI(canonicalPath));
+    permanentRedirect(canonicalPath);
   }
   const data = await getCategory(code);
 

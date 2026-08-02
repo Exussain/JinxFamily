@@ -18,6 +18,7 @@
 *.sqlite3-*
 *.sqlite3.bak*
 *.sqlite3.*.bak
+*.sqlite3.*.bak-*
 *.db
 
 # ============================================================
@@ -78,6 +79,9 @@ Thumbs.db
 .claude/settings.local.json
 .claude/worktrees/
 .playwright-cli/
+.playwright-mcp/
+output/
+frontend/.next-build/
 
 # Miscellaneous feedback screenshots dropped in the repo root (not source).
 # Scoped to the root so real website image assets in subfolders are unaffected.

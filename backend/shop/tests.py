@@ -2162,8 +2162,11 @@ class DiscountValidationGuardrailTests(TestCase):
             )
             self.assertEqual(response.status_code, 200, response.content)
             payload = response.json()
-            self.assertEqual(payload["diamond_discount"], 42000)
-            self.assertEqual(payload["diamonds_applied"], 134)
+            # Diamond discounts are capped at cost only (never below cost),
+            # not at cost + promo profit floor — so the user's own balance stays
+            # spendable. crew price 649k, tier cost 480k → allowed ≈ 110k.
+            self.assertEqual(payload["diamond_discount"], 110000)
+            self.assertEqual(payload["diamonds_applied"], 350)
 
 
 
@@ -2287,3 +2290,75 @@ class AbandonedCartReminderTests(TestCase):
         # 4. The cart should now be marked as converted
         cart.refresh_from_db()
         self.assertIsNotNone(cart.converted_at)
+
+
+class RefundCreditTests(TestCase):
+    """Refund credit (اعتبار بازگشتی) flow: refund credits it, checkout spends it 100%."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="09124445555",
+            email="refund-credit@example.com",
+            password="password123",
+        )
+        UserProfile.objects.get_or_create(user=self.user)
+
+    def test_credit_and_spend_refund_credit(self):
+        from shop.rewards import credit_refund_credit, spend_refund_credit
+
+        # Refund a 593,000 toman order → full balance credited
+        new_balance = credit_refund_credit(self.user, 593000, note="استرداد سفارش")
+        self.assertEqual(new_balance, 593000)
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.refund_credit, 593000)
+
+        # Spend the whole thing → balance zeroed, spent amount correct
+        spent = spend_refund_credit(self.user, 593000, note="مصرف کامل")
+        self.assertEqual(spent, 593000)
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.refund_credit, 0)
+
+        # Overdraw attempts are clamped (never negative)
+        spent2 = spend_refund_credit(self.user, 999999, note="بیشتر از موجودی")
+        self.assertEqual(spent2, 0)
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.refund_credit, 0)
+
+    def test_refund_credit_does_not_touch_diamond_balance(self):
+        from shop.rewards import credit_refund_credit
+        self.user.profile.points_balance = 100
+        self.user.profile.save(update_fields=["points_balance"])
+
+        credit_refund_credit(self.user, 200000, note="استرداد")
+
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.refund_credit, 200000)
+        self.assertEqual(self.user.profile.points_balance, 100)
+
+    def test_admin_refund_notify_credits_refund_credit(self):
+        from shop.models import Payment
+        admin = User.objects.create_user(username="admin_rc", password="x", is_staff=True)
+        order = Order.objects.create(
+            user=self.user,
+            status="completed",
+            epic_username="player_rc",
+            phone="09124445555",
+            amount=250000,
+        )
+        Payment.objects.create(
+            order=order,
+            status="success",
+            amount=250000,
+            ref_id="rc-test-1",
+            authority="rc-auth-1",
+        )
+
+        self.client.force_login(admin)
+        resp = self.client.post(f"/api/admin/orders/{order.tracking_code}/refund-notify")
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.refund_credit, 250000)
+
+        order.refresh_from_db()
+        self.assertEqual(order.status, "refunded")

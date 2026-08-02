@@ -66,6 +66,8 @@ export default function CheckoutPage() {
   const [discountPercent, setDiscountPercent] = useState(0);
   const [backendDiamondDiscount, setBackendDiamondDiscount] = useState(0);
   const [backendDiamondsApplied, setBackendDiamondsApplied] = useState(0);
+  const [backendRefundCredit, setBackendRefundCredit] = useState(0);
+  const [refundCreditUse, setRefundCreditUse] = useState(0);
   const [isValidating, setIsValidating] = useState(false);
   const [discountFlat, setDiscountFlat] = useState(0);
   const [discountMessage, setDiscountMessage] = useState('');
@@ -224,10 +226,17 @@ export default function CheckoutPage() {
     : (discountPercent > 0 ? Math.floor((baseTotal + rushFee) * discountPercent / 100) : 0);
   const subtotalAfterDiscount = Math.max(0, baseTotal + rushFee - discountAmount);
   const diamondsBalance = me?.points_balance || 0;
+  const refundCreditBalance = me?.refund_credit || backendRefundCredit || 0;
   const diamondsCap = Math.min(diamondsBalance, tomanToDiamondsCeil(subtotalAfterDiscount));
   const diamondDiscount = diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? backendDiamondDiscount : 0;
-  const finalTotal = Math.max(0, subtotalAfterDiscount - diamondDiscount);
+  const refundCreditMax = Math.min(refundCreditBalance, Math.max(0, subtotalAfterDiscount - diamondDiscount));
+  const refundCreditDiscount = Math.min(refundCreditUse, refundCreditMax);
+  const finalTotal = Math.max(0, subtotalAfterDiscount - diamondDiscount - refundCreditDiscount);
   const diamondsLimitExceeded = diamondsUse > 0 && diamondsUse > backendDiamondsApplied;
+
+  const handleRefundCreditToggle = () => {
+    setRefundCreditUse(currentUse => (currentUse > 0 ? 0 : refundCreditMax));
+  };
 
   const handleDiamondToggle = () => {
     setDiamondsUse(currentUse => nextDiamondUse(currentUse, diamondsBalance, diamondsCap));
@@ -263,6 +272,9 @@ export default function CheckoutPage() {
           const data = await res.json();
           setBackendDiamondDiscount(data.diamond_discount || 0);
           setBackendDiamondsApplied(data.diamonds_applied || 0);
+          if (typeof data.refund_credit_balance === "number") {
+            setBackendRefundCredit(data.refund_credit_balance);
+          }
         }
       } catch (err) {
         console.error("Failed to validate cart state:", err);
@@ -291,10 +303,13 @@ export default function CheckoutPage() {
         : "زمان تقریبی انجام: ۱۵ دقیقه تا ۸ ساعت کاری");
 
   useEffect(() => {
-    if (diamondsUse > diamondsCap) {
-      setDiamondsUse(diamondsCap);
+    const effectiveCap = backendDiamondsApplied > 0
+      ? Math.min(diamondsCap, backendDiamondsApplied)
+      : diamondsCap;
+    if (diamondsUse > effectiveCap) {
+      setDiamondsUse(effectiveCap);
     }
-  }, [diamondsCap, diamondsUse]);
+  }, [diamondsCap, diamondsUse, backendDiamondsApplied]);
 
   useEffect(() => {
     if (discountCode && !discountOpen) {
@@ -438,6 +453,7 @@ export default function CheckoutPage() {
         const draft = JSON.parse(raw);
         if (draft.form) setForm((prev) => ({ ...prev, ...draft.form }));
         if (typeof draft.diamondsUse === "number") setDiamondsUse(draft.diamondsUse);
+        if (typeof draft.refundCreditUse === "number") setRefundCreditUse(draft.refundCreditUse);
         if (typeof draft.rushOrder === "boolean") setRushOrder(draft.rushOrder);
         if (typeof draft.contactEmail === "string") setContactEmail(draft.contactEmail);
         if (typeof draft.discountCode === "string") setDiscountCode(draft.discountCode);
@@ -456,6 +472,7 @@ export default function CheckoutPage() {
         JSON.stringify({
           form,
           diamondsUse,
+          refundCreditUse,
           rushOrder,
           contactEmail,
           discountCode,
@@ -849,7 +866,8 @@ export default function CheckoutPage() {
         body: JSON.stringify({ 
           items: orderItems,
           contact: contactPayload,
-          diamonds_use: diamondsUse,
+          diamonds_use: Math.min(diamondsUse, Math.max(0, backendDiamondsApplied)),
+          refund_credit_use: Math.min(refundCreditUse, Math.max(0, refundCreditMax)),
           rush_order: rushOrder,
           rush_fee: rushFee,
           discount_code: appliedDiscountCode || undefined,
@@ -1481,6 +1499,16 @@ export default function CheckoutPage() {
                     </button>
                   )}
 
+                  {me && refundCreditBalance > 0 && (
+                    <button
+                      type="button"
+                      className={`sidebar-discount-action-btn ${refundCreditUse > 0 ? 'active' : ''}`}
+                      onClick={handleRefundCreditToggle}
+                    >
+                      <span>💰 استفاده از اعتبار بازگشتی ({refundCreditBalance.toLocaleString('fa-IR')} تومان)</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     className={`sidebar-discount-action-btn ${howToGetDiscount ? 'active' : ''}`}
@@ -1517,6 +1545,25 @@ export default function CheckoutPage() {
                         ⚠️ حداقل {MIN_DIAMONDS_TO_REDEEM} الماس
                       </span>
                     )}
+                  </div>
+                )}
+
+                {refundCreditUse > 0 && me && refundCreditBalance > 0 && (
+                  <div className="sidebar-diamond-use-box">
+                    <div className="wallet-input-inner">
+                      <input
+                        type="number"
+                        min={0}
+                        max={refundCreditMax}
+                        value={refundCreditUse}
+                        onChange={(e) => setRefundCreditUse(Math.min(refundCreditMax, Math.max(0, Number(e.target.value) || 0)))}
+                        placeholder="مبلغ به تومان"
+                      />
+                      <span className="wallet-input-unit">💰</span>
+                    </div>
+                    <span className="diamond-discount-tag">
+                      ✅ {refundCreditDiscount.toLocaleString('fa-IR')} تومان از اعتبار شما کسر می‌شود
+                    </span>
                   </div>
                 )}
 

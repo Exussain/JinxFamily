@@ -1,4 +1,5 @@
 import { normalizeSlug } from '../../../lib/productSlug.mjs';
+import { categoryPathFromCode } from '../../../lib/productCategoryRoutes';
 
 const BASE_URL = 'https://nubixshop.ir';
 
@@ -224,7 +225,7 @@ export default async function ProductLayout({ children, params }) {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: BASE_URL },
         ...(product.category === 'ROCKET_LEAGUE'
-          ? [{ '@type': 'ListItem', position: 2, name: 'راکت لیگ', item: `${BASE_URL}/category/rocket-league` }]
+          ? [{ '@type': 'ListItem', position: 2, name: 'راکت لیگ', item: `${BASE_URL}${categoryPathFromCode('ROCKET_LEAGUE')}` }]
           : []),
         { '@type': 'ListItem', position: product.category === 'ROCKET_LEAGUE' ? 3 : 2, name: product.name_fa, item: productUrl },
       ],

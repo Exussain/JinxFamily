@@ -33,7 +33,7 @@ if ! flock -n 200; then
 fi
 
 # 3. Clean temporary build artifacts
-cd /root/Projects/NubixShop/frontend
+cd /root/NubixShop/public/frontend
 rm -rf .next-build
 
 echo "==> [HardReload] Building Next.js application..."

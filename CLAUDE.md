@@ -30,9 +30,9 @@ Treat changes as deploying to production, not a sandbox.
 
 ### Frontend (`frontend/`)
 
-- `npm run dev` — dev server on port 3002 (Turbopack/webpack dev). **When working in `/Projects/NubixShop`, run the server in dev mode (`npm run dev`) during active development instead of running `HardReload.sh` on every change.**
+- `npm run dev` — dev server on port 3002 (Turbopack/webpack dev). **When working in `/root/NubixShop/public`, run the server in dev mode (`npm run dev`) during active development instead of running `HardReload.sh` on every change.**
 - `npm run build` — production build.
-- `npm run deploy` / `HardReload.sh` — production build & PM2 restart (`/root/Projects/NubixShop/HardReload.sh`). Use for production releases or when explicitly requested.
+- `npm run deploy` / `HardReload.sh` — production build & PM2 restart (`/root/NubixShop/public/HardReload.sh`). Use for production releases or when explicitly requested.
 - **Pre-Deployment Check (MANDATORY)**: Before executing `HardReload.sh`, always check if a `HardReload.sh` or `next build` process is already running (`pgrep -a -f 'HardReload.sh|next build'`). If running, terminate it first (`pkill -TERM -f 'HardReload.sh'; pkill -9 -f 'HardReload.sh'`) before starting a fresh build.
 - Log the change in `frontend/CHANGELOG.md` (Persian, dated entries — see existing entries for format/style).
 - Tests are plain Node scripts using `node:assert/strict` (some also use `node:test`), colocated as

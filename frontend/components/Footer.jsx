@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { categoryPathFromCode } from "../lib/productCategoryRoutes";
 
 export default function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -101,8 +102,8 @@ export default function Footer() {
                 <li><Link href="/product/chatgpt-subscription">خرید اشتراک ChatGPT</Link></li>
                 <li><Link href="/gemini">خرید اشتراک Gemini</Link></li>
                 <li><Link href="/gta6">پیش‌خرید GTA 6</Link></li>
-                <li><Link href="/category/fortnite">محصولات فورتنایت</Link></li>
-                <li><Link href="/category/giftcards">گیفت کارت‌ها</Link></li>
+                <li><Link href={categoryPathFromCode("FORTNITE")}>محصولات فورتنایت</Link></li>
+                <li><Link href={categoryPathFromCode("GIFTCARDS")}>گیفت کارت‌ها</Link></li>
                 <li><Link href="/faq/track-my-order">پیگیری سفارش</Link></li>
               </ul>
             </div>

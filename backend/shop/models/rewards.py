@@ -12,6 +12,8 @@ class PointsTransaction(models.Model):
         ("milestone", "جایزه پلکانی"),
         ("redeem", "تبدیل به تخفیف خرید"),
         ("adjust", "تعدیل دستی"),
+        ("refund_credit", "اعتبار بازگشتی (استرداد سفارش)"),
+        ("refund_use", "مصرف اعتبار بازگشتی در خرید"),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="points_txns")
     amount = models.IntegerField(help_text="مثبت = کسب، منفی = مصرف")

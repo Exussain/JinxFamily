@@ -2,50 +2,51 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { categoryPathFromCode } from "../lib/productCategoryRoutes";
 
 const promoCards = [
   {
     id: "free-fire",
     title: "فری فایر",
     image: "/images/game-cards/free-fire.webp",
-    href: "/category/free-fire",
+    href: categoryPathFromCode("FREE_FIRE"),
   },
   {
     id: "pubg-mobile",
     title: "پابجی موبایل",
     image: "/images/game-cards/pubg-mobile.webp",
-    href: "/category/pubg-mobile",
+    href: categoryPathFromCode("PUBG"),
   },
   {
     id: "call-of-duty",
     title: "کالاف دیوتی",
     image: "/images/game-cards/call-of-duty.webp",
-    href: "/category/call-of-duty",
+    href: categoryPathFromCode("COD_MOBILE"),
   },
   {
     id: "fortnite",
     title: "فورتنایت",
     image: "/images/game-cards/fortnite.webp",
-    href: "/category/fortnite",
+    href: categoryPathFromCode("FORTNITE"),
     isCenter: true,
   },
   {
     id: "valorant",
     title: "والورانت",
     image: "/images/game-cards/valorant.webp",
-    href: "/category/valorant",
+    href: categoryPathFromCode("VALORANT"),
   },
   {
     id: "clash-royale",
     title: "کلش رویال",
     image: "/images/game-cards/clash-royale.webp",
-    href: "/category/clash-royale",
+    href: categoryPathFromCode("CLASH_ROYALE"),
   },
   {
     id: "clash-of-clans",
     title: "کلش اف کلنز",
     image: "/images/game-cards/clash-of-clans.webp",
-    href: "/category/clash-of-clans",
+    href: categoryPathFromCode("CLASH_OF_CLANS"),
   },
 ];
 

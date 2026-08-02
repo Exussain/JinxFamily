@@ -23,6 +23,10 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     tier = models.CharField(max_length=16, choices=TIER_CHOICES, default="user")
     wallet_balance = models.PositiveIntegerField(default=0)
+    refund_credit = models.PositiveIntegerField(
+        default=0,
+        help_text="اعتبار بازگشتی (تومان) حاصل از استرداد سفارش — قابل مصرف کامل در خرید بعدی",
+    )
     avatar = models.FileField(upload_to='avatars/', blank=True, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True)
     signup_ip = models.GenericIPAddressField(null=True, blank=True, help_text="IP used during signup")

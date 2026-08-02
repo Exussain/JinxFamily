@@ -41,7 +41,7 @@ function ProductRail({ title, products, tone }) {
           <button className="product-rail__arrow" type="button" onClick={() => move(1)} aria-label="محصولات بعدی"><Arrow direction="next" /></button>
         </div>
       </div>
-      <div className="product-rail__viewport" ref={railRef}>
+      <div className="product-rail__viewport" ref={railRef} tabIndex={0}>
         {products.map((product) => <ProductCard key={product.id || product.slug} p={product} imageFit="cover" />)}
       </div>
     </section>

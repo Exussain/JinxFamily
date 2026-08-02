@@ -15,9 +15,10 @@ django.setup()
 
 from shop.models import Product, ProductVariant, SubCategory
 
-IMPORT_JSON = '/root/Projects/NubixShop/import-products/products.json'
-COVERS_DIR = '/root/Projects/NubixShop/import-products/covers'
-MEDIA_PRODUCTS_DIR = '/root/Projects/NubixShop/backend/media/products'
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+IMPORT_JSON = os.path.join(REPO_ROOT, 'import-products', 'products.json')
+COVERS_DIR = os.path.join(REPO_ROOT, 'import-products', 'covers')
+MEDIA_PRODUCTS_DIR = os.path.join(REPO_ROOT, 'backend', 'media', 'products')
 
 os.makedirs(MEDIA_PRODUCTS_DIR, exist_ok=True)
 
@@ -136,7 +137,7 @@ def convert_purchase_fields(pfields):
     return custom_fields
 
 def process_cover_image(cover_rel_file, clean_slug):
-    cover_src_path = os.path.join('/root/Projects/NubixShop/import-products', cover_rel_file)
+    cover_src_path = os.path.join(REPO_ROOT, 'import-products', cover_rel_file)
     if not os.path.exists(cover_src_path):
         cover_src_path = os.path.join(COVERS_DIR, os.path.basename(cover_rel_file))
         
