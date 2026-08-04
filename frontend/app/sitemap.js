@@ -1,5 +1,6 @@
 import { faqItems } from './faq/data.jsx';
 import { SITE_ORIGIN } from '../lib/site.mjs';
+import { PRODUCT_CATEGORY_CODES, categoryPathFromCode } from '../lib/productCategoryRoutes';
 
 const BASE_URL = SITE_ORIGIN;
 

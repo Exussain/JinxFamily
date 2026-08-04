@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import AnnouncementBar from "./AnnouncementBar";
+import InvalidInfoGlobalNotifier from "./InvalidInfoGlobalNotifier";
 import dynamic from "next/dynamic";
 
 const FloatingCart = dynamic(() => import("./FloatingCart"), { ssr: false });

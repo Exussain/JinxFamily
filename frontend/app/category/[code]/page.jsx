@@ -4,6 +4,7 @@ import Navbar from '../../../components/Navbar';
 import StaticProductCard from '../../../components/StaticProductCard';
 import { fetchApiJson } from '../../../lib/serverFetch.mjs';
 import { SITE_ORIGIN } from '../../../lib/site.mjs';
+import { categoryPathFromCode, categoryCodeFromSlug } from '../../../lib/productCategoryRoutes';
 
 export const revalidate = 60;
 
@@ -101,6 +102,7 @@ export default async function CategoryPage({ params, searchParams }) {
   const sub = (resolvedSearchParams.sub || '').toLowerCase();
   
   const code = (rawCode || '').toLowerCase();
+  const canonicalCode = categoryCodeFromSlug(code);
   const categoryCode = canonicalCode || code.toUpperCase().replace(/-/g, '_');
   const canonicalPath = categoryPathFromCode(categoryCode);
 

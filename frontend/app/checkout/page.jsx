@@ -1159,6 +1159,67 @@ function CheckoutPage() {
               </div>
             )}
 
+            {/* Tips and Agreement Section - Placed at Top */}
+            <div className="checkout-card tips-card">
+              <div className="card-header">
+                <div className="card-icon warning-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3>نکات و مقررات قبل از خرید</h3>
+                  <p>لطفاً برای جلوگیری از بروز تاخیر در انجام سفارش، موارد زیر را مطالعه فرمایید</p>
+                </div>
+              </div>
+
+              <div className="tips-content">
+                <ul className="order-tips-list-new">
+                  <li>
+                    <span className="tip-bullet">۱</span>
+                    <div>
+                      <strong>غیرفعال‌سازی ۲ مرحله‌ای (2FA)</strong>: پیش از نهایی کردن سفارش، حتماً تایید دو مرحله‌ای اکانت خود را خاموش کنید تا بدون معطلی و بلافاصله سفارش شما انجام شود.
+                      <a href="/guides/disable-2fa" className="order-tips-link-new" target="_blank" rel="noopener noreferrer">
+                         راهنمای غیرفعال‌سازی 2FA ↗
+                      </a>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="tip-bullet">۲</span>
+                    <div>
+                      <strong>اطلاعات ورود صحیح</strong>: ایمیل و رمز عبور اکانت وارد شده را مجدداً چک کنید. در صورت نادرست بودن اطلاعات، روند تکمیل سفارش با تاخیر مواجه خواهد شد.
+                    </div>
+                  </li>
+                  <li>
+                    <span className="tip-bullet">۳</span>
+                    <div>
+                      <strong>پشتیبانی آنلاین و پیامکی</strong>: کلیه مراحل تغییر وضعیت سفارش از طریق پیامک و ایمیل ثبت شده به شما اطلاع‌رسانی خواهد شد.
+                    </div>
+                  </li>
+                </ul>
+
+                {showAckSection && (
+                  <div className={`ack-agreement-row ${ackImportant ? 'is-checked' : ''}`}>
+                    <label className="ack-checkbox-new">
+                      <input
+                        type="checkbox"
+                        checked={ackImportant}
+                        onChange={(e) => handleAckChange(e.target.checked)}
+                      />
+                      <span className="checkmark-new">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </span>
+                      <span className="ack-text">تمامی موارد فوق را با دقت مطالعه کرده و تایید می‌کنم</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="checkout-card contact-card">
               <div className="card-header">
                 <div className="card-step">۰۱</div>
@@ -1409,62 +1470,6 @@ function CheckoutPage() {
               </div>
             )}
 
-            {/* 3. Tips and Agreement Section */}
-            <div className="checkout-card tips-card">
-              <div className="card-header">
-                <div className="card-icon warning-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3>نکات و مقررات قبل از خرید</h3>
-                  <p>لطفاً برای جلوگیری از بروز تاخیر در انجام سفارش، موارد زیر را مطالعه فرمایید</p>
-                </div>
-              </div>
-
-              <div className="tips-content">
-                <ul className="order-tips-list-new">
-                  <li>
-                    <span className="tip-bullet">۱</span>
-                    <div>
-                      <strong>غیرفعال‌سازی ۲ مرحله‌ای (2FA)</strong>: پیش از نهایی کردن سفارش، حتماً تایید دو مرحله‌ای اکانت خود را خاموش کنید تا بدون معطلی و بلافاصله سفارش شما انجام شود.
-                      <a href="/guides/disable-2fa" className="order-tips-link-new" target="_blank" rel="noopener noreferrer">
-                         راهنمای غیرفعال‌سازی 2FA ↗
-                      </a>
-                    </div>
-                  </li>
-                  <li>
-                    <span className="tip-bullet">۲</span>
-                    <div>
-                      <strong>اطلاعات ورود صحیح</strong>: ایمیل و رمز عبور اکانت وارد شده را مجدداً چک کنید. در صورت نادرست بودن اطلاعات، روند تکمیل سفارش با تاخیر مواجه خواهد شد.
-                    </div>
-                  </li>
-                  <li>
-                    <span className="tip-bullet">۳</span>
-                    <div>
-                      <strong>پشتیبانی آنلاین و پیامکی</strong>: کلیه مراحل تغییر وضعیت سفارش از طریق پیامک و ایمیل ثبت شده به شما اطلاع‌رسانی خواهد شد.
-                    </div>
-                  </li>
-                </ul>
-
-                {showAckSection && (
-                  <div className="ack-agreement-row">
-                    <label className="ack-checkbox-new">
-                      <input
-                        type="checkbox"
-                        checked={ackImportant}
-                        onChange={(e) => handleAckChange(e.target.checked)}
-                      />
-                      <span className="checkmark-new"></span>
-                      <span className="ack-text">تمامی موارد فوق را با دقت مطالعه کرده و تایید می‌کنم</span>
-                    </label>
-                  </div>
-                )}
-              </div>
-            </div>
           </section>
 
           {/* Sidebar - Order Summary Column (Left in RTL) */}

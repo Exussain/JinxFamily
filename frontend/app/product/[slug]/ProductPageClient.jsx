@@ -143,6 +143,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState(null);
+  const [activeTab, setActiveTab] = useState("description");
   const [viewerCount, setViewerCount] = useState(3);
   const [allArticles, setAllArticles] = useState([]);
   const [showDeferredSections, setShowDeferredSections] = useState(false);

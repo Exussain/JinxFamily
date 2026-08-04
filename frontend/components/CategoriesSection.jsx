@@ -26,44 +26,72 @@ const categoryCodes = {
 
 const categoryData = {
   "فورتنایت": {
-    icon: "/categories/category_fortnite.webp?v=5",
-    gradient: "linear-gradient(135deg, #8B5CF6, #EC4899)",
+    icon: "/categories/category_fortnite.webp",
+    gradient: "linear-gradient(135deg, #334155, #111827)",
   },
-  "بازارچه اکانت‌ها": {
-    icon: "/categories/category_accounts.webp?v=4",
-    gradient: "linear-gradient(135deg, #a855f7, #7e22ce)",
+  "پابجی": {
+    icon: "/categories/category_pubg.webp",
+    gradient: "linear-gradient(135deg, #ea580c, #ca8a04)",
+  },
+  "کالاف دیوتی": {
+    icon: "/categories/category_cod.webp",
+    gradient: "linear-gradient(135deg, #111827, #4b5563)",
+  },
+  "کلش رویال": {
+    icon: "/categories/category_clash_royal.webp",
+    gradient: "linear-gradient(135deg, #2563eb, #7c3aed)",
+  },
+  "کلش اف کلنز": {
+    icon: "/categories/category_coc.webp",
+    gradient: "linear-gradient(135deg, #f97316, #f59e0b)",
+  },
+  "براول استارز": {
+    icon: "/categories/category_brawl_stars.webp",
+    gradient: "linear-gradient(135deg, #eab308, #ef4444)",
+  },
+  "فری فایر": {
+    icon: "/categories/category_freefire.webp",
+    gradient: "linear-gradient(135deg, #dc2626, #b91c1c)",
+  },
+  "ولورانت": {
+    icon: "/categories/category_valorant.webp",
+    gradient: "linear-gradient(135deg, #ff4655, #0f1923)",
+  },
+  "رینبو سیکس": {
+    icon: "/categories/category_rainbow.webp",
+    gradient: "linear-gradient(135deg, #1e293b, #0f172a)",
+  },
+  "مارول ریوالز": {
+    icon: "/categories/category_marvel_rivals.webp",
+    gradient: "linear-gradient(135deg, #e11d48, #be123c)",
+  },
+  "سرویس کاهش پینگ": {
+    icon: "/categories/category_ping.webp",
+    gradient: "linear-gradient(135deg, #0284c7, #0369a1)",
+  },
+  "بازی‌های موبایل": {
+    icon: "/categories/category_mobile_games.webp",
+    gradient: "linear-gradient(135deg, #ec4899, #8b5cf6)",
+  },
+  "راکت لیگ": {
+    icon: "/categories/category_rocket_league.webp",
+    gradient: "linear-gradient(135deg, #2563eb, #f97316)",
   },
   "هوش مصنوعی": {
-    icon: "/categories/category_ai.webp?v=4",
+    icon: "/categories/category_ai.webp",
     gradient: "linear-gradient(135deg, #0ea5e9, #6366f1)",
   },
   "گیفت کارت‌ها": {
-    icon: "/categories/category_giftcard.webp?v=5",
+    icon: "/categories/category_giftcard.webp",
     gradient: "linear-gradient(135deg, #F59E0B, #EF4444)",
   },
   "بازی‌ها": {
-    icon: "/products/gta6/ps5-standard.webp?v=2",
+    icon: "/products/gta6/ps5-standard.webp",
     gradient: "linear-gradient(135deg, #10B981, #059669)",
   },
   "اشتراک‌ها": {
-    icon: "/categories/category_subscriptions.webp?v=2",
+    icon: "/categories/category_subscriptions.webp",
     gradient: "linear-gradient(135deg, #3B82F6, #06B6D4)",
-  },
-  "کلش آف کلنز": {
-    icon: "/categories/category_coc.webp?v=5",
-    gradient: "linear-gradient(135deg, #f97316, #f59e0b)",
-  },
-  "کلش رویال": {
-    icon: "/categories/category_clash_royal.webp?v=5",
-    gradient: "linear-gradient(135deg, #2563eb, #7c3aed)",
-  },
-  "کالاف دیوتی": {
-    icon: "/categories/category_cod.webp?v=5",
-    gradient: "linear-gradient(135deg, #111827, #4b5563)",
-  },
-  "بتلفیلد": {
-    icon: "/categories/category_battlefield6.webp?v=5",
-    gradient: "linear-gradient(135deg, #0ea5e9, #38bdf8)",
   },
 };
 
@@ -87,46 +115,6 @@ export default function CategoriesSection({
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [clickedLink, setClickedLink] = useState(null);
-
-  // Desktop Slider states & refs
-  const sliderRef = useRef(null);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(true);
-
-  const updateArrowStates = () => {
-    if (sliderRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
-      setCanScrollPrev(scrollLeft < -5);
-      setCanScrollNext(Math.abs(scrollLeft) + clientWidth < scrollWidth - 5);
-    }
-  };
-
-  const scrollPrev = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-    }
-  };
-
-  const scrollNext = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -320, behavior: 'smooth' });
-    }
-  };
-
-  useEffect(() => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    slider.addEventListener('scroll', updateArrowStates);
-    updateArrowStates();
-    window.addEventListener('resize', updateArrowStates);
-    return () => {
-      slider.removeEventListener('scroll', updateArrowStates);
-      window.removeEventListener('resize', updateArrowStates);
-    };
-  }, []);
-
-
-
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -243,55 +231,36 @@ export default function CategoriesSection({
     return () => section.removeObserver ? section.removeObserver() : section.removeEventListener('wheel', handleWheel);
   }, []);
 
-  const categoryFilterHref = (cat) => {
-    if (cat === "بازارچه اکانت‌ها" || cat === "بازارچه اکانت ها") return "/market?game=fortnite";
-    return `/?cat=${encodeURIComponent(cat)}`;
-  };
-  const isActiveCategory = (cat) => activeCat === cat;
-  const desktopCategoryCards = categories.map((category, index) => {
-    const details = categoryData[category] || {};
-    const cardDetails = {
-      "فورتنایت": { en: "Fortnite", desc: "ویباکس، کروپک و بتل‌پس 🎮", theme: "epicgames" },
-      "هوش مصنوعی": { en: "AI", desc: "ابزارهای هوشمند برای همه ✨", theme: "battlenet" },
-      "بازارچه اکانت‌ها": { en: "Marketplace", desc: "اکانت مورد علاقه‌ات را پیدا کن 🎀", theme: "steam" },
-      "اشتراک‌ها": { en: "Subscriptions", desc: "سرویس‌های محبوب، همیشه در دسترس ⭐", theme: "playstation" },
-      "گیفت کارت‌ها": { en: "Gift Cards", desc: "هدیه‌ای برای هر گیمر 🎁", theme: "steam" },
-      "بازی‌ها": { en: "Games", desc: "ماجراجویی‌های تازه در انتظار توست 🎯", theme: "xbox" },
-      "کلش آف کلنز": { en: "Clash of Clans", desc: "دهکده‌ات را قدرتمندتر کن 🏰", theme: "battlenet" },
-      "کلش رویال": { en: "Clash Royale", desc: "برای بردن آماده‌ای؟ 👑", theme: "playstation" },
-      "کالاف دیوتی": { en: "Call of Duty", desc: "وارد میدان نبرد شو 🔥", theme: "xbox" },
-      "بتلفیلد": { en: "Battlefield", desc: "نبردی در مقیاس بزرگ ⚡", theme: "epicgames" },
-    }[category] || {
-      en: category,
-      desc: "محصولات محبوب جینکس فمیلی ✨",
-      theme: ["steam", "battlenet", "epicgames", "playstation", "xbox"][index % 5],
-    };
+  // Sync active category from URL search params (cat or category)
+  const catParam = sp.get('category') || sp.get('cat') || '';
 
-    return {
-      key: category,
-      href: categoryFilterHref(category),
-      image: details.icon || "/categories/category_fortnite.webp",
-      label: category,
-      ...cardDetails,
-    };
-  });
+  const categoryFilterHref = (cat) => categoryPathFromCode(categoryCodes[cat]);
+  const isActiveCategory = (cat) => {
+    const categoryCode = categoryCodes[cat];
+    if (activeCategoryCode && categoryCode === activeCategoryCode) return true;
+    if (!catParam && !activeCat) return false;
+    return activeCat === cat || catParam === cat;
+  };
+
+  const DEFAULT_CATEGORIES = Object.keys(categoryCodes);
+  const targetCategories = Array.isArray(categories) && categories.length > 0 ? categories : DEFAULT_CATEGORIES;
 
   return (
-    <>
-      {/* Desktop-only categories section with chip row */}
-      <section 
-        ref={sectionRef}
-        className={`categories draggable-scroll desktop-categories-section${isPointerDown ? " is-pointer-down" : ""}`}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
-      >
-        {/* Mobile Head (only shown on mobile) */}
-        <div className="section-head mobile-only-head">
-          <div>
-            <p>فورتنایت، هوش مصنوعی، گیفت کارت و بیشتر</p>
-            <h2>دسته‌بندی محصولات جینکس فمیلی</h2>
+    <section
+      id="category-navigation-section"
+      ref={sectionRef}
+      className={`categories draggable-scroll categories--${variant}${isPointerDown ? " is-pointer-down" : ""}${className ? ` ${className}` : ''}`}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleDragEnd}
+      onMouseLeave={handleDragEnd}
+      aria-label="دسته‌بندی محصولات نوبیکس شاپ"
+    >
+      {variant !== 'products' && (
+        <div className="section-head">
+          <div className="section-title-box">
+            <p className="section-subtitle">فورتنایت، هوش مصنوعی، گیفت کارت و بیشتر</p>
+            <h2 className="section-main-title">دسته‌بندی محصولات نوبیکس شاپ</h2>
           </div>
           <Link
             href="/products"
@@ -317,92 +286,39 @@ export default function CategoriesSection({
         </div>
       )}
 
-        {/* Mobile Chips (only shown on mobile) */}
-        <div
-          ref={chipRowRef}
-          className="chip-row mobile-only-chips"
-        >
-          {categories.map((cat) => {
-            const catData = categoryData[cat] || { icon: "/categories/category_fortnite.webp", gradient: "linear-gradient(135deg, #6366F1, #8B5CF6)" };
-            return (
-              <Link
-                key={cat}
-                href={categoryFilterHref(cat)}
-                scroll={false}
-                className={`chip modern-chip${isActiveCategory(cat) ? ' active' : ''}`}
-                style={{ '--chip-gradient': catData.gradient }}
-                onClick={(e) => {
-                  if (isDragging) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                }}
-              >
-                <span className="chip-icon-wrapper">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={catData.icon} alt={cat} className="chip-icon-img" loading="lazy" decoding="async" />
-                </span>
-                <span className="chip-label">{cat}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Desktop-only platform category cards (glowing slider) */}
-        <div className="desktop-only-categories-wrapper">
-          <div className="desktop-categories-heading">
-            <span className="outline-title">Categories</span>
-            <h2 className="persian-title">دسته‌بندی‌های کیوت سایت 🎀</h2>
-          </div>
-
-          <div className="desktop-platform-slider-container">
-            {/* Right arrow (previous/back to start in RTL) */}
-            <button 
-              className="slider-arrow prev-arrow" 
-              onClick={scrollPrev} 
-              disabled={!canScrollPrev}
-              aria-label="صفحه قبلی"
+      <div
+        ref={chipRowRef}
+        className="chip-row category-chip-container"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleDragEnd}
+        role="navigation"
+        aria-label="لیست دسته‌بندی‌ها"
+      >
+        {targetCategories.map((cat) => {
+          const catData = categoryData[cat] || { icon: "/categories/category_fortnite.webp", gradient: "linear-gradient(135deg, #6366F1, #8B5CF6)" };
+          return (
+            <Link
+              key={cat}
+              href={categoryFilterHref(cat)}
+              className={`chip modern-chip${isActiveCategory(cat) ? ' active' : ''}`}
+              style={{ '--chip-gradient': catData.gradient }}
+              onClick={(e) => {
+                if (isDragging) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6"></polyline>
-              </svg>
-            </button>
-
-            <div ref={sliderRef} className="desktop-platform-categories">
-              <div className="platform-slider-track">
-                {desktopCategoryCards.map((card) => (
-                  <Link key={card.key} href={card.href} className={`platform-card ${card.theme}`}>
-                    <div className="platform-card-glow" />
-                    <div className="platform-card-inner">
-                      <span className="platform-en">{card.en}</span>
-                      <div className="platform-icon-wrapper">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={card.image} alt={card.en} />
-                      </div>
-                      <span className="platform-fa">{card.label}</span>
-                      <p className="platform-desc">{card.desc}</p>
-                      <span className="platform-btn-view">مشاهده ↗</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Left arrow (next/scroll left in RTL) */}
-            <button 
-              className="slider-arrow next-arrow" 
-              onClick={scrollNext} 
-              disabled={!canScrollNext}
-              aria-label="صفحه بعدی"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6"></polyline>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-      </section>
+              <span className="chip-icon-wrapper">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={catData.icon} alt={`دسته‌بندی ${cat}`} className="chip-icon-img" loading="lazy" decoding="async" />
+              </span>
+              <span className="chip-label">{cat}</span>
+            </Link>
+          );
+        })}
+      </div>
 
       {/* Modern sidebar drawer */}
       {open && (

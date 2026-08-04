@@ -42,21 +42,6 @@ export default function UserPanelPage() {
   const [cancellingOrder, setCancellingOrder] = useState(null);
   const [activeTab, setActiveTab] = useState("orders");
 
-  // Wallet and Wishlist states
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [walletTxns, setWalletTxns] = useState([]);
-  const [topupAmount, setTopupAmount] = useState("");
-  const [submittingTopup, setSubmittingTopup] = useState(false);
-  const [topupMessage, setTopupMessage] = useState("");
-  const [wishlistItems, setWishlistItems] = useState([]);
-  const [kycCode, setKycCode] = useState("");
-  const [kycStatus, setKycStatus] = useState("unverified");
-  const [kycRejectReason, setKycRejectReason] = useState("");
-  const [kycCardUrl, setKycCardUrl] = useState("");
-  const [kycFile, setKycFile] = useState(null);
-  const [kycSubmitting, setKycSubmitting] = useState(false);
-  const [kycMsg, setKycMsg] = useState("");
-
   // Exchange diamonds state
   const [exchanging, setExchanging] = useState(false);
   const [exchangeSuccess, setExchangeSuccess] = useState("");
@@ -352,37 +337,6 @@ export default function UserPanelPage() {
           setReferralData(rData);
           setReferralNotification(buildReferralNotification(rData));
         }
-
-        const walletRes = await fetch(`${apiBase}/api/me/wallet`, {
-          cache: "no-store",
-          credentials: "include",
-        });
-        if (walletRes.ok) {
-          const wData = await walletRes.json();
-          setWalletBalance(wData.balance || 0);
-          setWalletTxns(wData.transactions || []);
-        }
-
-        const wishlistRes = await fetch(`${apiBase}/api/me/wishlist`, {
-          cache: "no-store",
-          credentials: "include",
-        });
-        if (wishlistRes.ok) {
-          const wlData = await wishlistRes.json();
-          setWishlistItems(wlData || []);
-        }
-
-        const kycRes = await fetch(`${apiBase}/api/me/verify-identity`, {
-          cache: "no-store",
-          credentials: "include",
-        });
-        if (kycRes.ok) {
-          const kData = await kycRes.json();
-          setKycCode(kData.national_code || "");
-          setKycStatus(kData.verification_status || "unverified");
-          setKycRejectReason(kData.verification_reject_reason || "");
-          setKycCardUrl(kData.national_card_image || "");
-        }
       } finally {
         setLoading(false);
       }
@@ -407,52 +361,35 @@ export default function UserPanelPage() {
     }
   };
 
-  const handleRemoveWishlist = async (productId) => {
-    try {
-      const res = await fetch(`${apiBase}/api/me/wishlist/toggle`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ product_id: productId }),
-      });
-      if (res.ok) {
-        setWishlistItems(prev => prev.filter(item => item.product_id !== productId));
-      }
-    } catch (err) {
-      console.error(err);
+  const getStatusMessage = (status) => {
+    switch (status) {
+      case "pending":
+        return "نوبیکس شاپ منتظر پرداخته تا برات بفرسته 😉";
+      case "paid":
+      case "registered":
+        return "سفارش شما ثبت شد! نوبیکس شاپ به زودی شروع به انجامش می‌کنه 🧡";
+      case "processing":
+        return "نوبیکس شاپ داره برات می‌فرسته 😉";
+      case "completed":
+        return "سفارش شما با موفقیت تحویل داده شد! مبارکت باشه 😍🎉";
+      case "needs_2fa":
+        return "🔑 اکانتت نیاز به کد دو مرحله‌ای (2FA) داره. لطفا برامون بفرستش.";
+      case "needs_tr_region":
+        return "🌍 ریجن اکانتت با ریجن سفارش یکی نیست. لطفا با پشتیبانی چک کن.";
+      case "needs_xbox_info":
+        return "❌ مشکل اکانت ایکس باکس. لطفاً اطلاعات اکانت ایکس باکس خود را ارسال کنید.";
+      case "invalid_info":
+        return "❌ اطلاعات ورودت اشتباهه. لطفا اطلاعات صحیح رو برای پشتیبانی بفرست.";
+      case "canceled":
+        return "سفارش شما لغو شده است ✖";
+      case "refunded":
+        return "مبلغ سفارش به حساب شما مسترد شد 💸";
+      default:
+        return "پشتیبانی در حال بررسی سفارش شماست 🔎";
     }
   };
 
-  const handleWalletTopup = async (e) => {
-    e.preventDefault();
-    const parsed = parseInt(topupAmount, 10);
-    if (isNaN(parsed) || parsed < 5000) {
-      setTopupMessage("حداقل مبلغ شارژ ۵,۰۰۰ تومان است.");
-      return;
-    }
-    setSubmittingTopup(true);
-    setTopupMessage("");
-    try {
-      const res = await fetch(`${apiBase}/api/me/wallet/topup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ amount: parsed }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success && data.redirect_url) {
-        window.location.href = data.redirect_url;
-      } else {
-        setTopupMessage(data.message || "خطا در برقراری ارتباط با درگاه پرداخت.");
-      }
-    } catch (err) {
-      setTopupMessage("خطایی رخ داد. مجددا تلاش کنید.");
-    } finally {
-      setSubmittingTopup(false);
-    }
-  };
-
-  const displayName = (profileName || user?.name || user?.first_name || "").trim();
+  const displayName = `${profileFirstName} ${profileLastName}`.trim() || user?.name || user?.username || "";
   const phoneNumber = user?.phone_number || user?.phone || "";
   const displayPhone = loading ? "" : phoneNumber || "ثبت نشده";
   const ordersCount = Array.isArray(orders) ? orders.length : 0;
@@ -466,7 +403,7 @@ export default function UserPanelPage() {
   const handleCelebrationClose = () => {
     setShowCelebration(false);
     if (typeof window !== "undefined" && celebrationOrder?.tracking_code) {
-      window.localStorage.setItem("jinxfamily_last_celebration", celebrationOrder.tracking_code);
+      window.localStorage.setItem("nubix_last_celebration", celebrationOrder.tracking_code);
     }
   };
 
@@ -490,43 +427,6 @@ export default function UserPanelPage() {
       // ignore
     }
     window.location.href = "/";
-  };
-
-  const handleKycSubmit = async (e) => {
-    e.preventDefault();
-    if (!kycCode || kycCode.length !== 10 || isNaN(kycCode)) {
-      setKycMsg("لطفاً یک کد ملی معتبر ۱۰ رقمی وارد کنید.");
-      return;
-    }
-    if (!kycFile && !kycCardUrl) {
-      setKycMsg("لطفاً تصویر کارت ملی را انتخاب کنید.");
-      return;
-    }
-    setKycSubmitting(true);
-    setKycMsg("");
-    try {
-      const formData = new FormData();
-      formData.append("national_code", kycCode);
-      if (kycFile) {
-        formData.append("national_card_image", kycFile);
-      }
-      const res = await fetch(`${apiBase}/api/me/verify-identity`, {
-        method: "POST",
-        body: formData,
-        credentials: "include"
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setKycStatus("pending");
-        setKycMsg(data.message || "مدارک شما با موفقیت ثبت شد.");
-      } else {
-        setKycMsg(data.message || "خطا در ثبت مدارک.");
-      }
-    } catch (err) {
-      setKycMsg("خطا در ارتباط با سرور.");
-    } finally {
-      setKycSubmitting(false);
-    }
   };
 
   const handleCancelOrder = async (tracking_code) => {
@@ -578,7 +478,7 @@ export default function UserPanelPage() {
     const award = Number(data.profile_completion_award || 0);
     setProfileSuccess(
       award > 0
-        ? `آواتار ذخیره شد و ${award.toLocaleString("fa-IR")} کوین جایزه تکمیل پروفایل گرفتید.`
+        ? `آواتار ذخیره شد و ${award.toLocaleString("fa-IR")} الماس جایزه تکمیل پروفایل گرفتید.`
         : "تصویر پروفایل با موفقیت به‌روزرسانی شد."
     );
   };
@@ -659,7 +559,7 @@ export default function UserPanelPage() {
       const award = Number(data.profile_completion_award || 0);
       setProfileSuccess(
         award > 0
-          ? `پروفایل ذخیره شد و ${award.toLocaleString("fa-IR")} کوین جایزه تکمیل پروفایل گرفتید.`
+          ? `پروفایل ذخیره شد و ${award.toLocaleString("fa-IR")} الماس جایزه تکمیل پروفایل گرفتید.`
           : "پروفایل با موفقیت به‌روزرسانی شد."
       );
     } catch (err) {
@@ -681,7 +581,7 @@ export default function UserPanelPage() {
       return;
     }
     if (typeof window === "undefined") return;
-    const lastCelebrated = window.localStorage.getItem("jinxfamily_last_celebration");
+    const lastCelebrated = window.localStorage.getItem("nubix_last_celebration");
     if (lastCelebrated === completed.tracking_code) {
       setShowCelebration(false);
       return;
@@ -791,11 +691,8 @@ export default function UserPanelPage() {
   const TABS = [
     { id: "profile", label: "پروفایل من", icon: "👤" },
     { id: "orders", label: "سفارش‌های من", icon: "🧾", badge: ordersCount },
-    { id: "listings", label: "آگهی‌های من", icon: "📦" },
-    { id: "wallet", label: "کیف پول من", icon: "💳" },
-    { id: "wishlist", label: "علاقه‌مندی‌ها", icon: "🩷", badge: wishlistItems.length },
-    { id: "verification", label: "احراز هویت", icon: "🛡️" },
-    { id: "club", label: "کلوپ کوین", icon: "🪙" },
+    { id: "tickets", label: "تیکت‌های پشتیبانی", icon: "🎫", badge: ticketsUnreadCount },
+    { id: "club", label: "کلوپ الماس", icon: "💎" },
     { id: "cart", label: "سبد خرید", icon: "🛒", badge: cartCount },
   ];
 
@@ -817,7 +714,7 @@ export default function UserPanelPage() {
             </div>
             <div className="account-hero__meta">
               <p className="kicker light">حساب کاربری</p>
-              <h2>{displayName || user?.name || "کاربر جینکس فمیلی"}</h2>
+              <h2>{displayName || user?.name || "کاربر نوبیکس"}</h2>
               <div className="pill-row">
                 {displayPhone && <span className="pill">{displayPhone}</span>}
                 {user?.email && <span className="pill subtle">{user.email}</span>}
@@ -832,16 +729,12 @@ export default function UserPanelPage() {
               <span className="hstat__label">سفارش‌ها</span>
               <span className="hstat__value">{ordersCount.toLocaleString("fa-IR")}</span>
             </div>
-            <Link href="/panel/user/listings" className="hstat" style={{ textDecoration: "none" }}>
-              <span className="hstat__label">آگهی‌های من 📦</span>
-              <span className="hstat__value" style={{ fontSize: "14px", color: "#00f2fe" }}>مشاهده</span>
-            </Link>
             <div className="hstat">
               <span className="hstat__label">سبد خرید</span>
               <span className="hstat__value">{cartCount.toLocaleString("fa-IR")}</span>
             </div>
             <Link href="/panel/user/referrals" className="hstat hstat--points">
-              <span className="hstat__label">کوین / امتیاز 🪙</span>
+              <span className="hstat__label">الماس / امتیاز 💎</span>
               <span className="hstat__value">{(user?.points_balance || 0).toLocaleString("fa-IR")}</span>
             </Link>
           </div>
@@ -963,7 +856,7 @@ export default function UserPanelPage() {
                     <h4>یک آواتار برای خودت انتخاب کن</h4>
                     <p className="avatar-lab__desc">
                       پروفایل کامل با نام، ایمیل و آواتار، یک‌بار
-                      <strong> ۲۰ کوین </strong>
+                      <strong> ۲۰ الماس </strong>
                       جایزه می‌گیرد.
                     </p>
                     {needsProfileCompletion && (
@@ -1055,7 +948,7 @@ export default function UserPanelPage() {
                 <label className={`avatar-upload ${avatarSaving ? "busy" : ""}`}>
                   <input
                     type="file"
-                    accept="image/*,.png,.jpg,.jpeg,.gif,.webp,.bmp,.heic,.heif,.svg"
+                    accept="image/*"
                     disabled={avatarSaving}
                     onChange={(e) => handleAvatarFile(e.target.files?.[0])}
                   />
@@ -1115,128 +1008,17 @@ export default function UserPanelPage() {
                               </div>
                               <span className="order-date">{formatDate(o.created_at)}</span>
                             </div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="order-title">{o.first_item_name || "سفارش"}</div>
-                          <div className="muted-sm">{formatDate(o.created_at)}</div>
-                        </div>
-                        <div className="order-amount">
-                          <div className="price">{o.amount.toLocaleString("fa-IR")} تومان</div>
-                          {o.diamonds_used > 0 && (
-                            <div className="muted-xs">
-                              تخفیف کوین: {o.diamonds_used.toLocaleString("fa-IR")} 🪙
-                            </div>
-                          )}
-                      </div>
-                    </div>
-
-                      {/* Cute Status Timeline Widget */}
-                      <div className="order-timeline" style={{ marginTop: "16px", padding: "16px", background: "rgba(255,255,255,0.01)", borderRadius: "12px", border: "1px solid var(--line)", direction: "rtl" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", position: "relative", marginBottom: "8px" }}>
-                          
-                          {/* Line background */}
-                          <div style={{
-                            position: "absolute",
-                            top: "14px",
-                            left: "10%",
-                            right: "10%",
-                            height: "3px",
-                            background: o.status === "completed" || o.status === "processed"
-                              ? "linear-gradient(90deg, var(--primary) 0%, var(--primary) 100%)"
-                              : o.status === "pending"
-                                ? "#3f3f46"
-                                : "linear-gradient(90deg, var(--primary) 0%, #3f3f46 100%)",
-                            zIndex: 1
-                          }} />
-
-                          {/* Step 1: Paid */}
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 2, width: "30%" }}>
-                            <div style={{
-                              width: "30px",
-                              height: "30px",
-                              borderRadius: "50%",
-                              background: o.status !== "pending" && o.status !== "canceled" ? "var(--primary)" : "#27272a",
-                              color: "#fff",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              border: "3px solid var(--card)"
-                            }}>
-                              {o.status !== "pending" && o.status !== "canceled" ? "✓" : "۱"}
-                            </div>
-                            <span style={{ fontSize: "12px", fontWeight: "bold", marginTop: "4px", color: o.status !== "pending" && o.status !== "canceled" ? "var(--text)" : "var(--muted)" }}>پرداخت شد 🩷</span>
-                          </div>
-
-                          {/* Step 2: Processing */}
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 2, width: "30%" }}>
-                            <div style={{
-                              width: "30px",
-                              height: "30px",
-                              borderRadius: "50%",
-                              background: ["processing", "paid", "registered", "needs_2fa", "needs_tr_region", "invalid_info", "completed", "processed"].includes(o.status) ? "var(--primary)" : "#27272a",
-                              color: "#fff",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              border: "3px solid var(--card)"
-                            }}>
-                              {["completed", "processed"].includes(o.status) ? "✓" : "۲"}
-                            </div>
-                            <span style={{ fontSize: "12px", fontWeight: "bold", marginTop: "4px", color: ["processing", "paid", "registered", "needs_2fa", "needs_tr_region", "invalid_info", "completed", "processed"].includes(o.status) ? "var(--text)" : "var(--muted)" }}>
-                              {o.items && o.items.some(it => it.g4a4_variation_id) ? "ارسال به درگاه ⚡" : "در حال انجام ⚡"}
-                            </span>
-                          </div>
-
-                          {/* Step 3: Completed */}
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 2, width: "30%" }}>
-                            <div style={{
-                              width: "30px",
-                              height: "30px",
-                              borderRadius: "50%",
-                              background: o.status === "completed" || o.status === "processed" ? "var(--primary)" : "#27272a",
-                              color: "#fff",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              border: "3px solid var(--card)"
-                            }}>
-                              {o.status === "completed" || o.status === "processed" ? "✓" : "۳"}
-                            </div>
-                            <span style={{ fontSize: "12px", fontWeight: "bold", marginTop: "4px", color: o.status === "completed" || o.status === "processed" ? "var(--text)" : "var(--muted)" }}>تحویل شد 🎉</span>
-                          </div>
-
-                        </div>
-
-                        {/* Extra Status Notifications / G4A4 / Gifting Messages */}
-                        <div style={{ marginTop: "12px", fontSize: "12px", textAlign: "center", color: "var(--muted)" }}>
-                          {o.items && o.items.map((it, idx) => {
-                            if (it.g4a4_variation_id) {
-                              const g4StatusMap = {
-                                "pending": "در انتظار ارسال به درگاه ریسلر",
-                                "processing": "در حال تامین توسط درگاه ریسلر ⚡",
-                                "completed": "تامین خودکار با موفقیت انجام شد ✦",
-                                "failed": "ارسال خودکار ناموفق؛ پشتیبانی بررسی می‌کند."
-                              };
-                              return (
-                                <div key={idx} style={{ marginTop: "4px", color: "var(--accent)" }}>
-                                  📦 وضعیت کوین/آیتم زنده: <strong>{g4StatusMap[it.g4a4_status] || it.g4a4_status || "در حال آماده‌سازی"}</strong>
+                            <div className="order-thumbnail">
+                              {o.first_item_image ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={o.first_item_image} alt={o.first_item_name || "محصول"} />
+                              ) : (
+                                <div className="order-thumb-fallback">
+                                  {(o.first_item_name || "سفارش")?.[0] || "?"}
                                 </div>
-                              );
-                            } else {
-                              return (
-                                <div key={idx} style={{ marginTop: "4px" }}>
-                                  🎁 وضعیت آیتم: <strong>جینکسی داره برات می‌فرسته 😉</strong>
-                                </div>
-                              );
-                            }
-                          })}
+                              )}
+                            </div>
+                          </div>
                         </div>
 
                         {isOutsideWorkingHours(o.created_at) && ['paid', 'registered', 'processing', 'pending'].includes(o.status) && (
@@ -1427,285 +1209,312 @@ export default function UserPanelPage() {
                           </div>
                         )}
                       </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          )}
 
-                      {o.can_cancel && (
-                        <div className="order-card__actions">
-                          <button
-                            className="btn-cancel"
-                            onClick={() => handleCancelOrder(o.tracking_code)}
-                            disabled={cancellingOrder === o.tracking_code}
+          {activeTab === "tickets" && (
+            <section className="card section tickets-section-main">
+              {/* Header Hero Banner */}
+              <div className="tickets-hero-banner">
+                <div className="hero-text-side">
+                  <span className="tickets-kicker">پشتیبانی اختصاصی نوبیکس</span>
+                  <h3 className="tickets-title">مرکز پاسخگویی و تیکت‌ها</h3>
+                  <p className="tickets-subtitle">
+                    پاسخگویی سریع و پیگیری سفارشات شما در کمترین زمان ممکن
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-create-ticket-hero"
+                  onClick={() => { setShowCreateTicketModal(true); setCreateTicketError(""); }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>ایجاد تیکت جدید</span>
+                </button>
+              </div>
+
+              {/* Create Ticket Glass Modal */}
+              {showCreateTicketModal && (
+                <div className="modal-backdrop-glass" onClick={(e) => { if (e.target === e.currentTarget) setShowCreateTicketModal(false); }}>
+                  <div className="create-ticket-modal-card">
+                    <div className="modal-top-bar">
+                      <div className="modal-title-group">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9"/>
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                        <h4>ثبت تیکت پشتیبانی جدید</h4>
+                      </div>
+                      <button type="button" className="btn-close-modal" onClick={() => setShowCreateTicketModal(false)}>✕</button>
+                    </div>
+
+                    <form onSubmit={handleCreateTicketSubmit} className="ticket-modal-form">
+                      <div className="t-form-group">
+                        <label>موضوع یا عنوان تیکت <span className="req">*</span></label>
+                        <input
+                          type="text"
+                          className="t-input-styled"
+                          placeholder="مثال: سوال درباره اطلاعات ورود به اکانت"
+                          value={newTicketSubject}
+                          onChange={(e) => setNewTicketSubject(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="t-form-group">
+                        <label>ارتباط با سفارش (اختیاری)</label>
+                        <select
+                          className="t-select-styled"
+                          value={newTicketTracking}
+                          onChange={(e) => setNewTicketTracking(e.target.value)}
+                        >
+                          <option value="">-- بدون ارتباط با سفارش خاص --</option>
+                          {orders.map((o) => (
+                            <option key={o.id} value={o.tracking_code}>
+                              سفارش #{o.tracking_code} ({o.first_item_name || "محصول"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="t-form-group">
+                        <label>شرح کامل پیام شما <span className="req">*</span></label>
+                        <textarea
+                          rows={4}
+                          className="t-textarea-styled"
+                          placeholder="توضیحات و مشخصات یا سوال خود را با جزئیات وارد کنید..."
+                          value={newTicketMessage}
+                          onChange={(e) => setNewTicketMessage(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      {createTicketError && <div className="t-error-alert">⚠️ {createTicketError}</div>}
+
+                      <div className="t-modal-footer">
+                        <button type="submit" className="btn-submit-t" disabled={submittingNewTicket}>
+                          {submittingNewTicket ? "در حال ثبت تیکت..." : "🚀 ثبت و ارسال تیکت"}
+                        </button>
+                        <button type="button" className="btn-cancel-t" onClick={() => setShowCreateTicketModal(false)}>
+                          انصراف
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Master-Detail Split Dashboard Layout */}
+              <div className="tickets-split-dashboard">
+                {/* Left Side: Ticket List */}
+                <div className={`tickets-sidebar-column ${activeTicketId ? "hide-on-mobile" : ""}`}>
+                  <div className="sidebar-list-header">
+                    <h4>تیکت‌های شما ({userTickets.length})</h4>
+                  </div>
+
+                  {userTickets.length === 0 ? (
+                    <div className="tickets-empty-box">
+                      <div className="empty-icon-wrapper" style={{ display: "inline-flex", padding: "16px", borderRadius: "20px", background: "color-mix(in srgb, var(--primary) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--primary) 20%, transparent)", marginBottom: "14px" }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>
+                          <path d="M12 5v14"/>
+                        </svg>
+                      </div>
+                      <h5>تیکتی ثبت نشده است</h5>
+                      <p>چنانچه سوالی دارید یا مشکلی در سفارش وجود دارد تیکت ارسال کنید.</p>
+                      <button
+                        type="button"
+                        className="btn-create-first-ticket"
+                        onClick={() => setShowCreateTicketModal(true)}
+                      >
+                        ثبت اولین تیکت
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="tickets-cards-scroll">
+                      {userTickets.map((t) => {
+                        const isSelected = activeTicketId === t.id;
+                        return (
+                          <div
+                            key={t.id}
+                            className={`ticket-nav-card ${isSelected ? "selected" : ""} ${t.unread ? "has-unread" : ""}`}
+                            onClick={() => openTicketDetail(t.id)}
                           >
-                            {cancellingOrder === o.tracking_code ? "در حال لغو..." : "لغو سفارش"}
+                            <div className="card-top-row">
+                              <span className="ticket-id-tag">#{t.id}</span>
+                              <span className={`status-pill status-${t.status}`}>
+                                {t.status_fa}
+                              </span>
+                            </div>
+
+                            <h5 className="card-subject-text">{t.subject}</h5>
+
+                            {t.is_auto_created && (
+                              <div className="auto-created-chip">
+                                🤖 تیکت خودکار (نیاز به اصلاح اطلاعات)
+                              </div>
+                            )}
+
+                            <p className="card-excerpt">{t.last_message || "بدون پیام"}</p>
+
+                            <div className="card-bottom-row">
+                              <span className="card-date-str">🕒 {formatDate(t.created_at)}</span>
+                              {t.tracking_code && (
+                                <span className="card-order-str">سفارش #{t.tracking_code}</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Side: Chat Detail View */}
+                <div className={`tickets-chat-column ${!activeTicketId ? "hide-on-mobile" : ""}`}>
+                  {!activeTicketId ? (
+                    <div className="no-ticket-selected-placeholder">
+                      <div className="placeholder-icon" style={{ width: "72px", height: "72px", borderRadius: "50%", background: "linear-gradient(135deg, color-mix(in srgb, var(--primary) 15%, transparent), color-mix(in srgb, var(--accent) 15%, transparent))", border: "1px solid color-mix(in srgb, var(--primary) 30%, transparent)", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                      </div>
+                      <h4>یک تیکت را برای مشاهده گفتگو انتخاب کنید</h4>
+                      <p>از لیست سمت راست روی هر تیکت کلیک کنید تا سابقه پیام‌ها و چت پشتیبانی نمایش داده شود.</p>
+                    </div>
+                  ) : loadingTicketDetail ? (
+                    <div className="chat-loading-state">
+                      <div className="spinner-dots"></div>
+                      <p>در حال بارگذاری گفتگو...</p>
+                    </div>
+                  ) : activeTicketData?.ticket ? (
+                    <div className="active-chat-frame">
+                      {/* Chat View Header */}
+                      <div className="chat-frame-header">
+                        <button
+                          type="button"
+                          className="btn-back-mobile"
+                          onClick={() => { setActiveTicketId(null); setActiveTicketData(null); }}
+                        >
+                          ← لیست تیکت‌ها
+                        </button>
+                        <div className="chat-header-main">
+                          <h4 className="chat-header-title">{activeTicketData.ticket.subject}</h4>
+                          <div className="chat-header-meta">
+                            <span className="meta-chip">کد تیکت: #{activeTicketData.ticket.id}</span>
+                            {activeTicketData.ticket.tracking_code && (
+                              <span className="meta-chip order-chip">
+                                📦 سفارش: #{activeTicketData.ticket.tracking_code}
+                              </span>
+                            )}
+                            <span className={`status-pill status-${activeTicketData.ticket.status}`}>
+                              {activeTicketData.ticket.status_fa}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Chat Messages Stream */}
+                      <div className="chat-messages-stream">
+                        {activeTicketData.messages.map((m) => {
+                          const isAdmin = m.sender_type === "admin";
+                          return (
+                            <div key={m.id} className={`chat-bubble-row ${isAdmin ? "admin-side" : "user-side"}`}>
+                              <div className="avatar-wrapper">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={m.sender_avatar || "/web_logo.webp"} alt={m.sender_name} />
+                                {isAdmin && <span className="online-indicator"></span>}
+                              </div>
+
+                              <div className="bubble-content-box">
+                                <div className="bubble-sender-title">
+                                  <span className="name">{m.sender_name}</span>
+                                  {isAdmin && <span className="verified-badge">پشتیبانی نوبیکس شاپ ✓</span>}
+                                </div>
+                                <div className="bubble-message-text">{m.message}</div>
+                                <div className="bubble-timestamp">{formatDate(m.created_at)}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Chat Reply Bottom Bar */}
+                      {activeTicketData.ticket.status !== "closed" ? (
+                        <div className="chat-reply-bar">
+                          <textarea
+                            rows={2}
+                            className="chat-reply-input"
+                            placeholder="پاسخ خود را بنویسید..."
+                            value={userReplyText}
+                            onChange={(e) => setUserReplyText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendUserReply();
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="btn-send-message"
+                            onClick={handleSendUserReply}
+                            disabled={submittingUserReply || !userReplyText.trim()}
+                          >
+                            {submittingUserReply ? (
+                              <span>ارسال...</span>
+                            ) : (
+                              <>
+                                <span>ارسال</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                              </>
+                            )}
                           </button>
+                        </div>
+                      ) : (
+                        <div className="chat-closed-notice">
+                          🔒 این تیکت توسط پشتیبانی بسته‌شده است. در صورت نیاز می‌توانید تیکت جدیدی ایجاد کنید.
                         </div>
                       )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
-          {activeTab === "listings" && (
-            <section className="card section" dir="rtl">
-              <div className="section-head">
-                <div>
-                  <p className="kicker">بازارچه اکانت</p>
-                  <h3>آگهی‌های ثبت شده من 📦</h3>
-                </div>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <Link href="/market" style={{ padding: "10px 18px", borderRadius: "10px", background: "rgba(0, 242, 254, 0.12)", border: "1.5px solid #00f2fe", color: "#00f2fe", textDecoration: "none", fontWeight: "900", fontSize: "13px" }}>
-                    🎮 مشاهده اکانت‌های وبسایت
-                  </Link>
-                  <Link href="/market/sell" className="btn-primary" style={{ padding: "10px 20px", borderRadius: "10px", fontSize: "13px", fontWeight: "900" }}>
-                    ثبت آگهی جدید +
-                  </Link>
-                </div>
-              </div>
-              <div style={{ background: "rgba(0, 242, 254, 0.05)", border: "1px dashed #00f2fe", borderRadius: "16px", padding: "32px", textAlign: "center", marginTop: "16px" }}>
-                <span style={{ fontSize: "40px", marginBottom: "12px", display: "block" }}>📋</span>
-                <h4 style={{ fontSize: "18px", fontWeight: "900", color: "#fff", marginBottom: "8px" }}>اینباکس و مدیریت آگهی‌های شما</h4>
-                <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "20px" }}>برای مشاهده وضعیت بررسی، تصاویر، قیمت و وضعیت انتشار آگهی‌های اکانت خود وارد بخش اختصاصی شوید.</p>
-                <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-                  <Link href="/market" style={{ display: "inline-flex", padding: "12px 24px", borderRadius: "12px", background: "rgba(0, 242, 254, 0.12)", border: "1.5px solid #00f2fe", color: "#00f2fe", fontWeight: "900", textDecoration: "none", fontSize: "14px", boxShadow: "0 0 12px rgba(0, 242, 254, 0.2)" }}>
-                    🎮 مشاهده اکانت‌های وبسایت
-                  </Link>
-                  <Link href="/panel/user/listings" className="gradient-btn" style={{ display: "inline-flex", padding: "12px 28px", borderRadius: "12px", color: "#080c1c", fontWeight: "900", textDecoration: "none", fontSize: "14px" }}>
-                    📦 اینباکس تمام آگهی‌های من ←
-                  </Link>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {activeTab === "wallet" && (
-            <section className="card section" dir="rtl">
-              <div className="section-head">
-                <div>
-                  <p className="kicker">کیف پول من</p>
-                  <h3>موجودی و تراکنش‌های مالی 💳</h3>
-                </div>
-              </div>
-              
-              <div className="wallet-container" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginTop: "16px" }}>
-                
-                {/* Balance & Top up Form */}
-                <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: "16px", padding: "24px" }}>
-                  <div style={{ marginBottom: "20px" }}>
-                    <div style={{ color: "var(--muted)", fontSize: "14px" }}>موجودی فعلی حساب:</div>
-                    <div style={{ fontSize: "32px", fontWeight: "900", color: "var(--primary)", marginTop: "8px" }}>
-                      {walletBalance.toLocaleString("fa-IR")} <span style={{ fontSize: "16px" }}>تومان</span>
-                    </div>
-                  </div>
-                  
-                  <hr style={{ border: "0", borderTop: "1px solid var(--line)", margin: "20px 0" }} />
-                  
-                  <form onSubmit={handleWalletTopup} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                    <h4 style={{ fontSize: "16px", fontWeight: "bold" }}>⚡ افزایش موجودی با درگاه پرداخت</h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <label style={{ fontSize: "12px", color: "var(--muted)" }}>مبلغ شارژ (تومان)</label>
-                      <input
-                        type="number"
-                        placeholder="مثلا ۵۰۰۰۰"
-                        value={topupAmount}
-                        onChange={(e) => setTopupAmount(e.target.value)}
-                        style={{
-                          background: "transparent",
-                          border: "1px solid var(--line)",
-                          color: "var(--text)",
-                          padding: "12px",
-                          borderRadius: "8px",
-                          fontSize: "16px",
-                          outline: "none"
-                        }}
-                      />
-                    </div>
-                    {topupMessage && (
-                      <div style={{ color: "#ef4444", fontSize: "13px", fontWeight: "bold" }}>
-                        {topupMessage}
-                      </div>
-                    )}
-                    <button
-                      type="submit"
-                      className="btn-primary"
-                      disabled={submittingTopup}
-                      style={{ padding: "14px" }}
-                    >
-                      {submittingTopup ? "در حال انتقال..." : "پرداخت و افزایش اعتبار"}
-                    </button>
-                  </form>
-                </div>
-                
-                {/* Transactions History */}
-                <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: "16px", padding: "24px", maxHeight: "400px", overflowY: "auto" }}>
-                  <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "16px" }}>📜 تاریخچه تراکنش‌ها</h4>
-                  {walletTxns.length === 0 ? (
-                    <div style={{ color: "var(--muted)", textAlign: "center", padding: "20px" }}>
-                      هیچ تراکنشی ثبت نشده است.
-                    </div>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                      {walletTxns.map((t) => (
-                        <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "10px", border: "1px solid var(--line)" }}>
-                          <div>
-                            <div style={{ fontSize: "14px", fontWeight: "bold" }}>{t.note || t.kind_display}</div>
-                            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>{formatDate(t.created_at)}</div>
-                          </div>
-                          <div style={{ fontSize: "15px", fontWeight: "bold", color: t.amount > 0 ? "#10b981" : "#ef4444" }}>
-                            {t.amount > 0 ? "+" : ""}{t.amount.toLocaleString("fa-IR")} تومان
-                          </div>
-                        </div>
-                      ))}
+                    <div className="no-ticket-selected-placeholder">
+                      <p>تیکت مورد نظر پیدا نشد.</p>
                     </div>
                   )}
                 </div>
-                
-              </div>
-            </section>
-          )}
-
-          {activeTab === "wishlist" && (
-            <section className="card section" dir="rtl">
-              <div className="section-head">
-                <div>
-                  <p className="kicker">علاقه‌مندی‌ها</p>
-                  <h3>لیست علاقه‌مندی‌های من 🩷</h3>
-                </div>
-              </div>
-              
-              {wishlistItems.length === 0 ? (
-                <div className="empty-state">
-                  <span className="empty-state__icon">🩷</span>
-                  <p>لیست علاقه‌مندی‌های شما خالی است.</p>
-                  <Link href="/" className="btn-ghost">مشاهده ویترین</Link>
-                </div>
-              ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "20px", marginTop: "16px" }}>
-                  {wishlistItems.map((item) => (
-                    <div key={item.id} style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: "20px", padding: "16px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "260px" }}>
-                      <div>
-                        <div style={{ width: "100%", height: "140px", borderRadius: "12px", background: "rgba(255,255,255,0.02)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          {item.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          ) : (
-                            <span style={{ fontSize: "32px" }}>🎮</span>
-                          )}
-                        </div>
-                        <h4 style={{ fontSize: "14px", fontWeight: "bold", marginTop: "12px", color: "var(--text)" }}>{item.name}</h4>
-                      </div>
-                      
-                      <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
-                        {item.type === "catalog" ? (
-                          <Link href={`/product/${item.slug}`} className="btn-primary" style={{ flex: "1", textAlign: "center", padding: "8px 0", fontSize: "12px" }}>
-                            مشاهده محصول
-                          </Link>
-                        ) : (
-                          <Link href="/coins" className="btn-primary" style={{ flex: "1", textAlign: "center", padding: "8px 0", fontSize: "12px" }}>
-                            خرید کوین
-                          </Link>
-                        )}
-                        <button
-                          onClick={() => handleRemoveWishlist(item.product_id)}
-                          style={{ background: "rgba(239, 68, 68, 0.12)", color: "#ef4444", border: "none", borderRadius: "10px", width: "36px", height: "36px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
-          {activeTab === "verification" && (
-            <section className="card section" dir="rtl">
-              <div className="section-head">
-                <div>
-                  <p className="kicker">احراز هویت</p>
-                  <h3>تایید هویت و مدارک 🛡️</h3>
-                </div>
               </div>
 
-              {kycStatus === "verified" && (
-                <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "16px", padding: "24px", color: "#10b981", display: "flex", gap: "12px", alignItems: "center" }}>
-                  <span style={{ fontSize: "28px" }}>✓</span>
-                  <div>
-                    <h4 style={{ fontWeight: "900", margin: 0 }}>هویت شما تایید شده است.</h4>
-                    <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--muted)" }}>کد ملی ثبت شده: {kycCode}</p>
-                  </div>
-                </div>
-              )}
-
-              {kycStatus === "pending" && (
-                <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "16px", padding: "24px", color: "#f59e0b", display: "flex", gap: "12px", alignItems: "center" }}>
-                  <span style={{ fontSize: "28px" }}>⏳</span>
-                  <div>
-                    <h4 style={{ fontWeight: "900", margin: 0 }}>مدارک شما در انتظار بررسی ادمین است.</h4>
-                    <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--muted)" }}>کد ملی ارسال شده: {kycCode}</p>
-                  </div>
-                </div>
-              )}
-
-              {(kycStatus === "unverified" || kycStatus === "rejected") && (
-                <form onSubmit={handleKycSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "16px" }}>
-                  {kycStatus === "rejected" && (
-                    <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "12px", padding: "16px", color: "#ef4444" }}>
-                      <strong>مدارک قبلی شما رد شد:</strong> {kycRejectReason}
-                    </div>
-                  )}
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <label style={{ fontSize: "13px", fontWeight: "bold" }}>کد ملی ۱۰ رقمی</label>
-                    <input
-                      type="text"
-                      placeholder="مثال: ۱۲۳۴۵۶۷۸۹۰"
-                      maxLength={10}
-                      value={kycCode}
-                      onChange={(e) => setKycCode(e.target.value)}
-                      required
-                      style={{ padding: "12px", borderRadius: "10px", border: "1px solid var(--line)", background: "transparent", color: "var(--text)", maxWidth: "300px" }}
-                    />
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <label style={{ fontSize: "13px", fontWeight: "bold" }}>تصویر کارت ملی</label>
-                    <input
-                      type="file"
-                      accept="image/*,.png,.jpg,.jpeg,.gif,.webp,.bmp,.heic,.heif,.svg"
-                      onChange={(e) => setKycFile(e.target.files[0])}
-                      required={!kycCardUrl}
-                      style={{ padding: "10px 0" }}
-                    />
-                    {kycCardUrl && (
-                      <div style={{ fontSize: "11px", color: "var(--muted)" }}>
-                        تصویر قبلاً بارگذاری شده است. در صورت تمایل می‌توانید فایل جدید انتخاب کنید.
-                      </div>
-                    )}
-                  </div>
-
-                  {kycMsg && <div style={{ fontSize: "13px", color: "var(--primary)", fontWeight: "bold" }}>{kycMsg}</div>}
-
-                  <button
-                    type="submit"
-                    className="gradient-btn"
-                    disabled={kycSubmitting}
-                    style={{ maxWidth: "200px", padding: "12px 24px", border: "none", color: "#fff", fontWeight: "900", borderRadius: "10px", cursor: "pointer" }}
-                  >
-                    {kycSubmitting ? "در حال ارسال..." : "ارسال جهت بررسی"}
-                  </button>
-                </form>
-              )}
+              {/* Floating Action Button (FAB) for Mobile */}
+              <button
+                type="button"
+                className="fab-create-ticket-mobile"
+                onClick={() => { setShowCreateTicketModal(true); setCreateTicketError(""); }}
+                title="ایجاد تیکت جدید"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
             </section>
           )}
-
           {activeTab === "club" && (
             <section className="card section">
               <div className="section-head">
                 <div>
                   <p className="kicker">کلوپ مشتریان</p>
-                  <h3>تبدیل کوین و کسب پورسانت 🪙</h3>
+                  <h3>تبدیل الماس و کسب پورسانت 💎</h3>
                 </div>
               </div>
 
@@ -1722,14 +1531,14 @@ export default function UserPanelPage() {
               <div className="club-grid" dir="rtl">
                 {/* Exchange */}
                 <div className="club-col">
-                  <h4 className="club-col__title"><span>💸</span> تبدیل کوین به کد تخفیف</h4>
+                  <h4 className="club-col__title"><span>💸</span> تبدیل الماس به کد تخفیف</h4>
                   <p className="club-col__desc">
-                    با تبدیل کوین‌های خود به کد تخفیف، از خریدهایتان تخفیف‌های شگفت‌انگیز بگیرید. نرخ تبدیل: هر ۳۵۰ کوین معادل ۱۱۰,۰۰۰ تومان تخفیف بدون حداقل خرید است.
+                    با تبدیل الماس‌های خود به کد تخفیف، از خریدهایتان تخفیف‌های شگفت‌انگیز بگیرید. نرخ تبدیل: هر ۳۵۰ الماس معادل ۱۱۰,۰۰۰ تومان تخفیف بدون حداقل خرید است.
                   </p>
 
                   <div className="club-stack">
                     <div className="club-field">
-                      <label>تعداد کوین برای تبدیل (حداقل ۳۵۰)</label>
+                      <label>تعداد الماس برای تبدیل (حداقل ۳۵۰)</label>
                       <div className="club-input-wrap">
                         <input
                           type="number"
@@ -1739,7 +1548,7 @@ export default function UserPanelPage() {
                           onChange={(e) => setExchangeAmount(Math.max(0, Number(e.target.value) || 0))}
                           className="club-input"
                         />
-                        <span className="club-input__icon">🪙</span>
+                        <span className="club-input__icon">💎</span>
                       </div>
                     </div>
 
@@ -1758,24 +1567,30 @@ export default function UserPanelPage() {
                       {exchanging
                         ? "در حال تبدیل..."
                         : (user?.points_balance || 0) < exchangeAmount
-                          ? `به ${(exchangeAmount - (user?.points_balance || 0)).toLocaleString("fa-IR")} کوین دیگر نیاز دارید`
-                          : `تبدیل ${exchangeAmount.toLocaleString("fa-IR")} کوین`}
+                          ? `به ${(exchangeAmount - (user?.points_balance || 0)).toLocaleString("fa-IR")} الماس دیگر نیاز دارید`
+                          : `تبدیل ${exchangeAmount.toLocaleString("fa-IR")} الماس`}
                     </button>
                   </div>
                 </div>
 
                 {/* Referral */}
                 <div className="club-col">
-                  <h4 className="club-col__title"><span>🤝</span> کسب پورسانت و کوین رایگان</h4>
+                  <h4 className="club-col__title"><span>🤝</span> کسب الماس با دعوت دوستان</h4>
                   <p className="club-col__desc">
-                    لینک یا کد دعوت اختصاصی خود را برای دوستانتان بفرستید. در صورتی که با کد شما در سایت ثبت‌نام کنند و <strong>خرید انجام دهند</strong>، پورسانت به صورت کوین به حساب شما اضافه می‌شود.
+                    لینک یا کد دعوت را برای دوستانتان بفرستید. وقتی با کد شما <strong>ثبت‌نام</strong> کنند و به{" "}
+                    <strong>{REFERRAL_MILESTONE_COUNT.toLocaleString("fa-IR")} نفر</strong> برسید،{" "}
+                    <strong>{REFERRAL_MILESTONE_POINTS.toLocaleString("fa-IR")} الماس</strong> یک‌جا می‌گیرید.
                   </p>
 
                   <div className="club-note">
                     <span className="club-note__title">🎁 قوانین دعوت:</span>
                     <ul>
-                      <li>دریافت <strong>۱۵ تا ۵۰ کوین رایگان</strong> به ازای اولین خرید موفق هر دوست دعوت‌شده.</li>
-                      <li>دریافت <strong>کد تخفیف ۱۵۰,۰۰۰ تومانی بدون حداقل خرید</strong> به محض رسیدن به ۱۰ دعوت موفق.</li>
+                      <li>فقط با <strong>ثبت‌نام موفق</strong> با کد/لینک شما دعوت شمرده می‌شود.</li>
+                      <li>
+                        با رسیدن به{" "}
+                        <strong>{REFERRAL_MILESTONE_COUNT.toLocaleString("fa-IR")} دعوت موفق</strong>،{" "}
+                        <strong>{REFERRAL_MILESTONE_POINTS.toLocaleString("fa-IR")} الماس</strong> یک‌جا به حسابتان اضافه می‌شود.
+                      </li>
                     </ul>
                   </div>
 
@@ -1895,8 +1710,8 @@ export default function UserPanelPage() {
                           <div className="club-stat__label">دعوت‌های موفق</div>
                         </div>
                         <div className="club-stat">
-                          <div className="club-stat__value">{referralData.points_earned.toLocaleString("fa-IR")} 🪙</div>
-                          <div className="club-stat__label">کوین‌های دریافتی</div>
+                          <div className="club-stat__value">{referralData.points_earned.toLocaleString("fa-IR")} 💎</div>
+                          <div className="club-stat__label">الماس‌های دریافتی</div>
                         </div>
                       </div>
                       <Link href="/panel/user/referrals" className="btn-ghost btn-ghost--full">
@@ -2083,7 +1898,7 @@ export default function UserPanelPage() {
             <button className="celebration-close" onClick={handleCelebrationClose} aria-label="بستن">
               ×
             </button>
-            <div className="celebration-badge">تبریک از جینکس فمیلی</div>
+            <div className="celebration-badge">تبریک از نوبیکس</div>
             <h3>مبارک! سفارش #{celebrationOrder.tracking_code} تکمیل شد</h3>
             <p>
               سفارش شما توسط تیم پشتیبانی تکمیل شد. وضعیت لحظه‌ای سفارش را با کلیک روی دکمه زیر مشاهده کنید؛ همچنین به محض فعال‌سازی در پنل، از طریق پیامک و ایمیل مطلع خواهید شد.
