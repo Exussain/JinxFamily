@@ -67,6 +67,9 @@ export default function HeroSlider({ heroProducts = [] }) {
     window.dispatchEvent(new CustomEvent("cart:add"));
   };
 
+  // Duplicate items array during auto-scroll for seamless infinite loop
+  const displayProducts = autoScrollActive && products.length > 0 ? [...products, ...products] : products;
+
   return (
     <section className="jinxfamily-hero-slider" aria-labelledby="daily-drop-title">
       <div className="jf-offer-noise" aria-hidden="true" />
@@ -142,3 +145,4 @@ export default function HeroSlider({ heroProducts = [] }) {
     </section>
   );
 }
+

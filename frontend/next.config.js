@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: ['172.24.37.105', 'localhost', '127.0.0.1', '0.0.0.0'],
   distDir: process.env.NEXT_DIST_DIR || '.next',
   images: {
     remotePatterns: [
@@ -11,13 +12,11 @@ const nextConfig = {
   turbopack: {},
   webpack: (config, { dev }) => {
     if (dev) {
-      // Prevent Webpack from climbing up parent directories on Z: drive and hanging.
-      // Also ignore next.config.js itself to avoid false "config changed" restarts
-      // caused by unreliable file metadata on the network (Z:) drive.
       config.watchOptions = {
         ...config.watchOptions,
         ignored: [
           '**/node_modules/**',
+          '**/.next/**',
           '**/next.config.js',
           'Z:/root/!(Projects)/**',
           'Z:/root/Projects/!(JinxFamily)/**',
@@ -29,6 +28,19 @@ const nextConfig = {
     return config;
   },
   outputFileTracingRoot: __dirname,
+  images: {
+    qualities: [75, 85, 95],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'nubixshop.ir',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+      },
+    ],
+  },
   async redirects() {
     return [
       {
@@ -46,7 +58,7 @@ const nextConfig = {
       // /help was a stale duplicate of /faq; /lol pointed at a product that no
       // longer exists in the catalog.
       { source: '/help', destination: '/faq', permanent: true },
-      { source: '/lol', destination: '/', permanent: true },
+      { source: '/lol', destination: '/product/league-of-legends-rp', permanent: true },
       // Former alias routes that rendered /faq/* content with a canonical tag.
       // GSC kept reporting them as "Alternate page with proper canonical tag";
       // a 308 consolidates signals instead of serving duplicates.
@@ -64,6 +76,14 @@ const nextConfig = {
       { source: '/products/starterpack', destination: '/product/starterpack', permanent: true },
       { source: '/products/fortnite-starter-pack', destination: '/product/starterpack', permanent: true },
       { source: '/products/spotify', destination: '/product/spotify-subscription', permanent: true },
+      { source: '/product/frozenlegends', destination: '/product/frozen-legends', permanent: true },
+      { source: '/product/nubixshopirrocket-leaguecredits', destination: '/product/rocket-league-credits', permanent: true },
+      { source: '/products/lol_rp', destination: '/product/league-of-legends-rp', permanent: true },
+      { source: '/products/lol_rp_', destination: '/product/league-of-legends-rp', permanent: true },
+      { source: '/blog/unlink-xbox-from-epic-games', destination: '/guides/link-unlink', permanent: true },
+      { source: '/blog/category', destination: '/blog', permanent: true },
+      { source: '/quides/:path*', destination: '/guides/:path*', permanent: true },
+      { source: '/products/:slug', destination: '/product/:slug', permanent: true },
       { source: '/orders', destination: '/panel/user', permanent: true },
       { source: '/index.php', destination: '/', permanent: true },
       { source: '/feed', destination: '/blog/feed.xml', permanent: true },
@@ -91,6 +111,18 @@ const nextConfig = {
       {
         source: '/media/:path*',
         destination: 'http://127.0.0.1:8001/media/:path*',
+      },
+      {
+        source: '/emalls',
+        destination: 'http://127.0.0.1:8001/api/emalls',
+      },
+      {
+        source: '/emalls.json',
+        destination: 'http://127.0.0.1:8001/api/emalls.json',
+      },
+      {
+        source: '/emalls/products',
+        destination: 'http://127.0.0.1:8001/api/emalls/products',
       },
     ];
   },

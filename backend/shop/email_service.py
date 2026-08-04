@@ -315,11 +315,13 @@ def send_admin_new_order_email(tracking_code, order_items, total_amount, phone="
 </html>
 """
 
+        recipients = [ADMIN_NOTIFICATION_EMAIL]
+        cc_list = [ADMIN_NOTIFICATION_EMAIL_CC] if ADMIN_NOTIFICATION_EMAIL_CC else None
         sent = _send_email(
-            [ADMIN_NOTIFICATION_EMAIL],
+            recipients,
             f"سفارش جدید ثبت شد - {tracking_code}",
             html_content,
-            cc_list=[ADMIN_NOTIFICATION_EMAIL_CC],
+            cc_list=cc_list,
         )
         if sent:
             logger.info(f"Admin new order email sent for {tracking_code}")

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Navbar from '../../../components/Navbar';
+import { isOutsideWorkingHours } from '../../../lib/workingHours';
 
 export default function TrackClient({ code }) {
   const [order, setOrder] = useState(null);
@@ -61,6 +62,8 @@ export default function TrackClient({ code }) {
     }
   };
 
+  const showOutsideNotice = order && (order.is_outside_working_hours || (order.created_at && isOutsideWorkingHours(order.created_at)));
+
   return (
     <>
       <Navbar />
@@ -73,6 +76,20 @@ export default function TrackClient({ code }) {
           ) : (
             <div style={{ display: 'grid', gap: 12 }}>
               <h3>وضعیت سفارش</h3>
+              {showOutsideNotice && (
+                <div style={{
+                  padding: '12px 16px',
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(217, 119, 6, 0.08))',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  color: '#fbbf24',
+                  fontSize: 13,
+                  lineHeight: 1.8,
+                  direction: 'rtl'
+                }}>
+                  🌙 <strong>ثبت سفارش خارج از ساعت کاری:</strong> این سفارش خارج از ساعت کاری ثبت شده است و در ساعت کاری (<strong>۱۰ صبح تا ۱۲ شب</strong>) با <strong>اولویت زمان ثبت</strong> تکمیل می‌شود.
+                </div>
+              )}
               <div>
                 کد پیگیری: <b>{order.tracking_code}</b>
               </div>

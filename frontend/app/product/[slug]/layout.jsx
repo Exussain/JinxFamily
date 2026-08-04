@@ -1,4 +1,5 @@
 import { normalizeSlug } from '../../../lib/productSlug.mjs';
+import { categoryPathFromCode } from '../../../lib/productCategoryRoutes';
 
 import { SITE_ORIGIN } from '../../../lib/site.mjs';
 import Navbar from '../../../components/Navbar';
@@ -52,6 +53,7 @@ function brandFor(slug, product) {
   if (s.includes('spotify')) return 'Spotify';
   if (s.includes('telegram')) return 'Telegram';
   if (s.includes('gta')) return 'Rockstar Games';
+  if (cat === 'rocket_league' || s.includes('rocket-league')) return 'Psyonix';
   if (s.includes('استیم') || s.includes('steam')) return 'Steam';
   if (s.includes('پلی-استیشن') || s.includes('playstation') || s.includes('psn')) return 'PlayStation';
   if (s.includes('اپل') || s.includes('apple')) return 'Apple';
@@ -187,6 +189,8 @@ export default async function ProductLayout({ children, params }) {
             highPrice: String(maxPrice),
             offerCount: variantPrices.length,
             priceCurrency: 'IRR',
+            validFrom: new Date().toISOString().slice(0, 10),
+            priceValidUntil,
             availability,
             url: productUrl,
             hasMerchantReturnPolicy: RETURN_POLICY,
@@ -197,6 +201,7 @@ export default async function ProductLayout({ children, params }) {
               '@type': 'Offer',
               price: String(minPrice),
               priceCurrency: 'IRR',
+              validFrom: new Date().toISOString().slice(0, 10),
               priceValidUntil,
               availability,
               url: productUrl,

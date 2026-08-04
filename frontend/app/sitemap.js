@@ -98,24 +98,24 @@ export default async function sitemap() {
     { path: '/gta6', priority: 0.9, changeFrequency: 'daily' },
     { path: '/gemini', priority: 0.9, changeFrequency: 'weekly' },
     { path: '/lego', priority: 0.8, changeFrequency: 'weekly' },
+    { path: '/products', priority: 0.8, changeFrequency: 'daily' },
     { path: '/blog', priority: 0.7, changeFrequency: 'weekly' },
-    { path: '/category/fortnite', priority: 0.8, changeFrequency: 'weekly' },
-    { path: '/category/ai', priority: 0.8, changeFrequency: 'weekly' },
-    { path: '/category/giftcards', priority: 0.8, changeFrequency: 'weekly' },
-    { path: '/category/games', priority: 0.7, changeFrequency: 'weekly' },
-    { path: '/category/subscriptions', priority: 0.7, changeFrequency: 'weekly' },
     { path: '/faq', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/faq/about', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/faq/how-to-buy', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/faq/rules', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/faq/privacy', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/faq/contact', priority: 0.5, changeFrequency: 'monthly' },
-    { path: '/guides/disable-2fa', priority: 0.4, changeFrequency: 'monthly' },
-    { path: '/guides/link-unlink', priority: 0.4, changeFrequency: 'monthly' },
-    { path: '/guides/remove-restriction', priority: 0.4, changeFrequency: 'monthly' },
+    { path: '/guides/disable-2fa', priority: 0.6, changeFrequency: 'monthly' },
+    { path: '/guides/link-unlink', priority: 0.6, changeFrequency: 'monthly' },
+    { path: '/guides/remove-restriction', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/reseller', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/spin', priority: 0.4, changeFrequency: 'monthly' },
   ];
+
+  for (const code of PRODUCT_CATEGORY_CODES) {
+    staticRoutes.push({ path: categoryPathFromCode(code), priority: 0.8, changeFrequency: 'weekly' });
+  }
 
   // No fabricated lastModified on static routes — Google learns to distrust
   // sitemaps whose lastmod changes on every fetch.
@@ -145,6 +145,41 @@ export default async function sitemap() {
       changeFrequency: 'daily',
       priority: 0.8,
     });
+  }
+
+  // Ensure critical revenue and out-of-stock pages are always included,
+  // even if the backend API filters them out by default.
+  const EXPLICIT_SLUGS = [
+    'chatgpt-subscription',
+    'league-of-legends-rp',
+    'fortnite-music-pass',
+    'perfected-nature',
+    'frozen-legends',
+    'agency-renegades',
+    'skate-park',
+    'change-region-turkey',
+    'telegram-premium',
+    'discord-nitro',
+    'playstation-plus',
+    'xbox-game-pass',
+    'steam-gift-card',
+    'apple-gift-card',
+    'turkey-vcc',
+    'starterpack',
+    'summer-legends',
+    'minty-legends-pack',
+    'fortnite-battle-pass',
+    'spotify-subscription',
+  ];
+  const fetchedSlugs = new Set(products.map(p => p.slug));
+  for (const slug of EXPLICIT_SLUGS) {
+    if (!fetchedSlugs.has(slug) && !REDIRECTED_PRODUCT_SLUGS.has(slug)) {
+      entries.push({
+        url: `${BASE_URL}/product/${encodeURIComponent(slug)}`,
+        changeFrequency: 'daily',
+        priority: 0.8,
+      });
+    }
   }
 
   for (const { slug, updatedAt } of articles) {

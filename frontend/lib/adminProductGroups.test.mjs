@@ -13,13 +13,35 @@ const groups = groupAdminProducts(products);
 
 assert.deepEqual(groups.map((group) => group.key), [
   "fortnite",
+  "pubg",
+  "cod-mobile",
+  "clash-royale",
+  "clash-of-clans",
+  "brawl-stars",
+  "free-fire",
+  "valorant",
+  "rainbow-six",
+  "marvel-rivals",
+  "ping-reduction",
+  "mobile-games",
   "ai",
   "subscriptions",
-  "other-games",
+  "rocket-league",
+  "giftcards",
+  "games",
 ]);
 
-assert.deepEqual(groups.map((group) => group.count), [1, 1, 1, 2]);
-assert.deepEqual(groups.find((group) => group.key === "other-games").products.map((p) => p.slug), [
-  "gta6",
-  "steam-gift",
+assert.deepEqual(groups.map((group) => group.count), [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1]);
+assert.deepEqual(groups.find((group) => group.key === "giftcards").products.map((p) => p.slug), ["steam-gift"]);
+
+const activeSortGroups = groupAdminProducts([
+  { id: 10, name_fa: "آیتم غیرفعال الف", slug: "inactive-a", category: "FORTNITE", active: false },
+  { id: 11, name_fa: "آیتم فعال ی", slug: "active-z", category: "FORTNITE", active: true },
+  { id: 12, name_fa: "آیتم فعال ب", slug: "active-b", category: "FORTNITE", active: true },
+]);
+
+assert.deepEqual(activeSortGroups.find((group) => group.key === "fortnite").products.map((p) => p.slug), [
+  "active-b",
+  "active-z",
+  "inactive-a",
 ]);

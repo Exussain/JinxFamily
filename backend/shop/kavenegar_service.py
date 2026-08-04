@@ -462,6 +462,30 @@ class KavenegarService:
                 "template": template,
                 "type": "sms",
             }
+        elif template == "nubix-re-wronginfo":
+            # قالب reseller wrong info به صورت "❌همکار گرامی، اطلاعات یکی از اکانت های شما اشتباه می باشد. لطفا در اسرع وقت اقدام به اصلاح نمایید %token -نوبیکس شاپ" است.
+            # به جای %token مقدار همیشه ثابت https://vip-reseller.nubixshop.ir/reseller/orders را می‌فرستیم.
+            payload = {
+                "receptor": normalized,
+                "token": "https://vip-reseller.nubixshop.ir/reseller/orders",
+                "template": template,
+                "type": "sms",
+            }
+        elif template in ("nubixshop-wrong-details", "nubixshop-action-required"):
+            # قالب nubixshop-action-required / nubixshop-wrong-details: %token %token2 عزیز، سفارش شما نیاز به پشتیبانی دارد. لطفا به تیکت زیر مراجعه کنید %token3 نوبیکس شاپ
+            name_raw = (customer_name or "").strip()
+            parts = re.split(r"\s+", name_raw) if name_raw else []
+            first_name = _clean_token(parts[0]) if parts else "کاربر"
+            last_name = _clean_token(parts[1]) if len(parts) > 1 else "گرامی"
+            ticket_link = (status_fa or "https://nubixshop.ir/panel/user?tab=tickets").strip()
+            payload = {
+                "receptor": normalized,
+                "token": first_name or "کاربر",
+                "token2": last_name or "گرامی",
+                "token3": ticket_link,
+                "template": template,
+                "type": "sms",
+            }
         else:
             name_raw = (customer_name or "").strip()
             parts = re.split(r"\s+", name_raw) if name_raw else []

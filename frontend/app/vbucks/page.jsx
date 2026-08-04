@@ -4,7 +4,7 @@ import { fetchApiJson } from "../../lib/serverFetch.mjs";
 import Navbar from "../../components/Navbar";
 import '../globals.css';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const OG_DESCRIPTION = 'خرید وی‌باکس با بهترین قیمت و تحویل فوری — شارژ مستقیم و قانونی روی اکانت شما.';
 
@@ -39,7 +39,7 @@ export default async function VBucksPage() {
     path: "/vbucks",
     name: initialProductData?.name_fa || "وی‌باکس فورتنایت (V-Bucks)",
     description: "خرید وی‌باکس فورتنایت با بهترین قیمت و تحویل فوری — شارژ مستقیم و قانونی روی اکانت شما.",
-    image: initialProductData?.image_url,
+    image: initialProductData?.cover_16_9 || initialProductData?.image_url,
     priceToman: initialProductData?.min_price || initialProductData?.price,
     stats,
     brand: "Epic Games",

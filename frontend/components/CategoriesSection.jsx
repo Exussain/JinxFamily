@@ -2,6 +2,27 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { categoryPathFromCode } from '../lib/productCategoryRoutes';
+
+const categoryCodes = {
+  "فورتنایت": "FORTNITE",
+  "ولورانت": "VALORANT",
+  "بازی‌ها": "GAMES",
+  "هوش مصنوعی": "AI",
+  "راکت لیگ": "ROCKET_LEAGUE",
+  "کلش اف کلنز": "CLASH_OF_CLANS",
+  "کلش رویال": "CLASH_ROYALE",
+  "پابجی": "PUBG",
+  "کالاف دیوتی": "COD_MOBILE",
+  "براول استارز": "BRAWL_STARS",
+  "فری فایر": "FREE_FIRE",
+  "رینبو سیکس": "RAINBOW_SIX",
+  "مارول ریوالز": "MARVEL_RIVALS",
+  "سرویس کاهش پینگ": "PING_REDUCTION",
+  "بازی‌های موبایل": "MOBILE_GAMES",
+  "گیفت کارت‌ها": "GIFTCARDS",
+  "اشتراک‌ها": "SUBSCRIPTIONS",
+};
 
 const categoryData = {
   "فورتنایت": {
@@ -46,7 +67,12 @@ const categoryData = {
   },
 };
 
-export default function CategoriesSection({ categories = [] }) {
+export default function CategoriesSection({
+  categories = [],
+  variant = 'home',
+  className = '',
+  activeCategoryCode = '',
+}) {
   const [open, setOpen] = useState(false);
   const sp = useSearchParams();
   const pathname = usePathname();
@@ -267,13 +293,10 @@ export default function CategoriesSection({ categories = [] }) {
             <p>فورتنایت، هوش مصنوعی، گیفت کارت و بیشتر</p>
             <h2>دسته‌بندی محصولات جینکس فمیلی</h2>
           </div>
-          <button 
-            className="prominent-menu-btn" 
-            onClick={(e) => {
-              if (isDragging) return;
-              setOpen(true);
-            }} 
-            aria-label="نمایش همه دسته‌بندی‌ها"
+          <Link
+            href="/products"
+            className="prominent-menu-btn"
+            aria-label="مشاهده تمام دسته‌بندی‌ها در صفحه محصولات"
           >
             <span className="menu-btn-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -285,13 +308,14 @@ export default function CategoriesSection({ categories = [] }) {
             </span>
             <span className="menu-btn-text">
               <strong>مشاهده همه دسته‌بندی‌ها</strong>
-              <small>کلیک کنید تا منوی کامل را ببینید</small>
+              <small>جهت ورود به صفحه محصولات کلیک کنید</small>
             </span>
             <svg className="menu-btn-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
-          </button>
+          </Link>
         </div>
+      )}
 
         {/* Mobile Chips (only shown on mobile) */}
         <div
@@ -384,7 +408,7 @@ export default function CategoriesSection({ categories = [] }) {
       {open && (
         <>
           <div className="sidebar-overlay" onClick={() => setOpen(false)} />
-          <div className="sidebar-drawer">
+          <aside className="sidebar-drawer" aria-label="منوی دسته‌بندی محصولات">
             <div className="sidebar-header">
               <div className="sidebar-header-content">
                 <h3>دسته‌بندی محصولات</h3>
@@ -398,10 +422,10 @@ export default function CategoriesSection({ categories = [] }) {
               </button>
             </div>
             <div className="sidebar-content">
-              <div className="sidebar-category-list">
+              <nav className="sidebar-category-list" aria-label="لیست کامل دسته‌بندی‌ها">
                 <Link
-                  href="/"
-                  className={`sidebar-category-item${pathname === "/" && !activeCat ? ' active' : ''}`}
+                  href="/products"
+                  className={`sidebar-category-item${pathname === "/products" && !activeCat ? ' active' : ''}`}
                   onClick={() => setOpen(false)}
                 >
                   <span className="category-icon-img-wrapper" style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
@@ -418,19 +442,18 @@ export default function CategoriesSection({ categories = [] }) {
                     <polyline points="9 18 15 12 9 6"></polyline>
                   </svg>
                 </Link>
-                {categories.map((cat) => {
+                {targetCategories.map((cat) => {
                   const catData = categoryData[cat] || { icon: "/categories/category_fortnite.webp", gradient: "linear-gradient(135deg, #6366F1, #8B5CF6)" };
                   return (
                     <Link
                       key={cat}
                       href={categoryFilterHref(cat)}
-                      scroll={false}
                       className={`sidebar-category-item${isActiveCategory(cat) ? ' active' : ''}`}
                       onClick={() => setOpen(false)}
                     >
                       <span className="category-icon-img-wrapper" style={{ background: catData.gradient }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={catData.icon} alt={cat} className="category-icon-img" loading="lazy" decoding="async" />
+                        <img src={catData.icon} alt={`دسته‌بندی ${cat}`} className="category-icon-img" loading="lazy" decoding="async" />
                       </span>
                       <div className="category-info">
                         <span className="category-name">{cat}</span>
@@ -442,11 +465,11 @@ export default function CategoriesSection({ categories = [] }) {
                     </Link>
                   );
                 })}
-              </div>
+              </nav>
             </div>
-          </div>
+          </aside>
         </>
       )}
-    </>
+    </section>
   );
 }

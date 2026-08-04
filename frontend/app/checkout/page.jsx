@@ -107,8 +107,16 @@ function CheckoutPage() {
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscountCode, setAppliedDiscountCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState(0);
+  const [backendDiamondDiscount, setBackendDiamondDiscount] = useState(0);
+  const [backendDiamondsMax, setBackendDiamondsMax] = useState(null);
+  const [backendRefundCredit, setBackendRefundCredit] = useState(null);
+  const [backendRefundCreditMax, setBackendRefundCreditMax] = useState(null);
+  const [backendFinalAmount, setBackendFinalAmount] = useState(null);
+  const [refundCreditUse, setRefundCreditUse] = useState(0);
+  const [isValidating, setIsValidating] = useState(false);
   const [discountFlat, setDiscountFlat] = useState(0);
   const [discountMessage, setDiscountMessage] = useState('');
+  const [discountMessageKind, setDiscountMessageKind] = useState('');
   const [loading, setLoading] = useState(false);
   const [ackImportant, setAckImportant] = useState(false);
   const [showAckSection, setShowAckSection] = useState(true);
@@ -269,11 +277,75 @@ function CheckoutPage() {
     : (discountPercent > 0 ? Math.floor((baseTotal + rushFee) * discountPercent / 100) : 0);
   const subtotalAfterDiscount = Math.max(0, baseTotal + rushFee - discountAmount);
   const diamondsBalance = me?.points_balance || 0;
+  const refundCreditBalance = me?.refund_credit ?? backendRefundCredit ?? 0;
   const diamondsCap = Math.min(diamondsBalance, tomanToDiamondsCeil(subtotalAfterDiscount));
-  const diamondDiscount = diamondsUse >= MIN_DIAMONDS_TO_REDEEM
-    ? Math.min(diamondsToToman(diamondsUse), subtotalAfterDiscount)
-    : 0;
-  const finalTotal = Math.max(0, subtotalAfterDiscount - diamondDiscount);
+  const diamondsMaxAllowed = backendDiamondsMax == null
+    ? diamondsCap
+    : Math.min(diamondsCap, Math.max(0, Number(backendDiamondsMax) || 0));
+  const diamondDiscount = diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? backendDiamondDiscount : 0;
+  const refundCreditMax = backendRefundCreditMax == null
+    ? Math.min(refundCreditBalance, Math.max(0, subtotalAfterDiscount - diamondDiscount))
+    : Math.min(refundCreditBalance, Math.max(0, Number(backendRefundCreditMax) || 0));
+  const refundCreditDiscount = Math.min(refundCreditUse, refundCreditMax);
+  const finalTotal = Math.max(0, subtotalAfterDiscount - diamondDiscount - refundCreditDiscount);
+  const diamondsLimitExceeded = diamondsUse > diamondsMaxAllowed;
+
+  const handleRefundCreditToggle = () => {
+    setRefundCreditUse(currentUse => (currentUse > 0 ? 0 : refundCreditMax));
+  };
+
+  const handleDiamondToggle = () => {
+    setDiamondsUse(currentUse => nextDiamondUse(currentUse, diamondsBalance, diamondsMaxAllowed));
+    const nextMessage = discountMessageAfterDiamondToggle(discountMessageKind, discountMessage);
+    setDiscountMessage(nextMessage);
+    if (!nextMessage) setDiscountMessageKind('');
+  };
+
+  useEffect(() => {
+    let active = true;
+    const validateCartState = async () => {
+      if (!items || items.length === 0) return;
+      setIsValidating(true);
+      setBackendFinalAmount(null);
+      try {
+        const validationItems = items.map((it) => ({
+          product_id: it.product_id || it.id,
+          slug: it.slug,
+          variant_id: it.variant_id,
+          quantity: it.quantity || 1,
+        }));
+        const res = await fetch(`${apiBase}/api/discounts/validate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: appliedDiscountCode || undefined,
+            items: validationItems,
+            rush_order: rushOrder,
+            rush_fee: rushFee,
+            diamonds_use: diamondsUse,
+            refund_credit_use: refundCreditUse,
+          }),
+        });
+        if (res.ok && active) {
+          const data = await res.json();
+          setBackendDiamondDiscount(data.diamond_discount || 0);
+          if (typeof data.diamonds_max === "number") setBackendDiamondsMax(data.diamonds_max);
+          if (typeof data.refund_credit_balance === "number") {
+            setBackendRefundCredit(data.refund_credit_balance);
+          }
+          if (typeof data.refund_credit_max === "number") setBackendRefundCreditMax(data.refund_credit_max);
+          if (typeof data.final_amount === "number") setBackendFinalAmount(data.final_amount);
+        }
+      } catch (err) {
+        console.error("Failed to validate cart state:", err);
+      } finally {
+        if (active) setIsValidating(false);
+      }
+    };
+
+    validateCartState();
+    return () => { active = false; };
+  }, [items, rushOrder, appliedDiscountCode, diamondsUse, refundCreditUse, rushFee]);
 
   // Check if name is required but not provided
   const nameRequired = needsName && !fullName.trim();
@@ -291,10 +363,13 @@ function CheckoutPage() {
         : "زمان تقریبی انجام: ۱۵ دقیقه تا ۸ ساعت کاری");
 
   useEffect(() => {
-    if (diamondsUse > diamondsCap) {
-      setDiamondsUse(diamondsCap);
+    if (diamondsUse > diamondsMaxAllowed) {
+      setDiamondsUse(diamondsMaxAllowed);
     }
-  }, [diamondsCap, diamondsUse]);
+    if (refundCreditUse > refundCreditMax) {
+      setRefundCreditUse(refundCreditMax);
+    }
+  }, [diamondsMaxAllowed, diamondsUse, refundCreditMax, refundCreditUse]);
 
   useEffect(() => {
     if (discountCode && !discountOpen) {
@@ -438,6 +513,7 @@ function CheckoutPage() {
         const draft = JSON.parse(raw);
         if (draft.form) setForm((prev) => ({ ...prev, ...draft.form }));
         if (typeof draft.diamondsUse === "number") setDiamondsUse(draft.diamondsUse);
+        if (typeof draft.refundCreditUse === "number") setRefundCreditUse(draft.refundCreditUse);
         if (typeof draft.rushOrder === "boolean") setRushOrder(draft.rushOrder);
         if (typeof draft.contactEmail === "string") setContactEmail(draft.contactEmail);
         if (typeof draft.discountCode === "string") setDiscountCode(draft.discountCode);
@@ -456,6 +532,7 @@ function CheckoutPage() {
         JSON.stringify({
           form,
           diamondsUse,
+          refundCreditUse,
           rushOrder,
           contactEmail,
           discountCode,
@@ -637,9 +714,13 @@ function CheckoutPage() {
       });
       const payData = await res.json().catch(() => ({}));
 
-      if (res.ok && payData?.success && payData?.payment_url) {
+      if (res.ok && payData?.success && payData?.payment_required && payData?.payment_url) {
         window.location.href = payData.payment_url;
         return true;
+      }
+
+      if (res.ok && payData?.success && payData?.payment_required === false) {
+        return false;
       }
 
       setError(payData?.message || 'خطا در ایجاد لینک پرداخت');
@@ -651,11 +732,24 @@ function CheckoutPage() {
   };
 
   const applyDiscountCode = async () => {
-    if (!discountCode.trim()) {
+    const codeToApply = discountCode.trim().toUpperCase();
+    if (!codeToApply) {
       setDiscountMessage('کد تخفیف را وارد کنید.');
+      setDiscountMessageKind('info');
+      return;
+    }
+    if (appliedDiscountCode) {
+      if (appliedDiscountCode === codeToApply) {
+        setDiscountMessage(`کد تخفیف ${appliedDiscountCode} قبلاً اعمال شده است.`);
+        setDiscountMessageKind('success');
+        return;
+      }
+      setDiscountMessage('فقط یک کد تخفیف قابل اعمال است. ابتدا کد قبلی را حذف کنید.');
+      setDiscountMessageKind('error');
       return;
     }
     setDiscountMessage('');
+    setDiscountMessageKind('');
     try {
       const validationItems = items.map((it) => ({
         product_id: it.product_id || it.id,
@@ -696,11 +790,13 @@ function CheckoutPage() {
           ? `کد اعمال شد: ${appliedAmount.toLocaleString('fa-IR')} تومان`
           : `کد اعمال شد: ${data.percent}% تخفیف`
       );
+      setDiscountMessageKind('success');
     } catch (err) {
       setAppliedDiscountCode('');
       setDiscountPercent(0);
       setDiscountFlat(0);
       setDiscountMessage(err?.message || 'کد تخفیف نامعتبر است');
+      setDiscountMessageKind('error');
       // Show Telegram promo when discount code is invalid
       // setTelegramPromoVisible(true);
     }
@@ -869,7 +965,9 @@ function CheckoutPage() {
         body: JSON.stringify({ 
           items: orderItems,
           contact: contactPayload,
-          diamonds_use: diamondsUse,
+          diamonds_use: Math.min(diamondsUse, Math.max(0, diamondsMaxAllowed)),
+          refund_credit_use: Math.min(refundCreditUse, Math.max(0, refundCreditMax)),
+          ...(backendFinalAmount != null ? { expected_amount: backendFinalAmount } : {}),
           rush_order: rushOrder,
           rush_fee: rushFee,
           discount_code: appliedDiscountCode || undefined,
@@ -909,13 +1007,11 @@ function CheckoutPage() {
 
       clear();
 
-      if (data.amount > 0) {
-        const redirected = await requestPaymentAndRedirect(data.tracking_code);
-        if (redirected) {
-          sessionStorage.removeItem("checkout_form_draft");
-          sessionStorage.removeItem("return_to_checkout");
-          return;
-        }
+      const redirected = await requestPaymentAndRedirect(data.tracking_code);
+      if (redirected) {
+        sessionStorage.removeItem("checkout_form_draft");
+        sessionStorage.removeItem("return_to_checkout");
+        return;
       }
 
       sessionStorage.removeItem("checkout_form_draft");
@@ -1181,7 +1277,15 @@ function CheckoutPage() {
                           !(it.account_type === 'xbox' && it.xbox_create_account) ? (
                             <div className="credentials-inputs-grid">
                               <div className="field">
-                                <label>ایمیل اکانت (اپیک گیمز)</label>
+                                <label>
+                                  {it.account_type === 'epic'
+                                    ? 'ایمیل اکانت اپیک گیمز'
+                                    : it.account_type === 'xbox'
+                                    ? 'ایمیل اکانت Xbox (Microsoft)'
+                                    : it.account_type === 'psn'
+                                    ? 'ایمیل اکانت PlayStation Network'
+                                    : `ایمیل اکانت (${getPlatformOption(it.account_type).shortLabel})`}
+                                </label>
                                 <input
                                   type="email"
                                   value={it.account_email || ''}
@@ -1191,7 +1295,15 @@ function CheckoutPage() {
                                 />
                               </div>
                               <div className="field">
-                                <label>رمز عبور اکانت (اپیک گیمز)</label>
+                                <label>
+                                  {it.account_type === 'epic'
+                                    ? 'رمز عبور اکانت اپیک گیمز'
+                                    : it.account_type === 'xbox'
+                                    ? 'رمز عبور اکانت Xbox (Microsoft)'
+                                    : it.account_type === 'psn'
+                                    ? 'رمز عبور اکانت PlayStation Network'
+                                    : `رمز عبور اکانت (${getPlatformOption(it.account_type).shortLabel})`}
+                                </label>
                                 <PasswordInput
                                   value={it.account_password || ''}
                                   onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_password: e.target.value }, it.line_key)}
@@ -1199,6 +1311,29 @@ function CheckoutPage() {
                                   required
                                 />
                               </div>
+                              {it.account_type === 'xbox' && (
+                                <>
+                                  <div className="field">
+                                    <label>پسکد Xbox (اختیاری)</label>
+                                    <input
+                                      type="text"
+                                      value={it.xbox_passkey || ''}
+                                      onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, 'xbox', { xbox_passkey: e.target.value })}
+                                      placeholder="پسکد ۶ رقمی (در صورت داشتن)"
+                                      maxLength={6}
+                                    />
+                                  </div>
+                                  <div className="field">
+                                    <label>گیمرتگ Xbox (اختیاری)</label>
+                                    <input
+                                      type="text"
+                                      value={it.xbox_gamertag || ''}
+                                      onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, 'xbox', { xbox_gamertag: e.target.value })}
+                                      placeholder="GamerTag شما"
+                                    />
+                                  </div>
+                                </>
+                              )}
                             </div>
                           ) : (
                             <div className="xbox-create-message">
@@ -1540,9 +1675,6 @@ function CheckoutPage() {
                     value={discountCode}
                     onChange={(e) => {
                       setDiscountCode(e.target.value.toUpperCase());
-                      setAppliedDiscountCode('');
-                      setDiscountPercent(0);
-                      setDiscountFlat(0);
                     }}
                     placeholder="کد تخفیف دارید؟"
                     className="sidebar-discount-input"
@@ -1553,8 +1685,32 @@ function CheckoutPage() {
                 </div>
 
                 {discountMessage && (
-                  <div className={`discount-message-box ${discountPercent > 0 || discountFlat > 0 ? 'success' : 'error'}`}>
-                    {discountMessage}
+                  <div className={`discount-message-box ${discountMessageKind === 'success' ? 'success' : 'error'}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{discountMessage}</span>
+                    {appliedDiscountCode && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAppliedDiscountCode('');
+                          setDiscountCode('');
+                          setDiscountPercent(0);
+                          setDiscountFlat(0);
+                          setDiscountMessage('');
+                          setDiscountMessageKind('');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#ef4444',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          marginRight: '8px'
+                        }}
+                      >
+                        حذف
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -1563,7 +1719,7 @@ function CheckoutPage() {
                     <button
                       type="button"
                       className={`sidebar-discount-action-btn ${diamondsUse > 0 ? 'active' : ''}`}
-                      onClick={() => setDiamondsUse(diamondsUse > 0 ? 0 : Math.min(diamondsBalance, diamondsCap))}
+                      onClick={handleDiamondToggle}
                     >
                       <span>🪙 استفاده از کوین ({diamondsBalance.toLocaleString('fa-IR')})</span>
                     </button>
@@ -1601,6 +1757,18 @@ function CheckoutPage() {
                         ⚠️ حداقل {MIN_DIAMONDS_TO_REDEEM} کوین
                       </span>
                     )}
+                  </div>
+                )}
+
+                {refundCreditUse > 0 && me && refundCreditBalance > 0 && (
+                  <div className="sidebar-diamond-use-box">
+                    <div className="wallet-limit-copy">
+                      <span>حداکثر قابل مصرف: <strong>{refundCreditMax.toLocaleString('fa-IR')} تومان</strong></span>
+                      <span>انتخاب فعلی: {refundCreditUse.toLocaleString('fa-IR')} تومان</span>
+                    </div>
+                    <span className="diamond-discount-tag">
+                      ✅ {refundCreditDiscount.toLocaleString('fa-IR')} تومان از اعتبار شما کسر می‌شود
+                    </span>
                   </div>
                 )}
 
@@ -1651,9 +1819,10 @@ function CheckoutPage() {
 
               {/* Submit Button */}
               <button 
-                className={`submit-btn-new ${loading ? 'loading' : ''}`} 
-                aria-disabled={loading ? "true" : "false"}
-                onClick={submit}
+                className={`submit-btn-new ${(loading || diamondsLimitExceeded) ? 'loading' : ''}`} 
+                aria-disabled={(loading || diamondsLimitExceeded) ? "true" : "false"}
+                onClick={(loading || diamondsLimitExceeded) ? undefined : submit}
+                style={(loading || diamondsLimitExceeded) ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
               >
                 {loading ? (
                   <>

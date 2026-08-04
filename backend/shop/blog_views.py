@@ -15,6 +15,11 @@ def article_to_dict(article, request=None):
     if article.cover_image:
         try:
             cover_url = article.cover_image.url
+            # Blog covers are compiled into the frontend's public directory so
+            # they remain available through the public site even when Django's
+            # development media route is not exposed by the production proxy.
+            if cover_url.startswith('/media/blog/covers/'):
+                cover_url = cover_url.replace('/media/blog/covers/', '/blog/covers/', 1)
         except:
             pass
 

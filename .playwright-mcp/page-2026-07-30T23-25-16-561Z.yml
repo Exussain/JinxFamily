@@ -1,0 +1,2292 @@
+- generic [active] [ref=f3e1]:
+  - link "Jump to content" [ref=f3e2] [cursor=pointer]:
+    - /url: "#bodyContent"
+  - banner [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - navigation "Site" [ref=f3e6]:
+        - generic "Main menu" [ref=f3e7]:
+          - button "Main menu" [ref=f3e8] [cursor=pointer]
+      - link [ref=f3e12] [cursor=pointer]:
+        - /url: /wiki/Main_Page
+        - generic [ref=f3e13]:
+          - img "Wikipedia" [ref=f3e14]
+          - img "The Free Encyclopedia" [ref=f3e15]
+    - generic [ref=f3e16]:
+      - search [ref=f3e17]:
+        - generic [ref=f3e20]:
+          - searchbox "Search Wikipedia" [ref=f3e23]
+          - button "Search" [ref=f3e25]
+      - navigation "Personal tools" [ref=f3e26]:
+        - list [ref=f3e30]:
+          - listitem [ref=f3e31]:
+            - link "Donate" [ref=f3e32] [cursor=pointer]:
+              - /url: https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=en.wikipedia.org&uselang=en
+          - listitem [ref=f3e33]:
+            - link "Create account" [ref=f3e34] [cursor=pointer]:
+              - /url: https://en.wikipedia.org/w/index.php?title=Special%3ACreateAccount&returnto=Call+of+Duty%3A+Mobile&experiments%5B0%5D=we-1-8-account-creation-no-desktop-benefits%3Aunsampled
+          - listitem [ref=f3e35]:
+            - link "Log in" [ref=f3e36] [cursor=pointer]:
+              - /url: https://en.wikipedia.org/w/index.php?title=Special%3AUserLogin&returnto=Call+of+Duty%3A+Mobile&experiments%5B0%5D=we-1-8-account-creation-no-desktop-benefits%3Aunsampled
+  - generic [ref=f3e38]:
+    - navigation "Contents" [ref=f3e42]:
+      - generic [ref=f3e44]:
+        - generic [ref=f3e45]:
+          - heading "Contents" [level=2] [ref=f3e46]
+          - button "Hide Contents" [ref=f3e47] [cursor=pointer]: hide
+        - list [ref=f3e48]:
+          - listitem [ref=f3e49]:
+            - link "(Top)" [ref=f3e50] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=f3e52]:
+            - link "Gameplay" [ref=f3e53] [cursor=pointer]:
+              - /url: "#Gameplay"
+            - list
+          - listitem [ref=f3e55]:
+            - link "Seasonal updates" [ref=f3e56] [cursor=pointer]:
+              - /url: "#Seasonal_updates"
+            - button "Toggle Seasonal updates subsection" [expanded] [ref=f3e58]
+            - list [ref=f3e61]:
+              - listitem [ref=f3e62]:
+                - link "Multiplayer" [ref=f3e63] [cursor=pointer]:
+                  - /url: "#Multiplayer"
+                - list
+              - listitem [ref=f3e65]:
+                - link "Battle Royale" [ref=f3e66] [cursor=pointer]:
+                  - /url: "#Battle_Royale"
+                - list
+              - listitem [ref=f3e68]:
+                - link "Additional Battle royale Info" [ref=f3e69] [cursor=pointer]:
+                  - /url: "#Additional_Battle_royale_Info"
+                - list
+              - listitem [ref=f3e71]:
+                - link "Zombies" [ref=f3e72] [cursor=pointer]:
+                  - /url: "#Zombies"
+                - list
+          - listitem [ref=f3e74]:
+            - link "Development and release" [ref=f3e75] [cursor=pointer]:
+              - /url: "#Development_and_release"
+            - list
+          - listitem [ref=f3e77]:
+            - link "Esports" [ref=f3e78] [cursor=pointer]:
+              - /url: "#Esports"
+            - list
+          - listitem [ref=f3e80]:
+            - link "Reception" [ref=f3e81] [cursor=pointer]:
+              - /url: "#Reception"
+            - button "Toggle Reception subsection" [expanded] [ref=f3e83]
+            - list [ref=f3e86]:
+              - listitem [ref=f3e87]:
+                - link "Accolades" [ref=f3e88] [cursor=pointer]:
+                  - /url: "#Accolades"
+                - list
+          - listitem [ref=f3e90]:
+            - link "References" [ref=f3e91] [cursor=pointer]:
+              - /url: "#References"
+            - list
+          - listitem [ref=f3e93]:
+            - link "External links" [ref=f3e94] [cursor=pointer]:
+              - /url: "#External_links"
+            - list
+    - main [ref=f3e97]:
+      - generic [ref=f3e98]:
+        - 'heading "Call of Duty: Mobile" [level=1] [ref=f3e99]'
+        - generic [ref=f3e100]:
+          - button "29 languages" [ref=f3e101] [cursor=pointer]
+          - generic [ref=f3e102]: 29 languages
+      - generic [ref=f3e106]:
+        - navigation "Namespaces" [ref=f3e108]:
+          - list [ref=f3e111]:
+            - listitem [ref=f3e112]:
+              - link "Article" [ref=f3e113] [cursor=pointer]:
+                - /url: /wiki/Call_of_Duty:_Mobile
+            - listitem [ref=f3e115]:
+              - link "Talk" [ref=f3e116] [cursor=pointer]:
+                - /url: /wiki/Talk:Call_of_Duty:_Mobile
+        - generic [ref=f3e118]:
+          - navigation "Views" [ref=f3e119]:
+            - list [ref=f3e122]:
+              - listitem [ref=f3e123]:
+                - link "Read" [ref=f3e124] [cursor=pointer]:
+                  - /url: /wiki/Call_of_Duty:_Mobile
+              - listitem [ref=f3e126]:
+                - link "Edit" [ref=f3e127] [cursor=pointer]:
+                  - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit
+              - listitem [ref=f3e129]:
+                - link "View history" [ref=f3e130] [cursor=pointer]:
+                  - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=history
+          - navigation "Page tools" [ref=f3e132]:
+            - generic [ref=f3e133]:
+              - button "Tools" [ref=f3e134] [cursor=pointer]
+              - generic [ref=f3e135]: Tools
+      - navigation "Appearance" [ref=f3e140]:
+        - generic [ref=f3e142]:
+          - generic [ref=f3e143]:
+            - generic [ref=f3e144]: Appearance
+            - button "Hide Appearance" [ref=f3e145] [cursor=pointer]: hide
+          - generic [ref=f3e146]:
+            - generic [ref=f3e147]: Text
+            - list [ref=f3e149]:
+              - listitem [ref=f3e150]:
+                - generic [ref=f3e152]:
+                  - generic [ref=f3e153]:
+                    - radio "Small" [ref=f3e154]
+                    - generic [ref=f3e156]: Small
+                  - generic [ref=f3e158]:
+                    - radio "Standard" [checked] [ref=f3e159]
+                    - generic [ref=f3e161]: Standard
+                  - generic [ref=f3e163]:
+                    - radio "Large" [ref=f3e164]
+                    - generic [ref=f3e166]: Large
+          - generic [ref=f3e168]:
+            - generic [ref=f3e169]: Width
+            - list [ref=f3e171]:
+              - listitem [ref=f3e172]:
+                - generic [ref=f3e174]:
+                  - generic [ref=f3e175]:
+                    - radio "Standard" [checked] [ref=f3e176]
+                    - generic [ref=f3e178]: Standard
+                  - generic [ref=f3e180]:
+                    - radio "Wide" [ref=f3e181]
+                    - generic [ref=f3e183]: Wide
+          - generic [ref=f3e185]:
+            - generic [ref=f3e186]: Color
+            - list [ref=f3e188]:
+              - listitem [ref=f3e189]:
+                - generic [ref=f3e191]:
+                  - generic [ref=f3e192]:
+                    - radio "Automatic" [ref=f3e193]
+                    - generic [ref=f3e195]: Automatic
+                  - generic [ref=f3e197]:
+                    - radio "Light" [checked] [ref=f3e198]
+                    - generic [ref=f3e200]: Light
+                  - generic [ref=f3e202]:
+                    - radio "Dark" [ref=f3e203]
+                    - generic [ref=f3e205]: Dark
+      - 'generic "Call of Duty: Mobile" [ref=f3e207]':
+        - generic [ref=f3e208]: From Wikipedia, the free encyclopedia
+        - generic [ref=f3e211]:
+          - generic [ref=f3e212]:
+            - table [ref=f3e213]:
+              - rowgroup [ref=f3e214]:
+                - row [ref=f3e215]:
+                  - 'columnheader "Call of Duty: Mobile" [ref=f3e216]'
+                - row [ref=f3e217]:
+                  - cell [ref=f3e218]:
+                    - link [ref=f3e220] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/File:CODM_logo.png
+                - row [ref=f3e222]:
+                  - rowheader [ref=f3e223]:
+                    - link "Developer" [ref=f3e224] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_developer
+                  - cell [ref=f3e225]:
+                    - link "TiMi Studio Group" [ref=f3e226] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/TiMi_Studio_Group
+                - row [ref=f3e227]:
+                  - rowheader [ref=f3e228]:
+                    - link "Publishers" [ref=f3e229] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_publisher
+                  - cell [ref=f3e230]:
+                    - list [ref=f3e232]:
+                      - listitem [ref=f3e233]:
+                        - link "Activision" [ref=f3e234] [cursor=pointer]:
+                          - /url: https://en.wikipedia.org/wiki/Activision
+                      - listitem [ref=f3e235]:
+                        - link "Garena" [ref=f3e236] [cursor=pointer]:
+                          - /url: https://en.wikipedia.org/wiki/Garena
+                      - listitem [ref=f3e237]:
+                        - link "VNG Games" [ref=f3e238] [cursor=pointer]:
+                          - /url: https://en.wikipedia.org/wiki/VNG_Games
+                - row [ref=f3e239]:
+                  - rowheader [ref=f3e240]:
+                    - link "Writer" [ref=f3e241] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_writer
+                  - cell [ref=f3e242]:
+                    - link "Brian Bloom" [ref=f3e243] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Brian_Bloom
+                - row [ref=f3e244]:
+                  - rowheader "Series" [ref=f3e245]
+                  - cell [ref=f3e246]:
+                    - link "Call of Duty" [ref=f3e248] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Call_of_Duty
+                - row [ref=f3e249]:
+                  - rowheader [ref=f3e250]:
+                    - link "Engine" [ref=f3e251] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Game_engine
+                  - cell [ref=f3e252]:
+                    - link "Unity" [ref=f3e253] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Unity_(game_engine)
+                - row [ref=f3e254]:
+                  - rowheader [ref=f3e255]:
+                    - link "Platforms" [ref=f3e256] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Computing_platform
+                  - cell [ref=f3e257]:
+                    - link "Android" [ref=f3e258] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Android_(operating_system)
+                    - link "iOS" [ref=f3e259] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/IOS
+                    - text: 12 or later
+                    - link "iPadOS" [ref=f3e260] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/IPadOS
+                    - link "HarmonyOS" [ref=f3e261] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/HarmonyOS
+                    - link "HarmonyOS Next" [ref=f3e262] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/HarmonyOS_Next
+                    - link "Windows" [ref=f3e263] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Windows
+                - row [ref=f3e264]:
+                  - rowheader "Release" [ref=f3e265]
+                  - cell "September 29, 2019; 6 years ago (Southeast Asia) October 1, 2019; 6 years ago (International) December 24, 2020; 5 years ago (Mainland China)" [ref=f3e266]:
+                    - text: September 29, 2019
+                    - generic [ref=f3e267]: ; 6 years ago
+                    - text: (
+                    - link "Southeast Asia" [ref=f3e268] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Southeast_Asia
+                    - text: )October 1, 2019
+                    - generic [ref=f3e269]: ; 6 years ago
+                    - text: (International)December 24, 2020
+                    - generic [ref=f3e270]: ; 5 years ago
+                    - text: (
+                    - link "Mainland China" [ref=f3e271] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/China
+                    - text: )
+                - row [ref=f3e272]:
+                  - rowheader [ref=f3e273]:
+                    - link "Genres" [ref=f3e274] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_genre
+                  - cell [ref=f3e275]:
+                    - link "First-person shooter" [ref=f3e276] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/First-person_shooter
+                    - link "Third-person shooter" [ref=f3e277] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Third-person_shooter
+                - row [ref=f3e278]:
+                  - rowheader "Modes" [ref=f3e279]
+                  - cell [ref=f3e280]:
+                    - link "Multiplayer" [ref=f3e281] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Multiplayer
+                    - link "Battle royale" [ref=f3e282] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Battle_royale_game
+            - paragraph [ref=f3e283]:
+              - generic [ref=f3e284]: "Call of Duty: Mobile"
+              - text: is a
+              - link "multiplayer" [ref=f3e285] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Multiplayer_video_game
+              - link "battle royale game" [ref=f3e286] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Battle_royale_game
+              - text: developed by
+              - link "TiMi Studio Group" [ref=f3e287] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/TiMi_Studio_Group
+              - text: and published by
+              - link "Activision" [ref=f3e288] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Activision
+              - text: for
+              - link "Android" [ref=f3e289] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Android_(operating_system)
+              - text: and
+              - link "IOS" [ref=f3e290] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/IOS
+              - text: . Released as a
+              - link "free-to-play" [ref=f3e291] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Free-to-play
+              - text: title as part of the
+              - link "Call of Duty" [ref=f3e293] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Call_of_Duty
+              - text: video game series, it was one of the largest
+              - link "mobile game" [ref=f3e294] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Mobile_game
+              - text: "launches in history, generating over US$480 million with 270 million downloads within a year. Call of Duty: Mobile was published in other regions by"
+              - link "Garena" [ref=f3e295] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Garena
+              - text: ","
+              - link "Tencent Games" [ref=f3e296] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Tencent_Games
+              - text: ","
+              - link "VNG Corporation" [ref=f3e297] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/VNG_Corporation
+              - text: and
+              - link "TiMi Studio Group" [ref=f3e298] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/TiMi_Studio_Group
+              - text: .
+          - region [ref=f3e299]:
+            - generic [ref=f3e300]:
+              - heading "Gameplay" [level=2] [ref=f3e301]
+              - generic [ref=f3e302]:
+                - link "edit":
+                  - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=1
+            - figure [ref=f3e303]:
+              - link [ref=f3e304] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/File:CoD-Mobile-Gameplay.jpg
+              - generic [ref=f3e306]:
+                - text: "Gameplay of Call of Duty: Mobile. The game completely copies the previous \"older\" parts of its series (the picture shows the Crossfire map from the"
+                - link "Modern Warfare" [ref=f3e308] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare
+                - text: subseries).
+            - paragraph [ref=f3e309]:
+              - text: The game's two primary modes are
+              - link "multiplayer" [ref=f3e310] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Multiplayer_video_game
+              - text: and
+              - link "battle royale" [ref=f3e311] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Battle_royale_game
+              - text: ". Players can choose to play ranked or non-ranked matches. Apart from standard matchmaking, a private room for both of these modes can also be accessed where players can invite and battle with their in-game friends. The game includes two types of in-game currencies: \"Credits\", which are earned through playing the game, and \"COD Points\", which are bought with real-world money. It is possible to play the full game without paying, though some exclusive character and weapon skins can only be bought with COD Points."
+            - paragraph [ref=f3e312]: "Additional modes include Zombies, which can be played in a more traditional \"Endless\" mode and in a new \"Raid\" mode where players survive for a fixed number of rounds and fight a boss afterward, and \"DMZ: Recon\", an adaptation of Call of Duty: Modern Warfare II's DMZ extraction mode, where players can fight against AI enemies and other players to extract loot and weapons for cosmetic rewards."
+          - region [ref=f3e313]:
+            - generic [ref=f3e314]:
+              - heading "Seasonal updates" [level=2] [ref=f3e315]
+              - generic [ref=f3e316]:
+                - link "edit":
+                  - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=2
+            - paragraph [ref=f3e317]:
+              - text: "Call of Duty: Mobile has a seasonal update system. New weapons, skins, maps, and limited-time events are added through the Battle Pass each season."
+              - superscript [ref=f3e318]:
+                - link "[1]" [ref=f3e319] [cursor=pointer]:
+                  - /url: "#cite_note-1"
+              - text: Seasons also include special challenges and game modes that reward players with in-game items and experience points.
+              - superscript [ref=f3e320]:
+                - link "[2]" [ref=f3e321] [cursor=pointer]:
+                  - /url: "#cite_note-2"
+              - text: This system helps keep players engaged and keeps the game fresh each season.
+            - paragraph [ref=f3e322]:
+              - text: Characters, weapon skins, and events are all designed with a specific theme in mind for each season. These themes frequently show teamwork, futuristic details, or military environments. Each season has a similar identity because to the theme-based format. The Battle Pass is divided into free and premium tiers. Players can unlock rewards. Character skins and special decorations are examples of premium prizes. Seasonal updates often include limited-time events.
+              - superscript [ref=f3e323]:
+                - link "[3]" [ref=f3e324] [cursor=pointer]:
+                  - /url: "#cite_note-3"
+              - text: . Special objectives, changing game modes, and login rewards are frequently included in these events. Rewards are no longer available after the event finishes. Season updates also include technical improvements and bug fixes. Developers can adjust weapon performance and game mechanics to maintain balance. These updates support the game's long-term development as a live service title.
+              - superscript [ref=f3e325]:
+                - link "[4]" [ref=f3e326] [cursor=pointer]:
+                  - /url: "#cite_note-4"
+            - region [ref=f3e327]:
+              - generic [ref=f3e328]:
+                - heading "Multiplayer" [level=3] [ref=f3e329]
+                - generic [ref=f3e330]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=3
+              - paragraph [ref=f3e331]:
+                - text: The multiplayer mode is a
+                - link "first-person shooter" [ref=f3e332] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/First-person_shooter
+                - text: similar to previous
+                - link "Call of Duty games" [ref=f3e333] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Call_of_Duty
+                - text: . The game also has 'Scorestreaks,' which are special weapons that become available as the player reaches certain point thresholds. The primary modes which the game features include
+                - link "Team Deathmatch" [ref=f3e334] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Deathmatch_(video_games)#Variations
+                - text: ", Frontline, Domination, Hardpoint, Search and Destroy, Control, Free For All, and Kill Confirmed. Additionally, the game features special and limited multiplayer modes that last for varying lengths of time. These include:"
+                - link "Prop Hunt" [ref=f3e336] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Garry's_Mod#Prop_Hunt
+                - text: ","
+                - superscript [ref=f3e337]:
+                  - link "[5]" [ref=f3e338] [cursor=pointer]:
+                    - /url: "#cite_note-5"
+                - text: Rapid Fire, Sticks and Stones,
+                - superscript [ref=f3e339]:
+                  - link "[6]" [ref=f3e340] [cursor=pointer]:
+                    - /url: "#cite_note-6"
+                - text: 2v2,
+                - superscript [ref=f3e341]:
+                  - link "[7]" [ref=f3e342] [cursor=pointer]:
+                    - /url: "#cite_note-7"
+                - text: Capture the Flag,
+                - superscript [ref=f3e343]:
+                  - link "[8]" [ref=f3e344] [cursor=pointer]:
+                    - /url: "#cite_note-8"
+                - text: One Shot One Kill,
+                - superscript [ref=f3e345]:
+                  - link "[9]" [ref=f3e346] [cursor=pointer]:
+                    - /url: "#cite_note-9"
+                - text: Snipers Only,
+                - superscript [ref=f3e347]:
+                  - link "[10]" [ref=f3e348] [cursor=pointer]:
+                    - /url: "#cite_note-10"
+                - text: Gun Game,
+                - superscript [ref=f3e349]:
+                  - link "[11]" [ref=f3e350] [cursor=pointer]:
+                    - /url: "#cite_note-11"
+                - text: and Attack of the Undead among others.
+            - region [ref=f3e351]:
+              - generic [ref=f3e352]:
+                - heading "Battle Royale" [level=3] [ref=f3e353]
+                - generic [ref=f3e354]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=4
+              - paragraph [ref=f3e355]:
+                - text: The game also includes
+                - link "battle royale" [ref=f3e356] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Battle_royale_game
+                - text: modes featuring up to 100 players. Players can choose to play solo, in a duo, or in a four-man squad. At the start of a match, all players choose an ability from
+                - link "healing" [ref=f3e357] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Healing
+                - text: to making a
+                - link "launch pad" [ref=f3e358] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Launch_pad
+                - text: . Once all 100 players are ready, they board a transport plane that flies across the
+                - link "map" [ref=f3e359] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Map
+                - text: in a randomized trajectory. This flight path changes every game. Every team is automatically given a jump leader who decides when and where the team will land, However, players can choose to break away and jump independently if they prefer.
+                - superscript [ref=f3e360]:
+                  - link "[12]" [ref=f3e361] [cursor=pointer]:
+                    - /url: "#cite_note-12"
+              - paragraph [ref=f3e362]: "Each player starts with a melee as their only weapon. Scattered across the map are various weapons, vehicles, and equipment that players can use to eliminate enemies and increase their chances of survival. The mode has high tier loot zones (marked in yellow on the map) that provide players with better items. The safe zone gradually shrinks as the match progresses, forcing players to move inward. Those who remain outside the zone for too long will take continuous damage and eventually be eliminated. The last surviving player or team wins the match. Battle royale also has limited modes like Battle Royale Isolated, Battle Royale Alcatraz, Battle Royale Blackout, Battle Royale Krai, and Battle Royale Blitz. The game also features a first-person shooter mode known as DMZ: Recon, which is an extraction based game mode (in effect as of 2025)."
+            - region [ref=f3e363]:
+              - generic [ref=f3e364]:
+                - heading "Additional Battle royale Info" [level=3] [ref=f3e365]
+                - generic [ref=f3e366]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=5
+              - list [ref=f3e367]:
+                - listitem [ref=f3e368]: "Revive System: Some battle royale modes allow players to revive teammates if they collect their dog tags within a limited time."
+                - listitem [ref=f3e369]: "Airdrops: Supply drops periodically fall from the sky, containing rare weapons, armor, and perks."
+                - listitem [ref=f3e370]: "Classes: Players can choose from different character classes, such as Scout, Ninja, Medic, Defender, and more, each with unique abilities."
+                - listitem [ref=f3e371]: "Boss Fights: Some maps include AI-controlled bosses, such as the Butcher, which drop high-tier loot when defeated."
+                - listitem [ref=f3e372]: "Vehicles: The game features land, air, and water vehicles, such as ATVs, helicopters, and boats, which help players traverse the map quickly."
+                - listitem [ref=f3e373]: "Customization: Players can modify their loadouts with custom weapons, perks, and attachments before the match begins."
+            - region [ref=f3e374]:
+              - generic [ref=f3e375]:
+                - heading "Zombies" [level=3] [ref=f3e376]
+                - generic [ref=f3e377]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=6
+              - paragraph [ref=f3e378]:
+                - text: A
+                - link "Zombies" [ref=f3e379] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Zombie
+                - text: mode was added in November 2019. It featured one map called Shi No Numa. It placed teams of players against zombies that attacked in waves. It was playable in Endless Survival Mode, which ran like the classic
+                - 'link "Call of Duty: World at War" [ref=f3e381] [cursor=pointer]':
+                  - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_World_at_War
+                - text: experience, and Raid Mode, which threw a set number of waves at the players before transitioning to a boss encounter. The players could choose whether to play it on Normal or Heroic difficulty.
+                - superscript [ref=f3e382]:
+                  - link "[13]" [ref=f3e383] [cursor=pointer]:
+                    - /url: "#cite_note-13"
+                - text: The mode was removed in March 2020 due to it not reaching the desired level of quality.
+                - superscript [ref=f3e384]:
+                  - link "[14]" [ref=f3e385] [cursor=pointer]:
+                    - /url: "#cite_note-14"
+                - superscript [ref=f3e386]:
+                  - link "[15]" [ref=f3e387] [cursor=pointer]:
+                    - /url: "#cite_note-15"
+                - text: This mode was added back to the game in October 2022, again only featuring the Shi No Numa map.
+                - superscript [ref=f3e388]:
+                  - link "[16]" [ref=f3e389] [cursor=pointer]:
+                    - /url: "#cite_note-16"
+              - paragraph [ref=f3e390]:
+                - text: Undead Siege, a zombie survival mode, was added into the game in August 2021. In it, a team of four players have to survive and protect their teleportation device from continuous waves of zombies. During the day, players have to collect supplies which are used during the night to survive against a horde of zombies.
+                - superscript [ref=f3e391]:
+                  - link "[17]" [ref=f3e392] [cursor=pointer]:
+                    - /url: "#cite_note-17"
+                - text: In addition, players during the day also take part in Daytime
+                - link "Side Missions" [ref=f3e393] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Quest_(video_games)
+                - text: ", which include the Butcher, breaking the Aether Crystal Cluster, feeding 10 zombies to Cerberus and helping transport a big Aether Crystal. The mode has 3 difficulties - Casual, Hardcore and Nightmare. In casual, the team only has to survive for 3 nights while in other difficulties, the team has to survive for 5 nights."
+          - region [ref=f3e394]:
+            - generic [ref=f3e395]:
+              - heading "Development and release" [level=2] [ref=f3e396]
+              - generic [ref=f3e397]:
+                - link "edit":
+                  - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=7
+            - paragraph [ref=f3e398]:
+              - text: "Call of Duty: Mobile was announced in March 2019, with TiMi-J3, itself a"
+              - link "TiMi Studio Group" [ref=f3e399] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/TiMi_Studio_Group
+              - text: division, which is a subsidiary of
+              - link "Tencent Games" [ref=f3e400] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Tencent_Games
+              - text: ", leading development. Many of the game's features were revealed at this announcement, promising a familiar experience for fans of the"
+              - link "console" [ref=f3e401] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Video_game_console
+              - text: game. The aim of the game was to take familiar aspects from the franchise's previous games and allow users to access them from their mobile devices.
+              - superscript [ref=f3e402]:
+                - link "[18]" [ref=f3e403] [cursor=pointer]:
+                  - /url: "#cite_note-arstechnica-18"
+              - superscript [ref=f3e404]:
+                - link "[19]" [ref=f3e405] [cursor=pointer]:
+                  - /url: "#cite_note-19"
+              - text: It features two in-game currencies, as well as a
+              - link "battle pass" [ref=f3e406] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Battle_pass
+              - text: .
+              - superscript [ref=f3e407]:
+                - link "[20]" [ref=f3e408] [cursor=pointer]:
+                  - /url: "#cite_note-20"
+              - text: The initial release was in Australia on June 15, 2019, following the soft-launches in Australia, Canada and Peru.
+              - superscript [ref=f3e409]:
+                - link "[21]" [ref=f3e410] [cursor=pointer]:
+                  - /url: "#cite_note-21"
+              - superscript [ref=f3e411]:
+                - link "[22]" [ref=f3e412] [cursor=pointer]:
+                  - /url: "#cite_note-22"
+              - superscript [ref=f3e413]:
+                - link "[23]" [ref=f3e414] [cursor=pointer]:
+                  - /url: "#cite_note-23"
+              - link "Garena" [ref=f3e415] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Garena
+              - text: released the game in Hong Kong, Indonesia, Macau, Malaysia, Philippines, Singapore, Taiwan, and Thailand on September 29, 2019. The game was released in Europe, North America and Latin America by
+              - link "Activision" [ref=f3e416] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Activision
+              - text: on September 30, 2019, and by Tencent Games in South Korea on October 1, 2019.
+              - superscript [ref=f3e417]:
+                - link "[24]" [ref=f3e418] [cursor=pointer]:
+                  - /url: "#cite_note-24"
+              - superscript [ref=f3e419]:
+                - link "[25]" [ref=f3e420] [cursor=pointer]:
+                  - /url: "#cite_note-25"
+              - text: VNG Games released the game after the worldwide release in partnership with Activision and TiMi Studios in Vietnam on April 20, 2020.
+              - superscript [ref=f3e421]:
+                - link "[26]" [ref=f3e422] [cursor=pointer]:
+                  - /url: "#cite_note-26"
+              - superscript [ref=f3e423]:
+                - link "[27]" [ref=f3e424] [cursor=pointer]:
+                  - /url: "#cite_note-27"
+              - text: Tencent Games published the game for
+              - link "Mainland China" [ref=f3e425] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Mainland_China
+              - text: on December 24, 2020.
+              - superscript [ref=f3e426]:
+                - link "[28]" [ref=f3e427] [cursor=pointer]:
+                  - /url: "#cite_note-28"
+            - paragraph [ref=f3e428]:
+              - text: "Call of Duty: Mobile features many playable characters, maps, and game modes from previous games in the series."
+              - superscript [ref=f3e429]:
+                - link "[29]" [ref=f3e430] [cursor=pointer]:
+                  - /url: "#cite_note-gamesradar-29"
+              - text: Different control settings were included to cater to player's preferences.
+              - superscript [ref=f3e431]:
+                - link "[30]" [ref=f3e432] [cursor=pointer]:
+                  - /url: "#cite_note-30"
+              - text: A "zombies" game mode was added to the game in November 2019. This game mode followed the classic Call of Duty zombies "survival" formula where the player fights off endless waves of zombies, aiming to survive as long as possible. A "Raid" mode was also included where the player had to defeat a set amount of waves of zombies before encountering one of two final bosses.
+              - superscript [ref=f3e433]:
+                - link "[31]" [ref=f3e434] [cursor=pointer]:
+                  - /url: "#cite_note-31"
+          - region [ref=f3e435]:
+            - generic [ref=f3e436]:
+              - heading "Esports" [level=2] [ref=f3e437]
+              - generic [ref=f3e438]:
+                - link "edit":
+                  - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=8
+            - paragraph [ref=f3e439]:
+              - text: "The Call of Duty: Mobile World Championship 2020 Tournament was a partnership between"
+              - link "Activision Blizzard" [ref=f3e440] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Activision_Blizzard
+              - text: and
+              - link "Sony Mobile Communications" [ref=f3e441] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Sony_Mobile
+              - text: ", and marks the game's entry into the top tier of"
+              - link "esports" [ref=f3e442] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Esports
+              - text: .
+              - superscript [ref=f3e443]:
+                - link "[32]" [ref=f3e444] [cursor=pointer]:
+                  - /url: "#cite_note-32"
+              - text: It featured more than $1 million in total prizes, which include both cash and in-game cosmetics.
+              - superscript [ref=f3e445]:
+                - link "[33]" [ref=f3e446] [cursor=pointer]:
+                  - /url: "#cite_note-33"
+              - text: Competing teams were drawn directly from the game's community through four open online qualifiers from April 20 to May 24, 2020. Eligible players ranked veteran or higher have the chance to play.
+              - superscript [ref=f3e447]:
+                - link "[34]" [ref=f3e448] [cursor=pointer]:
+                  - /url: "#cite_note-34"
+              - text: The 2021 tournament featured a $2 million prize pool.
+              - superscript [ref=f3e449]:
+                - text: "["
+                - link "citation needed" [ref=f3e451] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:Citation_needed
+                - text: "]"
+              - text: "In addition to the official Call of Duty: Mobile World Championship, third-party tournaments have emerged, providing additional competitive opportunities for players. Platforms such as Money Gaming host regular COD:Mobile Battle Royale events, allowing players of all skill levels to compete for real cash prizes."
+              - superscript [ref=f3e452]:
+                - link "[35]" [ref=f3e453] [cursor=pointer]:
+                  - /url: "#cite_note-35"
+          - region [ref=f3e454]:
+            - generic [ref=f3e455]:
+              - heading "Reception" [level=2] [ref=f3e456]
+              - generic [ref=f3e457]:
+                - link "edit":
+                  - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=9
+            - complementary [ref=f3e458]:
+              - generic [ref=f3e459]: Reception
+              - table [ref=f3e460]:
+                - caption [ref=f3e461]: Aggregate score
+                - rowgroup [ref=f3e462]:
+                  - row [ref=f3e463]:
+                    - columnheader "Aggregator" [ref=f3e464]
+                    - columnheader "Score" [ref=f3e465]
+                  - row [ref=f3e466]:
+                    - cell [ref=f3e467]:
+                      - link "Metacritic" [ref=f3e468] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Metacritic
+                    - cell [ref=f3e469]:
+                      - text: 81/100
+                      - superscript [ref=f3e470]:
+                        - link "[36]" [ref=f3e471] [cursor=pointer]:
+                          - /url: "#cite_note-MCiOS-36"
+              - table [ref=f3e472]:
+                - caption [ref=f3e473]: Review scores
+                - rowgroup [ref=f3e474]:
+                  - row [ref=f3e475]:
+                    - columnheader "Publication" [ref=f3e476]
+                    - columnheader "Score" [ref=f3e477]
+                  - row [ref=f3e478]:
+                    - cell [ref=f3e479]:
+                      - link "4Players" [ref=f3e481] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/4Players
+                    - cell [ref=f3e482]:
+                      - text: 60/100
+                      - superscript [ref=f3e483]:
+                        - link "[37]" [ref=f3e484] [cursor=pointer]:
+                          - /url: "#cite_note-37"
+                  - row [ref=f3e485]:
+                    - cell [ref=f3e486]:
+                      - link "Destructoid" [ref=f3e488] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Destructoid
+                    - cell [ref=f3e489]:
+                      - text: 8.5/10
+                      - superscript [ref=f3e490]:
+                        - link "[38]" [ref=f3e491] [cursor=pointer]:
+                          - /url: "#cite_note-38"
+                  - row [ref=f3e492]:
+                    - cell [ref=f3e493]:
+                      - link "Eurogamer" [ref=f3e495] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Eurogamer
+                    - cell [ref=f3e496]:
+                      - text: 8/10
+                      - superscript [ref=f3e497]:
+                        - link "[39]" [ref=f3e498] [cursor=pointer]:
+                          - /url: "#cite_note-39"
+                  - row [ref=f3e499]:
+                    - cell [ref=f3e500]:
+                      - link "GameSpot" [ref=f3e502] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/GameSpot
+                    - cell [ref=f3e503]:
+                      - text: 8/10
+                      - superscript [ref=f3e504]:
+                        - link "[40]" [ref=f3e505] [cursor=pointer]:
+                          - /url: "#cite_note-GSpotiOS-40"
+                  - row [ref=f3e506]:
+                    - cell [ref=f3e507]:
+                      - link "Gamezebo" [ref=f3e509] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Gamezebo
+                    - cell [ref=f3e510]:
+                      - text: 5/5
+                      - superscript [ref=f3e511]:
+                        - link "[41]" [ref=f3e512] [cursor=pointer]:
+                          - /url: "#cite_note-41"
+                  - row [ref=f3e513]:
+                    - cell [ref=f3e514]:
+                      - link "IGN" [ref=f3e516] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/IGN
+                    - cell [ref=f3e517]:
+                      - text: 7.7/10
+                      - superscript [ref=f3e518]:
+                        - link "[42]" [ref=f3e519] [cursor=pointer]:
+                          - /url: "#cite_note-IGNiOS-42"
+                  - row [ref=f3e520]:
+                    - cell [ref=f3e521]:
+                      - link "Jeuxvideo.com" [ref=f3e523] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Jeuxvideo.com
+                    - cell [ref=f3e524]:
+                      - text: 16/20
+                      - superscript [ref=f3e525]:
+                        - link "[43]" [ref=f3e526] [cursor=pointer]:
+                          - /url: "#cite_note-43"
+            - paragraph [ref=f3e527]:
+              - text: "Call of Duty: Mobile received \"generally favorable reviews\", according to the"
+              - link "review aggregator" [ref=f3e528] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Review_aggregator
+              - link "Metacritic" [ref=f3e529] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Metacritic
+              - text: .
+              - superscript [ref=f3e530]:
+                - link "[36]" [ref=f3e531] [cursor=pointer]:
+                  - /url: "#cite_note-MCiOS-36"
+              - link "IGN" [ref=f3e533] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/IGN
+              - text: wrote that the game "represents the best the juggernaut franchise has ever been on a handheld platform. The leveling path is rewarding, even without spending money, and there are lots of modes to jump around between, including an impressive battle royale mode."
+              - superscript [ref=f3e534]:
+                - link "[42]" [ref=f3e535] [cursor=pointer]:
+                  - /url: "#cite_note-IGNiOS-42"
+              - link "GameSpot" [ref=f3e537] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/GameSpot
+              - text: "says \"beyond its messy micro-transaction menus and the slight time-saving purchases, there's not much else in Call of Duty: Mobile that detracts from its faithful recreation of the exhilarating and fast-paced multiplayer action of the core series.\""
+              - superscript [ref=f3e538]:
+                - link "[40]" [ref=f3e539] [cursor=pointer]:
+                  - /url: "#cite_note-GSpotiOS-40"
+              - link "Polygon" [ref=f3e541] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Polygon_(website)
+              - text: "also praised the game stating, \"Call of Duty: Mobile doesn't come across like a deeply compromised or watered-down rendition of the age-old multiplayer format; it just feels like Call of Duty.\""
+              - superscript [ref=f3e542]:
+                - link "[44]" [ref=f3e543] [cursor=pointer]:
+                  - /url: "#cite_note-44"
+            - paragraph [ref=f3e544]:
+              - text: In the first month, the game had over 148 million downloads and generated nearly US$54 million in revenue, making it the largest mobile game launch in history.
+              - superscript [ref=f3e545]:
+                - link "[45]" [ref=f3e546] [cursor=pointer]:
+                  - /url: "#cite_note-45"
+              - text: By June 2020, the game had generated over $327 million in revenue, and had seen over 250 million downloads.
+              - superscript [ref=f3e547]:
+                - link "[46]" [ref=f3e548] [cursor=pointer]:
+                  - /url: "#cite_note-46"
+              - superscript [ref=f3e549]:
+                - link "[47]" [ref=f3e550] [cursor=pointer]:
+                  - /url: "#cite_note-47"
+              - superscript [ref=f3e551]:
+                - link "[48]" [ref=f3e552] [cursor=pointer]:
+                  - /url: "#cite_note-48"
+              - text: By October 2020, that figure had risen to over $480 million with 270 million downloads.
+              - superscript [ref=f3e553]:
+                - link "[49]" [ref=f3e554] [cursor=pointer]:
+                  - /url: "#cite_note-49"
+              - text: As of February 2022, the game has generated over $1.5 billion globally in revenue from in-game spending and microtransactions,
+              - superscript [ref=f3e555]:
+                - link "[50]" [ref=f3e556] [cursor=pointer]:
+                  - /url: "#cite_note-50"
+              - text: with the game having seen over 500 million downloads by May 2021.
+              - superscript [ref=f3e557]:
+                - link "[51]" [ref=f3e558] [cursor=pointer]:
+                  - /url: "#cite_note-51"
+              - text: By November 2024, the game had amassed more than $3 billion in revenue, with the game having achieved over 1 billion downloads.
+              - superscript [ref=f3e559]:
+                - link "[52]" [ref=f3e560] [cursor=pointer]:
+                  - /url: "#cite_note-52"
+            - region [ref=f3e561]:
+              - generic [ref=f3e562]:
+                - heading "Accolades" [level=3] [ref=f3e563]
+                - generic [ref=f3e564]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=10
+              - table [ref=f3e565]:
+                - rowgroup [ref=f3e566]:
+                  - row [ref=f3e567]:
+                    - columnheader "Year" [ref=f3e568] [cursor=pointer]
+                    - columnheader "Award" [ref=f3e569] [cursor=pointer]
+                    - columnheader "Category" [ref=f3e570] [cursor=pointer]
+                    - columnheader "Result" [ref=f3e571] [cursor=pointer]
+                    - columnheader "Ref." [ref=f3e572] [cursor=pointer]
+                - rowgroup [ref=f3e573]:
+                  - row [ref=f3e574]:
+                    - cell "2019" [ref=f3e575]
+                    - cell [ref=f3e576]:
+                      - link "Hollywood Music in Media Awards" [ref=f3e577] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Hollywood_Music_in_Media_Awards
+                    - cell "Song/Score - Mobile Video Game" [ref=f3e578]
+                    - cell "Nominated" [ref=f3e579]
+                    - cell [ref=f3e580]:
+                      - superscript [ref=f3e581]:
+                        - link "[53]" [ref=f3e582] [cursor=pointer]:
+                          - /url: "#cite_note-53"
+                  - row [ref=f3e583]:
+                    - cell [ref=f3e584]:
+                      - link "The Game Awards 2019" [ref=f3e585] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/The_Game_Awards_2019
+                    - cell "Best Mobile Game" [ref=f3e586]
+                    - cell "Won" [ref=f3e587]
+                    - cell [ref=f3e588]:
+                      - superscript [ref=f3e589]:
+                        - link "[54]" [ref=f3e590] [cursor=pointer]:
+                          - /url: "#cite_note-54"
+                  - row [ref=f3e591]:
+                    - cell "2020" [ref=f3e592]
+                    - cell [ref=f3e593]:
+                      - link "23rd Annual D.I.C.E. Awards" [ref=f3e594] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/23rd_Annual_D.I.C.E._Awards
+                    - cell [ref=f3e595]:
+                      - link "Portable Game of the Year" [ref=f3e596] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/D.I.C.E._Award_for_Mobile_Game_of_the_Year
+                    - cell "Nominated" [ref=f3e597]
+                    - cell [ref=f3e598]:
+                      - superscript [ref=f3e599]:
+                        - link "[55]" [ref=f3e600] [cursor=pointer]:
+                          - /url: "#cite_note-55"
+                  - row [ref=f3e601]:
+                    - cell [ref=f3e602]:
+                      - link "Game Developers Choice Awards" [ref=f3e603] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Game_Developers_Choice_Awards
+                    - cell "Best Mobile Game" [ref=f3e604]
+                    - cell "Nominated" [ref=f3e605]
+                    - cell [ref=f3e606]:
+                      - superscript [ref=f3e607]:
+                        - link "[56]" [ref=f3e608] [cursor=pointer]:
+                          - /url: "#cite_note-56"
+                  - row [ref=f3e609]:
+                    - cell [ref=f3e610]:
+                      - link "SXSW Gaming Awards" [ref=f3e611] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/SXSW_Gaming_Awards
+                    - cell "Mobile Game of the Year" [ref=f3e612]
+                    - cell "Nominated" [ref=f3e613]
+                    - cell [ref=f3e614]:
+                      - superscript [ref=f3e615]:
+                        - link "[57]" [ref=f3e616] [cursor=pointer]:
+                          - /url: "#cite_note-57"
+                  - row [ref=f3e617]:
+                    - cell [ref=f3e618]:
+                      - link "16th British Academy Games Awards" [ref=f3e619] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/16th_British_Academy_Games_Awards
+                    - cell "Mobile Game of the Year" [ref=f3e620]
+                    - cell "Won" [ref=f3e621]
+                    - cell [ref=f3e622]:
+                      - superscript [ref=f3e623]:
+                        - link "[58]" [ref=f3e624] [cursor=pointer]:
+                          - /url: "#cite_note-58"
+                  - row [ref=f3e625]:
+                    - cell [ref=f3e626]:
+                      - link "The Game Awards 2020" [ref=f3e627] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/The_Game_Awards_2020
+                    - cell "Best Mobile Game" [ref=f3e628]
+                    - cell "Nominated" [ref=f3e629]
+                    - cell [ref=f3e630]:
+                      - superscript [ref=f3e631]:
+                        - link "[59]" [ref=f3e632] [cursor=pointer]:
+                          - /url: "#cite_note-59"
+                  - row [ref=f3e633]:
+                    - cell "2025" [ref=f3e634]
+                    - cell [ref=f3e635]:
+                      - link "Golden Joystick Awards" [ref=f3e636] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Golden_Joystick_Awards
+                    - cell "Still Playing Award - Mobile" [ref=f3e637]
+                    - cell "Nominated" [ref=f3e638]
+                    - cell [ref=f3e639]:
+                      - superscript [ref=f3e640]:
+                        - link "[60]" [ref=f3e641] [cursor=pointer]:
+                          - /url: "#cite_note-60"
+                - rowgroup
+          - region [ref=f3e642]:
+            - generic [ref=f3e643]:
+              - heading "References" [level=2] [ref=f3e644]
+              - generic [ref=f3e645]:
+                - link "edit":
+                  - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=11
+            - list [ref=f3e648]:
+              - listitem [ref=f3e649]:
+                - link "Jump up" [ref=f3e651] [cursor=pointer]:
+                  - /url: "#cite_ref-1"
+                  - text: ^
+                - generic [ref=f3e652]:
+                  - text: "Activision. \"Call of Duty: Mobile seasonal update overview.\" Official Call of Duty Blog."
+                  - link "https://www.callofduty.com/blog/2026/02/call-of-duty-mobile-season-2-lunar-charge" [ref=f3e653] [cursor=pointer]:
+                    - /url: https://www.callofduty.com/blog/2026/02/call-of-duty-mobile-season-2-lunar-charge
+              - listitem [ref=f3e654]:
+                - link "Jump up" [ref=f3e656] [cursor=pointer]:
+                  - /url: "#cite_ref-2"
+                  - text: ^
+                - generic [ref=f3e657]:
+                  - text: "Call of Duty. \"Call of Duty: Mobile Battle Pass and seasonal events.\""
+                  - link "https://www.callofduty.com/mobile" [ref=f3e658] [cursor=pointer]:
+                    - /url: https://www.callofduty.com/mobile
+              - listitem [ref=f3e659]:
+                - link "Jump up" [ref=f3e661] [cursor=pointer]:
+                  - /url: "#cite_ref-3"
+                  - text: ^
+                - generic [ref=f3e662]:
+                  - text: GameSpot. "Call of Duty Mobile Season 2 Brings New Gun, New DMZ Features, And More."
+                  - link "https://www.gamespot.com/articles/call-of-duty-mobile-season-2-brings-new-guns-new-dmz-features-and-more/1100-6537931/" [ref=f3e663] [cursor=pointer]:
+                    - /url: https://www.gamespot.com/articles/call-of-duty-mobile-season-2-brings-new-guns-new-dmz-features-and-more/1100-6537931/
+              - listitem [ref=f3e664]:
+                - link "Jump up" [ref=f3e666] [cursor=pointer]:
+                  - /url: "#cite_ref-4"
+                  - text: ^
+                - generic [ref=f3e667]:
+                  - text: "\"Introducing Call of Duty: Mobile Season 2 — Lunar Charge.\" Call of Duty Blog."
+                  - link "https://www.callofduty.com/blog/2026/02/call-of-duty-mobile-season-2-lunar-charge" [ref=f3e668] [cursor=pointer]:
+                    - /url: https://www.callofduty.com/blog/2026/02/call-of-duty-mobile-season-2-lunar-charge
+              - listitem [ref=f3e669]:
+                - link "Jump up" [ref=f3e671] [cursor=pointer]:
+                  - /url: "#cite_ref-5"
+                  - text: ^
+                - generic [ref=f3e672]:
+                  - generic [ref=f3e673]:
+                    - text: Ahmed, Wasif (December 12, 2019).
+                    - 'link "\"Call of Duty: Mobile is getting a prop hunt mode\"" [ref=f3e674] [cursor=pointer]':
+                      - /url: https://dotesports.com/news/call-of-duty-mobile-is-getting-a-prop-hunt-mode
+                    - text: . Dot Esports
+                    - generic [ref=f3e675]: . Retrieved May 6, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Dot+Esports&rft.atitle=Call+of+Duty%3A+Mobile+is+getting+a+prop+hunt+mode&rft.date=2019-12-12&rft.aulast=Ahmed&rft.aufirst=Wasif&rft_id=https%3A%2F%2Fdotesports.com%2Fnews%2Fcall-of-duty-mobile-is-getting-a-prop-hunt-mode&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e676]:
+                - link "Jump up" [ref=f3e678] [cursor=pointer]:
+                  - /url: "#cite_ref-6"
+                  - text: ^
+                - generic [ref=f3e679]:
+                  - generic [ref=f3e680]:
+                    - text: Winslow, Jeremy.
+                    - link "\"CoD Mobile Update Adds Rapid Fire, Sticks And Stones Modes\"" [ref=f3e681] [cursor=pointer]:
+                      - /url: https://www.gamespot.com/articles/cod-mobile-update-adds-rapid-fire-sticks-and-stone/1100-6475109/
+                    - text: . GameSpot
+                    - generic [ref=f3e682]: . Retrieved May 6, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=GameSpot&rft.atitle=CoD+Mobile+Update+Adds+Rapid+Fire%2C+Sticks+And+Stones+Modes&rft.aulast=Winslow&rft.aufirst=Jeremy&rft_id=https%3A%2F%2Fwww.gamespot.com%2Farticles%2Fcod-mobile-update-adds-rapid-fire-sticks-and-stone%2F1100-6475109%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e683]:
+                - link "Jump up" [ref=f3e685] [cursor=pointer]:
+                  - /url: "#cite_ref-7"
+                  - text: ^
+                - generic [ref=f3e686]:
+                  - generic [ref=f3e687]:
+                    - text: Martin, Liam (April 2020).
+                    - link "\"Call of Duty Mobile Season 5 release date LIVE, update patch notes, 2v2 Showdown and MORE\"" [ref=f3e688] [cursor=pointer]:
+                      - /url: https://www.express.co.uk/entertainment/gaming/1262939/Call-of-Duty-Mobile-Season-5-Steel-Legion-release-date-2v2-Showdown-UPDATE-patch-notes
+                    - text: . Express UK
+                    - generic [ref=f3e689]: . Retrieved May 6, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Express+UK&rft.atitle=Call+of+Duty+Mobile+Season+5+release+date+LIVE%2C+update+patch+notes%2C+2v2+Showdown+and+MORE&rft.date=2020-04&rft.aulast=Martin&rft.aufirst=Liam&rft_id=https%3A%2F%2Fwww.express.co.uk%2Fentertainment%2Fgaming%2F1262939%2FCall-of-Duty-Mobile-Season-5-Steel-Legion-release-date-2v2-Showdown-UPDATE-patch-notes&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e690]:
+                - link "Jump up" [ref=f3e692] [cursor=pointer]:
+                  - /url: "#cite_ref-8"
+                  - text: ^
+                - generic [ref=f3e693]:
+                  - generic [ref=f3e694]:
+                    - text: Watts, Steve.
+                    - link "\"Call Of Duty Mobile Update Adds Maps, Modes, And Rewards\"" [ref=f3e695] [cursor=pointer]:
+                      - /url: https://www.gamespot.com/articles/call-of-duty-mobile-update-adds-maps-modes-and-rew/1100-6476623/
+                    - text: . GameSpot
+                    - generic [ref=f3e696]: . Retrieved May 6, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=GameSpot&rft.atitle=Call+Of+Duty+Mobile+Update+Adds+Maps%2C+Modes%2C+And+Rewards&rft.aulast=Watts&rft.aufirst=Steve&rft_id=https%3A%2F%2Fwww.gamespot.com%2Farticles%2Fcall-of-duty-mobile-update-adds-maps-modes-and-rew%2F1100-6476623%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e697]:
+                - link "Jump up" [ref=f3e699] [cursor=pointer]:
+                  - /url: "#cite_ref-9"
+                  - text: ^
+                - generic [ref=f3e700]:
+                  - generic [ref=f3e701]:
+                    - text: Glover, Stephanie.
+                    - 'link "\"Mode Intel: One Shot, One Kill - Activision Games Blog\"" [ref=f3e702] [cursor=pointer]':
+                      - /url: https://blog.activision.com/call-of-duty/2019-12/Mode-Intel-One-Shot-One-Kill
+                    - text: . Activision Games Blog
+                    - generic [ref=f3e703]: . Retrieved May 6, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Activision+Games+Blog&rft.atitle=Mode+Intel%3A+One+Shot%2C+One+Kill+-+Activision+Games+Blog&rft.aulast=Glover&rft.aufirst=Stephanie&rft_id=https%3A%2F%2Fblog.activision.com%2Fcall-of-duty%2F2019-12%2FMode-Intel-One-Shot-One-Kill&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e704]:
+                - link "Jump up" [ref=f3e706] [cursor=pointer]:
+                  - /url: "#cite_ref-10"
+                  - text: ^
+                - generic [ref=f3e707]:
+                  - generic [ref=f3e708]:
+                    - text: Ahmed, Wasif (October 18, 2019).
+                    - 'link "\"Call of Duty: Mobile adds sniper-only game mode\"" [ref=f3e709] [cursor=pointer]':
+                      - /url: https://dotesports.com/mobile/news/call-of-duty-mobile-adds-sniper-only-game-mode
+                    - text: . Dot Esports
+                    - generic [ref=f3e710]: . Retrieved May 6, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Dot+Esports&rft.atitle=Call+of+Duty%3A+Mobile+adds+sniper-only+game+mode&rft.date=2019-10-18&rft.aulast=Ahmed&rft.aufirst=Wasif&rft_id=https%3A%2F%2Fdotesports.com%2Fmobile%2Fnews%2Fcall-of-duty-mobile-adds-sniper-only-game-mode&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e711]:
+                - link "Jump up" [ref=f3e713] [cursor=pointer]:
+                  - /url: "#cite_ref-11"
+                  - text: ^
+                - generic [ref=f3e714]:
+                  - generic [ref=f3e715]:
+                    - text: Ahmed, Wasif (October 14, 2019).
+                    - 'link "\"Gun Game has arrived in Call of Duty: Mobile\"" [ref=f3e716] [cursor=pointer]':
+                      - /url: https://dotesports.com/news/gun-game-has-arrived-in-call-of-duty-mobile
+                    - text: . Dot Esports
+                    - generic [ref=f3e717]: . Retrieved May 6, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Dot+Esports&rft.atitle=Gun+Game+has+arrived+in+Call+of+Duty%3A+Mobile&rft.date=2019-10-14&rft.aulast=Ahmed&rft.aufirst=Wasif&rft_id=https%3A%2F%2Fdotesports.com%2Fnews%2Fgun-game-has-arrived-in-call-of-duty-mobile&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e718]:
+                - link "Jump up" [ref=f3e720] [cursor=pointer]:
+                  - /url: "#cite_ref-12"
+                  - text: ^
+                - generic [ref=f3e721]:
+                  - generic [ref=f3e722]:
+                    - text: Saurbh, Utkarsh (October 14, 2019).
+                    - 'link "\"Call of Duty Mobile battle royale gameplay guide : Fly helicopters, be a Ninja, battle monsters\"" [ref=f3e723] [cursor=pointer]':
+                      - /url: https://timesofindia.indiatimes.com/gadgets-news/call-of-duty-mobile-battle-royale-gameplay-guide-fly-helicopters-be-a-ninja-battle-monsters/articleshow/71573673.cms
+                    - text: . Times of India
+                    - generic [ref=f3e724]: . Retrieved May 5, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Times+of+India&rft.atitle=Call+of+Duty+Mobile+battle+royale+gameplay+guide+%3A+Fly+helicopters%2C+be+a+Ninja%2C+battle+monsters&rft.date=2019-10-14&rft.aulast=Saurbh&rft.aufirst=Utkarsh&rft_id=https%3A%2F%2Ftimesofindia.indiatimes.com%2Fgadgets-news%2Fcall-of-duty-mobile-battle-royale-gameplay-guide-fly-helicopters-be-a-ninja-battle-monsters%2Farticleshow%2F71573673.cms&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e725]:
+                - link "Jump up" [ref=f3e727] [cursor=pointer]:
+                  - /url: "#cite_ref-13"
+                  - text: ^
+                - generic [ref=f3e728]:
+                  - generic [ref=f3e729]:
+                    - text: Sheridan, Connor.
+                    - 'link "\"Call of Duty: Mobile Zombies mode is live, here''s how it works\"" [ref=f3e730] [cursor=pointer]':
+                      - /url: https://www.gamesradar.com/call-of-duty-mobile-zombies-mode/
+                    - text: . GamesRadar+
+                    - generic [ref=f3e731]: . Retrieved May 5, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=GamesRadar%2B&rft.atitle=Call+of+Duty%3A+Mobile+Zombies+mode+is+live%2C+here%27s+how+it+works&rft.aulast=Sheridan&rft.aufirst=Connor&rft_id=https%3A%2F%2Fwww.gamesradar.com%2Fcall-of-duty-mobile-zombies-mode%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e732]:
+                - link "Jump up" [ref=f3e734] [cursor=pointer]:
+                  - /url: "#cite_ref-14"
+                  - text: ^
+                - generic [ref=f3e735]:
+                  - generic [ref=f3e736]:
+                    - text: Bedford, Tom (July 27, 2021).
+                    - 'link "\"Call of Duty: Mobile zombies is returning, but not as you remember it\"" [ref=f3e737] [cursor=pointer]':
+                      - /url: https://www.techradar.com/news/call-of-duty-mobile-zombies
+                    - text: .
+                    - link "TechRadar" [ref=f3e739] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/TechRadar
+                    - text: .
+                    - link "Archived" [ref=f3e740] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20211215100954/https://www.techradar.com/news/call-of-duty-mobile-zombies
+                    - text: from the original on December 15, 2021
+                    - generic [ref=f3e741]: . Retrieved December 15, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=TechRadar&rft.atitle=Call+of+Duty%3A+Mobile+zombies+is+returning%2C+but+not+as+you+remember+it&rft.date=2021-07-27&rft.aulast=Bedford&rft.aufirst=Tom&rft_id=https%3A%2F%2Fwww.techradar.com%2Fnews%2Fcall-of-duty-mobile-zombies&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e742]:
+                - link "Jump up" [ref=f3e744] [cursor=pointer]:
+                  - /url: "#cite_ref-15"
+                  - text: ^
+                - generic [ref=f3e745]:
+                  - generic [ref=f3e746]:
+                    - link "\"When is Zombies returning to Call of Duty Mobile?\"" [ref=f3e747] [cursor=pointer]:
+                      - /url: https://www.dexerto.com/call-of-duty/when-is-zombies-returning-to-call-of-duty-mobile-1511187/
+                    - text: . Dexerto. February 10, 2021.
+                    - link "Archived" [ref=f3e748] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210211091140/https://www.dexerto.com/call-of-duty/when-is-zombies-returning-to-call-of-duty-mobile-1511187/
+                    - text: from the original on February 11, 2021
+                    - generic [ref=f3e749]: . Retrieved December 15, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Dexerto&rft.atitle=When+is+Zombies+returning+to+Call+of+Duty+Mobile%3F&rft.date=2021-02-10&rft_id=https%3A%2F%2Fwww.dexerto.com%2Fcall-of-duty%2Fwhen-is-zombies-returning-to-call-of-duty-mobile-1511187%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e750]:
+                - link "Jump up" [ref=f3e752] [cursor=pointer]:
+                  - /url: "#cite_ref-16"
+                  - text: ^
+                - generic [ref=f3e753]:
+                  - generic [ref=f3e754]:
+                    - 'link "\"Announcing Call of Duty®: Mobile Season 9 — Zombies Are Back\"" [ref=f3e755] [cursor=pointer]':
+                      - /url: https://www.callofduty.com/blog/2022/10/call-of-duty-mobile-season-9-zombies-classic-battle-pass-multiplayer
+                    - text: . www.callofduty.com
+                    - generic [ref=f3e756]: . Retrieved October 14, 2022
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=www.callofduty.com&rft.atitle=Announcing+Call+of+Duty%C2%AE%3A+Mobile+Season+9+%E2%80%94+Zombies+Are+Back&rft_id=https%3A%2F%2Fwww.callofduty.com%2Fblog%2F2022%2F10%2Fcall-of-duty-mobile-season-9-zombies-classic-battle-pass-multiplayer&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e757]:
+                - link "Jump up" [ref=f3e759] [cursor=pointer]:
+                  - /url: "#cite_ref-17"
+                  - text: ^
+                - generic [ref=f3e760]:
+                  - generic [ref=f3e761]:
+                    - text: Good, Owen (March 4, 2020).
+                    - link "\"Call of Duty Mobile axes Zombies mode in next update\"" [ref=f3e762] [cursor=pointer]:
+                      - /url: https://www.polygon.com/2020/3/4/21164930/call-of-duty-mobile-zombies-mode-shut-down-march-2020-nacht-der-untoten-map-new-season
+                    - text: . Polygon
+                    - generic [ref=f3e763]: . Retrieved May 5, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Polygon&rft.atitle=Call+of+Duty+Mobile+axes+Zombies+mode+in+next+update&rft.date=2020-03-04&rft.aulast=Good&rft.aufirst=Owen&rft_id=https%3A%2F%2Fwww.polygon.com%2F2020%2F3%2F4%2F21164930%2Fcall-of-duty-mobile-zombies-mode-shut-down-march-2020-nacht-der-untoten-map-new-season&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e764]:
+                - link "Jump up" [ref=f3e766] [cursor=pointer]:
+                  - /url: "#cite_ref-arstechnica_18-0"
+                  - text: ^
+                - generic [ref=f3e767]:
+                  - generic [ref=f3e768]:
+                    - text: Machkovech, Sam (March 19, 2019).
+                    - link "\"Call of Duty Mobile announced for iOS, Android, made by China's Tencent\"" [ref=f3e769] [cursor=pointer]:
+                      - /url: https://arstechnica.com/gaming/2019/03/call-of-duty-mobile-announced-for-ios-android-made-by-chinas-tencent/
+                    - text: . Ars Technica
+                    - generic [ref=f3e770]: . Retrieved June 25, 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Ars+Technica&rft.atitle=Call+of+Duty+Mobile+announced+for+iOS%2C+Android%2C+made+by+China%27s+Tencent&rft.date=2019-03-19&rft.aulast=Machkovech&rft.aufirst=Sam&rft_id=https%3A%2F%2Farstechnica.com%2Fgaming%2F2019%2F03%2Fcall-of-duty-mobile-announced-for-ios-android-made-by-chinas-tencent%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e771]:
+                - link "Jump up" [ref=f3e773] [cursor=pointer]:
+                  - /url: "#cite_ref-19"
+                  - text: ^
+                - generic [ref=f3e774]:
+                  - generic [ref=f3e775]:
+                    - text: Mukherjee, Amritanshu (May 24, 2019).
+                    - 'link "\"Call of Duty Mobile: Here''s how you can download it on your Android and iOS smartphone\"" [ref=f3e776] [cursor=pointer]':
+                      - /url: https://www.indiatoday.in/technology/features/story/call-of-duty-mobile-here-s-how-you-can-download-it-on-your-android-and-ios-smartphone-1533574-2019-05-24
+                    - text: . India Today
+                    - generic [ref=f3e777]: . Retrieved May 24, 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=India+Today&rft.atitle=Call+of+Duty+Mobile%3A+Here%27s+how+you+can+download+it+on+your+Android+and+iOS+smartphone&rft.date=2019-05-24&rft.aulast=Mukherjee&rft.aufirst=Amritanshu&rft_id=https%3A%2F%2Fwww.indiatoday.in%2Ftechnology%2Ffeatures%2Fstory%2Fcall-of-duty-mobile-here-s-how-you-can-download-it-on-your-android-and-ios-smartphone-1533574-2019-05-24&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e778]:
+                - link "Jump up" [ref=f3e780] [cursor=pointer]:
+                  - /url: "#cite_ref-20"
+                  - text: ^
+                - generic [ref=f3e781]:
+                  - generic [ref=f3e782]:
+                    - text: Morgans, Matt (July 20, 2019).
+                    - 'link "\"Call of Duty: Mobile Will Feature Two Currencies and a Battle Pass\"" [ref=f3e783] [cursor=pointer]':
+                      - /url: https://www.vgr.com/call-of-duty-mobile-will-feature-two-currencies-and-a-battle-pass/
+                    - text: . VGR
+                    - generic [ref=f3e784]: . Retrieved July 21, 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=VGR&rft.atitle=Call+of+Duty%3A+Mobile+Will+Feature+Two+Currencies+and+a+Battle+Pass&rft.date=2019-07-20&rft.aulast=Morgans&rft.aufirst=Matt&rft_id=https%3A%2F%2Fwww.vgr.com%2Fcall-of-duty-mobile-will-feature-two-currencies-and-a-battle-pass%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e785]:
+                - link "Jump up" [ref=f3e787] [cursor=pointer]:
+                  - /url: "#cite_ref-21"
+                  - text: ^
+                - generic [ref=f3e788]:
+                  - generic [ref=f3e789]:
+                    - 'link "\"Call of Duty®: Mobile - Overview - Apple App Store - Australia\"" [ref=f3e790] [cursor=pointer]':
+                      - /url: https://sensortower.com/ios/au/activision-publishing-inc/app/call-of-duty-r-mobile/1287282214/overview
+                    - text: . Sensor Tower
+                    - generic [ref=f3e791]: . Retrieved February 21, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Sensor+Tower&rft.atitle=Call+of+Duty%C2%AE%3A+Mobile+-+Overview+-+Apple+App+Store+-+Australia&rft_id=https%3A%2F%2Fsensortower.com%2Fios%2Fau%2Factivision-publishing-inc%2Fapp%2Fcall-of-duty-r-mobile%2F1287282214%2Foverview&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e792]:
+                - link "Jump up" [ref=f3e794] [cursor=pointer]:
+                  - /url: "#cite_ref-22"
+                  - text: ^
+                - generic [ref=f3e795]:
+                  - generic [ref=f3e796]:
+                    - 'link "\"Call of Duty®: Mobile - Overview - Apple App Store - Canada\"" [ref=f3e797] [cursor=pointer]':
+                      - /url: https://sensortower.com/ios/ca/activision-publishing-inc/app/call-of-duty-r-mobile/1287282214/overview
+                    - text: . Sensor Tower
+                    - generic [ref=f3e798]: . Retrieved February 21, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Sensor+Tower&rft.atitle=Call+of+Duty%C2%AE%3A+Mobile+-+Overview+-+Apple+App+Store+-+Canada&rft_id=https%3A%2F%2Fsensortower.com%2Fios%2Fca%2Factivision-publishing-inc%2Fapp%2Fcall-of-duty-r-mobile%2F1287282214%2Foverview&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e799]:
+                - link "Jump up" [ref=f3e801] [cursor=pointer]:
+                  - /url: "#cite_ref-23"
+                  - text: ^
+                - generic [ref=f3e802]:
+                  - generic [ref=f3e803]:
+                    - 'link "\"Call of Duty®: Mobile - Overview - Apple App Store - Peru\"" [ref=f3e804] [cursor=pointer]':
+                      - /url: https://sensortower.com/ios/pe/activision-publishing-inc/app/call-of-duty-r-mobile/1287282214/overview
+                    - text: . Sensor Tower
+                    - generic [ref=f3e805]: . Retrieved February 21, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Sensor+Tower&rft.atitle=Call+of+Duty%C2%AE%3A+Mobile+-+Overview+-+Apple+App+Store+-+Peru&rft_id=https%3A%2F%2Fsensortower.com%2Fios%2Fpe%2Factivision-publishing-inc%2Fapp%2Fcall-of-duty-r-mobile%2F1287282214%2Foverview&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e806]:
+                - link "Jump up" [ref=f3e808] [cursor=pointer]:
+                  - /url: "#cite_ref-24"
+                  - text: ^
+                - generic [ref=f3e809]:
+                  - generic [ref=f3e810]:
+                    - 'link "\"Call of Duty®: Mobile - Overview - Google Play Store - US\"" [ref=f3e811] [cursor=pointer]':
+                      - /url: https://sensortower.com/android/us/activision-publishing-inc/app/call-of-duty-r-mobile/com.activision.callofduty.shooter/overview
+                    - text: . Sensor Tower
+                    - generic [ref=f3e812]: . Retrieved February 21, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Sensor+Tower&rft.atitle=Call+of+Duty%C2%AE%3A+Mobile+-+Overview+-+Google+Play+Store+-+US&rft_id=https%3A%2F%2Fsensortower.com%2Fandroid%2Fus%2Factivision-publishing-inc%2Fapp%2Fcall-of-duty-r-mobile%2Fcom.activision.callofduty.shooter%2Foverview&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e813]:
+                - link "Jump up" [ref=f3e815] [cursor=pointer]:
+                  - /url: "#cite_ref-25"
+                  - text: ^
+                - generic [ref=f3e816]:
+                  - generic [ref=f3e817]:
+                    - link "\"드디어 한국 상륙!\"" [ref=f3e818] [cursor=pointer]:
+                      - /url: https://www.codm.kr/webplat/info/news_version3/38647/38758/38761/38763/m22120/201909/829798.shtml
+                    - text: . www.codm.kr
+                    - generic [ref=f3e819]: . Retrieved February 21, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=www.codm.kr&rft.atitle=%EB%93%9C%EB%94%94%EC%96%B4+%ED%95%9C%EA%B5%AD+%EC%83%81%EB%A5%99%21&rft_id=https%3A%2F%2Fwww.codm.kr%2Fwebplat%2Finfo%2Fnews_version3%2F38647%2F38758%2F38761%2F38763%2Fm22120%2F201909%2F829798.shtml&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e820]:
+                - link "Jump up" [ref=f3e822] [cursor=pointer]:
+                  - /url: "#cite_ref-26"
+                  - text: ^
+                - generic [ref=f3e823]:
+                  - generic [ref=f3e824]:
+                    - 'link "\"Chào mừng đến với Call of Duty: Mobile VN!\"" [ref=f3e825] [cursor=pointer]':
+                      - /url: https://codm.zing.vn/tin-tuc/tin-tuc/chao-mung-den-voi-call-of-duty-mobile-vn.html
+                    - text: . codm.zing.vn.
+                    - link "VNG Games" [ref=f3e826] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/VNG_Corporation
+                    - text: . March 1, 2020.
+                    - link "Archived" [ref=f3e827] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20200927162430/https://codm.zing.vn/tin-tuc/tin-tuc/chao-mung-den-voi-call-of-duty-mobile-vn.html
+                    - text: from the original on September 27, 2020
+                    - generic [ref=f3e828]: . Retrieved February 21, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=codm.zing.vn&rft.atitle=Ch%C3%A0o+m%E1%BB%ABng+%C4%91%E1%BA%BFn+v%E1%BB%9Bi+Call+of+Duty%3A+Mobile+VN%21&rft.date=2020-03-01&rft_id=https%3A%2F%2Fcodm.zing.vn%2Ftin-tuc%2Ftin-tuc%2Fchao-mung-den-voi-call-of-duty-mobile-vn.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e829]:
+                - link "Jump up" [ref=f3e831] [cursor=pointer]:
+                  - /url: "#cite_ref-27"
+                  - text: ^
+                - generic [ref=f3e832]:
+                  - generic [ref=f3e833]:
+                    - 'link "\"10:00 Ngày 20/04/2020 | Call of Duty: Mobile VN Chính Thức Ra Mắt\"" [ref=f3e834] [cursor=pointer]':
+                      - /url: https://codm.zing.vn/tin-tuc/tin-tuc/10-00-ngay-20-04-2020-call-of-duty-mobile-vn-chinh-thuc-ra-mat.html
+                    - text: . codm.zing.vn.
+                    - link "VNG Games" [ref=f3e835] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/VNG_Corporation
+                    - text: . April 16, 2020.
+                    - link "Archived" [ref=f3e836] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20200927173326/https://codm.zing.vn/tin-tuc/tin-tuc/10-00-ngay-20-04-2020-call-of-duty-mobile-vn-chinh-thuc-ra-mat.html
+                    - text: from the original on September 27, 2020
+                    - generic [ref=f3e837]: . Retrieved February 21, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=codm.zing.vn&rft.atitle=10%3A00+Ng%C3%A0y+20%2F04%2F2020+%7C+Call+of+Duty%3A+Mobile+VN+Ch%C3%ADnh+Th%E1%BB%A9c+Ra+M%E1%BA%AFt&rft.date=2020-04-16&rft_id=https%3A%2F%2Fcodm.zing.vn%2Ftin-tuc%2Ftin-tuc%2F10-00-ngay-20-04-2020-call-of-duty-mobile-vn-chinh-thuc-ra-mat.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e838]:
+                - link "Jump up" [ref=f3e840] [cursor=pointer]:
+                  - /url: "#cite_ref-28"
+                  - text: ^
+                - generic [ref=f3e841]:
+                  - generic [ref=f3e842]:
+                    - link "\"《使命召唤手游》上线倒计时4天，KPL现场发布国服CG\"" [ref=f3e843] [cursor=pointer]:
+                      - /url: https://codm.qq.com/webplat/info/news_version3/37968/38022/38024/38026/m22490/202012/879065.shtml
+                    - text: .
+                    - link "Tencent Games" [ref=f3e844] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Tencent_Games
+                    - text: "&"
+                    - link "TiMi Studios" [ref=f3e845] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/TiMi_Studios
+                    - text: . December 20, 2020.
+                    - link "Archived" [ref=f3e846] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210801015543/https://codm.qq.com/webplat/info/news_version3/37968/38022/38024/38026/m22490/202012/879065.shtml
+                    - text: from the original on August 1, 2021
+                    - generic [ref=f3e847]: . Retrieved February 21, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=%E3%80%8A%E4%BD%BF%E5%91%BD%E5%8F%AC%E5%94%A4%E6%89%8B%E6%B8%B8%E3%80%8B%E4%B8%8A%E7%BA%BF%E5%80%92%E8%AE%A1%E6%97%B64%E5%A4%A9%EF%BC%8CKPL%E7%8E%B0%E5%9C%BA%E5%8F%91%E5%B8%83%E5%9B%BD%E6%9C%8DCG&rft.pub=Tencent+Games+%26+TiMi+Studios&rft.date=2020-12-20&rft_id=https%3A%2F%2Fcodm.qq.com%2Fwebplat%2Finfo%2Fnews_version3%2F37968%2F38022%2F38024%2F38026%2Fm22490%2F202012%2F879065.shtml&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e848]:
+                - link "Jump up" [ref=f3e850] [cursor=pointer]:
+                  - /url: "#cite_ref-gamesradar_29-0"
+                  - text: ^
+                - generic [ref=f3e851]:
+                  - generic [ref=f3e852]:
+                    - text: Avard, Alex (May 22, 2019).
+                    - 'link "\"Call of Duty Mobile: Battle Royale includes third-person mode, classes, 100 player matches, and more\"" [ref=f3e853] [cursor=pointer]':
+                      - /url: https://www.gamesradar.com/call-of-duty-mobile-battle-royale-mode-details/
+                    - text: . gamesradar
+                    - generic [ref=f3e854]: . Retrieved May 24, 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=gamesradar&rft.atitle=Call+of+Duty+Mobile%3A+Battle+Royale+includes+third-person+mode%2C+classes%2C+100+player+matches%2C+and+more&rft.date=2019-05-22&rft.aulast=Avard&rft.aufirst=Alex&rft_id=https%3A%2F%2Fwww.gamesradar.com%2Fcall-of-duty-mobile-battle-royale-mode-details%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e855]:
+                - link "Jump up" [ref=f3e857] [cursor=pointer]:
+                  - /url: "#cite_ref-30"
+                  - text: ^
+                - generic [ref=f3e858]:
+                  - generic [ref=f3e859]:
+                    - 'link "\"Call of Duty®: Mobile: Fresh Intel – A Preview of What''s to Come\"" [ref=f3e860] [cursor=pointer]':
+                      - /url: https://blog.activision.com/call-of-duty/2019-05/Call-of-Duty-Mobile-Fresh-Intel-A-Preview-of-Whats-to-Come
+                    - text: . blog.activision.com
+                    - generic [ref=f3e861]: . Retrieved July 30, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=blog.activision.com&rft.atitle=Call+of+Duty%C2%AE%3A+Mobile%3A+Fresh+Intel+%E2%80%93+A+Preview+of+What%27s+to+Come&rft_id=https%3A%2F%2Fblog.activision.com%2Fcall-of-duty%2F2019-05%2FCall-of-Duty-Mobile-Fresh-Intel-A-Preview-of-Whats-to-Come&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e862]:
+                - link "Jump up" [ref=f3e864] [cursor=pointer]:
+                  - /url: "#cite_ref-31"
+                  - text: ^
+                - generic [ref=f3e865]:
+                  - generic [ref=f3e866]:
+                    - text: May 2020, Leon Hurley 06 (May 6, 2020).
+                    - link "\"Wondering how to play Call of Duty Mobile Zombies? We've some good news and bad\"" [ref=f3e867] [cursor=pointer]:
+                      - /url: https://www.gamesradar.com/call-of-duty-mobile-zombies/
+                    - text: . gamesradar
+                    - generic [ref=f3e868]: . Retrieved July 30, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=gamesradar&rft.atitle=Wondering+how+to+play+Call+of+Duty+Mobile+Zombies%3F+We%27ve+some+good+news+and+bad&rft.date=2020-05-06&rft.aulast=May+2020&rft.aufirst=Leon+Hurley+06&rft_id=https%3A%2F%2Fwww.gamesradar.com%2Fcall-of-duty-mobile-zombies%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e869]:
+                - link "Jump up" [ref=f3e871] [cursor=pointer]:
+                  - /url: "#cite_ref-32"
+                  - text: ^
+                - generic [ref=f3e872]:
+                  - generic [ref=f3e873]:
+                    - text: Handrahan, Matthew (April 23, 2020).
+                    - 'link "\"Call of Duty: Mobile esports tournament gets $1m prize pool\"" [ref=f3e874] [cursor=pointer]':
+                      - /url: https://www.gamesindustry.biz/articles/2020-04-23-call-of-duty-mobile-esports-tournament-gets-USD1m-prize-pool
+                    - generic [ref=f3e875]: . Retrieved May 2, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Call+of+Duty%3A+Mobile+esports+tournament+gets+%241m+prize+pool&rft.date=2020-04-23&rft.aulast=Handrahan&rft.aufirst=Matthew&rft_id=https%3A%2F%2Fwww.gamesindustry.biz%2Farticles%2F2020-04-23-call-of-duty-mobile-esports-tournament-gets-USD1m-prize-pool&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e876]:
+                - link "Jump up" [ref=f3e878] [cursor=pointer]:
+                  - /url: "#cite_ref-33"
+                  - text: ^
+                - generic [ref=f3e879]:
+                  - generic [ref=f3e880]:
+                    - text: Webster, Andrew (April 22, 2020).
+                    - 'link "\"Call of Duty: Mobile is getting an esports tournament with $1 million in prizes\"" [ref=f3e881] [cursor=pointer]':
+                      - /url: https://www.theverge.com/2020/4/22/21231392/call-of-duty-mobile-esports-tournament-schedule-prize-money
+                    - text: . The Verge
+                    - generic [ref=f3e882]: . Retrieved May 2, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Verge&rft.atitle=Call+of+Duty%3A+Mobile+is+getting+an+esports+tournament+with+%241+million+in+prizes&rft.date=2020-04-22&rft.aulast=Webster&rft.aufirst=Andrew&rft_id=https%3A%2F%2Fwww.theverge.com%2F2020%2F4%2F22%2F21231392%2Fcall-of-duty-mobile-esports-tournament-schedule-prize-money&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e883]:
+                - link "Jump up" [ref=f3e885] [cursor=pointer]:
+                  - /url: "#cite_ref-34"
+                  - text: ^
+                - generic [ref=f3e886]:
+                  - generic [ref=f3e887]:
+                    - text: James, Ford (April 28, 2020).
+                    - 'link "\"Call of Duty Mobile World Championship 2020: Sign up, dates, qualifiers, and more\"" [ref=f3e888] [cursor=pointer]':
+                      - /url: https://www.gamesradar.com/call-of-duty-mobile-world-championship/
+                    - text: . GamesRadar+
+                    - generic [ref=f3e889]: . Retrieved May 2, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=GamesRadar%2B&rft.atitle=Call+of+Duty+Mobile+World+Championship+2020%3A+Sign+up%2C+dates%2C+qualifiers%2C+and+more&rft.date=2020-04-28&rft.aulast=James&rft.aufirst=Ford&rft_id=https%3A%2F%2Fwww.gamesradar.com%2Fcall-of-duty-mobile-world-championship%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e890]:
+                - link "Jump up" [ref=f3e892] [cursor=pointer]:
+                  - /url: "#cite_ref-35"
+                  - text: ^
+                - generic [ref=f3e893]:
+                  - generic [ref=f3e894]:
+                    - 'link "\"Money Gaming | COD: Mobile Battle Royale Events\"" [ref=f3e895] [cursor=pointer]':
+                      - /url: https://web.archive.org/web/20250211164732/https://moneygaminghq.com/uk/
+                    - text: . Money Gaming UK. Archived from
+                    - link "the original" [ref=f3e896] [cursor=pointer]:
+                      - /url: https://moneygaminghq.com/uk/
+                    - text: on February 11, 2025
+                    - generic [ref=f3e897]: . Retrieved February 19, 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Money+Gaming+UK&rft.atitle=Money+Gaming+%7C+COD%3A+Mobile+Battle+Royale+Events&rft_id=https%3A%2F%2Fmoneygaminghq.com%2Fuk%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e898]:
+                - generic [ref=f3e899]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f3e900] [cursor=pointer]:
+                    - /url: "#cite_ref-MCiOS_36-0"
+                  - link [ref=f3e902] [cursor=pointer]:
+                    - /url: "#cite_ref-MCiOS_36-1"
+                - generic [ref=f3e903]:
+                  - generic [ref=f3e904]:
+                    - link "\"Call of Duty Mobile for iOS Reviews\"" [ref=f3e905] [cursor=pointer]:
+                      - /url: https://www.metacritic.com/game/call-of-duty-mobile-2019/critic-reviews/?platform=ios-iphoneipad
+                    - text: .
+                    - link "Metacritic" [ref=f3e907] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Metacritic
+                    - text: .
+                    - link "CBS Interactive" [ref=f3e908] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/CBS_Interactive
+                    - generic [ref=f3e909]: . Retrieved October 23, 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Metacritic&rft.atitle=Call+of+Duty+Mobile+for+iOS+Reviews&rft_id=https%3A%2F%2Fwww.metacritic.com%2Fgame%2Fcall-of-duty-mobile-2019%2Fcritic-reviews%2F%3Fplatform%3Dios-iphoneipad&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e910]:
+                - link "Jump up" [ref=f3e912] [cursor=pointer]:
+                  - /url: "#cite_ref-37"
+                  - text: ^
+                - generic [ref=f3e913]:
+                  - generic [ref=f3e914]:
+                    - text: Schmid, Matthias (October 15, 2019).
+                    - 'link "\"Test: Call of Duty: Mobile\"" [ref=f3e915] [cursor=pointer]':
+                      - /url: https://www.4players.de/4players.php/dispbericht_fazit/Allgemein/Test/Fazit_Wertung/Allgemein/40559/84045/Call_of_Duty_Mobile.html
+                    - text: . 4Players
+                    - generic [ref=f3e916]: . Retrieved May 3, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=4Players&rft.atitle=Test%3A+Call+of+Duty%3A+Mobile&rft.date=2019-10-15&rft.aulast=Schmid&rft.aufirst=Matthias&rft_id=https%3A%2F%2Fwww.4players.de%2F4players.php%2Fdispbericht_fazit%2FAllgemein%2FTest%2FFazit_Wertung%2FAllgemein%2F40559%2F84045%2FCall_of_Duty_Mobile.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e917]:
+                - link "Jump up" [ref=f3e919] [cursor=pointer]:
+                  - /url: "#cite_ref-38"
+                  - text: ^
+                - generic [ref=f3e920]:
+                  - generic [ref=f3e921]:
+                    - text: Andriessen, CJ.
+                    - 'link "\"Review: Call of Duty: Mobile\"" [ref=f3e922] [cursor=pointer]':
+                      - /url: https://www.destructoid.com/review-call-of-duty-mobile-568699.phtml
+                    - text: . Destructoid
+                    - generic [ref=f3e923]: . Retrieved May 3, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Destructoid&rft.atitle=Review%3A+Call+of+Duty%3A+Mobile&rft.aulast=Andriessen&rft.aufirst=CJ&rft_id=https%3A%2F%2Fwww.destructoid.com%2Freview-call-of-duty-mobile-568699.phtml&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e924]:
+                - link "Jump up" [ref=f3e926] [cursor=pointer]:
+                  - /url: "#cite_ref-39"
+                  - text: ^
+                - generic [ref=f3e927]:
+                  - generic [ref=f3e928]:
+                    - text: Santangelo, Manuel (October 10, 2019).
+                    - 'link "\"Call of Duty: Mobile - recensione\"" [ref=f3e929] [cursor=pointer]':
+                      - /url: https://www.eurogamer.it/articles/2019-10-10-call-of-duty-mobile-recensione
+                    - text: . Eurogamer.it
+                    - generic [ref=f3e930]: . Retrieved May 3, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Eurogamer.it&rft.atitle=Call+of+Duty%3A+Mobile+-+recensione&rft.date=2019-10-10&rft.aulast=Santangelo&rft.aufirst=Manuel&rft_id=https%3A%2F%2Fwww.eurogamer.it%2Farticles%2F2019-10-10-call-of-duty-mobile-recensione&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e931]:
+                - generic [ref=f3e932]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f3e933] [cursor=pointer]:
+                    - /url: "#cite_ref-GSpotiOS_40-0"
+                  - link [ref=f3e935] [cursor=pointer]:
+                    - /url: "#cite_ref-GSpotiOS_40-1"
+                - generic [ref=f3e936]:
+                  - generic [ref=f3e937]:
+                    - text: Barbosa, Alessandro.
+                    - link "\"Call Of Duty Mobile Review - Boots On The Go\"" [ref=f3e938] [cursor=pointer]:
+                      - /url: https://www.gamespot.com/reviews/call-of-duty-mobile-review-boots-on-the-go/1900-6417357/
+                    - text: . GAMESPOT
+                    - generic [ref=f3e939]: . Retrieved May 1, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=GAMESPOT&rft.atitle=Call+Of+Duty+Mobile+Review+-+Boots+On+The+Go&rft.aulast=Barbosa&rft.aufirst=Alessandro&rft_id=https%3A%2F%2Fwww.gamespot.com%2Freviews%2Fcall-of-duty-mobile-review-boots-on-the-go%2F1900-6417357%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e940]:
+                - link "Jump up" [ref=f3e942] [cursor=pointer]:
+                  - /url: "#cite_ref-41"
+                  - text: ^
+                - generic [ref=f3e943]:
+                  - generic [ref=f3e944]:
+                    - text: Fox, Glen (October 2, 2019).
+                    - 'link "\"Call of Duty Mobile Review: The Lines Between Mobile and Console Have Blurred\"" [ref=f3e945] [cursor=pointer]':
+                      - /url: https://www.gamezebo.com/2019/10/03/call-of-duty-mobile-review-the-lines-between-mobile-and-console-have-blurred/
+                    - text: . GameZebo
+                    - generic [ref=f3e946]: . Retrieved May 3, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=GameZebo&rft.atitle=Call+of+Duty+Mobile+Review%3A+The+Lines+Between+Mobile+and+Console+Have+Blurred&rft.date=2019-10-02&rft.aulast=Fox&rft.aufirst=Glen&rft_id=https%3A%2F%2Fwww.gamezebo.com%2F2019%2F10%2F03%2Fcall-of-duty-mobile-review-the-lines-between-mobile-and-console-have-blurred%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e947]:
+                - generic [ref=f3e948]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f3e949] [cursor=pointer]:
+                    - /url: "#cite_ref-IGNiOS_42-0"
+                  - link [ref=f3e951] [cursor=pointer]:
+                    - /url: "#cite_ref-IGNiOS_42-1"
+                - generic [ref=f3e952]:
+                  - generic [ref=f3e953]:
+                    - text: Hilliard, Kyle (October 9, 2019).
+                    - 'link "\"Call of Duty: Mobile Review\"" [ref=f3e954] [cursor=pointer]':
+                      - /url: https://www.ign.com/articles/2019/10/09/call-of-duty-mobile-review
+                    - text: . IGN
+                    - generic [ref=f3e955]: . Retrieved May 1, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=IGN&rft.atitle=Call+of+Duty%3A+Mobile+Review&rft.date=2019-10-09&rft.aulast=Hilliard&rft.aufirst=Kyle&rft_id=https%3A%2F%2Fwww.ign.com%2Farticles%2F2019%2F10%2F09%2Fcall-of-duty-mobile-review&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e956]:
+                - link "Jump up" [ref=f3e958] [cursor=pointer]:
+                  - /url: "#cite_ref-43"
+                  - text: ^
+                - generic [ref=f3e959]:
+                  - generic [ref=f3e960]:
+                    - 'link "\"Test : Call of Duty Mobile : Simple, complet et efficace !\"" [ref=f3e961] [cursor=pointer]':
+                      - /url: http://www.jeuxvideo.com/test/1119006/call-of-duty-mobile-simple-complet-et-efficace.htm
+                    - text: . Jeuxvideo.com. October 4, 2019
+                    - generic [ref=f3e962]: . Retrieved May 3, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Jeuxvideo.com&rft.atitle=Test+%3A+Call+of+Duty+Mobile+%3A+Simple%2C+complet+et+efficace+%21&rft.date=2019-10-04&rft_id=http%3A%2F%2Fwww.jeuxvideo.com%2Ftest%2F1119006%2Fcall-of-duty-mobile-simple-complet-et-efficace.htm&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e963]:
+                - link "Jump up" [ref=f3e965] [cursor=pointer]:
+                  - /url: "#cite_ref-44"
+                  - text: ^
+                - generic [ref=f3e966]:
+                  - generic [ref=f3e967]:
+                    - text: Hayward, Andrew (October 18, 2019).
+                    - 'link "\"Call of Duty: Mobile is the perfect complement to the console and PC versions\"" [ref=f3e968] [cursor=pointer]':
+                      - /url: https://www.polygon.com/reviews/2019/10/18/20920622/call-of-duty-mobile-review-ios-android-microtransactions-free-to-play
+                    - text: . Polygon
+                    - generic [ref=f3e969]: . Retrieved May 2, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Polygon&rft.atitle=Call+of+Duty%3A+Mobile+is+the+perfect+complement+to+the+console+and+PC+versions&rft.date=2019-10-18&rft.aulast=Hayward&rft.aufirst=Andrew&rft_id=https%3A%2F%2Fwww.polygon.com%2Freviews%2F2019%2F10%2F18%2F20920622%2Fcall-of-duty-mobile-review-ios-android-microtransactions-free-to-play&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e970]:
+                - link "Jump up" [ref=f3e972] [cursor=pointer]:
+                  - /url: "#cite_ref-45"
+                  - text: ^
+                - generic [ref=f3e973]:
+                  - generic [ref=f3e974]:
+                    - text: Williams, Kate (November 8, 2019).
+                    - 'link "\"Call of Duty: Mobile Has Second Largest Launch Month Ever With 148 Million Downloads\"" [ref=f3e975] [cursor=pointer]':
+                      - /url: https://sensortower.com/blog/call-of-duty-mobile-first-month
+                    - text: . Sensor Tower
+                    - generic [ref=f3e976]: . Retrieved November 10, 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Sensor+Tower&rft.atitle=Call+of+Duty%3A+Mobile+Has+Second+Largest+Launch+Month+Ever+With+148+Million+Downloads&rft.date=2019-11-08&rft.aulast=Williams&rft.aufirst=Kate&rft_id=https%3A%2F%2Fsensortower.com%2Fblog%2Fcall-of-duty-mobile-first-month&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e977]:
+                - link "Jump up" [ref=f3e979] [cursor=pointer]:
+                  - /url: "#cite_ref-46"
+                  - text: ^
+                - generic [ref=f3e980]:
+                  - generic [ref=f3e981]:
+                    - 'link "\"Call of Duty: Mobile Hits 250 Million Downloads: Sensor Tower\"" [ref=f3e982] [cursor=pointer]':
+                      - /url: https://gadgets.ndtv.com/games/news/call-of-duty-mobile-250-million-downloads-google-play-app-store-covid-19-sensor-tower-2251634
+                    - text: . NDTV Gadgets 360. June 24, 2020
+                    - generic [ref=f3e983]: . Retrieved July 11, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=NDTV+Gadgets+360&rft.atitle=Call+of+Duty%3A+Mobile+Hits+250+Million+Downloads%3A+Sensor+Tower&rft.date=2020-06-24&rft_id=https%3A%2F%2Fgadgets.ndtv.com%2Fgames%2Fnews%2Fcall-of-duty-mobile-250-million-downloads-google-play-app-store-covid-19-sensor-tower-2251634&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e984]:
+                - link "Jump up" [ref=f3e986] [cursor=pointer]:
+                  - /url: "#cite_ref-47"
+                  - text: ^
+                - generic [ref=f3e987]:
+                  - generic [ref=f3e988]:
+                    - text: Partleton, Kayleigh; Writer, Staff (June 24, 2020).
+                    - 'link "\"Call of Duty: Mobile shoots through 250 million downloads\"" [ref=f3e989] [cursor=pointer]':
+                      - /url: https://www.pocketgamer.biz/news/73725/call-of-duty-mobile-250-million-downloads/
+                    - text: . pocketgamer.biz
+                    - generic [ref=f3e990]: . Retrieved July 18, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=pocketgamer.biz&rft.atitle=Call+of+Duty%3A+Mobile+shoots+through+250+million+downloads&rft.date=2020-06-24&rft.aulast=Partleton&rft.aufirst=Kayleigh&rft.au=Writer%2C+Staff&rft_id=https%3A%2F%2Fwww.pocketgamer.biz%2Fnews%2F73725%2Fcall-of-duty-mobile-250-million-downloads%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e991]:
+                - link "Jump up" [ref=f3e993] [cursor=pointer]:
+                  - /url: "#cite_ref-48"
+                  - text: ^
+                - generic [ref=f3e994]:
+                  - generic [ref=f3e995]:
+                    - 'link "\"Call of Duty: Mobile has reportedly topped 250 million downloads\"" [ref=f3e996] [cursor=pointer]':
+                      - /url: https://www.videogameschronicle.com/news/call-of-duty-mobile-has-reportedly-topped-250-million-downloads/
+                    - text: . VGC. June 24, 2020
+                    - generic [ref=f3e997]: . Retrieved July 18, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=VGC&rft.atitle=Call+of+Duty%3A+Mobile+has+reportedly+topped+250+million+downloads&rft.date=2020-06-24&rft_id=https%3A%2F%2Fwww.videogameschronicle.com%2Fnews%2Fcall-of-duty-mobile-has-reportedly-topped-250-million-downloads%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e998]:
+                - link "Jump up" [ref=f3e1000] [cursor=pointer]:
+                  - /url: "#cite_ref-49"
+                  - text: ^
+                - generic [ref=f3e1001]:
+                  - generic [ref=f3e1002]:
+                    - text: Kayleigh, Partleton (October 5, 2020).
+                    - 'link "\"Call of Duty: Mobile nears $500 million in revenue\"" [ref=f3e1003] [cursor=pointer]':
+                      - /url: https://www.pocketgamer.biz/news/74667/call-of-duty-mobile-nears-500-million-in-revenue/
+                    - text: . pocketgamer.biz.
+                    - link "Archived" [ref=f3e1004] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20201106142250/https://www.pocketgamer.biz/news/74667/call-of-duty-mobile-nears-500-million-in-revenue/
+                    - text: from the original on November 6, 2020
+                    - generic [ref=f3e1005]: . Retrieved February 21, 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=pocketgamer.biz&rft.atitle=Call+of+Duty%3A+Mobile+nears+%24500+million+in+revenue&rft.date=2020-10-05&rft.aulast=Kayleigh&rft.aufirst=Partleton&rft_id=https%3A%2F%2Fwww.pocketgamer.biz%2Fnews%2F74667%2Fcall-of-duty-mobile-nears-500-million-in-revenue%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1006]:
+                - link "Jump up" [ref=f3e1008] [cursor=pointer]:
+                  - /url: "#cite_ref-50"
+                  - text: ^
+                - generic [ref=f3e1009]:
+                  - generic [ref=f3e1010]:
+                    - 'link "\"Call of Duty: Mobile Shoots Past $1.5 Billion in Lifetime Player Spending\"" [ref=f3e1011] [cursor=pointer]':
+                      - /url: https://sensortower.com/blog/call-of-duty-mobile-shoots-past-usd1-5-billion-in-lifetime-player-spending/
+                    - text: . SensorTower. February 23, 2022
+                    - generic [ref=f3e1012]: . Retrieved February 24, 2022
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=SensorTower&rft.atitle=Call+of+Duty%3A+Mobile+Shoots+Past+%241.5+Billion+in+Lifetime+Player+Spending&rft.date=2022-02-23&rft_id=https%3A%2F%2Fsensortower.com%2Fblog%2Fcall-of-duty-mobile-shoots-past-usd1-5-billion-in-lifetime-player-spending%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1013]:
+                - link "Jump up" [ref=f3e1015] [cursor=pointer]:
+                  - /url: "#cite_ref-51"
+                  - text: ^
+                - generic [ref=f3e1016]:
+                  - generic [ref=f3e1017]:
+                    - link "\"Call Of Duty Mobile Has Been Downloaded 500 Million Times And Made A Ton Of Money\"" [ref=f3e1018] [cursor=pointer]:
+                      - /url: https://www.gamespot.com/articles/call-of-duty-mobile-has-been-downloaded-500-million-times-and-made-a-ton-of-money/1100-6491018/
+                    - text: . Gamespot. May 5, 2021
+                    - generic [ref=f3e1019]: . Retrieved February 24, 2022
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Gamespot&rft.atitle=Call+Of+Duty+Mobile+Has+Been+Downloaded+500+Million+Times+And+Made+A+Ton+Of+Money&rft.date=2021-05-05&rft_id=https%3A%2F%2Fwww.gamespot.com%2Farticles%2Fcall-of-duty-mobile-has-been-downloaded-500-million-times-and-made-a-ton-of-money%2F1100-6491018%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1020]:
+                - link "Jump up" [ref=f3e1022] [cursor=pointer]:
+                  - /url: "#cite_ref-52"
+                  - text: ^
+                - generic [ref=f3e1023]:
+                  - generic [ref=f3e1024]:
+                    - 'link "\"Call of Duty: Mobile hits one billion downloads\"" [ref=f3e1025] [cursor=pointer]':
+                      - /url: https://www.pocketgamer.biz/call-of-duty-mobile-hits-one-billion-downloads/
+                    - text: . pocketgamer.biz. November 6, 2024
+                    - generic [ref=f3e1026]: . Retrieved November 2, 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=pocketgamer.biz&rft.atitle=Call+of+Duty%3A+Mobile+hits+one+billion+downloads&rft.date=2024-11-06&rft_id=https%3A%2F%2Fwww.pocketgamer.biz%2Fcall-of-duty-mobile-hits-one-billion-downloads%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1027]:
+                - link "Jump up" [ref=f3e1029] [cursor=pointer]:
+                  - /url: "#cite_ref-53"
+                  - text: ^
+                - generic [ref=f3e1030]:
+                  - generic [ref=f3e1031]:
+                    - link "\"Hollywood Music In Media Awards Announces Nominees\"" [ref=f3e1032] [cursor=pointer]:
+                      - /url: https://www.shootonline.com/spw/hollywood-music-media-awards-announces-nominees
+                    - text: .
+                    - link "Shoot" [ref=f3e1034] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Shoot_(advertising_magazine)
+                    - text: . November 4, 2019
+                    - generic [ref=f3e1035]: . Retrieved November 6, 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Shoot&rft.atitle=Hollywood+Music+In+Media+Awards+Announces+Nominees&rft.date=2019-11-04&rft_id=https%3A%2F%2Fwww.shootonline.com%2Fspw%2Fhollywood-music-media-awards-announces-nominees&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1036]:
+                - link "Jump up" [ref=f3e1038] [cursor=pointer]:
+                  - /url: "#cite_ref-54"
+                  - text: ^
+                - generic [ref=f3e1039]:
+                  - generic [ref=f3e1040]:
+                    - text: Makuch, Eddie (December 13, 2019).
+                    - 'link "\"The Game Awards 2019 Winners: Sekiro Takes Game Of The Year\"" [ref=f3e1041] [cursor=pointer]':
+                      - /url: https://www.gamespot.com/articles/the-game-awards-2019-winners-sekiro-takes-game-of-/1100-6472169/
+                    - text: .
+                    - link "GameSpot" [ref=f3e1043] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/GameSpot
+                    - generic [ref=f3e1044]: . Retrieved December 13, 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=GameSpot&rft.atitle=The+Game+Awards+2019+Winners%3A+Sekiro+Takes+Game+Of+The+Year&rft.date=2019-12-13&rft.aulast=Makuch&rft.aufirst=Eddie&rft_id=https%3A%2F%2Fwww.gamespot.com%2Farticles%2Fthe-game-awards-2019-winners-sekiro-takes-game-of-%2F1100-6472169%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1045]:
+                - link "Jump up" [ref=f3e1047] [cursor=pointer]:
+                  - /url: "#cite_ref-55"
+                  - text: ^
+                - generic [ref=f3e1048]:
+                  - generic [ref=f3e1049]:
+                    - text: Chalk, Andy (January 13, 2020).
+                    - link "\"Control and Death Stranding get 8 nominations each for the 2020 DICE Awards\"" [ref=f3e1050] [cursor=pointer]:
+                      - /url: https://www.pcgamer.com/control-and-death-stranding-get-eight-nominations-each-for-the-2020-dice-awards/
+                    - text: .
+                    - link "PC Gamer" [ref=f3e1052] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/PC_Gamer
+                    - generic [ref=f3e1053]: . Retrieved January 20, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=PC+Gamer&rft.atitle=Control+and+Death+Stranding+get+8+nominations+each+for+the+2020+DICE+Awards&rft.date=2020-01-13&rft.aulast=Chalk&rft.aufirst=Andy&rft_id=https%3A%2F%2Fwww.pcgamer.com%2Fcontrol-and-death-stranding-get-eight-nominations-each-for-the-2020-dice-awards%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1054]:
+                - link "Jump up" [ref=f3e1056] [cursor=pointer]:
+                  - /url: "#cite_ref-56"
+                  - text: ^
+                - generic [ref=f3e1057]:
+                  - generic [ref=f3e1058]:
+                    - text: Shanley, Patrick (January 8, 2020).
+                    - link "\"'Death Stranding' Leads Game Developers Choice Awards Nominees\"" [ref=f3e1059] [cursor=pointer]:
+                      - /url: https://www.hollywoodreporter.com/news/game-developers-choice-awards-full-list-nominees-1268040
+                    - text: .
+                    - link "The Hollywood Reporter" [ref=f3e1062] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/The_Hollywood_Reporter
+                    - generic [ref=f3e1063]: . Retrieved January 8, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Hollywood+Reporter&rft.atitle=%27Death+Stranding%27+Leads+Game+Developers+Choice+Awards+Nominees&rft.date=2020-01-08&rft.aulast=Shanley&rft.aufirst=Patrick&rft_id=https%3A%2F%2Fwww.hollywoodreporter.com%2Fnews%2Fgame-developers-choice-awards-full-list-nominees-1268040&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1064]:
+                - link "Jump up" [ref=f3e1066] [cursor=pointer]:
+                  - /url: "#cite_ref-57"
+                  - text: ^
+                - generic [ref=f3e1067]:
+                  - generic [ref=f3e1068]:
+                    - text: Grayshadow (February 17, 2020).
+                    - link "\"2020 SXSW Gaming Awards Nominees Revealed\"" [ref=f3e1069] [cursor=pointer]:
+                      - /url: https://www.noobfeed.com/news/9773/2020-sxsw-gaming-awards-nominees-revealed
+                    - text: . NoobFeed
+                    - generic [ref=f3e1070]: . Retrieved February 18, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=NoobFeed&rft.atitle=2020+SXSW+Gaming+Awards+Nominees+Revealed&rft.date=2020-02-17&rft.au=Grayshadow&rft_id=https%3A%2F%2Fwww.noobfeed.com%2Fnews%2F9773%2F2020-sxsw-gaming-awards-nominees-revealed&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1071]:
+                - link "Jump up" [ref=f3e1073] [cursor=pointer]:
+                  - /url: "#cite_ref-58"
+                  - text: ^
+                - generic [ref=f3e1074]:
+                  - generic [ref=f3e1075]:
+                    - text: Chilton, Louis (April 2, 2020).
+                    - 'link "\"Bafta Games Awards 2020: The results in full\"" [ref=f3e1076] [cursor=pointer]':
+                      - /url: https://www.independent.co.uk/arts-entertainment/games/news/bafta-games-awards-2020-results-list-winners-outer-wilds-death-stranding-control-disco-elysium-a9444411.html
+                    - text: .
+                    - link "The Independent" [ref=f3e1078] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/The_Independent
+                    - generic [ref=f3e1079]: . Retrieved April 3, 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+Independent&rft.atitle=Bafta+Games+Awards+2020%3A+The+results+in+full&rft.date=2020-04-02&rft.aulast=Chilton&rft.aufirst=Louis&rft_id=https%3A%2F%2Fwww.independent.co.uk%2Farts-entertainment%2Fgames%2Fnews%2Fbafta-games-awards-2020-results-list-winners-outer-wilds-death-stranding-control-disco-elysium-a9444411.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1080]:
+                - link "Jump up" [ref=f3e1082] [cursor=pointer]:
+                  - /url: "#cite_ref-59"
+                  - text: ^
+                - generic [ref=f3e1083]:
+                  - generic [ref=f3e1084]:
+                    - text: Tassi, Paul (December 11, 2020).
+                    - link "\"Here's The Game Awards 2020 Winners List With A Near-Total 'Last Of Us' Sweep\"" [ref=f3e1085] [cursor=pointer]:
+                      - /url: https://www.forbes.com/sites/paultassi/2020/12/11/heres-the-game-awards-2020-winner-list-with-a-near-total-last-of-us-sweep/
+                    - text: .
+                    - link "Forbes" [ref=f3e1087] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Forbes
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Forbes&rft.atitle=Here%27s+The+Game+Awards+2020+Winners+List+With+A+Near-Total+%27Last+Of+Us%27+Sweep&rft.date=2020-12-11&rft.aulast=Tassi&rft.aufirst=Paul&rft_id=https%3A%2F%2Fwww.forbes.com%2Fsites%2Fpaultassi%2F2020%2F12%2F11%2Fheres-the-game-awards-2020-winner-list-with-a-near-total-last-of-us-sweep%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+              - listitem [ref=f3e1088]:
+                - link "Jump up" [ref=f3e1090] [cursor=pointer]:
+                  - /url: "#cite_ref-60"
+                  - text: ^
+                - generic [ref=f3e1091]:
+                  - generic [ref=f3e1092]:
+                    - text: Bevan, Rhiannon (November 20, 2025).
+                    - link "\"All Of The Winners At The Golden Joystick Awards 2025\"" [ref=f3e1093] [cursor=pointer]:
+                      - /url: https://www.thegamer.com/golden-joystick-awards-2025-all-winners/
+                    - text: . TheGamer
+                    - generic [ref=f3e1094]: . Retrieved November 22, 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=TheGamer&rft.atitle=All+Of+The+Winners+At+The+Golden+Joystick+Awards+2025&rft.date=2025-11-20&rft.aulast=Bevan&rft.aufirst=Rhiannon&rft_id=https%3A%2F%2Fwww.thegamer.com%2Fgolden-joystick-awards-2025-all-winners%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ACall+of+Duty%3A+Mobile"
+          - region [ref=f3e1095]:
+            - generic [ref=f3e1096]:
+              - heading "External links" [level=2] [ref=f3e1097]
+              - generic [ref=f3e1098]:
+                - link "edit":
+                  - /url: /w/index.php?title=Call_of_Duty:_Mobile&action=edit&section=12
+            - list [ref=f3e1099]:
+              - listitem [ref=f3e1100]:
+                - link "Official website" [ref=f3e1103] [cursor=pointer]:
+                  - /url: https://www.callofduty.com/mobile
+            - navigation [ref=f3e1104]:
+              - table [ref=f3e1105]:
+                - rowgroup [ref=f3e1106]:
+                  - row [ref=f3e1107]:
+                    - columnheader [ref=f3e1108]:
+                      - button "[hide]" [expanded] [ref=f3e1109] [cursor=pointer]
+                      - list [ref=f3e1111]:
+                        - listitem [ref=f3e1112]:
+                          - link "v" [ref=f3e1113] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Template:Call_of_Duty_series
+                          - text: ·
+                        - listitem [ref=f3e1114]:
+                          - link "t" [ref=f3e1115] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Template_talk:Call_of_Duty_series
+                          - text: ·
+                        - listitem [ref=f3e1116]:
+                          - link "e" [ref=f3e1117] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Special:EditPage/Template:Call_of_Duty_series
+                      - link "Call of Duty" [ref=f3e1120] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Call_of_Duty
+                  - row [ref=f3e1121]:
+                    - cell [ref=f3e1122]:
+                      - link "Activision" [ref=f3e1124] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Activision
+                  - row [ref=f3e1125]:
+                    - rowheader "World War II series" [ref=f3e1126]: World War IIseries
+                    - cell [ref=f3e1127]:
+                      - table [ref=f3e1128]:
+                        - rowgroup [ref=f3e1129]:
+                          - row [ref=f3e1130]:
+                            - rowheader "Main series" [ref=f3e1131]
+                            - cell [ref=f3e1132]:
+                              - list [ref=f3e1134]:
+                                - listitem [ref=f3e1135]:
+                                  - link "Call of Duty" [ref=f3e1137] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty_(video_game)
+                                  - list [ref=f3e1138]:
+                                    - listitem [ref=f3e1139]:
+                                      - text: (
+                                      - link "United Offensive" [ref=f3e1141] [cursor=pointer]:
+                                        - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_United_Offensive
+                                      - text: )
+                                  - text: ·
+                                - listitem [ref=f3e1142]:
+                                  - link "2" [ref=f3e1144] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty_2
+                                  - text: ·
+                                - listitem [ref=f3e1145]:
+                                  - link "3" [ref=f3e1147] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty_3
+                                  - text: ·
+                                - listitem [ref=f3e1148]:
+                                  - link "WWII" [ref=f3e1150] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_WWII
+                                  - text: ·
+                                - listitem [ref=f3e1151]:
+                                  - link "Vanguard" [ref=f3e1153] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Vanguard
+                          - row [ref=f3e1154]:
+                            - rowheader "Spin-offs" [ref=f3e1155]
+                            - cell [ref=f3e1156]:
+                              - list [ref=f3e1158]:
+                                - listitem [ref=f3e1159]:
+                                  - link "Finest Hour" [ref=f3e1161] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Finest_Hour
+                                  - text: ·
+                                - listitem [ref=f3e1162]:
+                                  - 'link "2: Big Red One" [ref=f3e1164] [cursor=pointer]':
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty_2:_Big_Red_One
+                                  - text: ·
+                                - listitem [ref=f3e1165]:
+                                  - link "Roads to Victory" [ref=f3e1167] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Roads_to_Victory
+                  - row [ref=f3e1168]:
+                    - rowheader "Modern Warfare" [ref=f3e1169]
+                    - cell [ref=f3e1170]:
+                      - table [ref=f3e1171]:
+                        - rowgroup [ref=f3e1172]:
+                          - row [ref=f3e1173]:
+                            - rowheader "Original series" [ref=f3e1174]
+                            - cell [ref=f3e1175]:
+                              - list [ref=f3e1177]:
+                                - listitem [ref=f3e1178]:
+                                  - 'link "4: Modern Warfare" [ref=f3e1180] [cursor=pointer]':
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare
+                                  - list [ref=f3e1181]:
+                                    - listitem [ref=f3e1182]:
+                                      - text: (
+                                      - link "Remastered" [ref=f3e1184] [cursor=pointer]:
+                                        - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_Remastered
+                                      - text: )
+                                  - text: ·
+                                - listitem [ref=f3e1185]:
+                                  - link "Modern Warfare 2" [ref=f3e1187] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_2
+                                  - text: ·
+                                - listitem [ref=f3e1188]:
+                                  - link "Modern Warfare 3" [ref=f3e1190] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_3
+                          - row [ref=f3e1191]:
+                            - rowheader "Reboot series" [ref=f3e1192]
+                            - cell [ref=f3e1193]:
+                              - list [ref=f3e1195]:
+                                - listitem [ref=f3e1196]:
+                                  - link "Modern Warfare" [ref=f3e1198] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_(2019_video_game)
+                                  - text: (2019) ·
+                                - listitem [ref=f3e1199]:
+                                  - link "Modern Warfare II" [ref=f3e1201] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_II_(2022_video_game)
+                                  - text: (2022) ·
+                                - listitem [ref=f3e1202]:
+                                  - link "Modern Warfare III" [ref=f3e1204] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_III_(2023_video_game)
+                                  - text: (2023) ·
+                                - listitem [ref=f3e1205]:
+                                  - link "Modern Warfare 4" [ref=f3e1207] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_4
+                                  - text: (2026)
+                          - row [ref=f3e1208]:
+                            - rowheader "Spin-offs" [ref=f3e1209]
+                            - cell [ref=f3e1210]:
+                              - list [ref=f3e1212]:
+                                - listitem [ref=f3e1213]:
+                                  - 'link "4: Modern Warfare" [ref=f3e1215] [cursor=pointer]':
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare_(Nintendo_DS)
+                                  - text: (Nintendo DS) ·
+                                - listitem [ref=f3e1216]:
+                                  - 'link "Modern Warfare: Mobilized" [ref=f3e1218] [cursor=pointer]':
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare:_Mobilized
+                                  - text: ·
+                                - listitem [ref=f3e1219]:
+                                  - link "Modern Warfare 3 – Defiance" [ref=f3e1221] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_3_–_Defiance
+                  - row [ref=f3e1222]:
+                    - rowheader "Black Ops" [ref=f3e1223]
+                    - cell [ref=f3e1224]:
+                      - table [ref=f3e1225]:
+                        - rowgroup [ref=f3e1226]:
+                          - row [ref=f3e1227]:
+                            - rowheader "Main series" [ref=f3e1228]
+                            - cell [ref=f3e1229]:
+                              - list [ref=f3e1231]:
+                                - listitem [ref=f3e1232]:
+                                  - link "World at War" [ref=f3e1234] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_World_at_War
+                                  - text: ·
+                                - listitem [ref=f3e1235]:
+                                  - link "Black Ops" [ref=f3e1237] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops
+                                  - text: ·
+                                - listitem [ref=f3e1238]:
+                                  - link "Black Ops II" [ref=f3e1240] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops_II
+                                  - text: ·
+                                - listitem [ref=f3e1241]:
+                                  - link "Black Ops III" [ref=f3e1243] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops_III
+                                  - text: ·
+                                - listitem [ref=f3e1244]:
+                                  - link "Black Ops 4" [ref=f3e1246] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops_4
+                                  - text: ·
+                                - listitem [ref=f3e1247]:
+                                  - link "Black Ops Cold War" [ref=f3e1249] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops_Cold_War
+                                  - text: ·
+                                - listitem [ref=f3e1250]:
+                                  - link "Black Ops 6" [ref=f3e1252] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops_6
+                                  - list [ref=f3e1253]:
+                                    - listitem [ref=f3e1254]:
+                                      - text: (
+                                      - link "Zombies" [ref=f3e1256] [cursor=pointer]:
+                                        - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops_6_Zombies
+                                      - text: )
+                                  - text: ·
+                                - listitem [ref=f3e1257]:
+                                  - link "Black Ops 7" [ref=f3e1259] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops_7
+                          - row [ref=f3e1260]:
+                            - rowheader "Spin-offs" [ref=f3e1261]
+                            - cell [ref=f3e1262]:
+                              - list [ref=f3e1264]:
+                                - listitem [ref=f3e1265]:
+                                  - link "World at War" [ref=f3e1267] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_World_at_War_(Nintendo_DS)
+                                  - text: (Nintendo DS) ·
+                                - listitem [ref=f3e1268]:
+                                  - link "World at War – Final Fronts" [ref=f3e1270] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_World_at_War_–_Final_Fronts
+                                  - text: ·
+                                - listitem [ref=f3e1271]:
+                                  - link "World at War – Zombies" [ref=f3e1273] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_World_at_War_–_Zombies
+                                  - text: ·
+                                - listitem [ref=f3e1274]:
+                                  - link "Black Ops – Zombies" [ref=f3e1276] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops_–_Zombies
+                                  - text: ·
+                                - listitem [ref=f3e1277]:
+                                  - 'link "Black Ops: Declassified" [ref=f3e1279] [cursor=pointer]':
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Black_Ops:_Declassified
+                                  - text: ·
+                                - listitem [ref=f3e1280]:
+                                  - link "Strike Team" [ref=f3e1282] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Strike_Team
+                  - row [ref=f3e1283]:
+                    - rowheader "Other games" [ref=f3e1284]
+                    - cell [ref=f3e1285]:
+                      - list [ref=f3e1287]:
+                        - listitem [ref=f3e1288]:
+                          - link "Online" [ref=f3e1290] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty_Online
+                          - text: ·
+                        - listitem [ref=f3e1291]:
+                          - link "Ghosts" [ref=f3e1293] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Ghosts
+                          - text: ·
+                        - listitem [ref=f3e1294]:
+                          - link "Advanced Warfare" [ref=f3e1296] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Advanced_Warfare
+                          - text: ·
+                        - listitem [ref=f3e1297]:
+                          - link "Heroes" [ref=f3e1299] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Heroes
+                          - text: ·
+                        - listitem [ref=f3e1300]:
+                          - link "Infinite Warfare" [ref=f3e1302] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Infinite_Warfare
+                          - text: ·
+                        - listitem [ref=f3e1303]:
+                          - link "Mobile" [ref=f3e1305] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Mobile
+                          - text: ·
+                        - listitem [ref=f3e1306]:
+                          - link "Warzone" [ref=f3e1308] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Warzone_(2020_video_game)
+                          - text: (2020) ·
+                        - listitem [ref=f3e1309]:
+                          - link "Warzone" [ref=f3e1311] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Warzone_(2022_video_game)
+                          - text: (2022) ·
+                        - listitem [ref=f3e1312]:
+                          - link "Warzone Mobile" [ref=f3e1314] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Warzone_Mobile
+                  - row [ref=f3e1315]:
+                    - rowheader "Other media" [ref=f3e1316]
+                    - cell [ref=f3e1317]:
+                      - list [ref=f3e1319]:
+                        - listitem [ref=f3e1320]:
+                          - 'link "Find Makarov: Operation Kingfish" [ref=f3e1322] [cursor=pointer]':
+                            - /url: https://en.wikipedia.org/wiki/Find_Makarov:_Operation_Kingfish
+                          - text: ·
+                        - listitem [ref=f3e1323]:
+                          - text: "\""
+                          - link "Nightmare" [ref=f3e1324] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Nightmare_(Avenged_Sevenfold_song)
+                          - text: "\" ·"
+                        - listitem [ref=f3e1325]:
+                          - text: "\""
+                          - link "Shepherd of Fire" [ref=f3e1326] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Shepherd_of_Fire
+                          - text: "\" ·"
+                        - listitem [ref=f3e1327]:
+                          - text: "\""
+                          - link "Survival" [ref=f3e1328] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Survival_(Eminem_song)
+                          - text: "\" ·"
+                        - listitem [ref=f3e1329]:
+                          - link "Black Reign" [ref=f3e1331] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Black_Reign_(EP)
+                          - list [ref=f3e1332]:
+                            - listitem [ref=f3e1333]:
+                              - text: ("
+                              - link "Not Ready to Die" [ref=f3e1334] [cursor=pointer]:
+                                - /url: https://en.wikipedia.org/wiki/Not_Ready_to_Die
+                              - text: "\" ·"
+                            - listitem [ref=f3e1335]:
+                              - text: "\""
+                              - link "Carry On" [ref=f3e1336] [cursor=pointer]:
+                                - /url: https://en.wikipedia.org/wiki/Carry_On_(Avenged_Sevenfold_song)
+                              - text: "\" ·"
+                            - listitem [ref=f3e1337]:
+                              - text: "\""
+                              - link "Mad Hatter" [ref=f3e1338] [cursor=pointer]:
+                                - /url: https://en.wikipedia.org/wiki/Mad_Hatter_(song)
+                              - text: "\")"
+                  - row [ref=f3e1339]:
+                    - rowheader "Elements" [ref=f3e1340]
+                    - cell [ref=f3e1341]:
+                      - table [ref=f3e1342]:
+                        - rowgroup [ref=f3e1343]:
+                          - row [ref=f3e1344]:
+                            - rowheader "Gameplay" [ref=f3e1345]
+                            - cell [ref=f3e1346]:
+                              - list [ref=f3e1348]:
+                                - listitem [ref=f3e1349]:
+                                  - link "Zombies mode" [ref=f3e1350] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Call_of_Duty_Zombies
+                                  - text: ·
+                                - listitem [ref=f3e1351]:
+                                  - link "Survival mode" [ref=f3e1352] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Survival_mode
+                          - row [ref=f3e1353]:
+                            - rowheader "Levels" [ref=f3e1354]
+                            - cell [ref=f3e1355]:
+                              - list [ref=f3e1357]:
+                                - listitem [ref=f3e1358]:
+                                  - text: "\""
+                                  - link "All Ghillied Up" [ref=f3e1359] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/All_Ghillied_Up
+                                  - text: "\" ·"
+                                - listitem [ref=f3e1360]:
+                                  - text: "\""
+                                  - link "No Russian" [ref=f3e1361] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/No_Russian
+                                  - text: "\""
+                          - row [ref=f3e1362]:
+                            - rowheader "Maps" [ref=f3e1363]
+                            - cell [ref=f3e1364]:
+                              - list [ref=f3e1366]:
+                                - listitem [ref=f3e1367]:
+                                  - text: "\""
+                                  - link "Nuketown" [ref=f3e1368] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Nuketown
+                                  - text: "\" ·"
+                                - listitem [ref=f3e1369]:
+                                  - text: "\""
+                                  - link "Shipment" [ref=f3e1370] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Shipment_(Call_of_Duty)
+                                  - text: "\""
+                          - row [ref=f3e1371]:
+                            - rowheader "Characters" [ref=f3e1372]
+                            - cell [ref=f3e1373]:
+                              - list [ref=f3e1375]:
+                                - listitem [ref=f3e1376]:
+                                  - link "Captain Price" [ref=f3e1377] [cursor=pointer]:
+                                    - /url: https://en.wikipedia.org/wiki/Captain_Price
+                  - row [ref=f3e1378]:
+                    - rowheader "Technology" [ref=f3e1379]
+                    - cell [ref=f3e1380]:
+                      - list [ref=f3e1382]:
+                        - listitem [ref=f3e1383]:
+                          - link "id Tech 3" [ref=f3e1384] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Id_Tech_3
+                          - text: ·
+                        - listitem [ref=f3e1385]:
+                          - link "Elite" [ref=f3e1386] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Elite
+                  - row [ref=f3e1387]:
+                    - rowheader "Events" [ref=f3e1388]
+                    - cell [ref=f3e1389]:
+                      - list [ref=f3e1391]:
+                        - listitem [ref=f3e1392]:
+                          - link "Experience 2011" [ref=f3e1393] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Experience_2011
+                          - text: ·
+                        - listitem [ref=f3e1394]:
+                          - link "Experience 2016" [ref=f3e1395] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty:_Experience_2016
+                  - row [ref=f3e1396]:
+                    - rowheader "Developers" [ref=f3e1397]
+                    - cell [ref=f3e1398]:
+                      - list [ref=f3e1400]:
+                        - listitem [ref=f3e1401]:
+                          - link "Infinity Ward" [ref=f3e1402] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Infinity_Ward
+                          - text: ·
+                        - listitem [ref=f3e1403]:
+                          - link "Treyarch" [ref=f3e1404] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Treyarch
+                          - text: ·
+                        - listitem [ref=f3e1405]:
+                          - link "Sledgehammer Games" [ref=f3e1406] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Sledgehammer_Games
+                          - text: ·
+                        - listitem [ref=f3e1407]:
+                          - link "Raven Software" [ref=f3e1408] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Raven_Software
+                  - row [ref=f3e1409]:
+                    - rowheader "Related" [ref=f3e1410]
+                    - cell [ref=f3e1411]:
+                      - list [ref=f3e1413]:
+                        - listitem [ref=f3e1414]:
+                          - link "Acquisition of Activision Blizzard by Microsoft" [ref=f3e1415] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Acquisition_of_Activision_Blizzard_by_Microsoft
+                          - text: ·
+                        - listitem [ref=f3e1416]:
+                          - link "Battle.net" [ref=f3e1417] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Battle.net
+                          - text: ·
+                        - listitem [ref=f3e1418]:
+                          - link "Call of Duty Endowment" [ref=f3e1419] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Call_of_Duty_Endowment
+                          - text: ·
+                        - listitem [ref=f3e1420]:
+                          - text: "\""
+                          - link "Press F to pay respects" [ref=f3e1421] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Press_F_to_pay_respects
+                          - text: "\" ·"
+                        - listitem [ref=f3e1422]:
+                          - link "2017 Wichita swatting" [ref=f3e1423] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/2017_Wichita_swatting
+                  - row [ref=f3e1424]:
+                    - cell "Category Category" [ref=f3e1425]:
+                      - list [ref=f3e1427]:
+                        - listitem [ref=f3e1428]:
+                          - generic "Category" [ref=f3e1430]
+                          - link "Category" [ref=f3e1431] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Category:Call_of_Duty
+        - generic [ref=f3e1433]:
+          - link "Categories" [ref=f3e1434] [cursor=pointer]:
+            - /url: /wiki/Help:Category
+          - text: ":"
+          - list [ref=f3e1435]:
+            - listitem [ref=f3e1436]:
+              - link "2019 video games" [ref=f3e1437] [cursor=pointer]:
+                - /url: /wiki/Category:2019_video_games
+            - listitem [ref=f3e1438]:
+              - link "Activision games" [ref=f3e1439] [cursor=pointer]:
+                - /url: /wiki/Category:Activision_games
+            - listitem [ref=f3e1440]:
+              - link "Android (operating system) games" [ref=f3e1441] [cursor=pointer]:
+                - /url: /wiki/Category:Android_(operating_system)_games
+            - listitem [ref=f3e1442]:
+              - link "BAFTA winners (video games)" [ref=f3e1443] [cursor=pointer]:
+                - /url: /wiki/Category:BAFTA_winners_(video_games)
+            - listitem [ref=f3e1444]:
+              - link "Battle royale games" [ref=f3e1445] [cursor=pointer]:
+                - /url: /wiki/Category:Battle_royale_games
+            - listitem [ref=f3e1446]:
+              - link "Call of Duty games" [ref=f3e1447] [cursor=pointer]:
+                - /url: /wiki/Category:Call_of_Duty_games
+            - listitem [ref=f3e1448]:
+              - link "First-person shooter multiplayer online games" [ref=f3e1449] [cursor=pointer]:
+                - /url: /wiki/Category:First-person_shooter_multiplayer_online_games
+            - listitem [ref=f3e1450]:
+              - link "First-person shooters" [ref=f3e1451] [cursor=pointer]:
+                - /url: /wiki/Category:First-person_shooters
+            - listitem [ref=f3e1452]:
+              - link "Free-to-play video games" [ref=f3e1453] [cursor=pointer]:
+                - /url: /wiki/Category:Free-to-play_video_games
+            - listitem [ref=f3e1454]:
+              - link "The Game Awards winners" [ref=f3e1455] [cursor=pointer]:
+                - /url: /wiki/Category:The_Game_Awards_winners
+            - listitem [ref=f3e1456]:
+              - link "Garena games" [ref=f3e1457] [cursor=pointer]:
+                - /url: /wiki/Category:Garena_games
+            - listitem [ref=f3e1458]:
+              - link "IOS games" [ref=f3e1459] [cursor=pointer]:
+                - /url: /wiki/Category:IOS_games
+            - listitem [ref=f3e1460]:
+              - link "Multiplayer online games" [ref=f3e1461] [cursor=pointer]:
+                - /url: /wiki/Category:Multiplayer_online_games
+            - listitem [ref=f3e1462]:
+              - link "Tencent" [ref=f3e1463] [cursor=pointer]:
+                - /url: /wiki/Category:Tencent
+            - listitem [ref=f3e1464]:
+              - link "TiMi Studio Group games" [ref=f3e1465] [cursor=pointer]:
+                - /url: /wiki/Category:TiMi_Studio_Group_games
+            - listitem [ref=f3e1466]:
+              - link "Unity (game engine) games" [ref=f3e1467] [cursor=pointer]:
+                - /url: /wiki/Category:Unity_(game_engine)_games
+            - listitem [ref=f3e1468]:
+              - link "Video games developed in China" [ref=f3e1469] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_developed_in_China
+            - listitem [ref=f3e1470]:
+              - link "Video games set in Afghanistan" [ref=f3e1471] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Afghanistan
+            - listitem [ref=f3e1472]:
+              - link "Video games set in Algeria" [ref=f3e1473] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Algeria
+            - listitem [ref=f3e1474]:
+              - link "Video games set in Angola" [ref=f3e1475] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Angola
+            - listitem [ref=f3e1476]:
+              - link "Video games set in Brazil" [ref=f3e1477] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Brazil
+            - listitem [ref=f3e1478]:
+              - link "Video games set in China" [ref=f3e1479] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_China
+            - listitem [ref=f3e1480]:
+              - link "Video games set in Cuba" [ref=f3e1481] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Cuba
+            - listitem [ref=f3e1482]:
+              - link "Video games set in Egypt" [ref=f3e1483] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Egypt
+            - listitem [ref=f3e1484]:
+              - link "Video games set in France" [ref=f3e1485] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_France
+            - listitem [ref=f3e1486]:
+              - link "Video games set in Georgia (U.S. state)" [ref=f3e1487] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Georgia_(U.S._state)
+            - listitem [ref=f3e1488]:
+              - link "Video games set in Greece" [ref=f3e1489] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Greece
+            - listitem [ref=f3e1490]:
+              - link "Video games set in Iraq" [ref=f3e1491] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Iraq
+            - listitem [ref=f3e1492]:
+              - link "Video games set in Kyoto" [ref=f3e1493] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Kyoto
+            - listitem [ref=f3e1494]:
+              - link "Video games set in Kyrgyzstan" [ref=f3e1495] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Kyrgyzstan
+            - listitem [ref=f3e1496]:
+              - link "Video games set in Laos" [ref=f3e1497] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Laos
+            - listitem [ref=f3e1498]:
+              - link "Video games set in Los Angeles" [ref=f3e1499] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Los_Angeles
+            - listitem [ref=f3e1500]:
+              - link "Video games set in Miami" [ref=f3e1501] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Miami
+            - listitem [ref=f3e1502]:
+              - link "Video games set in Nevada" [ref=f3e1503] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Nevada
+            - listitem [ref=f3e1504]:
+              - link "Video games set in New Mexico" [ref=f3e1505] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_New_Mexico
+            - listitem [ref=f3e1506]:
+              - link "Video games set in New York City" [ref=f3e1507] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_New_York_City
+            - listitem [ref=f3e1508]:
+              - link "Video games set in Pakistan" [ref=f3e1509] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Pakistan
+            - listitem [ref=f3e1510]:
+              - link "Video games set in Panama" [ref=f3e1511] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Panama
+            - listitem [ref=f3e1512]:
+              - link "Video games set in Russia" [ref=f3e1513] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Russia
+            - listitem [ref=f3e1514]:
+              - link "Video games set in Saudi Arabia" [ref=f3e1515] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Saudi_Arabia
+            - listitem [ref=f3e1516]:
+              - link "Video games set in Spain" [ref=f3e1517] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Spain
+            - listitem [ref=f3e1518]:
+              - link "Video games set in Texas" [ref=f3e1519] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Texas
+            - listitem [ref=f3e1520]:
+              - link "Video games set in the Arctic" [ref=f3e1521] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_the_Arctic
+            - listitem [ref=f3e1522]:
+              - link "Video games set in the Middle East" [ref=f3e1523] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_the_Middle_East
+            - listitem [ref=f3e1524]:
+              - link "Video games set in the Netherlands" [ref=f3e1525] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_the_Netherlands
+            - listitem [ref=f3e1526]:
+              - link "Video games set in the United Kingdom" [ref=f3e1527] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_the_United_Kingdom
+            - listitem [ref=f3e1528]:
+              - link "Video games set in Tunisia" [ref=f3e1529] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Tunisia
+            - listitem [ref=f3e1530]:
+              - link "Video games set in Ukraine" [ref=f3e1531] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Ukraine
+            - listitem [ref=f3e1532]:
+              - link "Video games set in Uzbekistan" [ref=f3e1533] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_set_in_Uzbekistan
+    - contentinfo [ref=f3e1535]:
+      - list [ref=f3e1536]:
+        - listitem [ref=f3e1537]: This page was last edited on 24 July 2026, at 02:13 (UTC).
+        - listitem [ref=f3e1538]:
+          - text: Page was rendered with
+          - link "Parsoid" [ref=f3e1539] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/wiki/Special:MyLanguage/Parsoid
+          - text: .
+        - listitem [ref=f3e1540]:
+          - text: Text is available under the
+          - link "Creative Commons Attribution-ShareAlike 4.0 License" [ref=f3e1541] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:Text_of_the_Creative_Commons_Attribution-ShareAlike_4.0_International_License
+          - text: ; additional terms may apply. By using this site, you agree to the
+          - link "Terms of Use" [ref=f3e1542] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use
+          - text: and
+          - link "Privacy Policy" [ref=f3e1543] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+          - text: . Wikipedia® is a registered trademark of the
+          - link "Wikimedia Foundation, Inc." [ref=f3e1544] [cursor=pointer]:
+            - /url: https://wikimediafoundation.org/
+          - text: ", a non-profit organization."
+      - list:
+        - listitem [ref=f3e1545]:
+          - link "Privacy policy" [ref=f3e1546] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+        - listitem [ref=f3e1547]:
+          - link "About Wikipedia" [ref=f3e1548] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:About
+        - listitem [ref=f3e1549]:
+          - link "Disclaimers" [ref=f3e1550] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:General_disclaimer
+        - listitem [ref=f3e1551]:
+          - link "Contact Wikipedia" [ref=f3e1552] [cursor=pointer]:
+            - /url: //en.wikipedia.org/wiki/Wikipedia:Contact_us
+        - listitem [ref=f3e1553]:
+          - link "Legal & safety contacts" [ref=f3e1554] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Wikimedia_Foundation_Legal_and_Safety_Contact_Information
+        - listitem [ref=f3e1555]:
+          - link "Code of Conduct" [ref=f3e1556] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Universal_Code_of_Conduct
+        - listitem [ref=f3e1557]:
+          - link "Developers" [ref=f3e1558] [cursor=pointer]:
+            - /url: https://developer.wikimedia.org
+        - listitem [ref=f3e1559]:
+          - link "Statistics" [ref=f3e1560] [cursor=pointer]:
+            - /url: https://stats.wikimedia.org/#/en.wikipedia.org
+        - listitem [ref=f3e1561]:
+          - link "Cookie statement" [ref=f3e1562] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Cookie_statement
+        - listitem [ref=f3e1563]:
+          - link "Mobile view" [ref=f3e1564] [cursor=pointer]:
+            - /url: //en.wikipedia.org/w/index.php?title=Call_of_Duty:_Mobile&mobileaction=toggle_view_mobile
+      - list [ref=f3e1565]:
+        - listitem [ref=f3e1566]:
+          - link [ref=f3e1567] [cursor=pointer]:
+            - /url: https://www.wikimedia.org/
+            - img "Wikimedia Foundation" [ref=f3e1569]
+        - listitem [ref=f3e1570]:
+          - link [ref=f3e1571] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/
+            - img "Powered by MediaWiki" [ref=f3e1573]
+  - generic [ref=f3e1574]:
+    - list

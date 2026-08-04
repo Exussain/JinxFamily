@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Navbar from "../../../components/Navbar";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import FaqSectionLayout from "../../../components/FaqSectionLayout";
 import HelpfulnessWidget from "../../faq/HelpfulnessWidget";
 
@@ -21,7 +20,7 @@ export default function Disable2FAGuidePage() {
       subtitle="پیش از ثبت سفارش، تایید دو مرحله‌ای حساب خود را غیرفعال کنید تا سفارش شما بدون هیچ تاخیری و در کوتاه‌ترین زمان انجام شود."
       activeSection="disable-2fa"
     >
-      <div className="guide-article-container">
+      <article className="guide-article-container">
         <style jsx>{`
           .guide-article-container {
             display: flex;
@@ -114,6 +113,7 @@ export default function Disable2FAGuidePage() {
             color: var(--text);
             font-size: 16px;
             line-height: 1.9;
+            overflow-wrap: anywhere;
           }
           
           .guide-intro {
@@ -348,29 +348,81 @@ export default function Disable2FAGuidePage() {
           }
           
           @media (max-width: 768px) {
+            .guide-article-container {
+              gap: 16px;
+            }
+            .guide-article-box {
+              border-radius: 18px;
+            }
             .guide-article-banner {
-              height: 140px;
-              padding: 24px;
+              height: auto;
+              min-height: 132px;
+              padding: 20px 18px;
             }
             .guide-article-banner .page-banner-title {
               font-size: 20px;
+              line-height: 1.5;
             }
             .guide-article-info-bar {
-              padding: 12px 24px;
-              flex-wrap: wrap;
-              gap: 12px;
+              display: grid;
+              grid-template-columns: minmax(0, 1fr);
+              padding: 12px 16px;
+              gap: 8px;
             }
             .guide-article-content {
-              padding: 24px;
+              padding: 20px 16px;
+              font-size: 15px;
+            }
+            .guide-intro {
+              font-size: 15px;
+              line-height: 1.9;
+            }
+            .warning-banner,
+            .tip-box {
+              gap: 10px;
+              padding: 14px;
             }
             .platform-tabs {
               flex-direction: column;
+              gap: 8px;
             }
             .platform-tab {
               justify-content: center;
+              min-height: 44px;
+              padding: 12px 14px;
             }
             .guide-content {
+              padding: 18px 14px;
+              border-radius: 16px;
+            }
+            .step {
+              gap: 12px;
+              margin-bottom: 20px;
+            }
+            .step-number {
+              width: 30px;
+              height: 30px;
+              font-size: 14px;
+            }
+            .guide-footer {
               padding: 20px 16px;
+              border-radius: 16px;
+            }
+            .support-btn {
+              width: 100%;
+              justify-content: center;
+              box-sizing: border-box;
+            }
+          }
+
+          @media (max-width: 380px) {
+            .guide-article-box {
+              border-radius: 16px;
+            }
+            .guide-article-banner-icon {
+              font-size: 56px;
+              top: 10px;
+              left: 12px;
             }
           }
         `}</style>
@@ -415,14 +467,19 @@ export default function Disable2FAGuidePage() {
               </div>
             </div>
 
-            <div className="platform-tabs">
+            <div className="platform-tabs" role="tablist" aria-label="پلتفرم مورد نظر">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
+                  id={`${tab.id}-tab`}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  aria-controls={`${tab.id}-panel`}
                   className={`platform-tab ${activeTab === tab.id ? "active" : ""}`}
                   onClick={() => setActiveTab(tab.id)}
                 >
-                  <img src={tab.icon} alt={tab.label} width={20} height={20} />
+                  <img src={tab.icon} alt="" aria-hidden="true" width={20} height={20} />
                   {tab.label}
                 </button>
               ))}
@@ -430,7 +487,7 @@ export default function Disable2FAGuidePage() {
 
             <div className="guide-content">
               {(
-                <div className="guide-section" hidden={activeTab !== "epic"}>
+                <div id="epic-panel" className="guide-section" role="tabpanel" aria-labelledby="epic-tab" hidden={activeTab !== "epic"}>
                   <h2>غیرفعال‌سازی 2FA در Epic Games</h2>
                   
                   <div className="step">
@@ -490,7 +547,7 @@ export default function Disable2FAGuidePage() {
               )}
 
               {(
-                <div className="guide-section" hidden={activeTab !== "xbox"}>
+                <div id="xbox-panel" className="guide-section" role="tabpanel" aria-labelledby="xbox-tab" hidden={activeTab !== "xbox"}>
                   <h2>غیرفعال‌سازی 2FA در Xbox (مایکروسافت)</h2>
 
                   <div className="step">
@@ -547,7 +604,7 @@ export default function Disable2FAGuidePage() {
               )}
 
               {(
-                <div className="guide-section" hidden={activeTab !== "playstation"}>
+                <div id="playstation-panel" className="guide-section" role="tabpanel" aria-labelledby="playstation-tab" hidden={activeTab !== "playstation"}>
                   <h2>غیرفعال‌سازی 2FA در PlayStation (PSN)</h2>
 
                   <div className="step">
@@ -616,7 +673,7 @@ export default function Disable2FAGuidePage() {
         </div>
 
         <HelpfulnessWidget />
-      </div>
+      </article>
     </FaqSectionLayout>
   );
 }

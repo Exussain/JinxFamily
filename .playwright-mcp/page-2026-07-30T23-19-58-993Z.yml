@@ -1,0 +1,635 @@
+- generic [active] [ref=e1]:
+  - link "Jump to content" [ref=e2] [cursor=pointer]:
+    - /url: "#bodyContent"
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - navigation "Site" [ref=e6]:
+        - generic "Main menu" [ref=e7]:
+          - button "Main menu" [ref=e8] [cursor=pointer]
+      - link [ref=e12] [cursor=pointer]:
+        - /url: /wiki/Main_Page
+        - img "Wikimedia Commons" [ref=e15]
+    - generic [ref=e16]:
+      - search [ref=e17]:
+        - generic [ref=e20]:
+          - searchbox "Search Wikimedia Commons" [ref=e23]
+          - button "Search" [ref=e25]
+      - navigation "Personal tools" [ref=e26]:
+        - generic [ref=e27]:
+          - list [ref=e30]:
+            - listitem [ref=e31]:
+              - link "English" [ref=e32] [cursor=pointer]:
+                - /url: "#"
+          - list [ref=e37]:
+            - listitem [ref=e38]:
+              - link "Donate" [ref=e39] [cursor=pointer]:
+                - /url: https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=commons.wikimedia.org&uselang=en
+            - listitem [ref=e40]:
+              - link "Create account" [ref=e41] [cursor=pointer]:
+                - /url: /w/index.php?title=Special:CreateAccount&returnto=File%3AValorant+logo+-+pink+color+version.svg
+            - listitem [ref=e42]:
+              - link "Log in" [ref=e43] [cursor=pointer]:
+                - /url: /w/index.php?title=Special:UserLogin&returnto=File%3AValorant+logo+-+pink+color+version.svg
+  - generic [ref=e45]:
+    - navigation "Contents" [ref=e49]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - heading "Contents" [level=2] [ref=e53]
+          - button "Hide Contents" [ref=e54] [cursor=pointer]: hide
+        - list [ref=e55]:
+          - listitem [ref=e56]:
+            - link "Beginning" [ref=e57] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e59]:
+            - link "Summary" [ref=e60] [cursor=pointer]:
+              - /url: "#Summary"
+            - list
+          - listitem [ref=e62]:
+            - link "Licensing" [ref=e63] [cursor=pointer]:
+              - /url: "#Licensing"
+            - list
+    - main [ref=e66]:
+      - heading "File:Valorant logo - pink color version.svg" [level=1] [ref=e68]
+      - generic [ref=e71]:
+        - navigation "Namespaces" [ref=e73]:
+          - list [ref=e76]:
+            - listitem [ref=e77]:
+              - link "File" [ref=e78] [cursor=pointer]:
+                - /url: /wiki/File:Valorant_logo_-_pink_color_version.svg
+            - listitem [ref=e80]:
+              - link "Discussion" [ref=e81] [cursor=pointer]:
+                - /url: /w/index.php?title=File_talk:Valorant_logo_-_pink_color_version.svg&action=edit&redlink=1
+        - generic [ref=e83]:
+          - navigation "Views" [ref=e84]:
+            - list [ref=e87]:
+              - listitem [ref=e88]:
+                - link "Read" [ref=e89] [cursor=pointer]:
+                  - /url: /wiki/File:Valorant_logo_-_pink_color_version.svg
+              - listitem [ref=e91]:
+                - link "Edit" [ref=e92] [cursor=pointer]:
+                  - /url: /w/index.php?title=File:Valorant_logo_-_pink_color_version.svg&action=edit
+              - listitem [ref=e94]:
+                - link "View history" [ref=e95] [cursor=pointer]:
+                  - /url: /w/index.php?title=File:Valorant_logo_-_pink_color_version.svg&action=history
+          - navigation "Page tools" [ref=e97]:
+            - generic [ref=e98]:
+              - button "Tools" [ref=e99] [cursor=pointer]
+              - generic [ref=e100]: Tools
+      - navigation "Appearance" [ref=e105]:
+        - generic [ref=e108]:
+          - generic [ref=e109]: Appearance
+          - button "Hide Appearance" [ref=e110] [cursor=pointer]: hide
+      - generic "File:Valorant logo - pink color version.svg" [ref=e111]:
+        - generic [ref=e112]:
+          - navigation [ref=e113]:
+            - listitem [ref=e114]:
+              - link "File" [ref=e115] [cursor=pointer]:
+                - /url: "#file"
+            - listitem [ref=e116]:
+              - link "File history" [ref=e117] [cursor=pointer]:
+                - /url: "#filehistory"
+            - listitem [ref=e118]:
+              - link "File usage on Commons" [ref=e119] [cursor=pointer]:
+                - /url: "#filelinks"
+            - listitem [ref=e120]:
+              - link "File usage on other wikis" [ref=e121] [cursor=pointer]:
+                - /url: "#globalusage"
+            - listitem [ref=e122]:
+              - link "Metadata" [ref=e123] [cursor=pointer]:
+                - /url: "#metadata"
+          - generic [ref=e124]:
+            - link [ref=e125] [cursor=pointer]:
+              - /url: https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg
+              - img "File:Valorant logo - pink color version.svg" [ref=e126]
+            - generic [ref=e127]:
+              - text: "Size of the above preview of this SVG file:"
+              - link "960 × 655 pixels" [ref=e128] [cursor=pointer]:
+                - /url: https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Valorant_logo_-_pink_color_version.svg/960px-Valorant_logo_-_pink_color_version.svg.png
+              - text: .
+              - generic [ref=e129]:
+                - text: "Other resolutions:"
+                - link "330 × 225 pixels" [ref=e130] [cursor=pointer]:
+                  - /url: https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Valorant_logo_-_pink_color_version.svg/330px-Valorant_logo_-_pink_color_version.svg.png
+                - text: "|"
+                - link "960 × 655 pixels" [ref=e131] [cursor=pointer]:
+                  - /url: https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Valorant_logo_-_pink_color_version.svg/960px-Valorant_logo_-_pink_color_version.svg.png
+                - text: "|"
+                - link "1,280 × 873 pixels" [ref=e132] [cursor=pointer]:
+                  - /url: https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Valorant_logo_-_pink_color_version.svg/1280px-Valorant_logo_-_pink_color_version.svg.png
+                - text: "|"
+                - link "3,840 × 2,619 pixels" [ref=e133] [cursor=pointer]:
+                  - /url: https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Valorant_logo_-_pink_color_version.svg/3840px-Valorant_logo_-_pink_color_version.svg.png
+                - text: .
+          - generic [ref=e134]:
+            - link "Original file" [ref=e136] [cursor=pointer]:
+              - /url: https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg
+            - text: "(SVG file, nominally 544 × 371 pixels, file size: 7 KB)"
+          - generic [ref=e138]:
+            - tablist [ref=e141]:
+              - tab "File information" [selected] [ref=e142]
+              - tab "Structured data" [ref=e143]
+            - generic [ref=e145]:
+              - tabpanel [ref=e146]:
+                - generic [ref=e147]:
+                  - heading "Captions" [level=3] [ref=e148]
+                  - generic [ref=e149]:
+                    - generic [ref=e150]: English
+                    - generic [ref=e151]: Official Valorant logo
+                - generic [ref=e153]:
+                  - generic [ref=e154]:
+                    - heading "Summary" [level=2] [ref=e155]
+                    - generic [ref=e156]:
+                      - link "edit":
+                        - /url: /w/index.php?title=File:Valorant_logo_-_pink_color_version.svg&action=edit&section=1
+                  - table [ref=e158]:
+                    - rowgroup [ref=e159]:
+                      - row [ref=e160]:
+                        - cell "Description" [ref=e161]
+                        - 'cell "English: Logo Valorant video game. Русский: Логотип компьютерной игры Valorant." [ref=e162]':
+                          - generic [ref=e163]:
+                            - generic "English" [ref=e164]: "English:"
+                            - text: Logo
+                            - link "Valorant" [ref=e166] [cursor=pointer]:
+                              - /url: https://en.wikipedia.org/wiki/Valorant
+                            - text: video game.
+                          - generic [ref=e167]:
+                            - generic "Russian" [ref=e168]: "Русский:"
+                            - text: Логотип компьютерной игры
+                            - link "Valorant" [ref=e170] [cursor=pointer]:
+                              - /url: https://ru.wikipedia.org/wiki/Valorant
+                            - text: .
+                      - row [ref=e171]:
+                        - cell "Date" [ref=e172]
+                        - cell [ref=e173]:
+                          - time [ref=e174]: 16 May 2020
+                      - row [ref=e175]:
+                        - cell "Source" [ref=e176]
+                        - cell [ref=e177]:
+                          - link "https://playvalorant.com" [ref=e178] [cursor=pointer]:
+                            - /url: https://playvalorant.com
+                          - text: (
+                          - link "archive link" [ref=e179] [cursor=pointer]:
+                            - /url: https://web.archive.org/web/20210810223358/https://playvalorant.com/en-us
+                          - text: )
+                      - row [ref=e180]:
+                        - cell "Author" [ref=e181]
+                        - cell [ref=e182]:
+                          - link "Riot Games" [ref=e183] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Riot_Games
+                      - row [ref=e184]:
+                        - cell "Other versions" [ref=e185]
+                        - cell [ref=e186]:
+                          - list [ref=e187]:
+                            - listitem [ref=e188]:
+                              - link [ref=e191] [cursor=pointer]:
+                                - /url: /wiki/File:Valorant_logo_-_black_color_version.svg
+                                - img "Valorant logo - black color version.svg" [ref=e192]
+                              - link "Valorant logo - black color version.svg" [ref=e195] [cursor=pointer]:
+                                - /url: /wiki/File:Valorant_logo_-_black_color_version.svg
+                            - listitem [ref=e196]:
+                              - link [ref=e199] [cursor=pointer]:
+                                - /url: /wiki/File:Valorant_pink_version_logo.svg
+                                - img "Valorant pink version logo.svg" [ref=e200]
+                              - link "Valorant pink version logo.svg" [ref=e203] [cursor=pointer]:
+                                - /url: /wiki/File:Valorant_pink_version_logo.svg
+                            - listitem [ref=e204]:
+                              - link [ref=e207] [cursor=pointer]:
+                                - /url: /wiki/File:Valorant_logo.svg
+                                - img "Valorant logo.svg" [ref=e208]
+                              - link "Valorant logo.svg" [ref=e211] [cursor=pointer]:
+                                - /url: /wiki/File:Valorant_logo.svg
+                      - row [ref=e212]:
+                        - cell "SVG development" [ref=e213]
+                        - cell [ref=e214]:
+                          - generic:
+                            - generic [ref=e215]:
+                              - link [ref=e217] [cursor=pointer]:
+                                - /url: /wiki/File:W3C_grn.svg
+                              - text: The
+                              - link "SVG" [ref=e219] [cursor=pointer]:
+                                - /url: /wiki/Help:SVG
+                              - text: code is
+                              - link "valid" [ref=e221] [cursor=pointer]:
+                                - /url: https://validator.w3.org/check?uri=https%3A%2F%2Fcommons.wikimedia.org%2Fwiki%2FSpecial%3AFilepath%2FValorant_logo_-_pink_color_version.svg&doctype=Inline
+                              - text: .
+                            - generic [ref=e222]:
+                              - link [ref=e224] [cursor=pointer]:
+                                - /url: /wiki/File:Vector_Magic_logo.svg
+                              - text: This text-logo was created with
+                              - link "Vector Magic" [ref=e226] [cursor=pointer]:
+                                - /url: https://en.wikipedia.org/wiki/Vector_Magic
+                              - text: .
+                  - generic [ref=e227]:
+                    - heading "Licensing" [level=2] [ref=e228]
+                    - generic [ref=e229]:
+                      - link "edit":
+                        - /url: /w/index.php?title=File:Valorant_logo_-_pink_color_version.svg&action=edit&section=2
+                  - table [ref=e230]:
+                    - rowgroup [ref=e231]:
+                      - row [ref=e232]:
+                        - cell [ref=e233]:
+                          - generic "Public domain" [ref=e235]:
+                            - img "Public domain" [ref=e236]
+                        - cell [ref=e237]:
+                          - generic [ref=e239]:
+                            - text: This logo image consists only of simple geometric shapes or text. It
+                            - generic [ref=e240]:
+                              - text: does not meet the
+                              - link "threshold of originality" [ref=e241] [cursor=pointer]:
+                                - /url: /wiki/Commons:Threshold_of_originality
+                            - text: needed for copyright protection, and is therefore in the
+                            - link "public domain" [ref=e243] [cursor=pointer]:
+                              - /url: https://en.wikipedia.org/wiki/public_domain
+                            - text: . Although it is free of copyright restrictions, this image may still be subject to
+                            - link "other restrictions" [ref=e244] [cursor=pointer]:
+                              - /url: /wiki/Commons:Non-copyright_restrictions
+                            - text: . See
+                            - link "WP:PD § Fonts and typefaces" [ref=e245] [cursor=pointer]:
+                              - /url: https://en.wikipedia.org/wiki/Wikipedia:Public_domain#Fonts_and_typefaces
+                            - text: or
+                            - link "Template talk:PD-textlogo" [ref=e246] [cursor=pointer]:
+                              - /url: /wiki/Template_talk:PD-textlogo
+                            - text: for more information.
+                  - table [ref=e247]:
+                    - rowgroup [ref=e248]:
+                      - row [ref=e249]:
+                        - cell "Trademarked" [ref=e250]:
+                          - figure "Trademarked" [ref=e251]:
+                            - link [ref=e252] [cursor=pointer]:
+                              - /url: /wiki/Commons:Non-copyright_restrictions
+                              - img "Trademarked" [ref=e253]
+                        - cell [ref=e254]:
+                          - text: This work includes material that may be
+                          - generic [ref=e255]:
+                            - text: protected as a
+                            - link "trademark" [ref=e256] [cursor=pointer]:
+                              - /url: https://en.wikipedia.org/wiki/en:trademark
+                          - text: in some jurisdictions. If you want to use it, you have to ensure that you have the legal right to do so and that you do not infringe any trademark rights. See our
+                          - link "general disclaimer" [ref=e257] [cursor=pointer]:
+                            - /url: /wiki/Commons:General_disclaimer
+                          - text: .
+                          - generic [ref=e258]:
+                            - text: This tag does not indicate the copyright status of the attached work.
+                            - generic [ref=e259]:
+                              - text: A normal
+                              - link "copyright tag" [ref=e260] [cursor=pointer]:
+                                - /url: /wiki/Special:MyLanguage/Commons:Copyright_tags
+                              - text: is still required.
+                            - generic [ref=e261]:
+                              - text: See
+                              - link "Commons:Licensing" [ref=e262] [cursor=pointer]:
+                                - /url: /wiki/Special:MyLanguage/Commons:Licensing
+                              - text: .
+                - heading "File history" [level=2] [ref=e263]
+                - generic [ref=e264]:
+                  - paragraph [ref=e265]: Click on a date/time to view the file as it appeared at that time.
+                  - table [ref=e266]:
+                    - rowgroup [ref=e267]:
+                      - row [ref=e268]:
+                        - columnheader [ref=e269]
+                        - columnheader "Date/Time" [ref=e270]
+                        - columnheader "Thumbnail" [ref=e271]
+                        - columnheader "Dimensions" [ref=e272]
+                        - columnheader "User" [ref=e273]
+                        - columnheader "Comment" [ref=e274]
+                      - row [ref=e275]:
+                        - cell "current" [ref=e276]
+                        - cell [ref=e277]:
+                          - link "19:18, 16 May 2020" [ref=e278] [cursor=pointer]:
+                            - /url: https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg
+                        - cell [ref=e279]:
+                          - link [ref=e280] [cursor=pointer]:
+                            - /url: https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg
+                            - img "Thumbnail for version as of 19:18, 16 May 2020" [ref=e281]
+                        - cell "544 × 371 (7 KB)" [ref=e282]
+                        - cell [ref=e283]:
+                          - link "Kirilloparma" [ref=e284] [cursor=pointer]:
+                            - /url: /w/index.php?title=User:Kirilloparma&action=edit&redlink=1
+                          - generic [ref=e286]:
+                            - text: (
+                            - link "talk" [ref=e287] [cursor=pointer]:
+                              - /url: /wiki/User_talk:Kirilloparma
+                            - text: "|"
+                            - link "contribs" [ref=e288] [cursor=pointer]:
+                              - /url: /wiki/Special:Contributions/Kirilloparma
+                            - text: )
+                        - 'cell "Uploaded a work by {{W|Riot Games}} from https://valorantcompetitive.com with UploadWizard" [ref=e289]'
+                - paragraph [ref=e291]: You cannot overwrite this file.
+                - heading "File usage on Commons" [level=2] [ref=e292]
+                - generic [ref=e293]:
+                  - paragraph [ref=e294]: "The following 5 pages use this file:"
+                  - list [ref=e295]:
+                    - listitem [ref=e296]:
+                      - link "User:SelfCloak/Favorites" [ref=e297] [cursor=pointer]:
+                        - /url: /wiki/User:SelfCloak/Favorites
+                    - listitem [ref=e298]:
+                      - link "File:Valorant logo.svg" [ref=e299] [cursor=pointer]:
+                        - /url: /wiki/File:Valorant_logo.svg
+                    - listitem [ref=e300]:
+                      - link "File:Valorant logo - black color version.svg" [ref=e301] [cursor=pointer]:
+                        - /url: /wiki/File:Valorant_logo_-_black_color_version.svg
+                    - listitem [ref=e302]:
+                      - link "File:Valorant pink version logo.svg" [ref=e303] [cursor=pointer]:
+                        - /url: /wiki/File:Valorant_pink_version_logo.svg
+                    - listitem [ref=e304]:
+                      - link "Category:Valorant" [ref=e305] [cursor=pointer]:
+                        - /url: /wiki/Category:Valorant
+                - heading "File usage on other wikis" [level=2] [ref=e306]
+                - generic [ref=e307]:
+                  - paragraph [ref=e308]: "The following other wikis use this file:"
+                  - list [ref=e309]:
+                    - listitem [ref=e310]:
+                      - text: Usage on ar.wikipedia.org
+                      - list [ref=e311]:
+                        - listitem [ref=e312]:
+                          - link "فالورانت" [ref=e313] [cursor=pointer]:
+                            - /url: https://ar.wikipedia.org/wiki/%D9%81%D8%A7%D9%84%D9%88%D8%B1%D8%A7%D9%86%D8%AA
+                    - listitem [ref=e314]:
+                      - text: Usage on as.wikipedia.org
+                      - list [ref=e315]:
+                        - listitem [ref=e316]:
+                          - link "ভেল’ৰেণ্ট" [ref=e317] [cursor=pointer]:
+                            - /url: https://as.wikipedia.org/wiki/%E0%A6%AD%E0%A7%87%E0%A6%B2%E2%80%99%E0%A7%B0%E0%A7%87%E0%A6%A3%E0%A7%8D%E0%A6%9F
+                    - listitem [ref=e318]:
+                      - text: Usage on az.wikipedia.org
+                      - list [ref=e319]:
+                        - listitem [ref=e320]:
+                          - link "Valorant" [ref=e321] [cursor=pointer]:
+                            - /url: https://az.wikipedia.org/wiki/Valorant
+                    - listitem [ref=e322]:
+                      - text: Usage on be-tarask.wikipedia.org
+                      - list [ref=e323]:
+                        - listitem [ref=e324]:
+                          - link "Valorant" [ref=e325] [cursor=pointer]:
+                            - /url: https://be-tarask.wikipedia.org/wiki/Valorant
+                    - listitem [ref=e326]:
+                      - text: Usage on bn.wikipedia.org
+                      - list [ref=e327]:
+                        - listitem [ref=e328]:
+                          - link "ভ্যালোরেন্ট" [ref=e329] [cursor=pointer]:
+                            - /url: https://bn.wikipedia.org/wiki/%E0%A6%AD%E0%A7%8D%E0%A6%AF%E0%A6%BE%E0%A6%B2%E0%A7%8B%E0%A6%B0%E0%A7%87%E0%A6%A8%E0%A7%8D%E0%A6%9F
+                    - listitem [ref=e330]:
+                      - text: Usage on bs.wikipedia.org
+                      - list [ref=e331]:
+                        - listitem [ref=e332]:
+                          - link "Valorant" [ref=e333] [cursor=pointer]:
+                            - /url: https://bs.wikipedia.org/wiki/Valorant
+                    - listitem [ref=e334]:
+                      - text: Usage on ca.wikipedia.org
+                      - list [ref=e335]:
+                        - listitem [ref=e336]:
+                          - link "Valorant" [ref=e337] [cursor=pointer]:
+                            - /url: https://ca.wikipedia.org/wiki/Valorant
+                    - listitem [ref=e338]:
+                      - text: Usage on cs.wikipedia.org
+                      - list [ref=e339]:
+                        - listitem [ref=e340]:
+                          - link "Valorant" [ref=e341] [cursor=pointer]:
+                            - /url: https://cs.wikipedia.org/wiki/Valorant
+                        - listitem [ref=e342]:
+                          - link "Wikipedista:Morwand/Pískoviště" [ref=e343] [cursor=pointer]:
+                            - /url: https://cs.wikipedia.org/wiki/Wikipedista:Morwand/P%C3%ADskovi%C5%A1t%C4%9B
+                    - listitem [ref=e344]:
+                      - text: Usage on de.wikipedia.org
+                      - list [ref=e345]:
+                        - listitem [ref=e346]:
+                          - link "Valorant" [ref=e347] [cursor=pointer]:
+                            - /url: https://de.wikipedia.org/wiki/Valorant
+                    - listitem [ref=e348]:
+                      - text: Usage on el.wikipedia.org
+                      - list [ref=e349]:
+                        - listitem [ref=e350]:
+                          - link "Valorant" [ref=e351] [cursor=pointer]:
+                            - /url: https://el.wikipedia.org/wiki/Valorant
+                    - listitem [ref=e352]:
+                      - text: Usage on en.wikipedia.org
+                      - list [ref=e353]:
+                        - listitem [ref=e354]:
+                          - link "Riot Games" [ref=e355] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Riot_Games
+                        - listitem [ref=e356]:
+                          - link "Wikipedia:Userboxes/Games/Video games/Shooter" [ref=e357] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Wikipedia:Userboxes/Games/Video_games/Shooter
+                        - listitem [ref=e358]:
+                          - link "User:DJTechYT" [ref=e359] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:DJTechYT
+                        - listitem [ref=e360]:
+                          - link "Valorant" [ref=e361] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Valorant
+                        - listitem [ref=e362]:
+                          - link "User:Ea-Nasir/Userboxes/valorant" [ref=e363] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Ea-Nasir/Userboxes/valorant
+                        - listitem [ref=e364]:
+                          - link "User:EconomicDose" [ref=e365] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:EconomicDose
+                        - listitem [ref=e366]:
+                          - link "Valorant Champions Tour" [ref=e367] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Valorant_Champions_Tour
+                        - listitem [ref=e368]:
+                          - link "2021 Valorant Champions" [ref=e369] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/2021_Valorant_Champions
+                        - listitem [ref=e370]:
+                          - link "Template:Valorant" [ref=e371] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Template:Valorant
+                        - listitem [ref=e372]:
+                          - link "User:Bluesunnyfox/Userboxes" [ref=e373] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Bluesunnyfox/Userboxes
+                        - listitem [ref=e374]:
+                          - link "Wikipedia talk:WikiProject Userboxes/New Userboxes/Archive 35" [ref=e375] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Wikipedia_talk:WikiProject_Userboxes/New_Userboxes/Archive_35
+                        - listitem [ref=e376]:
+                          - link "User:EconomicDose/Userboxes/Valorant" [ref=e377] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:EconomicDose/Userboxes/Valorant
+                        - listitem [ref=e378]:
+                          - link "User:EconomicDose/Userboxes/Valorant/SageMain" [ref=e379] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:EconomicDose/Userboxes/Valorant/SageMain
+                        - listitem [ref=e380]:
+                          - link "User:EconomicDose/Userboxes/Valorant/FadeMain" [ref=e381] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:EconomicDose/Userboxes/Valorant/FadeMain
+                        - listitem [ref=e382]:
+                          - link "2022 Valorant Champions" [ref=e383] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/2022_Valorant_Champions
+                        - listitem [ref=e384]:
+                          - link "Valorant Masters Reykjavík 2022" [ref=e385] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Valorant_Masters_Reykjav%C3%ADk_2022
+                        - listitem [ref=e386]:
+                          - link "User:Spodle/UBX" [ref=e387] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX
+                        - listitem [ref=e388]:
+                          - link "User:Spodle/UBX/Valorant/ViperMain" [ref=e389] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/ViperMain
+                        - listitem [ref=e390]:
+                          - link "User:Spodle/UBX/Valorant/SkyeMain" [ref=e391] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/SkyeMain
+                        - listitem [ref=e392]:
+                          - link "User:Spodle/UBX/Valorant/YoruMain" [ref=e393] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/YoruMain
+                        - listitem [ref=e394]:
+                          - link "User:Spodle/UBX/Valorant/ChamberMain" [ref=e395] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/ChamberMain
+                        - listitem [ref=e396]:
+                          - link "User:Spodle/UBX/Valorant/AstraMain" [ref=e397] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/AstraMain
+                        - listitem [ref=e398]:
+                          - link "User:Spodle/UBX/Valorant/BrimstoneMain" [ref=e399] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/BrimstoneMain
+                        - listitem [ref=e400]:
+                          - link "User:Spodle/UBX/Valorant" [ref=e401] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant
+                        - listitem [ref=e402]:
+                          - link "User:Spodle/UBX/Valorant/CypherMain" [ref=e403] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/CypherMain
+                        - listitem [ref=e404]:
+                          - link "User:Spodle/UBX/Valorant/BreachMain" [ref=e405] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/BreachMain
+                        - listitem [ref=e406]:
+                          - link "User:Spodle/UBX/Valorant/OmenMain" [ref=e407] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/OmenMain
+                        - listitem [ref=e408]:
+                          - link "User:Spodle/UBX/Valorant/JettMain" [ref=e409] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/JettMain
+                        - listitem [ref=e410]:
+                          - link "User:Spodle/UBX/Valorant/NeonMain" [ref=e411] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/NeonMain
+                        - listitem [ref=e412]:
+                          - link "User:Spodle/UBX/Valorant/KilljoyMain" [ref=e413] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/KilljoyMain
+                        - listitem [ref=e414]:
+                          - link "User:Spodle/UBX/Valorant/RazeMain" [ref=e415] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/RazeMain
+                        - listitem [ref=e416]:
+                          - link "User:Spodle/UBX/Valorant/ReynaMain" [ref=e417] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/ReynaMain
+                        - listitem [ref=e418]:
+                          - link "User:Spodle/UBX/Valorant/SovaMain" [ref=e419] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/SovaMain
+                        - listitem [ref=e420]:
+                          - link "User:Spodle/UBX/Valorant/PhoenixMain" [ref=e421] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/PhoenixMain
+                        - listitem [ref=e422]:
+                          - link "User:Spodle/UBX/Valorant/KAYoMain" [ref=e423] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Spodle/UBX/Valorant/KAYoMain
+                        - listitem [ref=e424]:
+                          - link "Valorant Masters Copenhagen 2022" [ref=e425] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Valorant_Masters_Copenhagen_2022
+                        - listitem [ref=e426]:
+                          - link "User:SnoopyBird" [ref=e427] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:SnoopyBird
+                        - listitem [ref=e428]:
+                          - link "User:Jennytacular" [ref=e429] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/User:Jennytacular
+                        - listitem [ref=e430]:
+                          - link "Draft:Valorant Masters" [ref=e431] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Draft:Valorant_Masters
+                  - paragraph [ref=e432]:
+                    - text: View
+                    - link "more global usage" [ref=e433] [cursor=pointer]:
+                      - /url: /wiki/Special:GlobalUsage/Valorant_logo_-_pink_color_version.svg
+                    - text: of this file.
+                - heading "Metadata" [level=2] [ref=e434]
+                - generic [ref=e435]:
+                  - paragraph [ref=e436]: This file contains additional information such as Exif metadata which may have been added by the digital camera, scanner, or software program used to create or digitize it. If the file has been modified from its original state, some details such as the timestamp may not fully reflect those of the original file. The timestamp is only as accurate as the clock in the camera, and it may be completely wrong.
+                  - table:
+                    - rowgroup
+              - tabpanel [ref=e437]:
+                - generic [ref=e439]:
+                  - generic [ref=e442]:
+                    - heading [level=3] [ref=e443]: Items portrayed in this file
+                    - heading [level=4] [ref=e444]:
+                      - link [ref=e446] [cursor=pointer]:
+                        - /url: https://www.wikidata.org/wiki/Special:EntityPage/P180
+                        - text: depicts
+                  - generic [ref=e449]:
+                    - heading [level=4] [ref=e453]:
+                      - link [ref=e455] [cursor=pointer]:
+                        - /url: https://www.wikidata.org/wiki/Special:EntityPage/Q1886349
+                        - text: logo
+                    - generic [ref=e460]:
+                      - link [ref=e461] [cursor=pointer]:
+                        - /url: https://www.wikidata.org/wiki/Special:EntityPage/P1535
+                        - text: used by
+                      - generic [ref=e462]: ":"
+                      - link [ref=e464] [cursor=pointer]:
+                        - /url: https://www.wikidata.org/wiki/Special:EntityPage/Q86919275
+                        - text: Valorant
+        - generic [ref=e465]:
+          - generic [ref=e466]:
+            - link "Categories" [ref=e467] [cursor=pointer]:
+              - /url: /wiki/Special:MyLanguage/Commons:Categories
+            - text: ":"
+            - list [ref=e468]:
+              - listitem [ref=e469]:
+                - link "SVG logos of video games" [ref=e470] [cursor=pointer]:
+                  - /url: /wiki/Category:SVG_logos_of_video_games
+              - listitem [ref=e471]:
+                - link "Valorant logos" [ref=e472] [cursor=pointer]:
+                  - /url: /wiki/Category:Valorant_logos
+          - generic [ref=e473]:
+            - text: "Hidden categories:"
+            - list [ref=e474]:
+              - listitem [ref=e475]:
+                - link "Valid SVG created with Vector Magic:Text logos" [ref=e476] [cursor=pointer]:
+                  - /url: /wiki/Category:Valid_SVG_created_with_Vector_Magic:Text_logos
+              - listitem [ref=e477]:
+                - link "PD textlogo" [ref=e478] [cursor=pointer]:
+                  - /url: /wiki/Category:PD_textlogo
+              - listitem [ref=e479]:
+                - link "SVG text logos" [ref=e480] [cursor=pointer]:
+                  - /url: /wiki/Category:SVG_text_logos
+              - listitem [ref=e481]:
+                - link "With trademark" [ref=e482] [cursor=pointer]:
+                  - /url: /wiki/Category:With_trademark
+    - contentinfo [ref=e484]:
+      - list [ref=e485]:
+        - listitem [ref=e486]: This page was last edited on 24 June 2025, at 15:41.
+        - listitem [ref=e487]:
+          - text: Files are available under licenses specified on their description page. All structured data from the file namespace is available under the
+          - link "Creative Commons CC0 License" [ref=e488] [cursor=pointer]:
+            - /url: https://creativecommons.org/publicdomain/zero/1.0/
+          - text: ; all unstructured text is available under the
+          - link "Creative Commons Attribution-ShareAlike License" [ref=e489] [cursor=pointer]:
+            - /url: https://creativecommons.org/licenses/by-sa/4.0/
+          - text: ; additional terms may apply. By using this site, you agree to the
+          - link "Terms of Use" [ref=e490] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use
+          - text: and the
+          - link "Privacy Policy" [ref=e491] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+          - text: .
+      - list:
+        - listitem [ref=e492]:
+          - link "Privacy policy" [ref=e493] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+        - listitem [ref=e494]:
+          - link "About Wikimedia Commons" [ref=e495] [cursor=pointer]:
+            - /url: /wiki/Commons:Welcome
+        - listitem [ref=e496]:
+          - link "Disclaimers" [ref=e497] [cursor=pointer]:
+            - /url: /wiki/Commons:General_disclaimer
+        - listitem [ref=e498]:
+          - link "Legal & safety contacts" [ref=e499] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Wikimedia_Foundation_Legal_and_Safety_Contact_Information
+        - listitem [ref=e500]:
+          - link "Code of Conduct" [ref=e501] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Universal_Code_of_Conduct
+        - listitem [ref=e502]:
+          - link "Developers" [ref=e503] [cursor=pointer]:
+            - /url: https://developer.wikimedia.org
+        - listitem [ref=e504]:
+          - link "Statistics" [ref=e505] [cursor=pointer]:
+            - /url: https://stats.wikimedia.org/#/commons.wikimedia.org
+        - listitem [ref=e506]:
+          - link "Cookie statement" [ref=e507] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Cookie_statement
+        - listitem [ref=e508]:
+          - link "Mobile view" [ref=e509] [cursor=pointer]:
+            - /url: //commons.wikimedia.org/w/index.php?title=File:Valorant_logo_-_pink_color_version.svg&mobileaction=toggle_view_mobile
+      - list [ref=e510]:
+        - listitem [ref=e511]:
+          - link [ref=e512] [cursor=pointer]:
+            - /url: https://www.wikimedia.org/
+            - img "Wikimedia Foundation" [ref=e514]
+        - listitem [ref=e515]:
+          - link [ref=e516] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/
+            - img "Powered by MediaWiki" [ref=e518]

@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AdminPricingTour from "./AdminPricingTour";
 import {
+  buildSmartPricingTiers,
+  commitDisplayedPrice,
   normalizeEditableTiers,
-  roundPrice,
+  shouldAutoCreateTiers,
   sortTiers,
   validateTiers,
 } from "../lib/resellerPricingEditor.mjs";
@@ -80,6 +82,8 @@ export default function ResellerPricingEditor({
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [notice, setNotice] = useState("");
+  const [priceDrafts, setPriceDrafts] = useState({});
+  const autoCreateAttempts = useRef(new Set());
 
   const [liraRate, setLiraRate] = useState(0);
   const [refRate, setRefRate] = useState(3360);
@@ -195,6 +199,10 @@ export default function ResellerPricingEditor({
           setNotice((globalResult.data && (globalResult.data.message || globalResult.data.detail)) || "خطا در بارگذاری قیمت‌ها.");
           return;
         }
+        if (scopeResult && !scopeResult.res.ok) {
+          setNotice((scopeResult.data && (scopeResult.data.message || scopeResult.data.detail)) || "خطا در بارگذاری قیمت اختصاصی همکار.");
+          return;
+        }
 
         const globalData = globalResult.data || {};
         setLiraRate(Number(globalData.lira_rate || 0));
@@ -212,19 +220,85 @@ export default function ResellerPricingEditor({
         const loadedGlobalTiers = sortTiers(globalData.results || []);
         setGlobalTiers(loadedGlobalTiers);
 
+        let loadedScopeTiers = loadedGlobalTiers;
         if (scopeResellerId) {
           const overrideRows = sortTiers((scopeResult && scopeResult.data && scopeResult.data.results) || []);
           if (overrideRows.length > 0) {
             setHasOwnOverride(true);
-            setEditingTiers(normalizeEditableTiers(overrideRows));
+            loadedScopeTiers = overrideRows;
           } else {
             setHasOwnOverride(false);
-            setEditingTiers(normalizeEditableTiers(loadedGlobalTiers));
+            // یک پلن اختصاصی از پلن عمومی شروع می‌شود. بنابراین ادمین می‌تواند
+            // فقط یک پله‌ی بهتر به آن اضافه کند و با ذخیره‌سازی همان لحظه override
+            // اختصاصی ساخته می‌شود؛ بدون این‌که ابتدا قیمت‌های صفر/هوشمند ناخواسته
+            // برای همکار ثبت شود.
+            loadedScopeTiers = loadedGlobalTiers;
           }
         } else {
           setHasOwnOverride(false);
-          setEditingTiers(normalizeEditableTiers(loadedGlobalTiers));
         }
+
+        if (shouldAutoCreateTiers(loadedScopeTiers)) {
+          const scopeKey = `${selectedProductId}:${selectedVariantId || "base"}:${scopeResellerId || "global"}`;
+          if (!autoCreateAttempts.current.has(scopeKey)) {
+            autoCreateAttempts.current.add(scopeKey);
+            const responseLiraRate = Number(globalData.lira_rate || 0);
+            const responseRefRate = Number(globalData.ref_rate || 3360);
+            const responsePriceLira = Number(globalData.variant_price_lira || effectivePriceLira || 0);
+            const responseScaleFactor = responseRefRate > 0 && responseLiraRate > 0
+              ? responseLiraRate / responseRefRate
+              : 0;
+            const shouldConvertGlobalDisplay = !scopeResellerId
+              && !isCrew
+              && !isFixedVariantTier
+              && responsePriceLira > 0
+              && responseScaleFactor > 0;
+            const smartTiers = buildSmartPricingTiers({
+              isCrew,
+              effectivePriceLira: responsePriceLira,
+              liraRate: responseLiraRate,
+              productPrice: selectedProduct?.price,
+              productSlug: selectedProduct?.slug,
+              variantTitle: selectedVariant?.title,
+              priceFromDisplay: (displayPrice) => shouldConvertGlobalDisplay
+                ? Math.round(Number(displayPrice || 0) / responseScaleFactor)
+                : Number(displayPrice || 0),
+            });
+            if (smartTiers.length > 0) {
+              const autoResult = await callApi("/api/admin/reseller-tiers/upsert", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  product_id: selectedProductId,
+                  variant_id: selectedVariantId || undefined,
+                  reseller_id: scopeResellerId || null,
+                  tiers: smartTiers,
+                }),
+              });
+              if (cancelled) return;
+              if (!autoResult.res.ok) {
+                autoCreateAttempts.current.delete(scopeKey);
+                setEditingTiers([]);
+                setNotice((autoResult.data && (autoResult.data.message || autoResult.data.detail)) || "ذخیره خودکار قیمت هوشمند ناموفق بود.");
+                return;
+              }
+              loadedScopeTiers = smartTiers;
+              if (scopeResellerId) {
+                setHasOwnOverride(true);
+                setOverrideResellerIds((ids) => ids.includes(scopeResellerId) ? ids : [...ids, scopeResellerId]);
+              } else {
+                setGlobalTiers(smartTiers);
+                onGlobalTiersChanged?.();
+              }
+              setNotice("قیمت دستی وجود نداشت؛ قیمت هوشمند محاسبه، ذخیره و فعال شد.");
+            } else {
+              autoCreateAttempts.current.delete(scopeKey);
+              setNotice("قیمت دستی وجود ندارد و اطلاعات کافی برای قیمت‌گذاری هوشمند پیدا نشد.");
+            }
+          }
+        }
+        setEditingTiers(normalizeEditableTiers(loadedScopeTiers));
+        setPriceDrafts({});
       } catch {
         if (!cancelled) setNotice("خطای شبکه در بارگذاری قیمت‌ها. صفحه را رفرش کنید یا دوباره تلاش کنید.");
       } finally {
@@ -240,8 +314,35 @@ export default function ResellerPricingEditor({
     setSaved(false);
   };
 
+  const commitPriceDraft = (idx) => {
+    if (!Object.prototype.hasOwnProperty.call(priceDrafts, idx)) return;
+    updateTier(idx, { price: commitDisplayedPrice(priceDrafts[idx], priceFromDisplay) });
+    setPriceDrafts((prev) => {
+      const next = { ...prev };
+      delete next[idx];
+      return next;
+    });
+  };
+
   const addTier = () => {
     const sorted = normalizeEditableTiers(editingTiers);
+    const standardPlan = sorted.length === 2
+      && sorted[0].min_quantity === 1
+      && sorted[1].min_quantity === 10;
+    if (standardPlan) {
+      const [singleTier, tenTier] = sorted;
+      setEditingTiers([
+        ...sorted,
+        {
+          min_quantity: 5,
+          price: Math.round((singleTier.price + tenTier.price) / 2000) * 1000,
+          active: true,
+        },
+      ]);
+      setSaved(false);
+      setNotice("پلهٔ میانی ۵+ به پلن اضافه شد؛ قیمت پیشنهادی را در صورت نیاز ویرایش کنید.");
+      return;
+    }
     const last = sorted[sorted.length - 1];
     const nextQty = last ? Math.max(last.min_quantity + 1, last.min_quantity + Math.round(last.min_quantity * 0.5)) : 1;
     const nextPrice = last
@@ -257,44 +358,33 @@ export default function ResellerPricingEditor({
   };
 
   const applySmartPricing = () => {
-    let single = 0;
-    let ten = 0;
-    if (isCrew) {
-      single = 505000;
-      ten = 469000;
-    } else if (effectivePriceLira > 0 && liraRate > 0) {
-      const cost = effectivePriceLira * liraRate;
-      const lowBoost = Math.max(0, (800000 - cost) / 800000);
-      const premiumBoost = Math.max(0, (cost - 5000000) / 3000000);
-      let singleMargin = 0.112 + 0.095 * lowBoost + 0.028 * premiumBoost;
-      let tenMargin = 0.087 + 0.05 * lowBoost + 0.018 * premiumBoost;
-      const slug = selectedProduct?.slug || "";
-      const variantTitle = selectedVariant?.title || "";
-      if (slug === "starterpack") singleMargin -= 0.015;
-      if (slug === "minty-legends-pack") singleMargin -= 0.005;
-      if (slug === "v-bucks" && variantTitle.includes("2400")) singleMargin += 0.05;
-      if (slug === "v-bucks" && variantTitle.includes("4500")) singleMargin += 0.008;
-      single = roundPrice(cost * (1 + singleMargin));
-      ten = roundPrice(cost * (1 + tenMargin));
-    } else {
-      const base = Number(selectedProduct?.price || 0);
-      single = roundPrice(base * 0.9);
-      ten = roundPrice(single * 0.9);
-    }
-    if (single <= 0 || ten <= 0) {
+    if (editingTiers.length > 0 && !window.confirm("قیمت‌های دستی فعلی با پیشنهاد هوشمند جایگزین شوند؟")) return;
+    const smartTiers = buildSmartPricingTiers({
+      isCrew,
+      effectivePriceLira,
+      liraRate,
+      productPrice: selectedProduct?.price,
+      productSlug: selectedProduct?.slug,
+      variantTitle: selectedVariant?.title,
+      priceFromDisplay,
+    });
+    if (smartTiers.length === 0) {
       setNotice("برای قیمت‌گذاری هوشمند، قیمت پایه یا قیمت لیر محصول لازم است.");
       return;
     }
-    setEditingTiers(normalizeEditableTiers([
-      { min_quantity: 1, price: priceFromDisplay(single), active: true },
-      { min_quantity: 10, price: priceFromDisplay(ten), active: true },
-    ]));
+    setEditingTiers(smartTiers);
+    setPriceDrafts({});
     setSaved(false);
     setNotice("قیمت‌های پیشنهادی هوشمند برای این محصول ساخته شد. قبل از ذخیره، اعداد را بررسی کنید.");
   };
 
   const handleSave = async () => {
-    const validation = validateTiers(editingTiers);
+    const tiersToSave = editingTiers.map((tier, idx) => (
+      Object.prototype.hasOwnProperty.call(priceDrafts, idx)
+        ? { ...tier, price: commitDisplayedPrice(priceDrafts[idx], priceFromDisplay) }
+        : tier
+    ));
+    const validation = validateTiers(tiersToSave);
     if (!validation.ok) {
       setNotice(validation.message);
       return;
@@ -324,6 +414,7 @@ export default function ResellerPricingEditor({
       }
       setSaved(true);
       setEditingTiers(validation.tiers);
+      setPriceDrafts({});
       if (scopeResellerId) {
         setHasOwnOverride(true);
         setOverrideResellerIds((ids) => (
@@ -598,8 +689,13 @@ export default function ResellerPricingEditor({
                             className={`rpe-number price ${below ? "below" : ""}`}
                             type="number"
                             min="0"
-                            value={effective}
-                            onChange={(e) => updateTier(idx, { price: priceFromDisplay(parseInt(e.target.value, 10) || 0) })}
+                            value={Object.prototype.hasOwnProperty.call(priceDrafts, idx) ? priceDrafts[idx] : effective}
+                            onFocus={(e) => setPriceDrafts((prev) => ({ ...prev, [idx]: e.target.value }))}
+                            onChange={(e) => {
+                              setPriceDrafts((prev) => ({ ...prev, [idx]: e.target.value }));
+                              setSaved(false);
+                            }}
+                            onBlur={() => commitPriceDraft(idx)}
                           />
                           <small>
                             {editsEffectivePrice
@@ -645,7 +741,7 @@ export default function ResellerPricingEditor({
 
           <div className="rpe-footer-actions">
             <button type="button" className="rpe-btn rpe-btn-soft" onClick={addTier} disabled={loading || busy}>
-              افزودن پله
+              افزودن پله {scopeResellerId && !hasOwnOverride ? "اختصاصی" : ""}
             </button>
             <button type="button" className="rpe-btn rpe-btn-ai" onClick={applySmartPricing} disabled={!canSmartPrice || loading || busy}>
               قیمت‌گذاری هوشمند محصول

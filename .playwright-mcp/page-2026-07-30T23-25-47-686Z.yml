@@ -1,0 +1,2437 @@
+- generic [active] [ref=f6e1]:
+  - link "Jump to content" [ref=f6e2] [cursor=pointer]:
+    - /url: "#bodyContent"
+  - banner [ref=f6e4]:
+    - generic [ref=f6e5]:
+      - navigation "Site" [ref=f6e6]:
+        - generic "Main menu" [ref=f6e7]:
+          - button "Main menu" [ref=f6e8] [cursor=pointer]
+      - link [ref=f6e12] [cursor=pointer]:
+        - /url: /wiki/Main_Page
+        - generic [ref=f6e13]:
+          - img "Wikipedia" [ref=f6e14]
+          - img "The Free Encyclopedia" [ref=f6e15]
+    - generic [ref=f6e16]:
+      - search [ref=f6e17]:
+        - generic [ref=f6e20]:
+          - searchbox "Search Wikipedia" [ref=f6e23]
+          - button "Search" [ref=f6e25]
+      - navigation "Personal tools" [ref=f6e26]:
+        - list [ref=f6e30]:
+          - listitem [ref=f6e31]:
+            - link "Donate" [ref=f6e32] [cursor=pointer]:
+              - /url: https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=en.wikipedia.org&uselang=en
+          - listitem [ref=f6e33]:
+            - link "Create account" [ref=f6e34] [cursor=pointer]:
+              - /url: https://en.wikipedia.org/w/index.php?title=Special%3ACreateAccount&returnto=Brawl+Stars&experiments%5B0%5D=we-1-8-account-creation-no-desktop-benefits%3Aunsampled
+          - listitem [ref=f6e35]:
+            - link "Log in" [ref=f6e36] [cursor=pointer]:
+              - /url: https://en.wikipedia.org/w/index.php?title=Special%3AUserLogin&returnto=Brawl+Stars&experiments%5B0%5D=we-1-8-account-creation-no-desktop-benefits%3Aunsampled
+  - generic [ref=f6e38]:
+    - navigation "Contents" [ref=f6e42]:
+      - generic [ref=f6e44]:
+        - generic [ref=f6e45]:
+          - heading "Contents" [level=2] [ref=f6e46]
+          - button "Hide Contents" [ref=f6e47] [cursor=pointer]: hide
+        - list [ref=f6e48]:
+          - listitem [ref=f6e49]:
+            - link "(Top)" [ref=f6e50] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=f6e52]:
+            - link "Gameplay" [ref=f6e53] [cursor=pointer]:
+              - /url: "#Gameplay"
+            - button "Toggle Gameplay subsection" [expanded] [ref=f6e55]
+            - list [ref=f6e58]:
+              - listitem [ref=f6e59]:
+                - link "Game Modes" [ref=f6e60] [cursor=pointer]:
+                  - /url: "#Game_Modes"
+                - list
+              - listitem [ref=f6e62]:
+                - link "Brawl Pass" [ref=f6e63] [cursor=pointer]:
+                  - /url: "#Brawl_Pass"
+                - list
+              - listitem [ref=f6e65]:
+                - link "Ranked" [ref=f6e66] [cursor=pointer]:
+                  - /url: "#Ranked"
+                - list
+              - listitem [ref=f6e68]:
+                - link "Pro Pass" [ref=f6e69] [cursor=pointer]:
+                  - /url: "#Pro_Pass"
+                - list
+              - listitem [ref=f6e71]:
+                - link "Resources" [ref=f6e72] [cursor=pointer]:
+                  - /url: "#Resources"
+                - list
+              - listitem [ref=f6e74]:
+                - link "Starr Road" [ref=f6e75] [cursor=pointer]:
+                  - /url: "#Starr_Road"
+                - list
+              - listitem [ref=f6e77]:
+                - link "Brawlers" [ref=f6e78] [cursor=pointer]:
+                  - /url: "#Brawlers"
+                - list
+          - listitem [ref=f6e80]:
+            - link "Setting" [ref=f6e81] [cursor=pointer]:
+              - /url: "#Setting"
+            - list
+          - listitem [ref=f6e83]:
+            - link "Development and release" [ref=f6e84] [cursor=pointer]:
+              - /url: "#Development_and_release"
+            - list
+          - listitem [ref=f6e86]:
+            - link "Brawl Stars Championship" [ref=f6e87] [cursor=pointer]:
+              - /url: "#Brawl_Stars_Championship"
+            - list
+          - listitem [ref=f6e89]:
+            - link "Reception" [ref=f6e90] [cursor=pointer]:
+              - /url: "#Reception"
+            - button "Toggle Reception subsection" [expanded] [ref=f6e92]
+            - list [ref=f6e95]:
+              - listitem [ref=f6e96]:
+                - link "Awards" [ref=f6e97] [cursor=pointer]:
+                  - /url: "#Awards"
+                - list
+              - listitem [ref=f6e99]:
+                - link "Critical reception" [ref=f6e100] [cursor=pointer]:
+                  - /url: "#Critical_reception"
+                - list
+              - listitem [ref=f6e102]:
+                - link "Commercial reception" [ref=f6e103] [cursor=pointer]:
+                  - /url: "#Commercial_reception"
+                - list
+          - listitem [ref=f6e105]:
+            - link "References" [ref=f6e106] [cursor=pointer]:
+              - /url: "#References"
+            - list
+          - listitem [ref=f6e108]:
+            - link "External links" [ref=f6e109] [cursor=pointer]:
+              - /url: "#External_links"
+            - list
+    - main [ref=f6e112]:
+      - generic [ref=f6e113]:
+        - heading "Brawl Stars" [level=1] [ref=f6e114]
+        - generic [ref=f6e115]:
+          - button "45 languages" [ref=f6e116] [cursor=pointer]
+          - generic [ref=f6e117]: 45 languages
+      - generic [ref=f6e121]:
+        - navigation "Namespaces" [ref=f6e123]:
+          - list [ref=f6e126]:
+            - listitem [ref=f6e127]:
+              - link "Article" [ref=f6e128] [cursor=pointer]:
+                - /url: /wiki/Brawl_Stars
+            - listitem [ref=f6e130]:
+              - link "Talk" [ref=f6e131] [cursor=pointer]:
+                - /url: /wiki/Talk:Brawl_Stars
+        - generic [ref=f6e133]:
+          - navigation "Views" [ref=f6e134]:
+            - list [ref=f6e137]:
+              - listitem [ref=f6e138]:
+                - link "Read" [ref=f6e139] [cursor=pointer]:
+                  - /url: /wiki/Brawl_Stars
+              - listitem [ref=f6e141]:
+                - link "View source" [ref=f6e142] [cursor=pointer]:
+                  - /url: /w/index.php?title=Brawl_Stars&action=edit
+              - listitem [ref=f6e144]:
+                - link "View history" [ref=f6e145] [cursor=pointer]:
+                  - /url: /w/index.php?title=Brawl_Stars&action=history
+          - navigation "Page tools" [ref=f6e147]:
+            - generic [ref=f6e148]:
+              - button "Tools" [ref=f6e149] [cursor=pointer]
+              - generic [ref=f6e150]: Tools
+      - navigation "Appearance" [ref=f6e155]:
+        - generic [ref=f6e157]:
+          - generic [ref=f6e158]:
+            - generic [ref=f6e159]: Appearance
+            - button "Hide Appearance" [ref=f6e160] [cursor=pointer]: hide
+          - generic [ref=f6e161]:
+            - generic [ref=f6e162]: Text
+            - list [ref=f6e164]:
+              - listitem [ref=f6e165]:
+                - generic [ref=f6e167]:
+                  - generic [ref=f6e168]:
+                    - radio "Small" [ref=f6e169]
+                    - generic [ref=f6e171]: Small
+                  - generic [ref=f6e173]:
+                    - radio "Standard" [checked] [ref=f6e174]
+                    - generic [ref=f6e176]: Standard
+                  - generic [ref=f6e178]:
+                    - radio "Large" [ref=f6e179]
+                    - generic [ref=f6e181]: Large
+          - generic [ref=f6e183]:
+            - generic [ref=f6e184]: Width
+            - list [ref=f6e186]:
+              - listitem [ref=f6e187]:
+                - generic [ref=f6e189]:
+                  - generic [ref=f6e190]:
+                    - radio "Standard" [checked] [ref=f6e191]
+                    - generic [ref=f6e193]: Standard
+                  - generic [ref=f6e195]:
+                    - radio "Wide" [ref=f6e196]
+                    - generic [ref=f6e198]: Wide
+          - generic [ref=f6e200]:
+            - generic [ref=f6e201]: Color
+            - list [ref=f6e203]:
+              - listitem [ref=f6e204]:
+                - generic [ref=f6e206]:
+                  - generic [ref=f6e207]:
+                    - radio "Automatic" [ref=f6e208]
+                    - generic [ref=f6e210]: Automatic
+                  - generic [ref=f6e212]:
+                    - radio "Light" [checked] [ref=f6e213]
+                    - generic [ref=f6e215]: Light
+                  - generic [ref=f6e217]:
+                    - radio "Dark" [ref=f6e218]
+                    - generic [ref=f6e220]: Dark
+      - generic "Brawl Stars" [ref=f6e222]:
+        - generic [ref=f6e223]:
+          - link [ref=f6e228] [cursor=pointer]:
+            - /url: https://en.wikipedia.org/wiki/Wikipedia:Protection_policy#semi
+            - img "Page semi-protected" [ref=f6e229]
+          - generic [ref=f6e230]: From Wikipedia, the free encyclopedia
+        - generic [ref=f6e232]:
+          - generic [ref=f6e233]:
+            - link [ref=f6e236] [cursor=pointer]:
+              - /url: https://en.wikipedia.org/wiki/File:Question_book-new.svg
+              - img "icon" [ref=f6e237]
+            - generic [ref=f6e238]:
+              - text: This article
+              - generic [ref=f6e239]:
+                - text: relies excessively on
+                - link "references" [ref=f6e240] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:Verifiability
+                - text: to
+                - link "primary sources" [ref=f6e241] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:No_original_research#Primary,_secondary_and_tertiary_sources
+              - text: .
+              - generic [ref=f6e242]:
+                - text: Please improve this article by adding
+                - link "secondary or tertiary sources" [ref=f6e243] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:No_original_research#Primary,_secondary_and_tertiary_sources
+                - text: .
+                - generic [ref=f6e245]:
+                  - text: "Find sources:"
+                  - link "\"Brawl Stars\"" [ref=f6e246] [cursor=pointer]:
+                    - /url: https://www.google.com/search?as_eq=wikipedia&q=%22Brawl+Stars%22
+                  - text: –
+                  - link "news" [ref=f6e247] [cursor=pointer]:
+                    - /url: https://www.google.com/search?tbm=nws&q=%22Brawl+Stars%22+-wikipedia&tbs=ar:1
+                  - text: ·
+                  - link "newspapers" [ref=f6e248] [cursor=pointer]:
+                    - /url: https://www.google.com/search?&q=%22Brawl+Stars%22&tbs=bkt:s&tbm=bks
+                  - text: ·
+                  - link "books" [ref=f6e249] [cursor=pointer]:
+                    - /url: https://www.google.com/search?tbs=bks:1&q=%22Brawl+Stars%22+-wikipedia
+                  - text: ·
+                  - link "scholar" [ref=f6e250] [cursor=pointer]:
+                    - /url: https://scholar.google.com/scholar?q=%22Brawl+Stars%22
+                  - text: ·
+                  - link "JSTOR" [ref=f6e251] [cursor=pointer]:
+                    - /url: https://www.jstor.org/action/doBasicSearch?Query=%22Brawl+Stars%22&acc=on&wc=on
+              - generic [ref=f6e252]: (March 2025)
+              - generic [ref=f6e255]:
+                - text: (
+                - link "Learn how and when to remove this message" [ref=f6e257] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Help:Maintenance_template_removal
+                - text: )
+            - table [ref=f6e258]:
+              - rowgroup [ref=f6e259]:
+                - row [ref=f6e260]:
+                  - columnheader "Brawl Stars" [ref=f6e261]
+                - row [ref=f6e262]:
+                  - cell "Logo used since September 2025" [ref=f6e263]:
+                    - link [ref=f6e265] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/File:Brawl_Stars_logo_2025.svg
+                - row [ref=f6e268]:
+                  - rowheader [ref=f6e269]:
+                    - link "Developer" [ref=f6e270] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_developer
+                  - cell [ref=f6e271]:
+                    - link "Supercell" [ref=f6e272] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Supercell_(company)
+                - row [ref=f6e273]:
+                  - rowheader [ref=f6e274]:
+                    - link "Publisher" [ref=f6e275] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_publisher
+                  - cell "Supercell" [ref=f6e276]
+                - row [ref=f6e277]:
+                  - rowheader [ref=f6e278]:
+                    - link "Platforms" [ref=f6e279] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Computing_platform
+                  - cell [ref=f6e280]:
+                    - link "Android" [ref=f6e281] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Android_(operating_system)
+                    - text: ","
+                    - link "iOS" [ref=f6e282] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/IOS
+                - row [ref=f6e283]:
+                  - rowheader "Release" [ref=f6e284]
+                  - 'cell "WW: 12 December 2018" [ref=f6e285]':
+                    - list [ref=f6e287]:
+                      - listitem [ref=f6e288]:
+                        - generic [ref=f6e289]: "WW:"
+                        - text: 12 December 2018
+                - row [ref=f6e290]:
+                  - rowheader [ref=f6e291]:
+                    - link "Genres" [ref=f6e292] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_genre
+                  - cell [ref=f6e293]:
+                    - link "MOBA" [ref=f6e294] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Multiplayer_online_battle_arena
+                    - text: ","
+                    - link "hero shooter" [ref=f6e295] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Hero_shooter
+                - row [ref=f6e296]:
+                  - rowheader "Mode" [ref=f6e297]
+                  - cell [ref=f6e298]:
+                    - link "Multiplayer" [ref=f6e299] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Multiplayer_video_game
+            - paragraph [ref=f6e300]:
+              - generic [ref=f6e301]: Brawl Stars
+              - text: is a
+              - link "multiplayer online battle arena" [ref=f6e302] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Multiplayer_online_battle_arena
+              - superscript [ref=f6e303]:
+                - link "[1]" [ref=f6e304] [cursor=pointer]:
+                  - /url: "#cite_note-vb1-1"
+              - text: and
+              - link "hero shooter" [ref=f6e305] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Hero_shooter
+              - superscript [ref=f6e306]:
+                - link "[2]" [ref=f6e307] [cursor=pointer]:
+                  - /url: "#cite_note-2"
+              - text: video game developed and published by Finnish video game company
+              - link "Supercell" [ref=f6e308] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Supercell_(company)
+              - text: .
+              - superscript [ref=f6e309]:
+                - link "[3]" [ref=f6e310] [cursor=pointer]:
+                  - /url: "#cite_note-3"
+              - text: The game was released worldwide on 12 December 2018, on
+              - link "iOS" [ref=f6e311] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/IOS
+              - text: and
+              - link "Android" [ref=f6e312] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Android_(operating_system)
+              - text: platforms. The game features a variety of game modes, each with a distinctive objective. Players are able to choose from over 100 unlockable characters, called "Brawlers", who each have different abilities and playstyles.
+              - superscript [ref=f6e313]:
+                - link "[4]" [ref=f6e314] [cursor=pointer]:
+                  - /url: "#cite_note-RB-4"
+              - superscript [ref=f6e315]:
+                - link "[5]" [ref=f6e316] [cursor=pointer]:
+                  - /url: "#cite_note-5"
+          - region [ref=f6e317]:
+            - heading "Gameplay" [level=2] [ref=f6e319]
+            - figure "Screenshot of gameplay from the map \"Snake Prairie\" on the game mode \"Bounty\"" [ref=f6e320]:
+              - link [ref=f6e321] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/File:Brawl_Stars_Bounty_gameplay.png
+            - paragraph [ref=f6e324]:
+              - text: In Brawl Stars, players battle against other players,
+              - link "AI opponents" [ref=f6e325] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Artificial_intelligence_in_video_games
+              - text: ", or PvE bosses in multiple game modes. Players can choose between different Brawlers, who can be unlocked through the Starr Road or purchased through the Shop to use in battles."
+              - superscript [ref=f6e326]:
+                - link "[6]" [ref=f6e327] [cursor=pointer]:
+                  - /url: "#cite_note-:1-6"
+              - text: In December 2022, a new progressive unlock system called the "Starr Road" replaced Boxes as the main method to unlock Brawlers.
+              - superscript [ref=f6e328]:
+                - link "[7]" [ref=f6e329] [cursor=pointer]:
+                  - /url: "#cite_note-:6-7"
+              - text: The cost to unlock each Brawler on the Starr Road depends on its rarity.
+              - superscript [ref=f6e330]:
+                - link "[8]" [ref=f6e331] [cursor=pointer]:
+                  - /url: "#cite_note-8"
+              - superscript [ref=f6e332]:
+                - text: "["
+                - link "unreliable source?" [ref=f6e334] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                - text: "]"
+            - paragraph [ref=f6e335]:
+              - text: During a match, players can use their Brawler's normal attack or their Super, a special attack that charges up through damaging opponents or in some cases through additional means. Players can also equip their Brawlers with
+              - link "power-ups" [ref=f6e336] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Power-up
+              - text: known as Gadgets, Star Powers, Gears, Hypercharges, and Buffies; Gadgets and Hypercharges can be activated during a match,
+              - superscript [ref=f6e337]:
+                - link "[9]" [ref=f6e338] [cursor=pointer]:
+                  - /url: "#cite_note-9"
+              - superscript [ref=f6e339]:
+                - link "[10]" [ref=f6e340] [cursor=pointer]:
+                  - /url: "#cite_note-10"
+              - text: Star Powers and Gears are passive abilities.
+              - superscript [ref=f6e341]:
+                - link "[11]" [ref=f6e342] [cursor=pointer]:
+                  - /url: "#cite_note-11"
+              - superscript [ref=f6e343]:
+                - link "[12]" [ref=f6e344] [cursor=pointer]:
+                  - /url: "#cite_note-12"
+              - text: With the exceptions of Gears, each of these upgrades are specific to each Brawler and can be upgraded with Buffies, which are obtained from Claw Machines.
+            - region [ref=f6e345]:
+              - heading "Game Modes" [level=3] [ref=f6e347]
+              - paragraph [ref=f6e348]:
+                - text: Brawl Stars has a variety of different permanent and temporary game modes that players can choose from, each having different objectives and maps. Players can invite friends to play with them while staying under the maximum team size of the game mode. Most modes involve two teams with three players each, other modes can involve either five or two player teams.
+                - superscript [ref=f6e349]:
+                  - link "[13]" [ref=f6e350] [cursor=pointer]:
+                    - /url: "#cite_note-13"
+                - superscript [ref=f6e351]:
+                  - text: "["
+                  - link "unreliable source?" [ref=f6e353] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                  - text: "]"
+                - superscript [ref=f6e354]:
+                  - link "[14]" [ref=f6e355] [cursor=pointer]:
+                    - /url: "#cite_note-14"
+              - list [ref=f6e356]:
+                - listitem [ref=f6e357]:
+                  - text: "Showdown: A"
+                  - link "battle royale" [ref=f6e358] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Battle_royale_game
+                  - text: "-style game mode involving one (solo), two (duo), or three (trio) players per team. Ten (twelve in Trio Showdown) players battle for survival, with Power Cube boxes scattered across the map providing boosts to attack and"
+                  - link "health" [ref=f6e359] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Health_(game_terminology)
+                  - text: .
+                  - superscript [ref=f6e360]:
+                    - link "[15]" [ref=f6e361] [cursor=pointer]:
+                      - /url: "#cite_note-15"
+                  - superscript [ref=f6e362]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e364] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e365]:
+                    - link "[16]" [ref=f6e366] [cursor=pointer]:
+                      - /url: "#cite_note-16"
+                  - superscript [ref=f6e367]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e369] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e370]:
+                    - link "[17]" [ref=f6e371] [cursor=pointer]:
+                      - /url: "#cite_note-17"
+                  - superscript [ref=f6e372]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e374] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e375]:
+                    - link "[18]" [ref=f6e376] [cursor=pointer]:
+                      - /url: "#cite_note-:2-18"
+                  - superscript [ref=f6e377]:
+                    - link "[19]" [ref=f6e378] [cursor=pointer]:
+                      - /url: "#cite_note-19"
+                - listitem [ref=f6e379]:
+                  - text: "Brawl Ball: A"
+                  - link "soccer" [ref=f6e380] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Soccer
+                  - text: game mode where two teams of three (or five for 5v5 Brawl Ball) players attempt to score points by shooting a ball into the opponents' goal. The game ends if one team scores two points, or if one team has a point advantage after two minutes, or overtime. Other variants of this game mode were later added, modelled after different sports such as
+                  - link "basketball" [ref=f6e381] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Basketball
+                  - text: ","
+                  - link "volleyball" [ref=f6e382] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Volleyball
+                  - text: ", and"
+                  - link "ice hockey" [ref=f6e383] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Ice_hockey
+                  - text: .
+                  - superscript [ref=f6e384]:
+                    - link "[20]" [ref=f6e385] [cursor=pointer]:
+                      - /url: "#cite_note-20"
+                  - superscript [ref=f6e386]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e388] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e389]:
+                    - link "[18]" [ref=f6e390] [cursor=pointer]:
+                      - /url: "#cite_note-:2-18"
+                  - text: . These game modes are named Basket Brawl, Volley Brawl, and Brawl Hockey respectively.
+                - listitem [ref=f6e391]:
+                  - text: "Gem Grab: Gems spawn in the middle of the map, and two teams of either three or five Brawlers (or four teams in the case of Trio Gem Grab) must collect the highest number of Gems possible. A team wins if they collect and hold at least ten Gems for 15 seconds. If both teams have 10 or more Gems, the countdown is active, and the teams are tied in Gems collected, the timer pauses. It restarts once a team takes the lead again."
+                  - superscript [ref=f6e392]:
+                    - link "[21]" [ref=f6e393] [cursor=pointer]:
+                      - /url: "#cite_note-21"
+                  - superscript [ref=f6e394]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e396] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e397]:
+                    - link "[18]" [ref=f6e398] [cursor=pointer]:
+                      - /url: "#cite_note-:2-18"
+                - listitem [ref=f6e399]:
+                  - text: "Wipeout and Bounty:"
+                  - link "Deathmatch" [ref=f6e400] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Deathmatch_(video_games)
+                  - text: game modes. In Wipeout, two teams of either three or five (four teams in the case of Trio Wipeout) must defeat 10 or 20 enemy Brawlers. In Bounty, teams must earn 20 points by defeating Brawlers, who become worth more points for each kill, with a blue star deciding the draw from overtime.
+                  - superscript [ref=f6e401]:
+                    - link "[18]" [ref=f6e402] [cursor=pointer]:
+                      - /url: "#cite_note-:2-18"
+                  - superscript [ref=f6e403]:
+                    - link "[22]" [ref=f6e404] [cursor=pointer]:
+                      - /url: "#cite_note-22"
+                  - superscript [ref=f6e405]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e407] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e408]:
+                    - link "[23]" [ref=f6e409] [cursor=pointer]:
+                      - /url: "#cite_note-23"
+                  - superscript [ref=f6e410]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e412] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e413]:
+                    - link "[24]" [ref=f6e414] [cursor=pointer]:
+                      - /url: "#cite_note-24"
+                  - superscript [ref=f6e415]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e417] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                - listitem [ref=f6e418]:
+                  - text: "Heist: Two teams of three Brawlers each attempt to destroy the opponents' highly durable"
+                  - link "safe" [ref=f6e419] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Safe
+                  - text: located near their spawn point, before the enemy team can destroy their own safe.
+                  - superscript [ref=f6e420]:
+                    - link "[25]" [ref=f6e421] [cursor=pointer]:
+                      - /url: "#cite_note-25"
+                  - superscript [ref=f6e422]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e424] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e425]:
+                    - link "[18]" [ref=f6e426] [cursor=pointer]:
+                      - /url: "#cite_note-:2-18"
+                  - text: After the April 2025 update, the safe gains a temporary shield after reaching a certain amount of damage, pushing enemy Brawlers away.
+                - listitem [ref=f6e427]:
+                  - text: "Hot Zone: A"
+                  - link "king of the hill" [ref=f6e428] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/King_of_the_hill_(game)
+                  - text: game mode. Two teams of three Brawlers each must stay in all Hot Zones for a combined total of 100 seconds. The match ends if this requirement is met or one team had stayed in the Hot Zones longer than the other throughout the time limit. A 2v2 version of the mode was added later during special events.
+                  - superscript [ref=f6e429]:
+                    - link "[26]" [ref=f6e430] [cursor=pointer]:
+                      - /url: "#cite_note-26"
+                  - superscript [ref=f6e431]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e433] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e434]:
+                    - link "[18]" [ref=f6e435] [cursor=pointer]:
+                      - /url: "#cite_note-:2-18"
+                - listitem [ref=f6e436]:
+                  - text: "Knockout: A deathmatch game mode where players cannot respawn and rounds are won by defeating the entire enemy team. The first team to win two rounds wins the game. A variation with five Brawlers is unique in that each elimination causes the remaining teammates to gain extra damage and health."
+                  - superscript [ref=f6e437]:
+                    - link "[27]" [ref=f6e438] [cursor=pointer]:
+                      - /url: "#cite_note-27"
+                  - superscript [ref=f6e439]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e441] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                  - superscript [ref=f6e442]:
+                    - link "[18]" [ref=f6e443] [cursor=pointer]:
+                      - /url: "#cite_note-:2-18"
+                - listitem [ref=f6e444]:
+                  - text: "Duels: Two players go against each other in a 1v1. Each player assembles a team of three Brawlers; after one of the players' Brawlers is defeated, the player plays the next one. The goal is to defeat all three of the opponents' Brawlers while not losing all their Brawlers in the process."
+                  - superscript [ref=f6e445]:
+                    - link "[18]" [ref=f6e446] [cursor=pointer]:
+                      - /url: "#cite_note-:2-18"
+                  - superscript [ref=f6e447]:
+                    - link "[28]" [ref=f6e448] [cursor=pointer]:
+                      - /url: "#cite_note-28"
+                  - superscript [ref=f6e449]:
+                    - text: "["
+                    - link "unreliable source?" [ref=f6e451] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                    - text: "]"
+                - listitem [ref=f6e452]:
+                  - text: "Brawl Arena: Added in the April 2025 update, two teams of three Brawlers try to destroy enemy turrets to win, while fighting enemy minions to level up and increase their stats."
+                  - superscript [ref=f6e453]:
+                    - link "[29]" [ref=f6e454] [cursor=pointer]:
+                      - /url: "#cite_note-29"
+                - listitem [ref=f6e455]:
+                  - text: "Mega Pig: Players can join clubs or create them"
+                  - superscript [ref=f6e456]:
+                    - link "[30]" [ref=f6e457] [cursor=pointer]:
+                      - /url: "#cite_note-30"
+                  - text: to participate in Mega Pig, an event that occurs around once a month over a weekend. Each win adds to a club's points, which increases the Starr Drops they get at the end of the event,
+                  - superscript [ref=f6e458]:
+                    - link "[31]" [ref=f6e459] [cursor=pointer]:
+                      - /url: "#cite_note-:3-31"
+                  - text: with a Mega Tree event during Christmas.
+                  - superscript [ref=f6e460]:
+                    - link "[32]" [ref=f6e461] [cursor=pointer]:
+                      - /url: "#cite_note-32"
+                  - text: Each player has six tickets they can use to play games, each game costing one. Once a player runs out of tickets, they can't contribute to the pig anymore (unless they help someone else in their club win games). On certain occasions such as collaborations, or seasonal events like Brawlidays (Christmas), the Mega Pig may be modified in a different theme with event-specific rewards.
+                  - superscript [ref=f6e462]:
+                    - link "[31]" [ref=f6e463] [cursor=pointer]:
+                      - /url: "#cite_note-:3-31"
+                - listitem [ref=f6e464]:
+                  - text: "Map Maker: A mode where players can freely create maps and may apply custom modifiers to various modes in the game. Players can submit their maps into candidates of the day, allowing for a selection of random player-submitted maps to be played by other players, who can give the map a like or dislike, increasing or decreasing their chance of being selected. The map with the most likes becomes the 'winner of the day' the next day. It is featured in a second Map Maker slot available for all players to play for a day."
+                  - superscript [ref=f6e465]:
+                    - link "[33]" [ref=f6e466] [cursor=pointer]:
+                      - /url: "#cite_note-33"
+            - region [ref=f6e467]:
+              - heading "Brawl Pass" [level=3] [ref=f6e469]
+              - paragraph [ref=f6e470]:
+                - text: On 14 May 2020, a game update added a new reward system called the “Brawl Pass”.
+                - superscript [ref=f6e471]:
+                  - link "[34]" [ref=f6e472] [cursor=pointer]:
+                    - /url: "#cite_note-Mons-34"
+                - text: The Brawl Pass is the game's version of a
+                - link "battle pass" [ref=f6e473] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Battle_pass
+                - text: . When players compete in battles, they earn
+                - link "XP" [ref=f6e474] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Experience_point
+                - text: (formerly known as Tokens) to progress along the Brawl Pass and unlock tiers with various rewards. All players have the free Brawl Pass by default. Players could purchase the premium Brawl Pass with Gems, until 4 January 2024, where the pass and its newly introduced Brawl Pass Plus variant could only be bought with real money.
+                - superscript [ref=f6e475]:
+                  - link "[35]" [ref=f6e476] [cursor=pointer]:
+                    - /url: "#cite_note-35"
+                - superscript [ref=f6e477]:
+                  - link "[36]" [ref=f6e478] [cursor=pointer]:
+                    - /url: "#cite_note-TB-36"
+            - region [ref=f6e479]:
+              - heading "Ranked" [level=3] [ref=f6e481]
+              - paragraph [ref=f6e482]:
+                - text: In Ranked, formerly called Power League, a random 3v3 game mode and map are chosen. Winning a game increases Points and gives Pro Pass XP, and Point thresholds increase a player's rank. As a player breaks through certain Point thresholds, 200 Pro Pass XP is obtained, which can give the player unique cosmetic items, Starr drops or skins. A list of the ranks as of February 2025 from lowest to highest is Bronze, Silver, Gold, Diamond, Mythic, Legendary, Masters, and Pro. Twelve Brawlers at Power Level 11 are required to pass into Mythic from Diamond.
+                - superscript [ref=f6e483]:
+                  - link "[37]" [ref=f6e484] [cursor=pointer]:
+                    - /url: "#cite_note-37"
+            - region [ref=f6e485]:
+              - heading "Pro Pass" [level=3] [ref=f6e487]
+              - paragraph [ref=f6e488]:
+                - text: The Pro Pass in Brawl Stars is a ranked pass that resets every four seasons to link with major
+                - link "Esports" [ref=f6e489] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Esports
+                - text: events. It offers a structured rewards system across 100 tiers, featuring both free and paid tracks. One of the most notable rewards is the Pro Skin Upgrade, which enhances an existing skin with exclusive Ranked-themed effects such as new
+                - link "animations" [ref=f6e490] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Animation
+                - text: ","
+                - link "visual effects" [ref=f6e491] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Visual_effects
+                - text: ", and upgraded"
+                - link "textures" [ref=f6e492] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Texture_(visual_arts)
+                - text: . Players earn four Pro Skin Upgrades throughout the Pro Pass at tiers 10, 30, 60, and 100, but these must be unlocked during the active season.
+                - superscript [ref=f6e493]:
+                  - link "[38]" [ref=f6e494] [cursor=pointer]:
+                    - /url: "#cite_note-:4-38"
+              - paragraph [ref=f6e495]:
+                - text: In addition to skin upgrades, the Pro Pass provides a variety of rewards, including Hypercharge Drops, Ranked Drops, and Starr Drops. Players can also collect Gems on the free track, while the paid track offers an additional Gems, along with exclusive cosmetics like Pins, Sprays, and Player Icons. These rewards encourage Ranked Mode participation and provide players with valuable in-game items to enhance their experience.
+                - superscript [ref=f6e496]:
+                  - link "[38]" [ref=f6e497] [cursor=pointer]:
+                    - /url: "#cite_note-:4-38"
+              - paragraph [ref=f6e498]:
+                - text: Players can earn Pro Pass XP in Brawl Stars by participating in Ranked Mode and official events. The primary way to gain XP is by winning Ranked Matches. Additionally, Rank Promotions provide an XP bonus once per month, helping players to progress faster. XP can also be obtained from Ranked Starr Drops, and by participating in official Brawl Stars events.
+                - superscript [ref=f6e499]:
+                  - link "[38]" [ref=f6e500] [cursor=pointer]:
+                    - /url: "#cite_note-:4-38"
+                - text: By watching esports tournaments and participating in "Pick-ems" on the official website, people can earn extra Pro Pass XP.
+            - region [ref=f6e501]:
+              - heading "Resources" [level=3] [ref=f6e503]
+              - paragraph [ref=f6e504]:
+                - text: Players can upgrade Brawlers' stats using Coins and Power Points. Coins are additionally used for buying Brawler-specific upgrades such as Gadgets, Star Powers and Hypercharges. Credits are used to unlock Brawlers, XP Doublers (formerly Token Doublers) are used to speed up progress through the Brawl Pass, and Bling is used to buy most cosmetics, which was added in April 2023, replacing Star Points.
+                - superscript [ref=f6e505]:
+                  - link "[39]" [ref=f6e506] [cursor=pointer]:
+                    - /url: "#cite_note-39"
+                - superscript [ref=f6e507]:
+                  - link "[40]" [ref=f6e508] [cursor=pointer]:
+                    - /url: "#cite_note-40"
+              - paragraph [ref=f6e509]:
+                - text: Gems are used to top off any currency that the player does not have enough of, as well as certain cosmetics exclusively available for gems.
+                - superscript [ref=f6e510]:
+                  - link "[41]" [ref=f6e511] [cursor=pointer]:
+                    - /url: "#cite_note-Supercell-41"
+                - text: Gems are available for free, but the main way of obtaining them is through money. Winning matches with Brawlers and doing certain challenges progresses their Record level, which can unlock Brawler cosmetics and progression items (Power Points, Coins, Titles, and Credits).
+                - superscript [ref=f6e512]:
+                  - link "[42]" [ref=f6e513] [cursor=pointer]:
+                    - /url: "#cite_note-42"
+            - region [ref=f6e514]:
+              - heading "Starr Road" [level=3] [ref=f6e516]
+              - paragraph [ref=f6e517]:
+                - text: The Starr Road was introduced as the method of unlocking Brawlers, after the removal of Boxes in December 2022.
+                - superscript [ref=f6e518]:
+                  - link "[7]" [ref=f6e519] [cursor=pointer]:
+                    - /url: "#cite_note-:6-7"
+                - superscript [ref=f6e520]:
+                  - link "[43]" [ref=f6e521] [cursor=pointer]:
+                    - /url: "#cite_note-43"
+                - text: Players can select a Brawler from a selection of up to four from the same rarity (from a choice of either Epic, Mythic, Legendary, or Ultra Legendary) to initiate the unlocking process. Progress is made through Credits, a currency obtained in the Trophy Road, shop freebies, daily login rewards, from Starr Drops and Chaos Drops, and from the Brawl Pass. Players can switch to a different Brawler they wish to unlock at any time, with the accumulated credits transitioning to the new selection.
+                - superscript [ref=f6e522]:
+                  - link "[44]" [ref=f6e523] [cursor=pointer]:
+                    - /url: "#cite_note-:5-44"
+              - paragraph [ref=f6e524]:
+                - text: Once a Brawler is unlocked, it becomes a permanent addition to the player's collection. The Starr Road then presents a new selection of Brawlers from the next rarity tier to unlock. Alternatively, players have the option to acquire Brawlers from the Starr Road using Gems.
+                - superscript [ref=f6e525]:
+                  - link "[44]" [ref=f6e526] [cursor=pointer]:
+                    - /url: "#cite_note-:5-44"
+              - paragraph [ref=f6e527]:
+                - text: Until 29 February 2024, the Chromatic Shop allowed players to unlock certain Brawlers through Chroma Credits, a currency obtainable through the Brawl Pass and used exclusively for unlocking Brawlers who debuted as part of a Brawl Pass. Alternatively, Gems could be used to purchase the Chromatics.
+                - superscript [ref=f6e528]:
+                  - link "[45]" [ref=f6e529] [cursor=pointer]:
+                    - /url: "#cite_note-45"
+              - paragraph [ref=f6e530]:
+                - text: Rare and Super Rare Brawlers are unlocked through the Trophy Road after reaching certain Trophy counts as opposed to using the Starr Road.
+                - superscript [ref=f6e531]:
+                  - link "[46]" [ref=f6e532] [cursor=pointer]:
+                    - /url: "#cite_note-46"
+            - region [ref=f6e533]:
+              - heading "Brawlers" [level=3] [ref=f6e535]
+              - paragraph [ref=f6e536]:
+                - text: "As of 11 June 2026, Brawl Stars has 104 Brawlers with the newest Brawlers Bolt and Starr Nova and 7 classes: Damage Dealers, Marksmen, Tanks, Assassins, Supports, Controllers, and Artillery. Brawlers also have Rarities, which vary based on a Brawler's concept difficulty: Rare, Super Rare, Epic, Mythic, Legendary, and Ultra Legendary (introduced on 29 May 2025 with the new brawler Kaze)"
+                - superscript [ref=f6e537]:
+                  - link "[47]" [ref=f6e538] [cursor=pointer]:
+                    - /url: "#cite_note-47"
+                - text: . In the 2026 update, the new brawlers released are Starr Nova, Damian, Bolt, Sirius, and Najia
+                - superscript [ref=f6e539]:
+                  - link "[48]" [ref=f6e540] [cursor=pointer]:
+                    - /url: "#cite_note-48"
+                - text: .
+          - region [ref=f6e541]:
+            - heading "Setting" [level=2] [ref=f6e543]
+            - paragraph [ref=f6e544]:
+              - text: Brawl Stars takes place in a fictional abandoned
+              - link "amusement park" [ref=f6e545] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Amusement_park
+              - text: named Starr Park. Initially introduced in a live-action short film,
+              - superscript [ref=f6e546]:
+                - link "[49]" [ref=f6e547] [cursor=pointer]:
+                  - /url: "#cite_note-49"
+              - text: in-game surveillance footage showed that Starr Park closed in 1995 due to magic purple gems that granted several staff and visitors in Starr Park immortality, but in the ensuing chaos, gave life to inanimate objects and mutated plant life and animals.
+              - superscript [ref=f6e548]:
+                - link "[50]" [ref=f6e549] [cursor=pointer]:
+                  - /url: "#cite_note-50"
+          - region [ref=f6e550]:
+            - heading "Development and release" [level=2] [ref=f6e552]
+            - paragraph [ref=f6e553]:
+              - link "Supercell" [ref=f6e554] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Supercell_(company)
+              - text: set out to develop a team-based game similar to
+              - link "League of Legends" [ref=f6e556] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/League_of_Legends
+              - text: and
+              - link "Overwatch" [ref=f6e557] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Overwatch_(2016_video_game)
+              - text: . The team wanted to create such a game that was designed with mobile devices in mind first. According to Frank Keienburg, Brawl Stars'
+              - link "General Manager" [ref=f6e558] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/General_Manager
+              - text: (i.e. project lead), "Our focus was on retaining a lot of depth while stripping away all the fluff".
+              - superscript [ref=f6e559]:
+                - link "[51]" [ref=f6e560] [cursor=pointer]:
+                  - /url: "#cite_note-Redbull-51"
+              - text: Although the game contains some elements of the battle royale genre, these were implemented before the genre as a whole took off and the team did not set out to make a game with those elements.
+              - superscript [ref=f6e561]:
+                - link "[52]" [ref=f6e562] [cursor=pointer]:
+                  - /url: "#cite_note-Newsweeklaunch-52"
+            - paragraph [ref=f6e563]:
+              - text: The game is notable for its long
+              - link "soft launch" [ref=f6e564] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Soft_launch
+              - text: period during which virtually every aspect of the game changed.
+              - superscript [ref=f6e565]:
+                - link "[53]" [ref=f6e566] [cursor=pointer]:
+                  - /url: "#cite_note-53"
+              - text: Supercell officially announced the game via a
+              - link "livestream" [ref=f6e567] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Livestream
+              - text: video on 14 June 2017.
+              - superscript [ref=f6e568]:
+                - link "[54]" [ref=f6e569] [cursor=pointer]:
+                  - /url: "#cite_note-54"
+              - superscript [ref=f6e570]:
+                - text: "["
+                - link "unreliable source?" [ref=f6e572] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                - text: "]"
+              - text: It received an
+              - link "iOS" [ref=f6e573] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/IOS
+              - text: soft launch in Canada the following day.
+              - superscript [ref=f6e574]:
+                - link "[55]" [ref=f6e575] [cursor=pointer]:
+                  - /url: "#cite_note-55"
+              - text: The soft launch would last a total of 522 days, during which internally it was doubted whether or not the game would ever actually see a general release.
+              - superscript [ref=f6e576]:
+                - link "[52]" [ref=f6e577] [cursor=pointer]:
+                  - /url: "#cite_note-Newsweeklaunch-52"
+              - superscript [ref=f6e578]:
+                - link "[51]" [ref=f6e579] [cursor=pointer]:
+                  - /url: "#cite_note-Redbull-51"
+              - text: Initially, the game was played in
+              - link "portrait mode" [ref=f6e580] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Portrait_mode
+              - text: and the movement controls were controlled by tapping on the screen. Landscape mode and joystick-based input would later replace them.
+              - superscript [ref=f6e581]:
+                - link "[52]" [ref=f6e582] [cursor=pointer]:
+                  - /url: "#cite_note-Newsweeklaunch-52"
+              - superscript [ref=f6e583]:
+                - link "[51]" [ref=f6e584] [cursor=pointer]:
+                  - /url: "#cite_note-Redbull-51"
+              - text: Other changes include changing the
+              - link "UI" [ref=f6e585] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/User_interface
+              - text: ", changing the"
+              - link "metagame" [ref=f6e586] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Metagame
+              - text: and transitioning the game from 2D to 3D.
+              - superscript [ref=f6e587]:
+                - link "[51]" [ref=f6e588] [cursor=pointer]:
+                  - /url: "#cite_note-Redbull-51"
+              - text: Frank Keienburg attributes the difficult beta period to the developers working in a new genre where they "weren't sure how to interpret its success".
+              - superscript [ref=f6e589]:
+                - link "[52]" [ref=f6e590] [cursor=pointer]:
+                  - /url: "#cite_note-Newsweeklaunch-52"
+              - text: The game soft-launched in Finland, Sweden, Denmark, Norway, Ireland, Singapore, Hong Kong, Macao and Malaysia for iOS on 19 January 2018.
+              - superscript [ref=f6e591]:
+                - text: "["
+                - link "citation needed" [ref=f6e593] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:Citation_needed
+                - text: "]"
+              - text: ", with a later"
+              - link "Android" [ref=f6e594] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Android_(operating_system)
+              - text: soft-launch in June.
+            - paragraph [ref=f6e595]:
+              - text: Brawl Stars was made globally and officially available on 12 December 2018,
+              - superscript [ref=f6e596]:
+                - link "[1]" [ref=f6e597] [cursor=pointer]:
+                  - /url: "#cite_note-vb1-1"
+              - text: grossing US$10 million in its first week
+              - superscript [ref=f6e598]:
+                - link "[56]" [ref=f6e599] [cursor=pointer]:
+                  - /url: "#cite_note-GB_20260131-56"
+              - text: and US$63 million in its first month.
+              - superscript [ref=f6e600]:
+                - link "[57]" [ref=f6e601] [cursor=pointer]:
+                  - /url: "#cite_note-57"
+              - text: On 9 June 2020, Brawl Stars was released in
+              - link "mainland China" [ref=f6e602] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Mainland_China
+              - text: ", with the corresponding changes to accommodate to Chinese regulations by"
+              - link "Tencent Games" [ref=f6e603] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Tencent_Games
+              - text: .
+              - superscript [ref=f6e604]:
+                - link "[58]" [ref=f6e605] [cursor=pointer]:
+                  - /url: "#cite_note-58"
+          - region [ref=f6e606]:
+            - heading "Brawl Stars Championship" [level=2] [ref=f6e608]
+            - paragraph [ref=f6e609]:
+              - text: The Brawl Stars Championship is an annual tournament, composed of a qualifying stage, available in-game, another Monthly Qualifier stage, a Regional Monthly Finals stage, and finally a World Finals stage, in which the best teams compete to win the Championship. The first in-game challenge is similar to other challenges, where players must win 15 matches in the in-game challenge without losing three times. After 15 wins, players win a spot in regional Monthly Qualifiers, which then give access to the regional Monthly Finals.
+              - superscript [ref=f6e610]:
+                - link "[59]" [ref=f6e611] [cursor=pointer]:
+                  - /url: "#cite_note-21BSC-59"
+              - text: First introduced in 2025, the Brawl Cup is an in-person event that features the top teams from six regions. The results from this event allows teams to secure a spot in the Last Chance Qualifiers (LCQs) or even the World Finals.
+              - superscript [ref=f6e612]:
+                - link "[60]" [ref=f6e613] [cursor=pointer]:
+                  - /url: "#cite_note-60"
+              - superscript [ref=f6e614]:
+                - link "[61]" [ref=f6e615] [cursor=pointer]:
+                  - /url: "#cite_note-:7-61"
+              - text: At the end of the year, the World Finals take place, which is an event which has the largest prize pool and attracts the most viewers.
+              - superscript [ref=f6e616]:
+                - link "[62]" [ref=f6e617] [cursor=pointer]:
+                  - /url: "#cite_note-:0-62"
+              - superscript [ref=f6e618]:
+                - text: "["
+                - link "unreliable source?" [ref=f6e620] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources
+                - text: "]"
+              - superscript [ref=f6e621]:
+                - link "[63]" [ref=f6e622] [cursor=pointer]:
+                  - /url: "#cite_note-BSC-63"
+            - paragraph [ref=f6e623]:
+              - text: The first edition, known as the Brawl Stars World Championship, was held on 15 and 16 November 2019, at the
+              - link "Busan Exhibition and Convention Center" [ref=f6e624] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Busan_Exhibition_and_Convention_Center
+              - text: in South Korea. The first-place winner was
+              - link "Nova Esports" [ref=f6e625] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Nova_Esports
+              - text: with a 3–0 victory. Other competing participants included Animal Chanpuru, Tribe Gaming, 3Bears,
+              - link "Spacestation Gaming" [ref=f6e626] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Spacestation_Gaming
+              - text: ", and"
+              - link "PSG Esports" [ref=f6e627] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/PSG_Esports
+              - text: . With a $250,000 prize pool, it was the first international event for the game and had teams from North America, Europe, Latin America, Southeast Asia, Japan, and South Korea.
+              - superscript [ref=f6e628]:
+                - link "[62]" [ref=f6e629] [cursor=pointer]:
+                  - /url: "#cite_note-:0-62"
+              - superscript [ref=f6e630]:
+                - link "[64]" [ref=f6e631] [cursor=pointer]:
+                  - /url: "#cite_note-64"
+            - paragraph [ref=f6e632]:
+              - text: In 2020, the World Finals were held between 21 and 22 November with a base $1,000,000 prize pool. Half of the amount was raised using the profits from an in-game championship package. Eight teams participated in the World Finals, which were originally to take place in
+              - link "Katowice" [ref=f6e633] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Katowice
+              - text: ", Poland, but were moved online due to the"
+              - link "COVID-19 pandemic" [ref=f6e634] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/COVID-19_pandemic
+              - text: . PSG Esports was the winner of that year's championship with a prize of $200,000. The other monetary prizes were split between the teams which won second to eighth place.
+              - superscript [ref=f6e635]:
+                - link "[65]" [ref=f6e636] [cursor=pointer]:
+                  - /url: "#cite_note-2020Win-65"
+            - paragraph [ref=f6e637]:
+              - text: In 2021, the Brawl Stars Championship started on 20 February. There are eight seasons for the championship that occur once per month, from February to September. The Championship Challenges and Monthly Qualifiers are each live for two days per season. The top eight teams from the regional Monthly Qualifiers go to the regional Monthly Finals. Sixteen teams from the Monthly Finals from all seven regions come together to participate in the World Finals, which took place in that year's edition from 26 to 28 November in-person in
+              - link "Bucharest" [ref=f6e638] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Bucharest
+              - text: ", Romania. The prizes for 2021 were $600,000 in the Monthly Finals, and a minimum of $500,000 in the World Finals with opportunities to increase this amount through in-game offers."
+              - superscript [ref=f6e639]:
+                - link "[63]" [ref=f6e640] [cursor=pointer]:
+                  - /url: "#cite_note-BSC-63"
+            - paragraph [ref=f6e641]:
+              - text: In 2024, the World Finals were held in conjunction with the
+              - link "Clash Royale League World Finals" [ref=f6e642] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Clash_Royale#Clash_Royale_League
+              - text: and the Clash of Clans World Championship in
+              - link "Helsinki" [ref=f6e643] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Helsinki
+              - text: ", Finland during Superfest, an event developed by Supercell encompassing the before mentioned tournaments."
+              - superscript [ref=f6e644]:
+                - link "[66]" [ref=f6e645] [cursor=pointer]:
+                  - /url: "#cite_note-66"
+              - superscript [ref=f6e646]:
+                - link "[67]" [ref=f6e647] [cursor=pointer]:
+                  - /url: "#cite_note-67"
+              - text: The 2024 edition reached a peak viewership of over a million viewers with team HMBLE taking first place after defeating Crazy Raccoon.
+              - superscript [ref=f6e648]:
+                - link "[68]" [ref=f6e649] [cursor=pointer]:
+                  - /url: "#cite_note-68"
+            - paragraph [ref=f6e650]:
+              - text: In 2025, the first edition of the Brawl Cup was held in
+              - link "Dallas" [ref=f6e651] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Dallas
+              - text: ", Texas, at"
+              - link "DreamHack" [ref=f6e652] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/DreamHack
+              - text: Dallas. With a prize pool of $50,000, six teams battled for places in the World Finals and Last Chance Qualifiers,
+              - superscript [ref=f6e653]:
+                - link "[61]" [ref=f6e654] [cursor=pointer]:
+                  - /url: "#cite_note-:7-61"
+              - text: with HMBLE taking the crown and advancing straight to the World Finals later that year, and the second and third place teams (
+              - link "SK Gaming" [ref=f6e655] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/SK_Gaming
+              - text: and Zeta Division) advancing to the LCQs.
+              - superscript [ref=f6e656]:
+                - text: "["
+                - link "citation needed" [ref=f6e658] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:Citation_needed
+                - text: "]"
+              - text: The Last Chance Qualifiers were held in Brazil, in October. This event saw 16 teams from 7 regions battle for four spots in the World Finals.
+              - superscript [ref=f6e659]:
+                - link "[69]" [ref=f6e660] [cursor=pointer]:
+                  - /url: "#cite_note-69"
+              - text: Revenant XSpark, Totem Esports, Crazy Raccoon, and Papara Supermassive all came out victorious, securing their spots in the World Finals.
+              - superscript [ref=f6e661]:
+                - text: "["
+                - link "citation needed" [ref=f6e663] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:Citation_needed
+                - text: "]"
+              - text: The World Finals were held in
+              - link "Stockholm" [ref=f6e664] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Stockholm
+              - text: ", Sweden, as part of DreamHack Stockholm. 16 teams fought for a share of the $1,000,000 prize pool. With a peak viewer count of just over 211,000, the final included reigning champions HMBLE facing Crazy Raccoon, a repeat of the finals that happened in 2024. Ultimately Crazy Raccoon came out victorious, defeating HMBLE 3–0."
+              - superscript [ref=f6e665]:
+                - link "[70]" [ref=f6e666] [cursor=pointer]:
+                  - /url: "#cite_note-70"
+          - region [ref=f6e667]:
+            - heading "Reception" [level=2] [ref=f6e669]
+            - complementary [ref=f6e670]:
+              - generic [ref=f6e671]: Brawl Stars Reception
+              - table [ref=f6e672]:
+                - caption [ref=f6e673]: Aggregate score
+                - rowgroup [ref=f6e674]:
+                  - row [ref=f6e675]:
+                    - columnheader "Aggregator" [ref=f6e676]
+                    - columnheader "Score" [ref=f6e677]
+                  - row [ref=f6e678]:
+                    - cell [ref=f6e679]:
+                      - link "Metacritic" [ref=f6e680] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Metacritic
+                    - cell [ref=f6e681]:
+                      - text: 72/100
+                      - superscript [ref=f6e682]:
+                        - link "[71]" [ref=f6e683] [cursor=pointer]:
+                          - /url: "#cite_note-MC-71"
+              - table [ref=f6e684]:
+                - caption [ref=f6e685]: Review scores
+                - rowgroup [ref=f6e686]:
+                  - row [ref=f6e687]:
+                    - columnheader "Publication" [ref=f6e688]
+                    - columnheader "Score" [ref=f6e689]
+                  - row [ref=f6e690]:
+                    - cell [ref=f6e691]:
+                      - link "Pocket Gamer" [ref=f6e693] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Pocket_Gamer
+                    - cell [ref=f6e694]:
+                      - text: 3/5
+                      - superscript [ref=f6e695]:
+                        - link "[72]" [ref=f6e696] [cursor=pointer]:
+                          - /url: "#cite_note-PG-72"
+                  - row [ref=f6e697]:
+                    - cell "148 Apps" [ref=f6e698]
+                    - cell [ref=f6e699]:
+                      - text: 3.5/5
+                      - superscript [ref=f6e700]:
+                        - link "[73]" [ref=f6e701] [cursor=pointer]:
+                          - /url: "#cite_note-SndRev-73"
+            - region [ref=f6e702]:
+              - heading "Awards" [level=3] [ref=f6e704]
+              - paragraph [ref=f6e705]:
+                - text: The game was nominated for "Mobile Game" and "EE Mobile Game of the Year" at the
+                - link "15th British Academy Games Awards" [ref=f6e706] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/15th_British_Academy_Games_Awards
+                - text: .
+                - superscript [ref=f6e707]:
+                  - link "[74]" [ref=f6e708] [cursor=pointer]:
+                    - /url: "#cite_note-74"
+            - region [ref=f6e709]:
+              - heading "Critical reception" [level=3] [ref=f6e711]
+              - paragraph [ref=f6e712]:
+                - text: Brawl Stars received "mixed or average" reviews or 72 out of 100 on
+                - link "review aggregator" [ref=f6e713] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Review_aggregator
+                - text: website
+                - link "Metacritic" [ref=f6e714] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Metacritic
+                - text: .
+                - superscript [ref=f6e715]:
+                  - link "[71]" [ref=f6e716] [cursor=pointer]:
+                    - /url: "#cite_note-MC-71"
+              - paragraph [ref=f6e717]:
+                - generic [ref=f6e718]:
+                  - link "Pocket Gamer" [ref=f6e719] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Pocket_Gamer
+                  - text: "'"
+                - text: s Harry Slater scored the game 3 out of 5. Reviewing the game immediately after global release, he praised that game's progression. He criticized Showdown, the game's
+                - link "battle royale" [ref=f6e720] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Battle_royale_game
+                - text: mode, for being the weakest of all the game modes that were in the game. He said that Showdown "doesn't capture the real madness of the genre, and there's a distinct lack of tension since you can pretty much see everyone on the map and what they're up to". He mentioned that something felt "missing in Brawl Stars. You'll play, you'll get new characters, you'll unlock new modes, but you're never having quite as much fun as you feel you should be doing." He continued on to say that "the action is relatively flat - in the team matches you know within the first few seconds which way the game is going." He concluded in disappointment because the game did not seem like "the huge step forward for multiplayer mobile action that a lot of us were hoping for."
+                - superscript [ref=f6e721]:
+                  - link "[72]" [ref=f6e722] [cursor=pointer]:
+                    - /url: "#cite_note-PG-72"
+              - paragraph [ref=f6e723]:
+                - text: 148 Apps' Campbell Bird scored the game 3.5 out of 5. She started with mentioning that the game felt "like a combination of
+                - link "Arena of Valor" [ref=f6e725] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Arena_of_Valor
+                - text: and
+                - link "Overwatch" [ref=f6e727] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Overwatch_(2016_video_game)
+                - text: ." She praised the game's graphics and the developer's implementation of the progression system to encourage players to play again, as well as the quick matchmaking. However, she criticized the game's controls for feeling "oddly loose and muddy". the characters falling "into pretty predictable hero shooter archetypes", as well as claiming that "every mode in the game is some variation on something you've seen before in other, better multiplayer shooters." She also highlighted that the frequent connection issues and unbalanced teams made the experience of playing the game less enjoyable.
+                - superscript [ref=f6e728]:
+                  - link "[73]" [ref=f6e729] [cursor=pointer]:
+                    - /url: "#cite_note-SndRev-73"
+              - paragraph [ref=f6e730]:
+                - link "Eurogamer" [ref=f6e732] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Eurogamer
+                - text: writer Christian Donlan wrote that the gameplay is easy to pick up (even for players of low skill). He also wrote that Battle Royales are all about preying on opponents and with
+                - link "health bars" [ref=f6e733] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Health_(game_terminology)
+                - text: always being visible to everyone, it becomes even more crucial.
+                - superscript [ref=f6e734]:
+                  - link "[75]" [ref=f6e735] [cursor=pointer]:
+                    - /url: "#cite_note-75"
+            - region [ref=f6e736]:
+              - heading "Commercial reception" [level=3] [ref=f6e738]
+              - paragraph [ref=f6e739]:
+                - text: Brawl Stars has been downloaded over 400 million times. In 2020, Brawl Stars had the second highest gross of any mobile game in Europe.
+                - superscript [ref=f6e740]:
+                  - link "[76]" [ref=f6e741] [cursor=pointer]:
+                    - /url: "#cite_note-76"
+                - text: It grossed US$526 million in total in 2020, which accounted for more than half its life time revenue. It was also the fourth game by Supercell to surpass US$1 billion in lifetime revenue.
+                - superscript [ref=f6e742]:
+                  - link "[77]" [ref=f6e743] [cursor=pointer]:
+                    - /url: "#cite_note-77"
+          - region [ref=f6e744]:
+            - heading "References" [level=2] [ref=f6e746]
+            - list [ref=f6e748]:
+              - listitem [ref=f6e749]:
+                - generic [ref=f6e750]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e751] [cursor=pointer]:
+                    - /url: "#cite_ref-vb1_1-0"
+                  - link [ref=f6e753] [cursor=pointer]:
+                    - /url: "#cite_ref-vb1_1-1"
+                - generic [ref=f6e754]:
+                  - generic [ref=f6e755]:
+                    - text: Minotti, Mike (12 December 2018).
+                    - link "\"Supercell's Brawl Stars launches on iOS and Android\"" [ref=f6e756] [cursor=pointer]:
+                      - /url: https://venturebeat.com/2018/12/12/supercells-brawl-stars-launches-on-ios-and-android/
+                    - text: . GamesBeat.
+                    - link "VentureBeat" [ref=f6e757] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/VentureBeat
+                    - text: .
+                    - link "Archived" [ref=f6e758] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210418130429/https://venturebeat.com/2018/12/12/supercells-brawl-stars-launches-on-ios-and-android/
+                    - text: from the original on 18 April 2021
+                    - generic [ref=f6e759]: . Retrieved 17 March 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=GamesBeat&rft.atitle=Supercell%27s+Brawl+Stars+launches+on+iOS+and+Android&rft.date=2018-12-12&rft.aulast=Minotti&rft.aufirst=Mike&rft_id=https%3A%2F%2Fventurebeat.com%2F2018%2F12%2F12%2Fsupercells-brawl-stars-launches-on-ios-and-android%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e760]:
+                - link "Jump up" [ref=f6e762] [cursor=pointer]:
+                  - /url: "#cite_ref-2"
+                  - text: ^
+                - generic [ref=f6e763]:
+                  - generic [ref=f6e764]:
+                    - 'link "\"''Brawl Stars'' review: ''Overwatch'' lite, on smartphones\"" [ref=f6e765] [cursor=pointer]':
+                      - /url: https://www.scmp.com/yp/discover/entertainment/tech-gaming/article/3090691/brawl-stars-review-fun-mobile-hero-shooter
+                    - text: . Young Post. 28 June 2020.
+                    - link "Archived" [ref=f6e767] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20211127120502/https://www.scmp.com/yp/discover/entertainment/tech-gaming/article/3090691/brawl-stars-review-fun-mobile-hero-shooter
+                    - text: from the original on 27 November 2021
+                    - generic [ref=f6e768]: . Retrieved 11 August 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Young+Post&rft.atitle=%27Brawl+Stars%27+review%3A+%27Overwatch%27+lite%2C+on+smartphones&rft.date=2020-06-28&rft_id=https%3A%2F%2Fwww.scmp.com%2Fyp%2Fdiscover%2Fentertainment%2Ftech-gaming%2Farticle%2F3090691%2Fbrawl-stars-review-fun-mobile-hero-shooter&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e769]:
+                - link "Jump up" [ref=f6e771] [cursor=pointer]:
+                  - /url: "#cite_ref-3"
+                  - text: ^
+                - generic [ref=f6e772]:
+                  - generic [ref=f6e773]:
+                    - text: Takahashi, Dean (11 February 2020).
+                    - 'link "\"Supercell''s off year: revenues of $1.56 billion and profits of $577 million\"" [ref=f6e774] [cursor=pointer]':
+                      - /url: https://venturebeat.com/2020/02/11/supercells-off-year-revenues-of-1-56-billion-and-profits-of-577-million/
+                    - text: . GamesBeat.
+                    - link "VentureBeat" [ref=f6e775] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/VentureBeat
+                    - text: .
+                    - link "Archived" [ref=f6e776] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20220605135910/https://venturebeat.com/2020/02/11/supercells-off-year-revenues-of-1-56-billion-and-profits-of-577-million/
+                    - text: from the original on 5 June 2022
+                    - generic [ref=f6e777]: . Retrieved 23 January 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=GamesBeat&rft.atitle=Supercell%27s+off+year%3A+revenues+of+%241.56+billion+and+profits+of+%24577+million&rft.date=2020-02-11&rft.aulast=Takahashi&rft.aufirst=Dean&rft_id=https%3A%2F%2Fventurebeat.com%2F2020%2F02%2F11%2Fsupercells-off-year-revenues-of-1-56-billion-and-profits-of-577-million%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e778]:
+                - link "Jump up" [ref=f6e780] [cursor=pointer]:
+                  - /url: "#cite_ref-RB_4-0"
+                  - text: ^
+                - generic [ref=f6e781]:
+                  - generic [ref=f6e782]:
+                    - link "\"A Beginner's guide to your new favourite mobile esport\"" [ref=f6e783] [cursor=pointer]:
+                      - /url: https://www.redbull.com/in-en/Brawl-Stars-tips-for-beginners
+                    - text: . Red Bull. 10 March 2021.
+                    - link "Archived" [ref=f6e784] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20221115163618/https://www.redbull.com/in-en/Brawl-Stars-tips-for-beginners
+                    - text: from the original on 15 November 2022
+                    - generic [ref=f6e785]: . Retrieved 5 April 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Red+Bull&rft.atitle=A+Beginner%27s+guide+to+your+new+favourite+mobile+esport&rft.date=2021-03-10&rft_id=https%3A%2F%2Fwww.redbull.com%2Fin-en%2FBrawl-Stars-tips-for-beginners&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e786]:
+                - link "Jump up" [ref=f6e788] [cursor=pointer]:
+                  - /url: "#cite_ref-5"
+                  - text: ^
+                - generic [ref=f6e789]:
+                  - generic [ref=f6e790]:
+                    - link "\"Brawl Planet - Brawl Stars Stats\"" [ref=f6e791] [cursor=pointer]:
+                      - /url: https://www.brawlplanet.com/brawlers
+                    - text: . www.brawlplanet.com.
+                    - link "Archived" [ref=f6e792] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310104335/https://www.brawlplanet.com/brawlers
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e793]: . Retrieved 30 October 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=www.brawlplanet.com&rft.atitle=Brawl+Planet+-+Brawl+Stars+Stats&rft_id=https%3A%2F%2Fwww.brawlplanet.com%2Fbrawlers&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e794]:
+                - link "Jump up" [ref=f6e796] [cursor=pointer]:
+                  - /url: "#cite_ref-:1_6-0"
+                  - text: ^
+                - generic [ref=f6e797]:
+                  - generic [ref=f6e798]:
+                    - 'link "\"UPDATE: Tara''s Bazaar\"" [ref=f6e799] [cursor=pointer]':
+                      - /url: https://blog.brawlstars.com/blog/game-updates/update-taras-bazaar.html
+                    - text: . Brawl Stars.
+                    - link "Archived" [ref=f6e800] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20220920173530/https://blog.brawlstars.com/blog/game-updates/update-taras-bazaar.html
+                    - text: from the original on 20 September 2022
+                    - generic [ref=f6e801]: . Retrieved 24 July 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=UPDATE%3A+Tara%27s+Bazaar&rft_id=https%3A%2F%2Fblog.brawlstars.com%2Fblog%2Fgame-updates%2Fupdate-taras-bazaar.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e802]:
+                - generic [ref=f6e803]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e804] [cursor=pointer]:
+                    - /url: "#cite_ref-:6_7-0"
+                  - link [ref=f6e806] [cursor=pointer]:
+                    - /url: "#cite_ref-:6_7-1"
+                - generic [ref=f6e807]:
+                  - generic [ref=f6e808]:
+                    - link "\"The Starr Road\"" [ref=f6e809] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/the-starr-road-2.html
+                    - text: . Supercell Support Portal
+                    - generic [ref=f6e810]: . Retrieved 19 June 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=The+Starr+Road&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fthe-starr-road-2.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e811]:
+                - link "Jump up" [ref=f6e813] [cursor=pointer]:
+                  - /url: "#cite_ref-8"
+                  - text: ^
+                - generic [ref=f6e814]:
+                  - generic [ref=f6e815]:
+                    - link "\"Credits\"" [ref=f6e816] [cursor=pointer]:
+                      - /url: https://www.brawlify.com/credits
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e817] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310105104/https://brawlify.com/
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e818]: . Retrieved 1 July 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Credits&rft_id=https%3A%2F%2Fwww.brawlify.com%2Fcredits&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e819]:
+                - link "Jump up" [ref=f6e821] [cursor=pointer]:
+                  - /url: "#cite_ref-9"
+                  - text: ^
+                - generic [ref=f6e822]:
+                  - generic [ref=f6e823]:
+                    - link "\"Hypercharges\"" [ref=f6e824] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/hypercharge-3.html
+                    - text: . Supercell Support Portal.
+                    - link "Archived" [ref=f6e825] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310105235/https://support.supercell.com/brawl-stars/en/articles/hypercharge-3.html
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e826]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=Hypercharges&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fhypercharge-3.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e827]:
+                - link "Jump up" [ref=f6e829] [cursor=pointer]:
+                  - /url: "#cite_ref-10"
+                  - text: ^
+                - generic [ref=f6e830]:
+                  - generic [ref=f6e831]:
+                    - link "\"Gadgets\"" [ref=f6e832] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/gadgets-4.html?q=1741598956
+                    - text: . Supercell Support Portal.
+                    - link "Archived" [ref=f6e833] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310105421/https://support.supercell.com/brawl-stars/en/articles/gadgets-4.html?q=1741598956
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e834]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=Gadgets&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fgadgets-4.html%3Fq%3D1741598956&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e835]:
+                - link "Jump up" [ref=f6e837] [cursor=pointer]:
+                  - /url: "#cite_ref-11"
+                  - text: ^
+                - generic [ref=f6e838]:
+                  - generic [ref=f6e839]:
+                    - link "\"Star Powers\"" [ref=f6e840] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/star-powers-3.html
+                    - text: . Supercell Support Portal.
+                    - link "Archived" [ref=f6e841] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310105520/https://support.supercell.com/brawl-stars/en/articles/star-powers-3.html
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e842]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=Star+Powers&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fstar-powers-3.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e843]:
+                - link "Jump up" [ref=f6e845] [cursor=pointer]:
+                  - /url: "#cite_ref-12"
+                  - text: ^
+                - generic [ref=f6e846]:
+                  - generic [ref=f6e847]:
+                    - link "\"Gears\"" [ref=f6e848] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/gears-7.html
+                    - text: . Supercell Support Portal.
+                    - link "Archived" [ref=f6e849] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310105608/https://support.supercell.com/brawl-stars/en/articles/gears-7.html
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e850]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=Gears&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fgears-7.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e851]:
+                - link "Jump up" [ref=f6e853] [cursor=pointer]:
+                  - /url: "#cite_ref-13"
+                  - text: ^
+                - generic [ref=f6e854]:
+                  - generic [ref=f6e855]:
+                    - text: Torres, Ida (17 June 2017).
+                    - link "\"Brawl Stars is an upcoming game from the makers of Clash Royale\"" [ref=f6e856] [cursor=pointer]:
+                      - /url: https://androidcommunity.com/brawl-stars-is-an-upcoming-game-from-the-makers-of-clash-royale-20170617/
+                    - text: . Android Community.
+                    - link "Archived" [ref=f6e857] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20190331042713/https://androidcommunity.com/brawl-stars-is-an-upcoming-game-from-the-makers-of-clash-royale-20170617/
+                    - text: from the original on 31 March 2019
+                    - generic [ref=f6e858]: . Retrieved 29 August 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Android+Community&rft.atitle=Brawl+Stars+is+an+upcoming+game+from+the+makers+of+Clash+Royale&rft.date=2017-06-17&rft.aulast=Torres&rft.aufirst=Ida&rft_id=https%3A%2F%2Fandroidcommunity.com%2Fbrawl-stars-is-an-upcoming-game-from-the-makers-of-clash-royale-20170617%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e859]:
+                - link "Jump up" [ref=f6e861] [cursor=pointer]:
+                  - /url: "#cite_ref-14"
+                  - text: ^
+                - generic [ref=f6e862]:
+                  - generic [ref=f6e863]:
+                    - text: Hayward, Andrew (19 December 2018).
+                    - link "\"Brawl Stars is a worthy, if simple, Clash Royale successor\"" [ref=f6e864] [cursor=pointer]:
+                      - /url: https://www.polygon.com/reviews/2018/12/19/18146759/brawl-stars-review-supercell-ios-android
+                    - text: . Polygon.
+                    - link "Archived" [ref=f6e865] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20190829045721/https://www.polygon.com/reviews/2018/12/19/18146759/brawl-stars-review-supercell-ios-android
+                    - text: from the original on 29 August 2019
+                    - generic [ref=f6e866]: . Retrieved 29 August 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Polygon&rft.atitle=Brawl+Stars+is+a+worthy%2C+if+simple%2C+Clash+Royale+successor&rft.date=2018-12-19&rft.aulast=Hayward&rft.aufirst=Andrew&rft_id=https%3A%2F%2Fwww.polygon.com%2Freviews%2F2018%2F12%2F19%2F18146759%2Fbrawl-stars-review-supercell-ios-android&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e867]:
+                - link "Jump up" [ref=f6e869] [cursor=pointer]:
+                  - /url: "#cite_ref-15"
+                  - text: ^
+                - generic [ref=f6e870]:
+                  - generic [ref=f6e871]:
+                    - link "\"Maps for Solo Showdown | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e872] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/Showdown
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e873] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310110017/https://brawlify.com/gamemodes/detail/Showdown
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e874]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Solo+Showdown+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FShowdown&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e875]:
+                - link "Jump up" [ref=f6e877] [cursor=pointer]:
+                  - /url: "#cite_ref-16"
+                  - text: ^
+                - generic [ref=f6e878]:
+                  - generic [ref=f6e879]:
+                    - link "\"Maps for Duo Showdown | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e880] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/DuoShowdown
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e881] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310110208/https://brawlify.com/gamemodes/detail/DuoShowdown
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e882]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Duo+Showdown+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FDuoShowdown&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e883]:
+                - link "Jump up" [ref=f6e885] [cursor=pointer]:
+                  - /url: "#cite_ref-17"
+                  - text: ^
+                - generic [ref=f6e886]:
+                  - generic [ref=f6e887]:
+                    - link "\"Maps for Trio Showdown | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e888] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/TrioShowdown
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e889] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310110457/https://brawlify.com/gamemodes/detail/TrioShowdown
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e890]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Trio+Showdown+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FTrioShowdown&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e891]:
+                - generic [ref=f6e892]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e893] [cursor=pointer]:
+                    - /url: "#cite_ref-:2_18-0"
+                  - link [ref=f6e895] [cursor=pointer]:
+                    - /url: "#cite_ref-:2_18-1"
+                  - link [ref=f6e896] [cursor=pointer]:
+                    - /url: "#cite_ref-:2_18-2"
+                  - link [ref=f6e897] [cursor=pointer]:
+                    - /url: "#cite_ref-:2_18-3"
+                  - link [ref=f6e898] [cursor=pointer]:
+                    - /url: "#cite_ref-:2_18-4"
+                  - link [ref=f6e899] [cursor=pointer]:
+                    - /url: "#cite_ref-:2_18-5"
+                  - link [ref=f6e900] [cursor=pointer]:
+                    - /url: "#cite_ref-:2_18-6"
+                  - link [ref=f6e901] [cursor=pointer]:
+                    - /url: "#cite_ref-:2_18-7"
+                - generic [ref=f6e902]:
+                  - generic [ref=f6e903]:
+                    - link "\"Game Modes\"" [ref=f6e904] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/game-modes-10.html?q=1741598954
+                    - text: . Supercell Support Portal.
+                    - link "Archived" [ref=f6e905] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310111011/https://support.supercell.com/brawl-stars/en/articles/game-modes-10.html?q=1741598954
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e906]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=Game+Modes&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fgame-modes-10.html%3Fq%3D1741598954&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e907]:
+                - link "Jump up" [ref=f6e909] [cursor=pointer]:
+                  - /url: "#cite_ref-19"
+                  - text: ^
+                - generic [ref=f6e910]:
+                  - generic [ref=f6e911]:
+                    - 'link "\"PATCH NOTES: SpongeBob SquarePants × Brawl Stars\"" [ref=f6e912] [cursor=pointer]':
+                      - /url: https://supercell.com/en/games/brawlstars/blog/game-updates/patch-notes-spongebob-squarepants/
+                    - text: . Brawl Stars
+                    - generic [ref=f6e913]: . Retrieved 19 June 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=PATCH+NOTES%3A+SpongeBob+SquarePants+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fgame-updates%2Fpatch-notes-spongebob-squarepants%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e914]:
+                - link "Jump up" [ref=f6e916] [cursor=pointer]:
+                  - /url: "#cite_ref-20"
+                  - text: ^
+                - generic [ref=f6e917]:
+                  - generic [ref=f6e918]:
+                    - link "\"Maps for Brawl Ball | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e919] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/BrawlBall
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e920] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310110737/https://brawlify.com/gamemodes/detail/BrawlBall
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e921]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Brawl+Ball+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FBrawlBall&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e922]:
+                - link "Jump up" [ref=f6e924] [cursor=pointer]:
+                  - /url: "#cite_ref-21"
+                  - text: ^
+                - generic [ref=f6e925]:
+                  - generic [ref=f6e926]:
+                    - link "\"Maps for Gem Grab | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e927] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/GemGrab
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e928] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310111241/https://brawlify.com/gamemodes/detail/GemGrab
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e929]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Gem+Grab+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FGemGrab&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e930]:
+                - link "Jump up" [ref=f6e932] [cursor=pointer]:
+                  - /url: "#cite_ref-22"
+                  - text: ^
+                - generic [ref=f6e933]:
+                  - generic [ref=f6e934]:
+                    - link "\"Maps for Wipeout 5v5 5v5 | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e935] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/Deathmatch5v5
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e936] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310111501/https://brawlify.com/gamemodes/detail/Deathmatch5v5
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e937]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Wipeout+5v5+5v5+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FDeathmatch5v5&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e938]:
+                - link "Jump up" [ref=f6e940] [cursor=pointer]:
+                  - /url: "#cite_ref-23"
+                  - text: ^
+                - generic [ref=f6e941]:
+                  - generic [ref=f6e942]:
+                    - link "\"Maps for Wipeout | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e943] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/Deathmatch
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e944] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310111628/https://brawlify.com/gamemodes/detail/Deathmatch
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e945]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Wipeout+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FDeathmatch&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e946]:
+                - link "Jump up" [ref=f6e948] [cursor=pointer]:
+                  - /url: "#cite_ref-24"
+                  - text: ^
+                - generic [ref=f6e949]:
+                  - generic [ref=f6e950]:
+                    - link "\"Maps for Bounty | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e951] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/Bounty
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e952] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310111807/https://brawlify.com/gamemodes/detail/Bounty
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e953]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Bounty+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FBounty&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e954]:
+                - link "Jump up" [ref=f6e956] [cursor=pointer]:
+                  - /url: "#cite_ref-25"
+                  - text: ^
+                - generic [ref=f6e957]:
+                  - generic [ref=f6e958]:
+                    - link "\"Maps for Heist | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e959] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/Heist
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e960] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310125826/https://brawlify.com/gamemodes/detail/Heist
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e961]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Heist+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FHeist&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e962]:
+                - link "Jump up" [ref=f6e964] [cursor=pointer]:
+                  - /url: "#cite_ref-26"
+                  - text: ^
+                - generic [ref=f6e965]:
+                  - generic [ref=f6e966]:
+                    - link "\"Maps for Hot Zone | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e967] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/KingOfHill
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e968] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310130016/https://brawlify.com/gamemodes/detail/KingOfHill
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e969]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Hot+Zone+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FKingOfHill&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e970]:
+                - link "Jump up" [ref=f6e972] [cursor=pointer]:
+                  - /url: "#cite_ref-27"
+                  - text: ^
+                - generic [ref=f6e973]:
+                  - generic [ref=f6e974]:
+                    - link "\"Maps for Knockout | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e975] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/Knockout
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e976] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310130251/https://brawlify.com/gamemodes/detail/Knockout
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e977]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Knockout+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FKnockout&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e978]:
+                - link "Jump up" [ref=f6e980] [cursor=pointer]:
+                  - /url: "#cite_ref-28"
+                  - text: ^
+                - generic [ref=f6e981]:
+                  - generic [ref=f6e982]:
+                    - link "\"Maps for Duels | Best Brawlers & Teams in Brawl Stars\"" [ref=f6e983] [cursor=pointer]:
+                      - /url: https://brawlify.com/gamemodes/detail/TagTeam
+                    - text: . Brawlify.
+                    - link "Archived" [ref=f6e984] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310142153/https://brawlify.com/gamemodes/detail/TagTeam
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e985]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawlify&rft.atitle=Maps+for+Duels+%7C+Best+Brawlers+%26+Teams+in+Brawl+Stars&rft_id=https%3A%2F%2Fbrawlify.com%2Fgamemodes%2Fdetail%2FTagTeam&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e986]:
+                - link "Jump up" [ref=f6e988] [cursor=pointer]:
+                  - /url: "#cite_ref-29"
+                  - text: ^
+                - generic [ref=f6e989]:
+                  - generic [ref=f6e990]:
+                    - 'link "\"Brawl Talk: A NEW BRAWLER RARITY?!\"" [ref=f6e991] [cursor=pointer]':
+                      - /url: https://www.youtube.com/watch?v=6D1yFt1Uook&list=PLTBLax1DE1612clulHb7Ci4JQEVMKoC7x&index=4
+                    - text: .
+                    - link "YouTube" [ref=f6e993] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/YouTube
+                    - text: . 19 April 2025.
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=YouTube&rft.atitle=Brawl+Talk%3A+A+NEW+BRAWLER+RARITY%3F%21&rft.date=2025-04-19&rft_id=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D6D1yFt1Uook%26list%3DPLTBLax1DE1612clulHb7Ci4JQEVMKoC7x%26index%3D4&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e994]:
+                - link "Jump up" [ref=f6e996] [cursor=pointer]:
+                  - /url: "#cite_ref-30"
+                  - text: ^
+                - generic [ref=f6e997]:
+                  - generic [ref=f6e998]:
+                    - link "\"Clubs and Club Roles\"" [ref=f6e999] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/clubs-and-club-roles-3.html
+                    - text: . Supercell Support.
+                    - link "Archived" [ref=f6e1000] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310131610/https://support.supercell.com/brawl-stars/en/articles/clubs-and-club-roles-3.html
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1001]: . Retrieved 30 June 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support&rft.atitle=Clubs+and+Club+Roles&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fclubs-and-club-roles-3.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1002]:
+                - generic [ref=f6e1003]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1004] [cursor=pointer]:
+                    - /url: "#cite_ref-:3_31-0"
+                  - link [ref=f6e1006] [cursor=pointer]:
+                    - /url: "#cite_ref-:3_31-1"
+                - generic [ref=f6e1007]:
+                  - generic [ref=f6e1008]:
+                    - link "\"Mega Pig Supercell Support\"" [ref=f6e1009] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/mega-pig-2.html?q=1741598954
+                    - text: . Supercell Support. Supercell.
+                    - link "Archived" [ref=f6e1010] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310131339/https://support.supercell.com/brawl-stars/en/articles/mega-pig-2.html?q=1741598954
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1011]: . Retrieved 29 June 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support&rft.atitle=Mega+Pig+Supercell+Support&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fmega-pig-2.html%3Fq%3D1741598954&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1012]:
+                - link "Jump up" [ref=f6e1014] [cursor=pointer]:
+                  - /url: "#cite_ref-32"
+                  - text: ^
+                - generic [ref=f6e1015]:
+                  - generic [ref=f6e1016]:
+                    - link "\"Brawliversary and Brawlidays Events! × Brawl Stars\"" [ref=f6e1017] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/community/brawliversary-and-brawlidays-events/
+                    - text: . Brawl Stars.
+                    - link "Archived" [ref=f6e1018] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310133110/https://supercell.com/en/games/brawlstars/blog/community/brawliversary-and-brawlidays-events/
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1019]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=Brawliversary+and+Brawlidays+Events%21+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fcommunity%2Fbrawliversary-and-brawlidays-events%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1020]:
+                - link "Jump up" [ref=f6e1022] [cursor=pointer]:
+                  - /url: "#cite_ref-33"
+                  - text: ^
+                - generic [ref=f6e1023]:
+                  - generic [ref=f6e1024]:
+                    - link "\"About Map Maker\"" [ref=f6e1025] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/about-map-maker.html
+                    - text: . Supercell Support Portal. Supercell.
+                    - link "Archived" [ref=f6e1026] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310131208/https://support.supercell.com/brawl-stars/en/articles/about-map-maker.html
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1027]: . Retrieved 29 June 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=About+Map+Maker&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fabout-map-maker.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1028]:
+                - link "Jump up" [ref=f6e1030] [cursor=pointer]:
+                  - /url: "#cite_ref-Mons_34-0"
+                  - text: ^
+                - generic [ref=f6e1031]:
+                  - generic [ref=f6e1032]:
+                    - text: Swan, Eva (7 July 2020).
+                    - link "\"Everything you need to know about Brawl Stars' Summer of Monsters pass\"" [ref=f6e1033] [cursor=pointer]:
+                      - /url: https://dotesports.com/mobile/news/everything-you-need-to-know-about-brawl-stars-summer-of-monsters-pass
+                    - text: . Dot Esports.
+                    - link "Archived" [ref=f6e1034] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210206161820/https://dotesports.com/mobile/news/everything-you-need-to-know-about-brawl-stars-summer-of-monsters-pass
+                    - text: from the original on 6 February 2021
+                    - generic [ref=f6e1035]: . Retrieved 1 February 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Dot+Esports&rft.atitle=Everything+you+need+to+know+about+Brawl+Stars%27+Summer+of+Monsters+pass&rft.date=2020-07-07&rft.aulast=Swan&rft.aufirst=Eva&rft_id=https%3A%2F%2Fdotesports.com%2Fmobile%2Fnews%2Feverything-you-need-to-know-about-brawl-stars-summer-of-monsters-pass&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1036]:
+                - link "Jump up" [ref=f6e1038] [cursor=pointer]:
+                  - /url: "#cite_ref-35"
+                  - text: ^
+                - generic [ref=f6e1039]:
+                  - generic [ref=f6e1040]:
+                    - link "\"Incoming Changes to the Brawl Pass × Brawl Stars\"" [ref=f6e1041] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/news/incoming-changes-to-the-brawl-pass/
+                    - text: . Brawl Stars.
+                    - link "Archived" [ref=f6e1042] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310131040/https://supercell.com/en/games/brawlstars/blog/news/incoming-changes-to-the-brawl-pass/
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1043]: . Retrieved 4 January 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=Incoming+Changes+to+the+Brawl+Pass+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fnews%2Fincoming-changes-to-the-brawl-pass%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1044]:
+                - link "Jump up" [ref=f6e1046] [cursor=pointer]:
+                  - /url: "#cite_ref-TB_36-0"
+                  - text: ^
+                - generic [ref=f6e1047]:
+                  - generic [ref=f6e1048]:
+                    - text: Ahmed, Wasif (13 May 2020).
+                    - link "\"Here's everything you need to know about Brawl Stars' new Brawl Pass\"" [ref=f6e1049] [cursor=pointer]:
+                      - /url: https://dotesports.com/mobile/news/heres-everything-you-need-to-know-about-brawl-stars-new-brawl-pass
+                    - text: . Dot Esports.
+                    - link "Archived" [ref=f6e1050] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20211005071214/https://dotesports.com/mobile/news/heres-everything-you-need-to-know-about-brawl-stars-new-brawl-pass
+                    - text: from the original on 5 October 2021
+                    - generic [ref=f6e1051]: . Retrieved 1 February 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Dot+Esports&rft.atitle=Here%27s+everything+you+need+to+know+about+Brawl+Stars%27+new+Brawl+Pass&rft.date=2020-05-13&rft.aulast=Ahmed&rft.aufirst=Wasif&rft_id=https%3A%2F%2Fdotesports.com%2Fmobile%2Fnews%2Fheres-everything-you-need-to-know-about-brawl-stars-new-brawl-pass&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1052]:
+                - link "Jump up" [ref=f6e1054] [cursor=pointer]:
+                  - /url: "#cite_ref-37"
+                  - text: ^
+                - generic [ref=f6e1055]:
+                  - generic [ref=f6e1056]:
+                    - link "\"RANKED IS DEAD, AND RANKED IS BACK!! × Brawl Stars\"" [ref=f6e1057] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/news/ranked-is-dead-and-ranked-is-back/
+                    - text: . Brawl Stars.
+                    - link "Archived" [ref=f6e1058] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310130758/https://supercell.com/en/games/brawlstars/blog/news/ranked-is-dead-and-ranked-is-back/
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1059]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=RANKED+IS+DEAD%2C+AND+RANKED+IS+BACK%21%21+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fnews%2Franked-is-dead-and-ranked-is-back%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1060]:
+                - generic [ref=f6e1061]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1062] [cursor=pointer]:
+                    - /url: "#cite_ref-:4_38-0"
+                  - link [ref=f6e1064] [cursor=pointer]:
+                    - /url: "#cite_ref-:4_38-1"
+                  - link [ref=f6e1065] [cursor=pointer]:
+                    - /url: "#cite_ref-:4_38-2"
+                - generic [ref=f6e1066]:
+                  - generic [ref=f6e1067]:
+                    - link "\"Ranked Pro Pass\"" [ref=f6e1068] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/ranked-pro-pass.html
+                    - text: . Supercell Support Portal.
+                    - link "Archived" [ref=f6e1069] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310133433/https://support.supercell.com/brawl-stars/en/articles/ranked-pro-pass.html
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1070]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=Ranked+Pro+Pass&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Franked-pro-pass.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1071]:
+                - link "Jump up" [ref=f6e1073] [cursor=pointer]:
+                  - /url: "#cite_ref-39"
+                  - text: ^
+                - generic [ref=f6e1074]:
+                  - generic [ref=f6e1075]:
+                    - link "\"IMPORTANT - Power League and Skin changes! × Brawl Stars\"" [ref=f6e1076] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/news/important-power-league-and-skin-changes/
+                    - text: . Brawl Stars.
+                    - link "Archived" [ref=f6e1077] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310141226/https://supercell.com/en/games/brawlstars/blog/news/important-power-league-and-skin-changes/
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1078]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=IMPORTANT+-+Power+League+and+Skin+changes%21+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fnews%2Fimportant-power-league-and-skin-changes%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1079]:
+                - link "Jump up" [ref=f6e1081] [cursor=pointer]:
+                  - /url: "#cite_ref-40"
+                  - text: ^
+                - generic [ref=f6e1082]:
+                  - generic [ref=f6e1083]:
+                    - link "\"#RumbleJungle - Patch Notes! × Brawl Stars\"" [ref=f6e1084] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/release-notes/rumblejungle-patch-notes/
+                    - text: . Brawl Stars.
+                    - link "Archived" [ref=f6e1085] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310141402/https://supercell.com/en/games/brawlstars/blog/release-notes/rumblejungle-patch-notes/
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1086]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=%23RumbleJungle+-+Patch+Notes%21+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Frelease-notes%2Frumblejungle-patch-notes%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1087]:
+                - link "Jump up" [ref=f6e1089] [cursor=pointer]:
+                  - /url: "#cite_ref-Supercell_41-0"
+                  - text: ^
+                - generic [ref=f6e1090]:
+                  - generic [ref=f6e1091]:
+                    - link "\"In-Game Currencies\"" [ref=f6e1092] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/currencies.html
+                    - text: . Brawl Stars Support. Supercell.
+                    - link "Archived" [ref=f6e1093] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310140031/https://support.supercell.com/brawl-stars/en/articles/currencies.html
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1094]: . Retrieved 29 June 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars+Support&rft.atitle=In-Game+Currencies&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fcurrencies.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1095]:
+                - link "Jump up" [ref=f6e1097] [cursor=pointer]:
+                  - /url: "#cite_ref-42"
+                  - text: ^
+                - generic [ref=f6e1098]:
+                  - generic [ref=f6e1099]:
+                    - link "\"Mastery\"" [ref=f6e1100] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/mastery-2.html?q=1741598956
+                    - text: . Supercell Support.
+                    - link "Archived" [ref=f6e1101] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310140232/https://support.supercell.com/brawl-stars/en/articles/mastery-2.html?q=1741598956
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1102]: . Retrieved 30 June 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support&rft.atitle=Mastery&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fmastery-2.html%3Fq%3D1741598956&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1103]:
+                - link "Jump up" [ref=f6e1105] [cursor=pointer]:
+                  - /url: "#cite_ref-43"
+                  - text: ^
+                - generic [ref=f6e1106]:
+                  - generic [ref=f6e1107]:
+                    - link "\"#CandyLand Update - Release Notes! × Brawl Stars\"" [ref=f6e1108] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/release-notes/candyland-update-release-notes-2/
+                    - text: . Brawl Stars
+                    - generic [ref=f6e1109]: . Retrieved 19 June 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=%23CandyLand+Update+-+Release+Notes%21+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Frelease-notes%2Fcandyland-update-release-notes-2%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1110]:
+                - generic [ref=f6e1111]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1112] [cursor=pointer]:
+                    - /url: "#cite_ref-:5_44-0"
+                  - link [ref=f6e1114] [cursor=pointer]:
+                    - /url: "#cite_ref-:5_44-1"
+                - generic [ref=f6e1115]:
+                  - generic [ref=f6e1116]:
+                    - 'link "\"The Starr Road: Unlocking Brawlers\"" [ref=f6e1117] [cursor=pointer]':
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/the-starr-road.html?q=1741598955
+                    - text: . Supercell Support Portal.
+                    - link "Archived" [ref=f6e1118] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310133843/https://support.supercell.com/brawl-stars/en/articles/the-starr-road.html?q=1741598955
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1119]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=The+Starr+Road%3A+Unlocking+Brawlers&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fthe-starr-road.html%3Fq%3D1741598955&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1120]:
+                - link "Jump up" [ref=f6e1122] [cursor=pointer]:
+                  - /url: "#cite_ref-45"
+                  - text: ^
+                - generic [ref=f6e1123]:
+                  - generic [ref=f6e1124]:
+                    - link "\"Chroma No More and Game Changes! × Brawl Stars\"" [ref=f6e1125] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/news/chroma-no-more-and-game-changes/
+                    - text: . Brawl Stars.
+                    - link "Archived" [ref=f6e1126] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310134146/https://supercell.com/en/games/brawlstars/blog/news/chroma-no-more-and-game-changes/
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1127]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=Chroma+No+More+and+Game+Changes%21+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fnews%2Fchroma-no-more-and-game-changes%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1128]:
+                - link "Jump up" [ref=f6e1130] [cursor=pointer]:
+                  - /url: "#cite_ref-46"
+                  - text: ^
+                - generic [ref=f6e1131]:
+                  - generic [ref=f6e1132]:
+                    - link "\"RELEASE NOTES JUNE 2025 × Brawl Stars\"" [ref=f6e1133] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/game-updates/release-notes-june-2025/
+                    - text: . Brawl Stars
+                    - generic [ref=f6e1134]: . Retrieved 8 December 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=RELEASE+NOTES+JUNE+2025+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fgame-updates%2Frelease-notes-june-2025%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1135]:
+                - link "Jump up" [ref=f6e1137] [cursor=pointer]:
+                  - /url: "#cite_ref-47"
+                  - text: ^
+                - generic [ref=f6e1138]:
+                  - generic [ref=f6e1139]:
+                    - link "\"Brawler Rarities\"" [ref=f6e1140] [cursor=pointer]:
+                      - /url: https://support.supercell.com/brawl-stars/en/articles/brawler-rarities-3.html
+                    - text: . Supercell Support Portal
+                    - generic [ref=f6e1141]: . Retrieved 17 May 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support+Portal&rft.atitle=Brawler+Rarities&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fbrawl-stars%2Fen%2Farticles%2Fbrawler-rarities-3.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1142]:
+                - link "Jump up" [ref=f6e1144] [cursor=pointer]:
+                  - /url: "#cite_ref-48"
+                  - text: ^
+                - generic [ref=f6e1145]:
+                  - generic [ref=f6e1146]:
+                    - text: Lex - Brawl Stars (18 April 2026).
+                    - link "3 NEW BRAWLERS INCOMING 🔥 Brawl Stars Update!" [ref=f6e1147] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=sA0omr6QJZ4
+                    - generic [ref=f6e1148]: . Retrieved 27 May 2026
+                    - text: – via YouTube.
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=3+NEW+BRAWLERS+INCOMING+%F0%9F%94%A5+Brawl+Stars+Update%21&rft.date=2026-04-18&rft.au=Lex+-+Brawl+Stars&rft_id=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DsA0omr6QJZ4&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1149]:
+                - link "Jump up" [ref=f6e1151] [cursor=pointer]:
+                  - /url: "#cite_ref-49"
+                  - text: ^
+                - generic [ref=f6e1152]:
+                  - generic [ref=f6e1153]:
+                    - link "\"The story behind Starr Park's wild and world-building production design\"" [ref=f6e1154] [cursor=pointer]:
+                      - /url: https://www.dandad.org/annual/2021/editorial/behind-the-work-the-story-behind-starr-park-world-building-production-design
+                    - text: .
+                    - link "Archived" [ref=f6e1155] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310104748/https://www.dandad.org/annual/2021/editorial/behind-the-work-the-story-behind-starr-park-world-building-production-design
+                    - text: from the original on 10 March 2025.
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=The+story+behind+Starr+Park%27s+wild+and+world-building+production+design&rft_id=https%3A%2F%2Fwww.dandad.org%2Fannual%2F2021%2Feditorial%2Fbehind-the-work-the-story-behind-starr-park-world-building-production-design&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1156]:
+                - link "Jump up" [ref=f6e1158] [cursor=pointer]:
+                  - /url: "#cite_ref-50"
+                  - text: ^
+                - generic [ref=f6e1159]:
+                  - generic [ref=f6e1160]:
+                    - link "\"Supercell Brawl Stars Starr Park CCTV\"" [ref=f6e1161] [cursor=pointer]:
+                      - /url: https://buck.co/work/supercell-brawl-stars-lore
+                    - text: .
+                    - link "Archived" [ref=f6e1162] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310104933/https://buck.co/work/supercell-brawl-stars-lore
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1163]: . Retrieved 10 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Supercell+Brawl+Stars+Starr+Park+CCTV&rft_id=https%3A%2F%2Fbuck.co%2Fwork%2Fsupercell-brawl-stars-lore&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1164]:
+                - generic [ref=f6e1165]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1166] [cursor=pointer]:
+                    - /url: "#cite_ref-Redbull_51-0"
+                  - link [ref=f6e1168] [cursor=pointer]:
+                    - /url: "#cite_ref-Redbull_51-1"
+                  - link [ref=f6e1169] [cursor=pointer]:
+                    - /url: "#cite_ref-Redbull_51-2"
+                  - link [ref=f6e1170] [cursor=pointer]:
+                    - /url: "#cite_ref-Redbull_51-3"
+                - generic [ref=f6e1171]:
+                  - generic [ref=f6e1172]:
+                    - text: Hayward, Andrew (22 January 2019).
+                    - link "\"Supercell on Brawl Stars, a mobile action game tailor-made for tournaments\"" [ref=f6e1173] [cursor=pointer]:
+                      - /url: https://www.redbull.com/us-en/brawl-stars-supercell-interview-meo
+                    - text: . Red Bull.
+                    - link "Archived" [ref=f6e1174] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20211110170146/https://www.redbull.com/us-en/brawl-stars-supercell-interview-meo
+                    - text: from the original on 10 November 2021
+                    - generic [ref=f6e1175]: . Retrieved 23 December 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Red+Bull&rft.atitle=Supercell+on+Brawl+Stars%2C+a+mobile+action+game+tailor-made+for+tournaments&rft.date=2019-01-22&rft.aulast=Hayward&rft.aufirst=Andrew&rft_id=https%3A%2F%2Fwww.redbull.com%2Fus-en%2Fbrawl-stars-supercell-interview-meo&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1176]:
+                - generic [ref=f6e1177]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1178] [cursor=pointer]:
+                    - /url: "#cite_ref-Newsweeklaunch_52-0"
+                  - link [ref=f6e1180] [cursor=pointer]:
+                    - /url: "#cite_ref-Newsweeklaunch_52-1"
+                  - link [ref=f6e1181] [cursor=pointer]:
+                    - /url: "#cite_ref-Newsweeklaunch_52-2"
+                  - link [ref=f6e1182] [cursor=pointer]:
+                    - /url: "#cite_ref-Newsweeklaunch_52-3"
+                - generic [ref=f6e1183]:
+                  - generic [ref=f6e1184]:
+                    - text: Asarch, Steven (20 November 2018).
+                    - link "\"'Brawl Stars' Game Lead Talks Lessons Learned After 522-day Soft Launch\"" [ref=f6e1185] [cursor=pointer]:
+                      - /url: https://www.newsweek.com/brawl-stars-interview-release-game-director-spike-supercell-mobile-1224546
+                    - text: . Newsweek.
+                    - link "Archived" [ref=f6e1187] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20191223200800/https://www.newsweek.com/brawl-stars-interview-release-game-director-spike-supercell-mobile-1224546
+                    - text: from the original on 23 December 2019
+                    - generic [ref=f6e1188]: . Retrieved 23 December 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Newsweek&rft.atitle=%27Brawl+Stars%27+Game+Lead+Talks+Lessons+Learned+After+522-day+Soft+Launch&rft.date=2018-11-20&rft.aulast=Asarch&rft.aufirst=Steven&rft_id=https%3A%2F%2Fwww.newsweek.com%2Fbrawl-stars-interview-release-game-director-spike-supercell-mobile-1224546&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1189]:
+                - link "Jump up" [ref=f6e1191] [cursor=pointer]:
+                  - /url: "#cite_ref-53"
+                  - text: ^
+                - generic [ref=f6e1192]:
+                  - generic [ref=f6e1193]:
+                    - text: Webster, Andrew (14 November 2018).
+                    - link "\"Supercell's new game mixes Fortnite and Clash Royale, and its out soon\"" [ref=f6e1194] [cursor=pointer]:
+                      - /url: https://www.theverge.com/2018/11/14/18093052/supercell-brawl-stars-global-launch-iphone-android
+                    - text: . The Verge.
+                    - link "Archived" [ref=f6e1195] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20191223200800/https://www.theverge.com/2018/11/14/18093052/supercell-brawl-stars-global-launch-iphone-android
+                    - text: from the original on 23 December 2019
+                    - generic [ref=f6e1196]: . Retrieved 23 December 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Verge&rft.atitle=Supercell%27s+new+game+mixes+Fortnite+and+Clash+Royale%2C+and+its+out+soon&rft.date=2018-11-14&rft.aulast=Webster&rft.aufirst=Andrew&rft_id=https%3A%2F%2Fwww.theverge.com%2F2018%2F11%2F14%2F18093052%2Fsupercell-brawl-stars-global-launch-iphone-android&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1197]:
+                - link "Jump up" [ref=f6e1199] [cursor=pointer]:
+                  - /url: "#cite_ref-54"
+                  - text: ^
+                - generic [ref=f6e1200]:
+                  - generic [ref=f6e1201]:
+                    - text: Callaham, John (14 June 2017).
+                    - link "\"Clash of Clans developer Supercell reveals new game, Brawl Stars\"" [ref=f6e1202] [cursor=pointer]:
+                      - /url: https://www.androidauthority.com/supercell-new-game-brawl-stars-779929/
+                    - text: . Android Authority.
+                    - link "Archived" [ref=f6e1203] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210429141404/https://www.androidauthority.com/supercell-new-game-brawl-stars-779929/
+                    - text: from the original on 29 April 2021
+                    - generic [ref=f6e1204]: . Retrieved 29 August 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Android+Authority&rft.atitle=Clash+of+Clans+developer+Supercell+reveals+new+game%2C+Brawl+Stars&rft.date=2017-06-14&rft.aulast=Callaham&rft.aufirst=John&rft_id=https%3A%2F%2Fwww.androidauthority.com%2Fsupercell-new-game-brawl-stars-779929%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1205]:
+                - link "Jump up" [ref=f6e1207] [cursor=pointer]:
+                  - /url: "#cite_ref-55"
+                  - text: ^
+                - generic [ref=f6e1208]:
+                  - generic [ref=f6e1209]:
+                    - text: Funnell, Rob (15 June 2017).
+                    - link "\"'Brawl Stars' Has Soft Launched on the Canadian App Store, Android Version Coming Soon?\"" [ref=f6e1210] [cursor=pointer]:
+                      - /url: https://toucharcade.com/2017/06/15/brawl-stars-has-soft-launched-on-the-canadian-app-store-android-version-coming-soon/
+                    - text: . TouchArcade.
+                    - link "Archived" [ref=f6e1212] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20190605150853/https://toucharcade.com/2017/06/15/brawl-stars-has-soft-launched-on-the-canadian-app-store-android-version-coming-soon/
+                    - text: from the original on 5 June 2019
+                    - generic [ref=f6e1213]: . Retrieved 29 August 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=TouchArcade&rft.atitle=%27Brawl+Stars%27+Has+Soft+Launched+on+the+Canadian+App+Store%2C+Android+Version+Coming+Soon%3F&rft.date=2017-06-15&rft.aulast=Funnell&rft.aufirst=Rob&rft_id=https%3A%2F%2Ftoucharcade.com%2F2017%2F06%2F15%2Fbrawl-stars-has-soft-launched-on-the-canadian-app-store-android-version-coming-soon%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1214]:
+                - link "Jump up" [ref=f6e1216] [cursor=pointer]:
+                  - /url: "#cite_ref-GB_20260131_56-0"
+                  - text: ^
+                - generic [ref=f6e1217]:
+                  - generic [ref=f6e1218]:
+                    - text: Wilson, Jason (19 December 2018).
+                    - 'link "\"Sensor Tower: Supercell''s Brawl Stars rakes in $10 million in its first week\"" [ref=f6e1219] [cursor=pointer]':
+                      - /url: https://gamesbeat.com/sensor-tower-supercells-brawl-stars-rakes-in-10-million-in-its-first-week/
+                    - text: . GamesBeat.
+                    - link "VentureBeat" [ref=f6e1220] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/VentureBeat
+                    - text: .
+                    - link "Archived" [ref=f6e1221] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20260625043440/https://gamesbeat.com/sensor-tower-supercells-brawl-stars-rakes-in-10-million-in-its-first-week/
+                    - text: from the original on 25 June 2026
+                    - generic [ref=f6e1222]: . Retrieved 25 June 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=GamesBeat&rft.atitle=Sensor+Tower%3A+Supercell%27s+Brawl+Stars+rakes+in+%2410+million+in+its+first+week&rft.date=2018-12-19&rft.aulast=Wilson&rft.aufirst=Jason&rft_id=https%3A%2F%2Fgamesbeat.com%2Fsensor-tower-supercells-brawl-stars-rakes-in-10-million-in-its-first-week%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1223]:
+                - link "Jump up" [ref=f6e1225] [cursor=pointer]:
+                  - /url: "#cite_ref-57"
+                  - text: ^
+                - generic [ref=f6e1226]:
+                  - generic [ref=f6e1227]:
+                    - text: Vincent, Brittany (16 January 2019).
+                    - link "\"Supercell's 'Brawl Stars' Clears Over $63 Million in One Month\"" [ref=f6e1228] [cursor=pointer]:
+                      - /url: https://variety.com/2019/gaming/news/brawl-stars-63-million-debut-1203109668/
+                    - text: .
+                    - link "Variety" [ref=f6e1230] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Variety_(magazine)
+                    - text: .
+                    - link "Archived" [ref=f6e1231] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20221127104455/https://variety.com/2019/gaming/news/brawl-stars-63-million-debut-1203109668/
+                    - text: from the original on 27 November 2022
+                    - generic [ref=f6e1232]: . Retrieved 17 January 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Variety&rft.atitle=Supercell%27s+%27Brawl+Stars%27+Clears+Over+%2463+Million+in+One+Month&rft.date=2019-01-16&rft.aulast=Vincent&rft.aufirst=Brittany&rft_id=https%3A%2F%2Fvariety.com%2F2019%2Fgaming%2Fnews%2Fbrawl-stars-63-million-debut-1203109668%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1233]:
+                - link "Jump up" [ref=f6e1235] [cursor=pointer]:
+                  - /url: "#cite_ref-58"
+                  - text: ^
+                - generic [ref=f6e1236]:
+                  - generic [ref=f6e1237]:
+                    - link "\"Tencent's latest game Brawl Stars rakes in US$17.5 million in first week\"" [ref=f6e1238] [cursor=pointer]:
+                      - /url: https://www.scmp.com/tech/gear/article/3090093/tencent-lands-another-mobile-game-hit-brawl-stars-rakes-us175-million
+                    - text: . South China Morning Post. 23 June 2020.
+                    - link "Archived" [ref=f6e1239] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20200809093702/https://www.scmp.com/tech/gear/article/3090093/tencent-lands-another-mobile-game-hit-brawl-stars-rakes-us175-million
+                    - text: from the original on 9 August 2020
+                    - generic [ref=f6e1240]: . Retrieved 14 August 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=South+China+Morning+Post&rft.atitle=Tencent%27s+latest+game+Brawl+Stars+rakes+in+US%2417.5+million+in+first+week&rft.date=2020-06-23&rft_id=https%3A%2F%2Fwww.scmp.com%2Ftech%2Fgear%2Farticle%2F3090093%2Ftencent-lands-another-mobile-game-hit-brawl-stars-rakes-us175-million&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1241]:
+                - link "Jump up" [ref=f6e1243] [cursor=pointer]:
+                  - /url: "#cite_ref-21BSC_59-0"
+                  - text: ^
+                - generic [ref=f6e1244]:
+                  - generic [ref=f6e1245]:
+                    - text: Ahmed, Wasif (18 March 2021).
+                    - link "\"Brawl Stars' Championship Challenge to happen on March 20 and 21\"" [ref=f6e1246] [cursor=pointer]:
+                      - /url: https://dotesports.com/mobile/news/brawl-stars-championship-challenge-to-happen-on-march-20-and-21
+                    - text: . Dot Esports.
+                    - link "Archived" [ref=f6e1247] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210503153838/https://dotesports.com/mobile/news/brawl-stars-championship-challenge-to-happen-on-march-20-and-21
+                    - text: from the original on 3 May 2021
+                    - generic [ref=f6e1248]: . Retrieved 28 March 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Dot+Esports&rft.atitle=Brawl+Stars%27+Championship+Challenge+to+happen+on+March+20+and+21&rft.date=2021-03-18&rft.aulast=Ahmed&rft.aufirst=Wasif&rft_id=https%3A%2F%2Fdotesports.com%2Fmobile%2Fnews%2Fbrawl-stars-championship-challenge-to-happen-on-march-20-and-21&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1249]:
+                - link "Jump up" [ref=f6e1251] [cursor=pointer]:
+                  - /url: "#cite_ref-60"
+                  - text: ^
+                - generic [ref=f6e1252]:
+                  - generic [ref=f6e1253]:
+                    - link "\"BSC 2025 Season Kickoff! × Brawl Stars\"" [ref=f6e1254] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/esports/bsc-2025season-kickoff/
+                    - text: . Brawl Stars
+                    - generic [ref=f6e1255]: . Retrieved 25 February 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=BSC+2025+Season+Kickoff%21+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fesports%2Fbsc-2025season-kickoff%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1256]:
+                - generic [ref=f6e1257]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1258] [cursor=pointer]:
+                    - /url: "#cite_ref-:7_61-0"
+                  - link [ref=f6e1260] [cursor=pointer]:
+                    - /url: "#cite_ref-:7_61-1"
+                - generic [ref=f6e1261]:
+                  - generic [ref=f6e1262]:
+                    - link "\"Brawl Cup coming to Dallas - limited merch add-on! × Brawl Stars\"" [ref=f6e1263] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/esports/brawl-cup-coming-to-dallas-limited-merch-add-on/
+                    - text: . Brawl Stars
+                    - generic [ref=f6e1264]: . Retrieved 25 February 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=Brawl+Cup+coming+to+Dallas+-+limited+merch+add-on%21+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fesports%2Fbrawl-cup-coming-to-dallas-limited-merch-add-on%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1265]:
+                - generic [ref=f6e1266]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1267] [cursor=pointer]:
+                    - /url: "#cite_ref-:0_62-0"
+                  - link [ref=f6e1269] [cursor=pointer]:
+                    - /url: "#cite_ref-:0_62-1"
+                - generic [ref=f6e1270]:
+                  - generic [ref=f6e1271]:
+                    - link "\"Brawl Stars Championship has $1 million prize pool in 2020\"" [ref=f6e1272] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20200724231602/https://www.dailyesports.gg/brawl-stars-championship-has-1-million-prize-pool-in-2020/
+                    - text: . Daily Esports. 15 December 2019. Archived from
+                    - link "the original" [ref=f6e1273] [cursor=pointer]:
+                      - /url: https://www.dailyesports.gg/brawl-stars-championship-has-1-million-prize-pool-in-2020/
+                    - text: on 24 July 2020
+                    - generic [ref=f6e1274]: . Retrieved 24 July 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Daily+Esports&rft.atitle=Brawl+Stars+Championship+has+%241+million+prize+pool+in+2020&rft.date=2019-12-15&rft_id=https%3A%2F%2Fwww.dailyesports.gg%2Fbrawl-stars-championship-has-1-million-prize-pool-in-2020%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1275]:
+                - generic [ref=f6e1276]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1277] [cursor=pointer]:
+                    - /url: "#cite_ref-BSC_63-0"
+                  - link [ref=f6e1279] [cursor=pointer]:
+                    - /url: "#cite_ref-BSC_63-1"
+                - generic [ref=f6e1280]:
+                  - generic [ref=f6e1281]:
+                    - link "\"Brawl Stars Championship 2021\"" [ref=f6e1282] [cursor=pointer]:
+                      - /url: https://blog.brawlstars.com/blog/esports/brawl-stars-championship-2021.html
+                    - text: . Brawl Stars.
+                    - link "Archived" [ref=f6e1283] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210304091045/https://blog.brawlstars.com/blog/esports/brawl-stars-championship-2021.html
+                    - text: from the original on 4 March 2021
+                    - generic [ref=f6e1284]: . Retrieved 28 March 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=Brawl+Stars+Championship+2021&rft_id=https%3A%2F%2Fblog.brawlstars.com%2Fblog%2Fesports%2Fbrawl-stars-championship-2021.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1285]:
+                - link "Jump up" [ref=f6e1287] [cursor=pointer]:
+                  - /url: "#cite_ref-64"
+                  - text: ^
+                - generic [ref=f6e1288]:
+                  - generic [ref=f6e1289]:
+                    - text: Castello, Jay (4 January 2020).
+                    - link "\"The challenges and advantages of casual approachability in Brawl Stars esports\"" [ref=f6e1290] [cursor=pointer]:
+                      - /url: https://www.eurogamer.net/the-challenges-and-advantages-of-casual-approachability-in-brawl-stars-esports
+                    - text: . Eurogamer.
+                    - link "Archived" [ref=f6e1291] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250311102909/https://www.eurogamer.net/the-challenges-and-advantages-of-casual-approachability-in-brawl-stars-esports
+                    - text: from the original on 11 March 2025
+                    - generic [ref=f6e1292]: . Retrieved 11 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Eurogamer&rft.atitle=The+challenges+and+advantages+of+casual+approachability+in+Brawl+Stars+esports&rft.date=2020-01-04&rft.aulast=Castello&rft.aufirst=Jay&rft_id=https%3A%2F%2Fwww.eurogamer.net%2Fthe-challenges-and-advantages-of-casual-approachability-in-brawl-stars-esports&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1293]:
+                - link "Jump up" [ref=f6e1295] [cursor=pointer]:
+                  - /url: "#cite_ref-2020Win_65-0"
+                  - text: ^
+                - generic [ref=f6e1296]:
+                  - generic [ref=f6e1297]:
+                    - text: Ahmed, Wasif (22 November 2020).
+                    - link "\"PSG Esports win Brawl Stars World Finals 2020\"" [ref=f6e1298] [cursor=pointer]:
+                      - /url: https://dotesports.com/mobile/news/psg-esports-win-brawl-stars-world-finals-2020
+                    - text: . Dot Esports.
+                    - link "Archived" [ref=f6e1299] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210506205744/https://dotesports.com/mobile/news/psg-esports-win-brawl-stars-world-finals-2020
+                    - text: from the original on 6 May 2021
+                    - generic [ref=f6e1300]: . Retrieved 28 March 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Dot+Esports&rft.atitle=PSG+Esports+win+Brawl+Stars+World+Finals+2020&rft.date=2020-11-22&rft.aulast=Ahmed&rft.aufirst=Wasif&rft_id=https%3A%2F%2Fdotesports.com%2Fmobile%2Fnews%2Fpsg-esports-win-brawl-stars-world-finals-2020&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1301]:
+                - link "Jump up" [ref=f6e1303] [cursor=pointer]:
+                  - /url: "#cite_ref-66"
+                  - text: ^
+                - generic [ref=f6e1304]:
+                  - generic [ref=f6e1305]:
+                    - link "\"SuperFest 2024 – Three World Champions Crowned in One Weekend\"" [ref=f6e1306] [cursor=pointer]:
+                      - /url: https://supercell.com/en/news/superfest-2024/
+                    - text: . Supercell.
+                    - link "Archived" [ref=f6e1307] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310142340/https://supercell.com/en/news/superfest-2024/
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1308]: . Retrieved 27 January 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell&rft.atitle=SuperFest+2024+%E2%80%93+Three+World+Champions+Crowned+in+One+Weekend&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fnews%2Fsuperfest-2024%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1309]:
+                - link "Jump up" [ref=f6e1311] [cursor=pointer]:
+                  - /url: "#cite_ref-67"
+                  - text: ^
+                - generic [ref=f6e1312]:
+                  - generic [ref=f6e1313]:
+                    - link "\"Clash of Clans Esports\"" [ref=f6e1314] [cursor=pointer]:
+                      - /url: https://esports.clashofclans.com/news/superfest-2024
+                    - text: . esports.clashofclans.com.
+                    - link "Archived" [ref=f6e1315] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250310142436/https://esports.clashofclans.com/news/superfest-2024
+                    - text: from the original on 10 March 2025
+                    - generic [ref=f6e1316]: . Retrieved 27 January 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=esports.clashofclans.com&rft.atitle=Clash+of+Clans+Esports&rft_id=https%3A%2F%2Fesports.clashofclans.com%2Fnews%2Fsuperfest-2024&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1317]:
+                - link "Jump up" [ref=f6e1319] [cursor=pointer]:
+                  - /url: "#cite_ref-68"
+                  - text: ^
+                - generic [ref=f6e1320]:
+                  - generic [ref=f6e1321]:
+                    - text: Gwynn, Dafydd (4 November 2024).
+                    - link "\"Brawl Stars World Finals 2024 records 1m peak viewers to become the game's most popular event\"" [ref=f6e1322] [cursor=pointer]:
+                      - /url: https://esportsinsider.com/2024/11/brawl-stars-world-finals-viewership
+                    - text: . Esports Insider
+                    - generic [ref=f6e1323]: . Retrieved 27 January 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Esports+Insider&rft.atitle=Brawl+Stars+World+Finals+2024+records+1m+peak+viewers+to+become+the+game%27s+most+popular+event&rft.date=2024-11-04&rft.aulast=Gwynn&rft.aufirst=Dafydd&rft_id=https%3A%2F%2Fesportsinsider.com%2F2024%2F11%2Fbrawl-stars-world-finals-viewership&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1324]:
+                - link "Jump up" [ref=f6e1326] [cursor=pointer]:
+                  - /url: "#cite_ref-69"
+                  - text: ^
+                - generic [ref=f6e1327]:
+                  - generic [ref=f6e1328]:
+                    - link "\"BRAWL GOES TO BRAZIL! × Brawl Stars\"" [ref=f6e1329] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/brawlstars/blog/esports/brawl-goes-to-brazil-2/
+                    - text: . Brawl Stars
+                    - generic [ref=f6e1330]: . Retrieved 25 February 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brawl+Stars&rft.atitle=BRAWL+GOES+TO+BRAZIL%21+%C3%97+Brawl+Stars&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fbrawlstars%2Fblog%2Fesports%2Fbrawl-goes-to-brazil-2%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1331]:
+                - link "Jump up" [ref=f6e1333] [cursor=pointer]:
+                  - /url: "#cite_ref-70"
+                  - text: ^
+                - generic [ref=f6e1334]:
+                  - generic [ref=f6e1335]:
+                    - link "\"Brawl Stars World Finals 2025 peaks at 211K viewers as Crazy Raccoon wins first world title | Esports Charts\"" [ref=f6e1336] [cursor=pointer]:
+                      - /url: https://escharts.com/news/brawl-stars-world-finals-2025-recap
+                    - text: . escharts.com. 16 February 2026
+                    - generic [ref=f6e1337]: . Retrieved 25 February 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=escharts.com&rft.atitle=Brawl+Stars+World+Finals+2025+peaks+at+211K+viewers+as+Crazy+Raccoon+wins+first+world+title+%7C+Esports+Charts&rft.date=2026-02-16&rft_id=https%3A%2F%2Fescharts.com%2Fnews%2Fbrawl-stars-world-finals-2025-recap&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1338]:
+                - generic [ref=f6e1339]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1340] [cursor=pointer]:
+                    - /url: "#cite_ref-MC_71-0"
+                  - link [ref=f6e1342] [cursor=pointer]:
+                    - /url: "#cite_ref-MC_71-1"
+                - generic [ref=f6e1343]:
+                  - generic [ref=f6e1344]:
+                    - link "\"Brawl Stars\"" [ref=f6e1345] [cursor=pointer]:
+                      - /url: https://www.metacritic.com/game/brawl-stars/critic-reviews/?platform=ios-iphoneipad
+                    - text: . Metacritic.
+                    - link "Archived" [ref=f6e1346] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20200228221450/https://www.metacritic.com/game/ios/brawl-stars
+                    - text: from the original on 28 February 2020
+                    - generic [ref=f6e1347]: . Retrieved 28 February 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Metacritic&rft.atitle=Brawl+Stars&rft_id=https%3A%2F%2Fwww.metacritic.com%2Fgame%2Fbrawl-stars%2Fcritic-reviews%2F%3Fplatform%3Dios-iphoneipad&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1348]:
+                - generic [ref=f6e1349]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1350] [cursor=pointer]:
+                    - /url: "#cite_ref-PG_72-0"
+                  - link [ref=f6e1352] [cursor=pointer]:
+                    - /url: "#cite_ref-PG_72-1"
+                - generic [ref=f6e1353]:
+                  - generic [ref=f6e1354]:
+                    - text: Slater, Harry (12 December 2018).
+                    - link "\"Brawl Stars review - \"Can Supercell make the midcore shooter cool?\"\"" [ref=f6e1355] [cursor=pointer]:
+                      - /url: https://www.pocketgamer.com/articles/079602/brawl-stars-review/
+                    - text: . www.pocketgamer.com.
+                    - link "Archived" [ref=f6e1357] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20191005210512/https://www.pocketgamer.com/articles/079602/brawl-stars-review/
+                    - text: from the original on 5 October 2019
+                    - generic [ref=f6e1358]: . Retrieved 1 February 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=www.pocketgamer.com&rft.atitle=Brawl+Stars+review+-+%22Can+Supercell+make+the+midcore+shooter+cool%3F%22&rft.date=2018-12-12&rft.aulast=Slater&rft.aufirst=Harry&rft_id=https%3A%2F%2Fwww.pocketgamer.com%2Farticles%2F079602%2Fbrawl-stars-review%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1359]:
+                - generic [ref=f6e1360]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f6e1361] [cursor=pointer]:
+                    - /url: "#cite_ref-SndRev_73-0"
+                  - link [ref=f6e1363] [cursor=pointer]:
+                    - /url: "#cite_ref-SndRev_73-1"
+                - generic [ref=f6e1364]:
+                  - generic [ref=f6e1365]:
+                    - text: Bird, Campbell (18 December 2018).
+                    - link "\"Brawl Stars Review\"" [ref=f6e1366] [cursor=pointer]:
+                      - /url: https://www.148apps.com/reviews/brawl-stars-review/
+                    - text: . 148 Apps.
+                    - link "Archived" [ref=f6e1367] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20181221154436/https://www.148apps.com/reviews/brawl-stars-review/
+                    - text: from the original on 21 December 2018
+                    - generic [ref=f6e1368]: . Retrieved 1 February 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=148+Apps&rft.atitle=Brawl+Stars+Review&rft.date=2018-12-18&rft.aulast=Bird&rft.aufirst=Campbell&rft_id=https%3A%2F%2Fwww.148apps.com%2Freviews%2Fbrawl-stars-review%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1369]:
+                - link "Jump up" [ref=f6e1371] [cursor=pointer]:
+                  - /url: "#cite_ref-74"
+                  - text: ^
+                - generic [ref=f6e1372]:
+                  - generic [ref=f6e1373]:
+                    - text: Fogel, Stefanie (14 March 2019).
+                    - link "\"'God of War', 'Red Dead 2' Lead BAFTA Game Awards Nominations\"" [ref=f6e1374] [cursor=pointer]:
+                      - /url: https://variety.com/2019/gaming/news/british-academy-games-awards-2019-nominees-1203163369/
+                    - text: .
+                    - link "Variety" [ref=f6e1377] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Variety_(magazine)
+                    - text: .
+                    - link "Archived" [ref=f6e1378] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20190315135246/https://variety.com/2019/gaming/news/british-academy-games-awards-2019-nominees-1203163369/
+                    - text: from the original on 15 March 2019
+                    - generic [ref=f6e1379]: . Retrieved 15 March 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Variety&rft.atitle=%27God+of+War%27%2C+%27Red+Dead+2%27+Lead+BAFTA+Game+Awards+Nominations&rft.date=2019-03-14&rft.aulast=Fogel&rft.aufirst=Stefanie&rft_id=https%3A%2F%2Fvariety.com%2F2019%2Fgaming%2Fnews%2Fbritish-academy-games-awards-2019-nominees-1203163369%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1380]:
+                - link "Jump up" [ref=f6e1382] [cursor=pointer]:
+                  - /url: "#cite_ref-75"
+                  - text: ^
+                - generic [ref=f6e1383]:
+                  - generic [ref=f6e1384]:
+                    - text: Donlan, Christian (13 December 2018).
+                    - link "\"Turns out there's one more Battle Royale game you need in your life\"" [ref=f6e1385] [cursor=pointer]:
+                      - /url: https://www.eurogamer.net/turns-out-theres-one-more-battle-royale-game-you-need-in-your-life
+                    - text: . Eurogamer.net.
+                    - link "Archived" [ref=f6e1386] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250311103214/https://www.eurogamer.net/turns-out-theres-one-more-battle-royale-game-you-need-in-your-life
+                    - text: from the original on 11 March 2025
+                    - generic [ref=f6e1387]: . Retrieved 11 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Eurogamer.net&rft.atitle=Turns+out+there%27s+one+more+Battle+Royale+game+you+need+in+your+life&rft.date=2018-12-13&rft.aulast=Donlan&rft.aufirst=Christian&rft_id=https%3A%2F%2Fwww.eurogamer.net%2Fturns-out-theres-one-more-battle-royale-game-you-need-in-your-life&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1388]:
+                - link "Jump up" [ref=f6e1390] [cursor=pointer]:
+                  - /url: "#cite_ref-76"
+                  - text: ^
+                - generic [ref=f6e1391]:
+                  - generic [ref=f6e1392]:
+                    - text: Partleton, Kayleigh (11 January 2021).
+                    - link "\"European consumers spent $14.8 billion on mobile apps last year\"" [ref=f6e1393] [cursor=pointer]:
+                      - /url: https://www.pocketgamer.biz/news/75475/european-consumers-spent-148-billion-on-mobile-apps-last-year/
+                    - text: . Pocket Gamer.
+                    - link "Archived" [ref=f6e1394] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210128033642/https://www.pocketgamer.biz/news/75475/european-consumers-spent-148-billion-on-mobile-apps-last-year/
+                    - text: from the original on 28 January 2021
+                    - generic [ref=f6e1395]: . Retrieved 1 February 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.atitle=European+consumers+spent+%2414.8+billion+on+mobile+apps+last+year&rft.date=2021-01-11&rft.aulast=Partleton&rft.aufirst=Kayleigh&rft_id=https%3A%2F%2Fwww.pocketgamer.biz%2Fnews%2F75475%2Feuropean-consumers-spent-148-billion-on-mobile-apps-last-year%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+              - listitem [ref=f6e1396]:
+                - link "Jump up" [ref=f6e1398] [cursor=pointer]:
+                  - /url: "#cite_ref-77"
+                  - text: ^
+                - generic [ref=f6e1399]:
+                  - generic [ref=f6e1400]:
+                    - text: Batchelor, James (29 January 2021).
+                    - link "\"Brawl Stars is Supercell's fourth title to pass $1bn in lifetime revenue\"" [ref=f6e1401] [cursor=pointer]:
+                      - /url: https://www.gamesindustry.biz/articles/2021-01-29-brawl-stars-is-supercells-fourth-title-to-pass-usd1bn-in-lifetime-revenue
+                    - text: . Pocket Gamer.
+                    - link "Archived" [ref=f6e1402] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210129121057/https://www.gamesindustry.biz/articles/2021-01-29-brawl-stars-is-supercells-fourth-title-to-pass-usd1bn-in-lifetime-revenue
+                    - text: from the original on 29 January 2021
+                    - generic [ref=f6e1403]: . Retrieved 1 February 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.atitle=Brawl+Stars+is+Supercell%27s+fourth+title+to+pass+%241bn+in+lifetime+revenue&rft.date=2021-01-29&rft.aulast=Batchelor&rft.aufirst=James&rft_id=https%3A%2F%2Fwww.gamesindustry.biz%2Farticles%2F2021-01-29-brawl-stars-is-supercells-fourth-title-to-pass-usd1bn-in-lifetime-revenue&rfr_id=info%3Asid%2Fen.wikipedia.org%3ABrawl+Stars"
+          - region [ref=f6e1404]:
+            - heading "External links" [level=2] [ref=f6e1406]
+            - list [ref=f6e1407]:
+              - listitem [ref=f6e1408]:
+                - link "Official website" [ref=f6e1411] [cursor=pointer]:
+                  - /url: https://brawlstars.com/
+            - navigation [ref=f6e1412]:
+              - table [ref=f6e1413]:
+                - rowgroup [ref=f6e1414]:
+                  - row [ref=f6e1415]:
+                    - columnheader [ref=f6e1416]:
+                      - button "[hide]" [expanded] [ref=f6e1417] [cursor=pointer]
+                      - list [ref=f6e1419]:
+                        - listitem [ref=f6e1420]:
+                          - link "v" [ref=f6e1421] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Template:Supercell
+                          - text: ·
+                        - listitem [ref=f6e1422]:
+                          - link "t" [ref=f6e1423] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Template_talk:Supercell
+                          - text: ·
+                        - listitem [ref=f6e1424]:
+                          - link "e" [ref=f6e1425] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Special:EditPage/Template:Supercell
+                      - link "Supercell" [ref=f6e1427] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Supercell_(company)
+                  - row [ref=f6e1428]:
+                    - rowheader "Games" [ref=f6e1429]
+                    - cell [ref=f6e1430]:
+                      - list [ref=f6e1432]:
+                        - listitem [ref=f6e1433]:
+                          - link "Hay Day" [ref=f6e1435] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Hay_Day
+                          - text: ·
+                        - listitem [ref=f6e1436]:
+                          - link "Clash of Clans" [ref=f6e1438] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Clash_of_Clans
+                          - text: ·
+                        - listitem [ref=f6e1439]:
+                          - link "Boom Beach" [ref=f6e1441] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Boom_Beach
+                          - text: ·
+                        - listitem [ref=f6e1442]:
+                          - link "Clash Royale" [ref=f6e1444] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Clash_Royale
+                          - text: ·
+                        - listitem [ref=f6e1445]:
+                          - link "Brawl Stars" [ref=f6e1447] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Brawl_Stars
+                          - text: ·
+                        - listitem [ref=f6e1448]:
+                          - link "Everdale" [ref=f6e1450] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Everdale
+                          - text: ·
+                        - listitem [ref=f6e1451]:
+                          - link "Squad Busters" [ref=f6e1453] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Squad_Busters
+                    - cell [ref=f6e1454]:
+                      - link [ref=f6e1457] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/File:Supercell-logo.svg
+            - navigation "Portals" [ref=f6e1459]:
+              - generic [ref=f6e1460]:
+                - link "Portal" [ref=f6e1461] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Wikipedia:Contents/Portals
+                - text: ":"
+              - list [ref=f6e1462]:
+                - listitem [ref=f6e1463]:
+                  - link "Video games" [ref=f6e1467] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Portal:Video_games
+        - generic [ref=f6e1469]:
+          - link "Categories" [ref=f6e1470] [cursor=pointer]:
+            - /url: /wiki/Help:Category
+          - text: ":"
+          - list [ref=f6e1471]:
+            - listitem [ref=f6e1472]:
+              - link "2018 video games" [ref=f6e1473] [cursor=pointer]:
+                - /url: /wiki/Category:2018_video_games
+            - listitem [ref=f6e1474]:
+              - link "Android (operating system) games" [ref=f6e1475] [cursor=pointer]:
+                - /url: /wiki/Category:Android_(operating_system)_games
+            - listitem [ref=f6e1476]:
+              - link "Esports games" [ref=f6e1477] [cursor=pointer]:
+                - /url: /wiki/Category:Esports_games
+            - listitem [ref=f6e1478]:
+              - link "Free-to-play video games" [ref=f6e1479] [cursor=pointer]:
+                - /url: /wiki/Category:Free-to-play_video_games
+            - listitem [ref=f6e1480]:
+              - link "IOS games" [ref=f6e1481] [cursor=pointer]:
+                - /url: /wiki/Category:IOS_games
+            - listitem [ref=f6e1482]:
+              - link "Multiplayer online games" [ref=f6e1483] [cursor=pointer]:
+                - /url: /wiki/Category:Multiplayer_online_games
+            - listitem [ref=f6e1484]:
+              - link "Strategy video games" [ref=f6e1485] [cursor=pointer]:
+                - /url: /wiki/Category:Strategy_video_games
+            - listitem [ref=f6e1486]:
+              - link "Supercell (video game company) games" [ref=f6e1487] [cursor=pointer]:
+                - /url: /wiki/Category:Supercell_(video_game_company)_games
+            - listitem [ref=f6e1488]:
+              - link "Video games developed in Finland" [ref=f6e1489] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_developed_in_Finland
+    - contentinfo [ref=f6e1491]:
+      - list [ref=f6e1492]:
+        - listitem [ref=f6e1493]: This page was last edited on 28 July 2026, at 13:01 (UTC).
+        - listitem [ref=f6e1494]:
+          - text: Page was rendered with
+          - link "Parsoid" [ref=f6e1495] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/wiki/Special:MyLanguage/Parsoid
+          - text: .
+        - listitem [ref=f6e1496]:
+          - text: Text is available under the
+          - link "Creative Commons Attribution-ShareAlike 4.0 License" [ref=f6e1497] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:Text_of_the_Creative_Commons_Attribution-ShareAlike_4.0_International_License
+          - text: ; additional terms may apply. By using this site, you agree to the
+          - link "Terms of Use" [ref=f6e1498] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use
+          - text: and
+          - link "Privacy Policy" [ref=f6e1499] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+          - text: . Wikipedia® is a registered trademark of the
+          - link "Wikimedia Foundation, Inc." [ref=f6e1500] [cursor=pointer]:
+            - /url: https://wikimediafoundation.org/
+          - text: ", a non-profit organization."
+      - list:
+        - listitem [ref=f6e1501]:
+          - link "Privacy policy" [ref=f6e1502] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+        - listitem [ref=f6e1503]:
+          - link "About Wikipedia" [ref=f6e1504] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:About
+        - listitem [ref=f6e1505]:
+          - link "Disclaimers" [ref=f6e1506] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:General_disclaimer
+        - listitem [ref=f6e1507]:
+          - link "Contact Wikipedia" [ref=f6e1508] [cursor=pointer]:
+            - /url: //en.wikipedia.org/wiki/Wikipedia:Contact_us
+        - listitem [ref=f6e1509]:
+          - link "Legal & safety contacts" [ref=f6e1510] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Wikimedia_Foundation_Legal_and_Safety_Contact_Information
+        - listitem [ref=f6e1511]:
+          - link "Code of Conduct" [ref=f6e1512] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Universal_Code_of_Conduct
+        - listitem [ref=f6e1513]:
+          - link "Developers" [ref=f6e1514] [cursor=pointer]:
+            - /url: https://developer.wikimedia.org
+        - listitem [ref=f6e1515]:
+          - link "Statistics" [ref=f6e1516] [cursor=pointer]:
+            - /url: https://stats.wikimedia.org/#/en.wikipedia.org
+        - listitem [ref=f6e1517]:
+          - link "Cookie statement" [ref=f6e1518] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Cookie_statement
+        - listitem [ref=f6e1519]:
+          - link "Mobile view" [ref=f6e1520] [cursor=pointer]:
+            - /url: //en.wikipedia.org/w/index.php?title=Brawl_Stars&mobileaction=toggle_view_mobile
+      - list [ref=f6e1521]:
+        - listitem [ref=f6e1522]:
+          - link [ref=f6e1523] [cursor=pointer]:
+            - /url: https://www.wikimedia.org/
+            - img "Wikimedia Foundation" [ref=f6e1525]
+        - listitem [ref=f6e1526]:
+          - link [ref=f6e1527] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/
+            - img "Powered by MediaWiki" [ref=f6e1529]
+  - generic [ref=f6e1530]:
+    - list

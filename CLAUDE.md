@@ -30,7 +30,7 @@ Treat changes as deploying to production, not a sandbox.
 
 ### Frontend (`frontend/`)
 
-- `npm run dev` — dev server on port 3002 (Turbopack/webpack dev, all interfaces).
+- `npm run dev` — dev server on port 3002 (Turbopack/webpack dev). **When working in `/root/NubixShop/public`, run the server in dev mode (`npm run dev`) during active development instead of running `HardReload.sh` on every change.**
 - `npm run build` — production build.
 - `npm run deploy` — `next build && pm2 restart jinxfamily-frontend` (same as the root `HardReload.sh`).
 - **After any frontend code change, run `/root/jinxfamily/public/HardReload.sh`** (builds and
@@ -333,4 +333,6 @@ To avoid repeating previous critical bugs and regressions, always adhere to thes
 - **Reseller Registration**: Public reseller registration at `POST /api/reseller/signup` (frontend `/reseller/apply`) creates reseller accounts in a `draft` status, issuing a one-time token. Once the reseller goes through onboarding, their status becomes `pending_review`. Users with `pending_review` status are redirected to the queue page `/reseller/pending` when logging in.
 - **Optional Registration Avatar**: During OTP registration, users can choose standard emoji/canvas-rendered avatars (via `frontend/lib/avatarImage.mjs`) or upload a custom image. If they do not interact, it remains optional (no upload). If selected, the avatar is uploaded to `POST /api/me/avatar` post-signup.
 - **Maintenance Mode**: The `MAINTENANCE_MODE` flag in `frontend/proxy.js` toggle serves a 503 status code and is built using static assets in `frontend/public/maintenance/`. When disabling, toggle it back to `false` and run `HardReload.sh`.
+- **Lazy Skill Activation (Progressive Disclosure)**: Skills in `.agents/skills/` and `~/.gemini/antigravity-cli/skills/` are registered lazily via YAML frontmatter (`name` + `description`). Agents load full skill instructions via `view_file` only on demand when relevant user tasks are requested, preventing context window bloat.
+
 

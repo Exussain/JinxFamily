@@ -5,7 +5,7 @@ import { fetchApiJson } from "../../lib/serverFetch.mjs";
 import Navbar from "../../components/Navbar";
 import '../globals.css';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const OG_IMAGE = 'https://jinxfamily.ir/media/products/fortnite-crew-pack-20260701063129.webp';
 const OG_DESCRIPTION = 'اشتراک کروپک فورتنایت با فعال‌سازی قانونی — اسکین انحصاری، ۱۰۰۰ وی‌باکس و بتل پس.';
@@ -39,12 +39,12 @@ export default async function CrewPackPage() {
   ]);
   // The hero image is the LCP element — start its download from the <head>
   // instead of waiting for body parse (React 19 dedupes into one preload).
-  preload(initialProduct?.image_url || OG_IMAGE, { as: "image", fetchPriority: "high" });
+  preload(initialProduct?.cover_16_9 || initialProduct?.image_url || OG_IMAGE, { as: "image", fetchPriority: "high" });
   const productLd = buildProductJsonLd({
     path: "/crewpack",
     name: initialProduct?.name_fa || "کروپک فورتنایت (Fortnite Crew)",
     description: "اشتراک کروپک فورتنایت با فعال‌سازی قانونی — اسکین انحصاری، ۱۰۰۰ وی‌باکس و بتل پس.",
-    image: initialProduct?.image_url,
+    image: initialProduct?.cover_16_9 || initialProduct?.image_url,
     priceToman: initialProduct?.min_price || initialProduct?.price,
     stats,
     brand: "Epic Games",

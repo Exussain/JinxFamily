@@ -36,6 +36,7 @@ export default function AppShell({ children, footer }) {
       <WebVitalsReporter />
       <ClientEffects />
       <ReferralCapture />
+      <InvalidInfoGlobalNotifier />
       {!quiet && <AnnouncementBar />}
       {children}
       {footer}

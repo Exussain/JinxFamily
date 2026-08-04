@@ -29,6 +29,8 @@ function stripHtml(html) {
   return stripped.replace(/\s+/g, " ").trim();
 }
 
+import { createCartSplash } from "../lib/effects";
+
 export default function ProductCard({ p, imageFit = "contain" }) {
   const { items, addItem, setQty, removeItem } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();

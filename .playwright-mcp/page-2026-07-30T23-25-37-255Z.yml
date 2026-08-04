@@ -1,0 +1,2410 @@
+- generic [active] [ref=f5e1]:
+  - link "Jump to content" [ref=f5e2] [cursor=pointer]:
+    - /url: "#bodyContent"
+  - banner [ref=f5e4]:
+    - generic [ref=f5e5]:
+      - navigation "Site" [ref=f5e6]:
+        - generic "Main menu" [ref=f5e7]:
+          - button "Main menu" [ref=f5e8] [cursor=pointer]
+      - link [ref=f5e12] [cursor=pointer]:
+        - /url: /wiki/Main_Page
+        - generic [ref=f5e13]:
+          - img "Wikipedia" [ref=f5e14]
+          - img "The Free Encyclopedia" [ref=f5e15]
+    - generic [ref=f5e16]:
+      - search [ref=f5e17]:
+        - generic [ref=f5e20]:
+          - searchbox "Search Wikipedia" [ref=f5e23]
+          - button "Search" [ref=f5e25]
+      - navigation "Personal tools" [ref=f5e26]:
+        - list [ref=f5e30]:
+          - listitem [ref=f5e31]:
+            - link "Donate" [ref=f5e32] [cursor=pointer]:
+              - /url: https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=en.wikipedia.org&uselang=en
+          - listitem [ref=f5e33]:
+            - link "Create account" [ref=f5e34] [cursor=pointer]:
+              - /url: https://en.wikipedia.org/w/index.php?title=Special%3ACreateAccount&returnto=Clash+of+Clans&experiments%5B0%5D=we-1-8-account-creation-no-desktop-benefits%3Aunsampled
+          - listitem [ref=f5e35]:
+            - link "Log in" [ref=f5e36] [cursor=pointer]:
+              - /url: https://en.wikipedia.org/w/index.php?title=Special%3AUserLogin&returnto=Clash+of+Clans&experiments%5B0%5D=we-1-8-account-creation-no-desktop-benefits%3Aunsampled
+  - generic [ref=f5e38]:
+    - navigation "Contents" [ref=f5e42]:
+      - generic [ref=f5e44]:
+        - generic [ref=f5e45]:
+          - heading "Contents" [level=2] [ref=f5e46]
+          - button "Hide Contents" [ref=f5e47] [cursor=pointer]: hide
+        - list [ref=f5e48]:
+          - listitem [ref=f5e49]:
+            - link "(Top)" [ref=f5e50] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=f5e52]:
+            - link "Gameplay" [ref=f5e53] [cursor=pointer]:
+              - /url: "#Gameplay"
+            - button "Toggle Gameplay subsection" [expanded] [ref=f5e55]
+            - list [ref=f5e58]:
+              - listitem [ref=f5e59]:
+                - link "Buildings" [ref=f5e60] [cursor=pointer]:
+                  - /url: "#Buildings"
+                - list
+              - listitem [ref=f5e62]:
+                - link "Troops and spells" [ref=f5e63] [cursor=pointer]:
+                  - /url: "#Troops_and_spells"
+                - list
+              - listitem [ref=f5e65]:
+                - link "Clans and Clan Wars" [ref=f5e66] [cursor=pointer]:
+                  - /url: "#Clans_and_Clan_Wars"
+                - list
+              - listitem [ref=f5e68]:
+                - link "Builder Base" [ref=f5e69] [cursor=pointer]:
+                  - /url: "#Builder_Base"
+                - list
+              - listitem [ref=f5e71]:
+                - link "Clan Games and Magic Items" [ref=f5e72] [cursor=pointer]:
+                  - /url: "#Clan_Games_and_Magic_Items"
+                - list
+              - listitem [ref=f5e74]:
+                - link "Clan Capital" [ref=f5e75] [cursor=pointer]:
+                  - /url: "#Clan_Capital"
+                - list
+              - listitem [ref=f5e77]:
+                - link "Hero Equipments and Ores" [ref=f5e78] [cursor=pointer]:
+                  - /url: "#Hero_Equipments_and_Ores"
+                - list
+          - listitem [ref=f5e80]:
+            - link "Development, release, and marketing" [ref=f5e81] [cursor=pointer]:
+              - /url: "#Development,_release,_and_marketing"
+            - list
+          - listitem [ref=f5e83]:
+            - link "Reception" [ref=f5e84] [cursor=pointer]:
+              - /url: "#Reception"
+            - button "Toggle Reception subsection" [expanded] [ref=f5e86]
+            - list [ref=f5e89]:
+              - listitem [ref=f5e90]:
+                - link "Critical reception" [ref=f5e91] [cursor=pointer]:
+                  - /url: "#Critical_reception"
+                - list
+              - listitem [ref=f5e93]:
+                - link "Commercial reception" [ref=f5e94] [cursor=pointer]:
+                  - /url: "#Commercial_reception"
+                - list
+          - listitem [ref=f5e96]:
+            - link "Legacy" [ref=f5e97] [cursor=pointer]:
+              - /url: "#Legacy"
+            - list
+          - listitem [ref=f5e99]:
+            - link "See also" [ref=f5e100] [cursor=pointer]:
+              - /url: "#See_also"
+            - list
+          - listitem [ref=f5e102]:
+            - link "References" [ref=f5e103] [cursor=pointer]:
+              - /url: "#References"
+            - list
+          - listitem [ref=f5e105]:
+            - link "External links" [ref=f5e106] [cursor=pointer]:
+              - /url: "#External_links"
+            - list
+    - main [ref=f5e109]:
+      - generic [ref=f5e110]:
+        - heading "Clash of Clans" [level=1] [ref=f5e111]
+        - generic [ref=f5e112]:
+          - button "66 languages" [ref=f5e113] [cursor=pointer]
+          - generic [ref=f5e114]: 66 languages
+      - generic [ref=f5e118]:
+        - navigation "Namespaces" [ref=f5e120]:
+          - list [ref=f5e123]:
+            - listitem [ref=f5e124]:
+              - link "Article" [ref=f5e125] [cursor=pointer]:
+                - /url: /wiki/Clash_of_Clans
+            - listitem [ref=f5e127]:
+              - link "Talk" [ref=f5e128] [cursor=pointer]:
+                - /url: /wiki/Talk:Clash_of_Clans
+        - generic [ref=f5e130]:
+          - navigation "Views" [ref=f5e131]:
+            - list [ref=f5e134]:
+              - listitem [ref=f5e135]:
+                - link "Read" [ref=f5e136] [cursor=pointer]:
+                  - /url: /wiki/Clash_of_Clans
+              - listitem [ref=f5e138]:
+                - link "Edit" [ref=f5e139] [cursor=pointer]:
+                  - /url: /w/index.php?title=Clash_of_Clans&action=edit
+              - listitem [ref=f5e141]:
+                - link "View history" [ref=f5e142] [cursor=pointer]:
+                  - /url: /w/index.php?title=Clash_of_Clans&action=history
+          - navigation "Page tools" [ref=f5e144]:
+            - generic [ref=f5e145]:
+              - button "Tools" [ref=f5e146] [cursor=pointer]
+              - generic [ref=f5e147]: Tools
+      - navigation "Appearance" [ref=f5e152]:
+        - generic [ref=f5e154]:
+          - generic [ref=f5e155]:
+            - generic [ref=f5e156]: Appearance
+            - button "Hide Appearance" [ref=f5e157] [cursor=pointer]: hide
+          - generic [ref=f5e158]:
+            - generic [ref=f5e159]: Text
+            - list [ref=f5e161]:
+              - listitem [ref=f5e162]:
+                - generic [ref=f5e164]:
+                  - generic [ref=f5e165]:
+                    - radio "Small" [ref=f5e166]
+                    - generic [ref=f5e168]: Small
+                  - generic [ref=f5e170]:
+                    - radio "Standard" [checked] [ref=f5e171]
+                    - generic [ref=f5e173]: Standard
+                  - generic [ref=f5e175]:
+                    - radio "Large" [ref=f5e176]
+                    - generic [ref=f5e178]: Large
+          - generic [ref=f5e180]:
+            - generic [ref=f5e181]: Width
+            - list [ref=f5e183]:
+              - listitem [ref=f5e184]:
+                - generic [ref=f5e186]:
+                  - generic [ref=f5e187]:
+                    - radio "Standard" [checked] [ref=f5e188]
+                    - generic [ref=f5e190]: Standard
+                  - generic [ref=f5e192]:
+                    - radio "Wide" [ref=f5e193]
+                    - generic [ref=f5e195]: Wide
+          - generic [ref=f5e197]:
+            - generic [ref=f5e198]: Color
+            - list [ref=f5e200]:
+              - listitem [ref=f5e201]:
+                - generic [ref=f5e203]:
+                  - generic [ref=f5e204]:
+                    - radio "Automatic" [ref=f5e205]
+                    - generic [ref=f5e207]: Automatic
+                  - generic [ref=f5e209]:
+                    - radio "Light" [checked] [ref=f5e210]
+                    - generic [ref=f5e212]: Light
+                  - generic [ref=f5e214]:
+                    - radio "Dark" [ref=f5e215]
+                    - generic [ref=f5e217]: Dark
+      - generic "Clash of Clans" [ref=f5e219]:
+        - generic [ref=f5e220]: From Wikipedia, the free encyclopedia
+        - generic [ref=f5e223]:
+          - generic [ref=f5e224]:
+            - generic [ref=f5e229]:
+              - button "[hide]" [expanded] [ref=f5e230] [cursor=pointer]
+              - text: This article has multiple issues. Please help
+              - link "improve it" [ref=f5e232] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Special:EditPage/Clash_of_Clans
+              - text: or discuss these issues on the
+              - link "talk page" [ref=f5e234] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Talk:Clash_of_Clans
+              - text: .
+              - generic [ref=f5e236]:
+                - text: (
+                - link "Learn how and when to remove these messages" [ref=f5e237] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Help:Maintenance_template_removal
+                - text: )
+              - generic [ref=f5e238]:
+                - generic [ref=f5e239]:
+                  - text: This article needs to be updated.
+                  - generic [ref=f5e240]: (June 2023)
+                - generic [ref=f5e242]:
+                  - text: This article
+                  - generic [ref=f5e243]:
+                    - text: relies excessively on
+                    - link "references" [ref=f5e244] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Verifiability
+                    - text: to
+                    - link "primary sources" [ref=f5e245] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:No_original_research#Primary,_secondary_and_tertiary_sources
+                  - text: .
+                  - generic [ref=f5e246]: (April 2025)
+                - generic [ref=f5e248]:
+                  - text: This article
+                  - generic [ref=f5e249]:
+                    - text: may need to be rewritten to comply with Wikipedia's
+                    - link "quality standards" [ref=f5e250] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style
+                  - text: .
+                  - generic [ref=f5e251]: (October 2025)
+            - table [ref=f5e253]:
+              - rowgroup [ref=f5e254]:
+                - row [ref=f5e255]:
+                  - columnheader "Clash of Clans" [ref=f5e256]
+                - row [ref=f5e257]:
+                  - cell [ref=f5e258]:
+                    - link [ref=f5e260] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/File:Clash_of_Clans_Logo.png
+                - row [ref=f5e262]:
+                  - rowheader [ref=f5e263]:
+                    - link "Developer" [ref=f5e264] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_developer
+                  - cell [ref=f5e265]:
+                    - link "Supercell" [ref=f5e266] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Supercell_(company)
+                - row [ref=f5e267]:
+                  - rowheader [ref=f5e268]:
+                    - link "Publisher" [ref=f5e269] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_publisher
+                  - cell "Supercell" [ref=f5e270]
+                - row [ref=f5e271]:
+                  - rowheader [ref=f5e272]:
+                    - link "Platforms" [ref=f5e273] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Computing_platform
+                  - cell [ref=f5e274]:
+                    - link "iOS" [ref=f5e275] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/IOS
+                    - text: ","
+                    - link "Android" [ref=f5e276] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Android_(operating_system)
+                    - text: ","
+                    - link "Windows" [ref=f5e277] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Microsoft_Windows
+                - row [ref=f5e278]:
+                  - rowheader "Release" [ref=f5e279]
+                  - cell [ref=f5e280]:
+                    - text: iOS2 August 2012
+                    - superscript [ref=f5e281]:
+                      - link "[1]" [ref=f5e282] [cursor=pointer]:
+                        - /url: "#cite_note-iOS-1"
+                    - text: Android7 October 2013
+                    - superscript [ref=f5e283]:
+                      - link "[2]" [ref=f5e284] [cursor=pointer]:
+                        - /url: "#cite_note-Android-2"
+                    - text: Windows23 October 2023
+                    - superscript [ref=f5e285]:
+                      - link "[3]" [ref=f5e286] [cursor=pointer]:
+                        - /url: "#cite_note-Windows-3"
+                - row [ref=f5e287]:
+                  - rowheader [ref=f5e288]:
+                    - link "Genre" [ref=f5e289] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Video_game_genre
+                  - cell [ref=f5e290]:
+                    - link "Strategy" [ref=f5e291] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Strategy_video_game
+                - row [ref=f5e292]:
+                  - rowheader "Modes" [ref=f5e293]
+                  - cell [ref=f5e294]:
+                    - link "Single-player" [ref=f5e295] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Single-player
+                    - text: ","
+                    - link "multiplayer" [ref=f5e296] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Multiplayer
+            - paragraph [ref=f5e297]:
+              - generic [ref=f5e298]: Clash of Clans
+              - text: is a
+              - link "free-to-play" [ref=f5e299] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Free-to-play
+              - link "mobile" [ref=f5e300] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Mobile_game
+              - link "strategy video game" [ref=f5e301] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Strategy_video_game
+              - text: developed and published by
+              - link "Supercell" [ref=f5e302] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Supercell_(company)
+              - text: . It was released for
+              - link "iOS" [ref=f5e303] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/IOS
+              - text: on 2 August 2012 and
+              - link "Android" [ref=f5e304] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Android_(operating_system)
+              - text: on 7 October 2013, and later
+              - link "Windows" [ref=f5e305] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Windows
+              - text: on 23 October 2023.
+            - paragraph [ref=f5e306]:
+              - text: The game is set in a fantasy-themed
+              - superscript [ref=f5e307]:
+                - link "[4]" [ref=f5e308] [cursor=pointer]:
+                  - /url: "#cite_note-gbcoc-4"
+              - link "persistent world" [ref=f5e309] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Persistent_world
+              - superscript [ref=f5e310]:
+                - link "[5]" [ref=f5e311] [cursor=pointer]:
+                  - /url: "#cite_note-commto-5"
+              - text: where the player is the chief of a village. Clash of Clans tasks players to build and upgrade their own village using the resources gained from attacking other players' villages with troops, earning rewards, buying them with medals, or producing them at their own village. Players can create clans with others – up to fifty in a clan – who then can participate in Clan Wars together, donate and receive troops, and chat with each other. Players can also build up a Clan Village called a Clan Capital.
+              - superscript [ref=f5e312]:
+                - link "[6]" [ref=f5e313] [cursor=pointer]:
+                  - /url: "#cite_note-6"
+            - paragraph [ref=f5e314]:
+              - text: Clash of Clans received generally positive reviews from critics.; it is one of the highest-grossing mobile games of all time and a commercial success for Supercell, serving as a foundation of the company's
+              - link "live service" [ref=f5e315] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Live_service_game
+              - text: mobile games.
+          - region [ref=f5e316]:
+            - generic [ref=f5e317]:
+              - heading "Gameplay" [level=2] [ref=f5e318]
+              - generic [ref=f5e319]:
+                - link "edit":
+                  - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=1
+            - figure "A replay of gameplay, in which a player is attacking another player's village" [ref=f5e320]:
+              - link [ref=f5e321] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/File:Clash_of_Clans_gameplay.jpg
+            - paragraph [ref=f5e324]:
+              - text: Clash of Clans is a
+              - link "strategy video game" [ref=f5e325] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Strategy_video_game
+              - text: with elements of
+              - link "city-building games" [ref=f5e326] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/City-building_games
+              - text: . Players build a village from the ground up, collecting and utilizing resources while also training troops to attack other players' villages to gain resources and trophies. Players can (and usually do) form communities called clans, which are groups of up to 50 people. Clan players can donate troops to each other and can go to war with other clans. There are multiple currencies or resources in the game, including Gold, Elixir, Dark Elixir, Gems and 3 different ores, Shiny Ore, Starry Ore, and Glowy Ore.
+              - superscript [ref=f5e327]:
+                - link "[4]" [ref=f5e328] [cursor=pointer]:
+                  - /url: "#cite_note-gbcoc-4"
+              - text: Gold and Elixir are used to build and upgrade buildings like defenses, resource collectors etc. Elixir and Dark Elixir are also used to upgrade army-related buildings, troops, spells, and heroes. In the past, they were also used to train the troops, but since July 2022, training has been made free.
+              - superscript [ref=f5e329]:
+                - link "[7]" [ref=f5e330] [cursor=pointer]:
+                  - /url: "#cite_note-7"
+            - paragraph [ref=f5e331]:
+              - text: An update called Clash Anytime in March 2025 removed training time of troops, spells, and siege machines, as well as the recovery time of heroes.
+              - superscript [ref=f5e332]:
+                - link "[8]" [ref=f5e333] [cursor=pointer]:
+                  - /url: "#cite_note-8"
+              - superscript [ref=f5e334]:
+                - link "[9]" [ref=f5e335] [cursor=pointer]:
+                  - /url: "#cite_note-9"
+            - paragraph [ref=f5e336]:
+              - text: The most recent update from February 2026 includes the new Dragon Duke hero, the Greedy Raven pet, and Town Hall level 18.
+              - superscript [ref=f5e337]:
+                - link "[10]" [ref=f5e338] [cursor=pointer]:
+                  - /url: "#cite_note-10"
+            - paragraph [ref=f5e339]:
+              - text: Gems are the premium currency. They can be earned by completing in-game achievements or bought using real money.
+              - superscript [ref=f5e340]:
+                - link "[4]" [ref=f5e341] [cursor=pointer]:
+                  - /url: "#cite_note-gbcoc-4"
+              - text: The 3 ores are all used to upgrade hero equipment, at different levels. Attacks are rated on a three-star scale and have a maximum timed length of three minutes.
+              - superscript [ref=f5e342]:
+                - link "[4]" [ref=f5e343] [cursor=pointer]:
+                  - /url: "#cite_note-gbcoc-4"
+            - paragraph [ref=f5e344]:
+              - text: The game also features a single-player campaign in which the player can attack a series of villages held hostage by malevolent goblins
+              - superscript [ref=f5e345]:
+                - link "[11]" [ref=f5e346] [cursor=pointer]:
+                  - /url: "#cite_note-tgcoc-11"
+              - text: to earn resources; it is unique for being the only single-player campaign in a fully released game by Supercell.
+            - paragraph [ref=f5e347]:
+              - text: To perform any upgrade, an unassigned builder is needed. The player initially has one builder, but can have up to six builders. They are bought by using gems (up to 5th)
+              - superscript [ref=f5e348]:
+                - link "[12]" [ref=f5e349] [cursor=pointer]:
+                  - /url: "#cite_note-12"
+              - text: and the sixth is unlocked by completing a series of challenges in the Builder Base (another village).
+              - superscript [ref=f5e350]:
+                - link "[13]" [ref=f5e351] [cursor=pointer]:
+                  - /url: "#cite_note-Newsweek-13"
+            - region [ref=f5e352]:
+              - generic [ref=f5e353]:
+                - heading "Buildings" [level=3] [ref=f5e354]
+                - generic [ref=f5e355]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=2
+              - paragraph [ref=f5e356]: To earn and store Gold and Elixir, players must build mines and storage buildings for each resource. Elixir is used to conduct research in the Laboratory to upgrade troops and to construct or upgrade certain buildings, primarily offensive ones. Gold is used to build defensive structures and to upgrade the Town Hall, which unlocks access to more buildings and higher levels for existing ones. At Town Hall 7, Dark Elixir becomes available. This resource is used to upgrade Dark Elixir troops, heroes such as the Barbarian King, and—starting at Town Hall 8—Dark Spells. To earn and store Dark Elixir, players must build Dark Elixir Drills and Dark Elixir Storages.
+              - paragraph [ref=f5e357]:
+                - text: There are several buildings available to the player to defend their village, including Cannons, Mortars, Archer Towers, Wizard Towers, Inferno Towers, Eagle Artillery, Scattershots, Monoliths, Air Defenses, Spell Towers, Clan Castle, Multi-Archer towers, and Ricochet Cannons. There are also traps, including Hidden Teslas, Bombs, Giant Bombs, Tornado Traps, Air Bombs, and Seeking Air Mines. Players can also build walls, which can be upgraded further as a player's town hall level increases.
+                - superscript [ref=f5e358]:
+                  - link "[14]" [ref=f5e359] [cursor=pointer]:
+                    - /url: "#cite_note-Pocket-14"
+                - superscript [ref=f5e360]:
+                  - link "[15]" [ref=f5e361] [cursor=pointer]:
+                    - /url: "#cite_note-148Apps-15"
+                - text: As the Town Hall level increases, the player gets access to stronger buildings such as the Monolith, Eagle Artillery, and Inferno Towers.
+                - superscript [ref=f5e362]:
+                  - link "[16]" [ref=f5e363] [cursor=pointer]:
+                    - /url: "#cite_note-TH12_release-16"
+            - region [ref=f5e364]:
+              - generic [ref=f5e365]:
+                - heading "Troops and spells" [level=3] [ref=f5e366]
+                - generic [ref=f5e367]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=3
+              - paragraph [ref=f5e368]:
+                - text: The game has two kinds of barracks and spell factories, a basic version, a "dark" version. Initially, all of the basic versions were used to train troops using elixir, whereas the dark versions used dark elixir, and players would have to wait for troops to be trained and spells to be brewed ("training time"). However, an update in July 2022 made all troops free to train, with the primary limitation being space in the army camps.
+                - superscript [ref=f5e369]:
+                  - link "[17]" [ref=f5e370] [cursor=pointer]:
+                    - /url: "#cite_note-17"
+                - text: Later, in March 2025, an update removed all troop training times along with the requirement to heal heroes.
+                - superscript [ref=f5e371]:
+                  - link "[18]" [ref=f5e372] [cursor=pointer]:
+                    - /url: "#cite_note-18"
+                - text: Both sets of barracks and spell factories can be upgraded to higher levels to unlock more troops (eighteen total troops for the barracks, and twelve for the dark barracks).
+              - paragraph [ref=f5e373]: "Each of the troops have their own group:"
+              - list [ref=f5e374]:
+                - listitem [ref=f5e375]:
+                  - text: The Elixir Troops consist of Archers,
+                  - link "Barbarians" [ref=f5e376] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Barbarian
+                  - text: ", Balloons (piloted by bomb-wielding"
+                  - link "skeletons" [ref=f5e377] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Skeleton_(undead)
+                  - text: ),
+                  - link "Dragons" [ref=f5e378] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Dragon
+                  - text: (as well as baby dragons and electro dragons), Dragon Riders (skeletons riding dragon-shaped airplanes), Electro
+                  - link "Titans" [ref=f5e379] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Titans
+                  - text: ","
+                  - link "Giants" [ref=f5e380] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Giant
+                  - text: ","
+                  - link "Goblins" [ref=f5e381] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Goblin
+                  - text: ", Healers, Meteor"
+                  - link "Golems" [ref=f5e382] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Golem
+                  - text: made up of Meteormites,
+                  - link "Miners" [ref=f5e383] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Miner
+                  - text: ", P.E.K.K.A.s, Root Riders, Throwers (which resemble helmeted"
+                  - link "Cyclopes" [ref=f5e384] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Cyclopes
+                  - text: ), Wall Breakers (a bomb-wielding skeleton that targets walls),
+                  - link "Wizards" [ref=f5e385] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Magician_(fantasy)
+                  - text: ", and"
+                  - link "Yetis" [ref=f5e386] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Yeti
+                  - text: that spawn Yetimites.
+                - listitem [ref=f5e387]:
+                  - text: The Dark Elixir Troops consist of Apprentice Wardens, Bowlers,
+                  - link "Druids" [ref=f5e388] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Druid
+                  - text: ", Furnaces that spawn Firemites,"
+                  - link "Golem" [ref=f5e389] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Golem
+                  - text: ","
+                  - link "Headhunter" [ref=f5e390] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Headhunting
+                  - text: ","
+                  - link "Hog" [ref=f5e391] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Pig
+                  - text: Riders, Ice Golems, Lava
+                  - link "Hounds" [ref=f5e392] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Hound
+                  - text: ", Minions (which resemble blue"
+                  - link "gargoyle" [ref=f5e393] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Gargoyle_(monster)
+                  - text: "-like creatures),"
+                  - link "Valkyries" [ref=f5e394] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Valkyrie
+                  - text: ", and"
+                  - link "Witches" [ref=f5e395] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Witch
+                  - text: .
+                - listitem [ref=f5e396]: The Heroes consist of Archer Queen, Barbarian King, Dragon Duke, Grand Warden, Minion Prince, and Royal Champion.
+              - paragraph [ref=f5e397]:
+                - text: At Town Hall 7, the Hero Hall can be built to unlock Heroes, powerful troops with abilities that can be activated during a battle.
+                - superscript [ref=f5e398]:
+                  - link "[19]" [ref=f5e399] [cursor=pointer]:
+                    - /url: "#cite_note-19"
+              - paragraph [ref=f5e400]:
+                - text: At Town Hall 11, Super Troops are unlocked. Super Troops are troops that are more powerful than their elixir counterparts and have special abilities. Players can unlock a Super Troop for 3 days by spending Dark Elixir. Players are only allowed to have two Super Troops unlocked at any given time.
+                - superscript [ref=f5e401]:
+                  - link "[20]" [ref=f5e402] [cursor=pointer]:
+                    - /url: "#cite_note-20"
+                - text: .
+              - list [ref=f5e403]:
+                - listitem [ref=f5e404]: The Super Troops consist of the Super Barbarian, Super Archer, Sneaky Goblin, Super Wall Breaker, Super Giant, Rocket Balloon, Super Wizard, Super Dragon, Inferno Dragon, Super Minion, Super Valkyrie, Super Witch, Ice Hound, Super Bowler, Super Miner, Super Yeti, and Super Hog Rider.
+              - paragraph [ref=f5e405]:
+                - text: At Town Hall 12, the Workshop can be built to construct siege machines, which are powerful troop-like units that can house troops inside of them.
+                - superscript [ref=f5e406]:
+                  - link "[21]" [ref=f5e407] [cursor=pointer]:
+                    - /url: "#cite_note-21"
+              - paragraph [ref=f5e408]:
+                - text: At Town Hall 14, the Pet House can be built to assign pets to heroes, each serving a different role in assisting a hero.
+                - superscript [ref=f5e409]:
+                  - link "[22]" [ref=f5e410] [cursor=pointer]:
+                    - /url: "#cite_note-dotesports1-22"
+            - region [ref=f5e411]:
+              - generic [ref=f5e412]:
+                - heading "Clans and Clan Wars" [level=3] [ref=f5e413]
+                - generic [ref=f5e414]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=4
+              - paragraph [ref=f5e415]: Clans are groups of players who join to support each other, either by donating troops or offering advice. Players can join clans once they rebuild the Clan Castle. A major component of Clash of Clans is clans facing off against one another in Clan Wars. Clan leaders and co-leaders can initiate wars against other clans. Each clan is given one Preparation Day and one War Day.
+              - paragraph [ref=f5e416]: "When a player attacks a member of the opposing clan, they earn stars based on the amount of destruction inflicted on the opponent's base: dealing 50% damage or more grants 1 star, destroying the Town Hall grants another, and destroying the base grants the third star. Each player is limited to two attacks per war, and the clan with the most stars at the end of War Day is declared the winner. If both clans earn the same number of stars, the winner is determined by which clan caused the greater percentage of destruction."
+              - paragraph [ref=f5e417]:
+                - text: "Players receive bonus war loot if they participate in the war by using their attacks. This loot varies depending on the base and is determined by Supercell: the top-ranked base receives the most war bonus loot, while the lowest-ranked receives the least. If the clan wins the war, the full bonus loot is awarded to the player. However, in the event of a loss or draw, only one-third of the bonus loot is delivered."
+                - superscript [ref=f5e418]:
+                  - link "[23]" [ref=f5e419] [cursor=pointer]:
+                    - /url: "#cite_note-23"
+              - paragraph [ref=f5e420]:
+                - text: The available war sizes are 50v50, 40v40, 30v30, 25v25, 20v20, 15v15, 10v10, and 5v5.
+                - superscript [ref=f5e421]:
+                  - link "[24]" [ref=f5e422] [cursor=pointer]:
+                    - /url: "#cite_note-24"
+                - superscript [ref=f5e423]:
+                  - link "[25]" [ref=f5e424] [cursor=pointer]:
+                    - /url: "#cite_note-25"
+                - superscript [ref=f5e425]:
+                  - link "[26]" [ref=f5e426] [cursor=pointer]:
+                    - /url: "#cite_note-26"
+                - text: There were previously 35v35 and 45v45 sizes as well, but these were removed in the March 2016 update.
+                - superscript [ref=f5e427]:
+                  - link "[27]" [ref=f5e428] [cursor=pointer]:
+                    - /url: "#cite_note-27"
+                - superscript [ref=f5e429]:
+                  - link "[28]" [ref=f5e430] [cursor=pointer]:
+                    - /url: "#cite_note-28"
+                - superscript [ref=f5e431]:
+                  - link "[29]" [ref=f5e432] [cursor=pointer]:
+                    - /url: "#cite_note-29"
+                - text: In the May 2016 update, Friendly Challenges were introduced to allow clanmates to compete amongst other clanmates - however, these challenges do not provide loot or trophies and do not affect a player's army.
+                - superscript [ref=f5e433]:
+                  - link "[30]" [ref=f5e434] [cursor=pointer]:
+                    - /url: "#cite_note-30"
+                - text: In the October 2018 update, Clan War Leagues were introduced. Clans can fight seven other clans to advance to the next league and earn league medals by earning stars in Clan War Leagues. The clans in the group with the most stars will be promoted to a higher league, while the clans in the group with the fewest stars will be demoted to a lower league.
+            - region [ref=f5e435]:
+              - generic [ref=f5e436]:
+                - heading "Builder Base" [level=3] [ref=f5e437]
+                - generic [ref=f5e438]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=5
+              - figure "Gameplay from the original Builder Base mode, prior to the \"Builder Base 2.0\" update in 2023." [ref=f5e439]:
+                - link [ref=f5e440] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/File:Coc_attack.png
+              - paragraph [ref=f5e443]:
+                - text: Following an update on 22 May 2017, Supercell released the new "Builder Base" game mode to the game. It allows players to sail to a new island and create a new village with a different set of buildings.
+                - superscript [ref=f5e444]:
+                  - link "[31]" [ref=f5e445] [cursor=pointer]:
+                    - /url: "#cite_note-31"
+              - paragraph [ref=f5e446]:
+                - text: In Clash of Clans' Builder Base 2.0 update, the Builder Base attack system was reworked, where players attack each other's bases sequentially instead of simultaneously. Players now alternate attacks across two stages of the opponent's base, with each stage having its own defenses and layout. The player who earns more stars across the two stages wins the battle. Rewards such as gold and elixir are granted based on getting a certain number of stars in a day (a maximum of 6 in a battle), while additional attacks help players climb the trophy leaderboard.
+                - superscript [ref=f5e447]:
+                  - link "[32]" [ref=f5e448] [cursor=pointer]:
+                    - /url: "#cite_note-Clash_of_Clans-32"
+              - paragraph [ref=f5e449]:
+                - text: Players can spend gems to speed up the in-game time (which can be mined in the Gem Mine) or by using the Clock Tower (temporarily speeds up the process in the entire Builder Base). A new hero, the Battle Machine, was also introduced along with this update. In June 2019, Builder Hall level 9 was released.
+                - superscript [ref=f5e450]:
+                  - link "[13]" [ref=f5e451] [cursor=pointer]:
+                    - /url: "#cite_note-Newsweek-13"
+                - text: The May 2023 update brought Builder Hall 10, which is currently the highest Builder Hall level. The May 2023 update also brought the long-awaited Builder Base 2.0, with higher Builder Base levels having multiple levels to beat, and introducing many changes to the Builder Base, like new troop abilities and a new troop called the Electrofire Wizard. O.T.T.O, a secondary builder in the Builder Base, was also replaced by B.O.B in this update.
+                - superscript [ref=f5e452]:
+                  - link "[33]" [ref=f5e453] [cursor=pointer]:
+                    - /url: "#cite_note-BB2-33"
+            - region [ref=f5e454]:
+              - generic [ref=f5e455]:
+                - heading "Clan Games and Magic Items" [level=3] [ref=f5e456]
+                - generic [ref=f5e457]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=6
+              - paragraph [ref=f5e458]:
+                - text: In December 2017, Supercell introduced Clan Games, a feature where clan members could work together to complete tasks, which would then earn clan points. When enough points are accumulated, a new reward tier unlocks, and players can select one reward from each unlocked tier. This update also introduced Magic Items, obtainable as rewards from Clan Games and through events. These items can be used, e.g., to get resources, finish upgrades, or briefly add levels to troops or heroes.
+                - superscript [ref=f5e459]:
+                  - link "[34]" [ref=f5e460] [cursor=pointer]:
+                    - /url: "#cite_note-34"
+                - superscript [ref=f5e461]:
+                  - link "[35]" [ref=f5e462] [cursor=pointer]:
+                    - /url: "#cite_note-35"
+            - region [ref=f5e463]:
+              - generic [ref=f5e464]:
+                - heading "Clan Capital" [level=3] [ref=f5e465]
+                - generic [ref=f5e466]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=7
+              - paragraph [ref=f5e467]:
+                - text: The Clan Capital is the central hub where the entire clan contributes to the construction and upgrading of a massive base. Every member of a clan is able to contribute to building a new region to strengthen its defenses and upgrade its troops. A clan will try to defeat other clans' Capitals over the course of a Raid Weekend. Capital Gold is earned during raids to upgrade and improve the Capital, but also Raid Medals that can be used to purchase items for players' villages. Reinforcement troops can be purchased without having to wait for other clanmates to donate.
+                - superscript [ref=f5e468]:
+                  - link "[36]" [ref=f5e469] [cursor=pointer]:
+                    - /url: "#cite_note-36"
+                - text: In December 2022, player decorations for their Capital Peak houses were introduced.
+                - superscript [ref=f5e470]:
+                  - link "[37]" [ref=f5e471] [cursor=pointer]:
+                    - /url: "#cite_note-37"
+            - region [ref=f5e472]:
+              - generic [ref=f5e473]:
+                - heading "Hero Equipments and Ores" [level=3] [ref=f5e474]
+                - generic [ref=f5e475]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=8
+              - paragraph [ref=f5e476]:
+                - text: Hero Equipments were introduced in December 2023, available to players above Town Hall 8.
+                - superscript [ref=f5e477]:
+                  - link "[38]" [ref=f5e478] [cursor=pointer]:
+                    - /url: "#cite_note-38"
+                - text: Hero Equipments allow the player to customize their Heroes' special abilities according to their strategy using the Blacksmith. Ores were introduced as a resource used to advance Hero Equipments to higher levels, consisting of Shiny, Glowy, and Starry types.
+          - region [ref=f5e479]:
+            - generic [ref=f5e480]:
+              - heading "Development, release, and marketing" [level=2] [ref=f5e481]
+              - generic [ref=f5e482]:
+                - link "edit":
+                  - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=9
+            - figure [ref=f5e483]:
+              - link [ref=f5e484] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/File:Clash_of_Clans-_Designing_Games_That_People_Will_Play_For_Years_(16119522833).jpg
+              - generic [ref=f5e486]:
+                - text: Jonas Collaros, one of the programmers of Clash of Clans, speaks about the game's design at the 2015
+                - link "GDC" [ref=f5e487] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Game_Developers_Conference
+                - text: .
+            - paragraph [ref=f5e488]:
+              - text: Clash of Clans was developed by
+              - link "Supercell" [ref=f5e489] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Supercell_(video_game_company)
+              - text: ", the company behind other popular mobile games like"
+              - link "Hay Day" [ref=f5e491] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Hay_Day
+              - text: and
+              - link "Brawl Stars" [ref=f5e493] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Brawl_Stars
+              - text: .
+              - superscript [ref=f5e494]:
+                - link "[39]" [ref=f5e495] [cursor=pointer]:
+                  - /url: "#cite_note-39"
+              - text: The game took six months to develop with the gameplay changing little over the course of development.
+              - superscript [ref=f5e496]:
+                - link "[40]" [ref=f5e497] [cursor=pointer]:
+                  - /url: "#cite_note-Chartrush-40"
+              - text: According to Supercell's Lasse Louhento, the development team encountered no major hurdles during this time.
+              - superscript [ref=f5e498]:
+                - link "[40]" [ref=f5e499] [cursor=pointer]:
+                  - /url: "#cite_note-Chartrush-40"
+              - text: Inspiration for the game included the games
+              - link "Backyard Monsters" [ref=f5e501] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Backyard_Monsters
+              - text: and
+              - link "Travian" [ref=f5e503] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Travian
+              - text: with the art style being influenced by old
+              - link "Super NES" [ref=f5e504] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Super_NES
+              - text: and
+              - link "arcade games" [ref=f5e505] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Arcade_game
+              - text: .
+              - superscript [ref=f5e506]:
+                - link "[40]" [ref=f5e507] [cursor=pointer]:
+                  - /url: "#cite_note-Chartrush-40"
+              - text: Initially, the art style was more cartoon based, but this was changed as the team worried it would alienate the more hardcore segment of their audience.
+              - superscript [ref=f5e508]:
+                - link "[41]" [ref=f5e509] [cursor=pointer]:
+                  - /url: "#cite_note-keystosuccess-41"
+              - text: Throughout most of development the game was multiplayer-only - however, after
+              - link "focus testing" [ref=f5e510] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Focus_testing
+              - text: ", Supercell added a"
+              - link "single-player" [ref=f5e511] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Single-player
+              - text: mode.
+              - superscript [ref=f5e512]:
+                - link "[40]" [ref=f5e513] [cursor=pointer]:
+                  - /url: "#cite_note-Chartrush-40"
+              - text: The game was released for
+              - link "iOS" [ref=f5e514] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/IOS
+              - text: platforms on 2 August 2012,
+              - superscript [ref=f5e515]:
+                - link "[1]" [ref=f5e516] [cursor=pointer]:
+                  - /url: "#cite_note-iOS-1"
+              - text: and on
+              - link "Google Play" [ref=f5e517] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Google_Play
+              - text: for
+              - link "Android" [ref=f5e518] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Android_(operating_system)
+              - text: on 7 October 2013.
+              - superscript [ref=f5e519]:
+                - link "[2]" [ref=f5e520] [cursor=pointer]:
+                  - /url: "#cite_note-Android-2"
+            - paragraph [ref=f5e521]:
+              - text: In 2016, an animated web series based on the game, Clash-A-Rama!, began being released to YouTube by Supercell. A comedic spin on the game, it was produced by Tolerable Entertainment with animation by
+              - link "Rough Draft Studios" [ref=f5e522] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Rough_Draft_Studios
+              - text: ; voice actors such as
+              - link "Tom Kenny" [ref=f5e523] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Tom_Kenny
+              - text: and
+              - link "Charlie Adler" [ref=f5e524] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Charlie_Adler
+              - text: were involved in voice acting.
+              - superscript [ref=f5e525]:
+                - link "[42]" [ref=f5e526] [cursor=pointer]:
+                  - /url: "#cite_note-42"
+            - paragraph [ref=f5e527]:
+              - text: In February 2015 Supercell released their Clash of Clans
+              - link "Super Bowl XLIX" [ref=f5e528] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Super_Bowl_XLIX
+              - text: commercial, featuring
+              - link "Liam Neeson" [ref=f5e529] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Liam_Neeson
+              - text: parodying his character from
+              - link "Taken" [ref=f5e531] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Taken_(film)
+              - text: .
+              - superscript [ref=f5e532]:
+                - link "[43]" [ref=f5e533] [cursor=pointer]:
+                  - /url: "#cite_note-43"
+              - text: On 2 February
+              - link "Business Insider" [ref=f5e535] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Business_Insider
+              - text: reported the ad as the fifth most watched Super Bowl ad,
+              - superscript [ref=f5e536]:
+                - link "[44]" [ref=f5e537] [cursor=pointer]:
+                  - /url: "#cite_note-44"
+              - text: though on 6 February
+              - link "VentureBeat" [ref=f5e539] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/VentureBeat
+              - text: reported the ad was the most viewed of those that appeared on the Super Bowl.
+              - superscript [ref=f5e540]:
+                - link "[45]" [ref=f5e541] [cursor=pointer]:
+                  - /url: "#cite_note-45"
+              - link "YouTube" [ref=f5e542] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/YouTube
+              - text: users later voted the advertisement the second-best Super Bowl ad, behind
+              - link "Nissan's" [ref=f5e543] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Nissan
+              - text: "\"With Dad\" ad."
+              - superscript [ref=f5e544]:
+                - link "[46]" [ref=f5e545] [cursor=pointer]:
+                  - /url: "#cite_note-46"
+            - paragraph [ref=f5e546]:
+              - text: On 1 May 2024, Supercell announced a collaboration with the footballer
+              - link "Erling Haaland" [ref=f5e547] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Erling_Haaland
+              - text: with the "Clash With Haaland" event that would run until the end of the month. The event was announced with a video in which Haaland is captured by Clash of Clans troops who are searching for the "world's greatest attacker" and transport him into the game. The trailer also features a Clash of Clans remix of CTID's "Haaland (Ha Ha Ha)" song.
+              - superscript [ref=f5e548]:
+                - link "[47]" [ref=f5e549] [cursor=pointer]:
+                  - /url: "#cite_note-47"
+              - text: The event featured two temporary football-themed troops, a temporary spell, challenge levels, and football-inspired skins of heroes. Supercell claims that Haaland plays the game in his free time and that the first challenge level is his actual base.
+              - superscript [ref=f5e550]:
+                - link "[48]" [ref=f5e551] [cursor=pointer]:
+                  - /url: "#cite_note-48"
+            - paragraph [ref=f5e552]:
+              - text: On 20 May 2025, Supercell announced an animated series adaptation for
+              - link "Netflix" [ref=f5e553] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Netflix
+              - text: ; it will be produced by Supercell and
+              - link "Netflix Animation" [ref=f5e554] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Netflix_Animation
+              - text: .
+              - superscript [ref=f5e555]:
+                - link "[49]" [ref=f5e556] [cursor=pointer]:
+                  - /url: "#cite_note-49"
+          - region [ref=f5e557]:
+            - generic [ref=f5e558]:
+              - heading "Reception" [level=2] [ref=f5e559]
+              - generic [ref=f5e560]:
+                - link "edit":
+                  - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=10
+            - complementary [ref=f5e561]:
+              - generic [ref=f5e562]: Clash of Clans
+              - table [ref=f5e563]:
+                - caption [ref=f5e564]: Aggregate scores
+                - rowgroup [ref=f5e565]:
+                  - row [ref=f5e566]:
+                    - columnheader "Aggregator" [ref=f5e567]
+                    - columnheader "Score" [ref=f5e568]
+                  - row [ref=f5e569]:
+                    - cell [ref=f5e570]:
+                      - link "GameRankings" [ref=f5e571] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/GameRankings
+                    - cell [ref=f5e572]:
+                      - text: "iOS: 80%"
+                      - superscript [ref=f5e573]:
+                        - link "[50]" [ref=f5e574] [cursor=pointer]:
+                          - /url: "#cite_note-GR-50"
+                  - row [ref=f5e575]:
+                    - cell [ref=f5e576]:
+                      - link "Metacritic" [ref=f5e577] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Metacritic
+                    - cell [ref=f5e578]:
+                      - text: "iOS: 74/100"
+                      - superscript [ref=f5e579]:
+                        - link "[51]" [ref=f5e580] [cursor=pointer]:
+                          - /url: "#cite_note-MC-51"
+              - table [ref=f5e581]:
+                - caption [ref=f5e582]: Review scores
+                - rowgroup [ref=f5e583]:
+                  - row [ref=f5e584]:
+                    - columnheader "Publication" [ref=f5e585]
+                    - columnheader "Score" [ref=f5e586]
+                  - row [ref=f5e587]:
+                    - cell "148 Apps" [ref=f5e588]
+                    - cell [ref=f5e589]:
+                      - text: 3.5/5
+                      - superscript [ref=f5e590]:
+                        - link "[15]" [ref=f5e591] [cursor=pointer]:
+                          - /url: "#cite_note-148Apps-15"
+                  - row [ref=f5e592]:
+                    - cell "Android Police" [ref=f5e593]
+                    - cell [ref=f5e594]:
+                      - text: 4.5/5
+                      - superscript [ref=f5e595]:
+                        - link "[52]" [ref=f5e596] [cursor=pointer]:
+                          - /url: "#cite_note-pomust-52"
+                  - row [ref=f5e597]:
+                    - cell [ref=f5e598]:
+                      - link "Gamezebo" [ref=f5e600] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Gamezebo
+                    - cell [ref=f5e601]:
+                      - text: 4.5/5
+                      - superscript [ref=f5e602]:
+                        - link "[53]" [ref=f5e603] [cursor=pointer]:
+                          - /url: "#cite_note-Gamezebo-53"
+                  - row [ref=f5e604]:
+                    - cell "Modojo" [ref=f5e605]
+                    - cell [ref=f5e606]:
+                      - text: 3/5
+                      - superscript [ref=f5e607]:
+                        - link "[54]" [ref=f5e608] [cursor=pointer]:
+                          - /url: "#cite_note-Modojo-54"
+                  - row [ref=f5e609]:
+                    - cell [ref=f5e610]:
+                      - link "Pocket Gamer" [ref=f5e612] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Pocket_Gamer
+                    - cell [ref=f5e613]:
+                      - text: 9/10
+                      - superscript [ref=f5e614]:
+                        - link "[14]" [ref=f5e615] [cursor=pointer]:
+                          - /url: "#cite_note-Pocket-14"
+                  - row [ref=f5e616]:
+                    - cell "Tom's Guide" [ref=f5e617]
+                    - cell [ref=f5e618]:
+                      - text: 3.5/5
+                      - superscript [ref=f5e619]:
+                        - link "[11]" [ref=f5e620] [cursor=pointer]:
+                          - /url: "#cite_note-tgcoc-11"
+                  - row [ref=f5e621]:
+                    - cell [ref=f5e622]:
+                      - link "Aptoide" [ref=f5e624] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Aptoide
+                    - cell [ref=f5e625]:
+                      - text: 4.6/5
+                      - superscript [ref=f5e626]:
+                        - link "[55]" [ref=f5e627] [cursor=pointer]:
+                          - /url: "#cite_note-Aptoide-55"
+            - region [ref=f5e628]:
+              - generic [ref=f5e629]:
+                - heading "Critical reception" [level=3] [ref=f5e630]
+                - generic [ref=f5e631]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=11
+              - paragraph [ref=f5e632]:
+                - text: Clash of Clans has received generally positive reviews. The iOS version holds an aggregate score of 74 out of 100 on
+                - link "Metacritic" [ref=f5e633] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Metacritic
+                - text: ","
+                - superscript [ref=f5e634]:
+                  - link "[51]" [ref=f5e635] [cursor=pointer]:
+                    - /url: "#cite_note-MC-51"
+                - text: and 80% on
+                - link "GameRankings" [ref=f5e636] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/GameRankings
+                - text: .
+                - superscript [ref=f5e637]:
+                  - link "[50]" [ref=f5e638] [cursor=pointer]:
+                    - /url: "#cite_note-GR-50"
+              - paragraph [ref=f5e639]:
+                - link "Gamezebo" [ref=f5e641] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Gamezebo
+                - generic [ref=f5e642]: "'"
+                - text: s Leif Johnson was impressed, scoring the game 4.5 out of 5. Although he felt the gameplay was heavily skewed to encourage the player to purchase gems, he praised the addition of a single-player campaign. He concluded that "Clash of Clans is a simple game, but that's more of a strength than a weakness. It's simple enough to provide quick, painless matches on an
+                - link "iPhone" [ref=f5e643] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/IPhone
+                - text: in an idle moment, and there are enough different units to choose from in the battle mode to make playing against other players endlessly rewarding. Best of all, the option to fight against
+                - link "NPC" [ref=f5e644] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Non-player_character
+                - text: goblins gives Clash of Clans a small edge over similar strategy games that rely almost entirely on player-versus-player combat."
+                - superscript [ref=f5e645]:
+                  - link "[53]" [ref=f5e646] [cursor=pointer]:
+                    - /url: "#cite_note-Gamezebo-53"
+              - paragraph [ref=f5e647]:
+                - generic [ref=f5e648]:
+                  - link "Pocket Gamer" [ref=f5e649] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Pocket_Gamer
+                  - text: "'"
+                - text: s Peter Willington was equally impressed, scoring the game 9 out of 10 and giving it a "Gold Award". Reviewing the game several months after it was released for iOS devices, Willington praised the game for requiring real strategy to play. He wrote that the gameplay was built on the progression of "requiring more and more sophisticated units, asking you to strategize and really think about which elements you should focus on building within your camp." He concluded that "Clash of Clans is a superb game,
+                - link "freemium" [ref=f5e650] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Freemium
+                - text: or otherwise, with more nuance than most give it credit for. That's why it's passed the test of time since its launch and still has an active community devotedly constructing elaborate fortresses in the hope of becoming invincible."
+                - superscript [ref=f5e651]:
+                  - link "[14]" [ref=f5e652] [cursor=pointer]:
+                    - /url: "#cite_note-Pocket-14"
+              - paragraph [ref=f5e653]:
+                - text: 148Apps
+                - generic [ref=f5e654]: "'"
+                - text: s Rob Rich scored the game 3.5 out of 5, writing "It's great to play an online freemium game that doesn't shy away from the single-player experience but also offers up some honest-to-goodness direct interaction, which is a very rare combination these days. It probably won't warm the hearts of any haters out there, but it does give genre fans something with a bit more action and strategy than they might be used to."
+                - superscript [ref=f5e655]:
+                  - link "[15]" [ref=f5e656] [cursor=pointer]:
+                    - /url: "#cite_note-148Apps-15"
+                - text: Tom's Guide enjoyed the player interaction.
+                - superscript [ref=f5e657]:
+                  - link "[11]" [ref=f5e658] [cursor=pointer]:
+                    - /url: "#cite_note-tgcoc-11"
+              - paragraph [ref=f5e659]:
+                - text: Modojo's John Bedford scored the game 3 out of 5. He was critical of freemium gaming in general, writing "The novelty hasn't just worn off this particular style of greedy gaming, it's shriveled up and condensed itself into an infinitely dense singularity of self-loathing." Of the game itself, he concluded, "This is a game that follows in the footsteps of no small number of titles that have made feverish demands on our wallets in exchange for just a slightly thicker slice of the gameplay. You may have an unending appetite for these
+                - link "micromanagement" [ref=f5e660] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Micromanagement
+                - text: titles, in which case we recommend getting heartily stuck into Supercell's latest game. While Clash of Clans brings something new to accompany its competent but unexceptional empire gameplay, for most of us it'll be a case of too little, too late."
+                - superscript [ref=f5e661]:
+                  - link "[54]" [ref=f5e662] [cursor=pointer]:
+                    - /url: "#cite_note-Modojo-54"
+            - region [ref=f5e663]:
+              - generic [ref=f5e664]:
+                - heading "Commercial reception" [level=3] [ref=f5e665]
+                - generic [ref=f5e666]:
+                  - link "edit":
+                    - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=12
+              - paragraph [ref=f5e667]:
+                - text: Clash of Clans became an
+                - link "App Store" [ref=f5e668] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/App_Store_(iOS)
+                - text: top 5 download between December 2012 and May 2013,
+                - superscript [ref=f5e669]:
+                  - link "[56]" [ref=f5e670] [cursor=pointer]:
+                    - /url: "#cite_note-56"
+                - text: and this success has been described as helping to usher in a new era in single-player gaming on mobile devices.
+                - superscript [ref=f5e671]:
+                  - link "[57]" [ref=f5e672] [cursor=pointer]:
+                    - /url: "#cite_note-57"
+                - superscript [ref=f5e673]:
+                  - link "[58]" [ref=f5e674] [cursor=pointer]:
+                    - /url: "#cite_note-58"
+              - paragraph [ref=f5e675]:
+                - text: In 2013 Clash of Clans was the third-highest game in revenue generated on the App Store and number one on
+                - link "Google Play" [ref=f5e676] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Google_Play
+                - text: .
+                - superscript [ref=f5e677]:
+                  - link "[59]" [ref=f5e678] [cursor=pointer]:
+                    - /url: "#cite_note-59"
+              - paragraph [ref=f5e679]:
+                - text: In February 2014 it was reported that the game was generating US$654,000 in daily revenue for Supercell.
+                - superscript [ref=f5e680]:
+                  - link "[60]" [ref=f5e681] [cursor=pointer]:
+                    - /url: "#cite_note-gpd-60"
+              - paragraph [ref=f5e682]:
+                - text: In 2015, the game was the top-grossing app on both the App Store and Google Play, with an estimated revenue of 1.5 million dollars per day.
+                - superscript [ref=f5e683]:
+                  - link "[61]" [ref=f5e684] [cursor=pointer]:
+                    - /url: "#cite_note-61"
+                - superscript [ref=f5e685]:
+                  - link "[62]" [ref=f5e686] [cursor=pointer]:
+                    - /url: "#cite_note-62"
+              - paragraph [ref=f5e687]:
+                - text: It was the fourth most installed app in the App Store and the seventh most installed app in the Play Store, where it had amassed 500 million downloads by 2018.
+                - superscript [ref=f5e688]:
+                  - link "[63]" [ref=f5e689] [cursor=pointer]:
+                    - /url: "#cite_note-63"
+                - superscript [ref=f5e690]:
+                  - link "[64]" [ref=f5e691] [cursor=pointer]:
+                    - /url: "#cite_note-:0-64"
+              - paragraph [ref=f5e692]:
+                - text: As of 2018 Clash of Clans has generated more revenue than any other app on the App Store,
+                - superscript [ref=f5e693]:
+                  - link "[64]" [ref=f5e694] [cursor=pointer]:
+                    - /url: "#cite_note-:0-64"
+                - text: having brought in a revenue of over $6.4 billion since its launch.
+                - superscript [ref=f5e695]:
+                  - link "[65]" [ref=f5e696] [cursor=pointer]:
+                    - /url: "#cite_note-65"
+              - paragraph [ref=f5e697]:
+                - text: As of 2020 Clash of Clans remains in the top 50 grossing apps in both the Play Store and App Store, more than eight years following its release in 2012.
+                - superscript [ref=f5e698]:
+                  - link "[66]" [ref=f5e699] [cursor=pointer]:
+                    - /url: "#cite_note-66"
+                - superscript [ref=f5e700]:
+                  - link "[67]" [ref=f5e701] [cursor=pointer]:
+                    - /url: "#cite_note-67"
+          - region [ref=f5e702]:
+            - generic [ref=f5e703]:
+              - heading "Legacy" [level=2] [ref=f5e704]
+              - generic [ref=f5e705]:
+                - link "edit":
+                  - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=13
+            - paragraph [ref=f5e706]:
+              - text: Four spin-off games in the same universe of Clash of Clans were developed by Supercell. The first,
+              - link "Clash Royale" [ref=f5e708] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Clash_Royale
+              - text: ", was released in 2016."
+              - superscript [ref=f5e709]:
+                - link "[68]" [ref=f5e710] [cursor=pointer]:
+                  - /url: "#cite_note-68"
+              - text: The other three, Clash Quest, Clash Mini, and Clash Heroes, were announced in April 2021.
+              - superscript [ref=f5e711]:
+                - link "[69]" [ref=f5e712] [cursor=pointer]:
+                  - /url: "#cite_note-clash.com2-69"
+              - superscript [ref=f5e713]:
+                - link "[70]" [ref=f5e714] [cursor=pointer]:
+                  - /url: "#cite_note-70"
+              - text: Clash Quest development was discontinued on 17 August 2022.
+              - superscript [ref=f5e715]:
+                - link "[71]" [ref=f5e716] [cursor=pointer]:
+                  - /url: "#cite_note-71"
+              - text: On 13 March 2024 Supercell announced that development on Clash Mini would also end, but elements from it would be brought to Clash Royale.
+              - superscript [ref=f5e717]:
+                - link "[72]" [ref=f5e718] [cursor=pointer]:
+                  - /url: "#cite_note-72"
+              - text: Supercell announced on 24 June 2024 that development on Clash Heroes had been terminated in favor of a replacement named Project R.I.S.E.
+              - superscript [ref=f5e719]:
+                - link "[73]" [ref=f5e720] [cursor=pointer]:
+                  - /url: "#cite_note-73"
+            - paragraph [ref=f5e721]:
+              - text: In 2016, an animated web series based on the game and
+              - link "Clash Royale" [ref=f5e723] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Clash_Royale
+              - text: ", titled Clash-A-Rama!, began. The show was released on"
+              - link "YouTube" [ref=f5e724] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/YouTube
+              - text: by Supercell. It is a comedic spin on the game and was produced by Tolerable Entertainment with animation by
+              - link "Rough Draft Studios" [ref=f5e725] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Rough_Draft_Studios
+              - text: .
+            - paragraph [ref=f5e726]:
+              - text: In May 2025, Supercell announced a fully CGI animated series of the game on
+              - link "Netflix" [ref=f5e727] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Netflix
+              - text: now in pre-production, with Fletcher Moules as showrunner and executive producer alongside
+              - link "Ron Weiner" [ref=f5e728] [cursor=pointer]:
+                - /url: https://en.wikipedia.org/wiki/Ron_Weiner
+              - text: while animation will be provided by ICON Creative Studio. Unlike Crash-A-Rama, the series will follow a barbarian and his band of misfits defend their village while navigating through the politics of war.
+              - superscript [ref=f5e729]:
+                - link "[74]" [ref=f5e730] [cursor=pointer]:
+                  - /url: "#cite_note-74"
+          - region [ref=f5e731]:
+            - generic [ref=f5e732]:
+              - heading "See also" [level=2] [ref=f5e733]
+              - generic [ref=f5e734]:
+                - link "edit":
+                  - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=14
+            - navigation "Portals" [ref=f5e735]:
+              - listitem [ref=f5e736]:
+                - link [ref=f5e739] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/File:Noun-smartphone-apps-432831.svg
+                  - img "icon" [ref=f5e740]
+                - link "2010s portal" [ref=f5e742] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Portal:2010s
+              - listitem [ref=f5e743]:
+                - link "Video Games portal" [ref=f5e748] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Portal:Video_Games
+            - list [ref=f5e749]:
+              - listitem [ref=f5e750]:
+                - 'link "Game of War: Fire Age" [ref=f5e752] [cursor=pointer]':
+                  - /url: https://en.wikipedia.org/wiki/Game_of_War:_Fire_Age
+              - listitem [ref=f5e753]:
+                - link "Lords Mobile" [ref=f5e755] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/Lords_Mobile
+          - region [ref=f5e756]:
+            - generic [ref=f5e757]:
+              - heading "References" [level=2] [ref=f5e758]
+              - generic [ref=f5e759]:
+                - link "edit":
+                  - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=15
+            - list [ref=f5e762]:
+              - listitem [ref=f5e763]:
+                - generic [ref=f5e764]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e765] [cursor=pointer]:
+                    - /url: "#cite_ref-iOS_1-0"
+                  - link [ref=f5e767] [cursor=pointer]:
+                    - /url: "#cite_ref-iOS_1-1"
+                - generic [ref=f5e768]:
+                  - generic [ref=f5e769]:
+                    - link "\"Clash of Clans\"" [ref=f5e770] [cursor=pointer]:
+                      - /url: http://www.slidetoplay.com/games/clash-of-clans/
+                    - text: . Slide to Play.
+                    - link "Archived" [ref=f5e771] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20181222003724/http://www.slidetoplay.com/games/clash-of-clans/
+                    - text: from the original on 22 December 2018
+                    - generic [ref=f5e772]: . Retrieved 8 June 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Slide+to+Play&rft.atitle=Clash+of+Clans&rft_id=http%3A%2F%2Fwww.slidetoplay.com%2Fgames%2Fclash-of-clans%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e773]:
+                - generic [ref=f5e774]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e775] [cursor=pointer]:
+                    - /url: "#cite_ref-Android_2-0"
+                  - link [ref=f5e777] [cursor=pointer]:
+                    - /url: "#cite_ref-Android_2-1"
+                - generic [ref=f5e778]:
+                  - generic [ref=f5e779]:
+                    - text: Koueider, Adam (8 October 2013).
+                    - link "\"Clash of Clans finally hits the Google Play Store\"" [ref=f5e780] [cursor=pointer]:
+                      - /url: http://www.androidauthority.com/clash-of-clans-hits-the-play-store-281354/
+                    - text: . Androidauthority.
+                    - link "Archived" [ref=f5e781] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20131008121048/http://www.androidauthority.com/clash-of-clans-hits-the-play-store-281354/
+                    - text: from the original on 8 October 2013
+                    - generic [ref=f5e782]: . Retrieved 20 November 2013
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash+of+Clans+finally+hits+the+Google+Play+Store&rft.pub=Androidauthority&rft.date=2013-10-08&rft.aulast=Koueider&rft.aufirst=Adam&rft_id=http%3A%2F%2Fwww.androidauthority.com%2Fclash-of-clans-hits-the-play-store-281354%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e783]:
+                - link "Jump up" [ref=f5e785] [cursor=pointer]:
+                  - /url: "#cite_ref-Windows_3-0"
+                  - text: ^
+                - generic [ref=f5e786]:
+                  - generic [ref=f5e787]:
+                    - link "\"Google Play Games Beta adds new titles including Clash of Clans\"" [ref=f5e788] [cursor=pointer]:
+                      - /url: https://blog.google/products/google-play/google-play-games-beta-october-2023-update/
+                    - text: . Google. 23 October 2023
+                    - generic [ref=f5e789]: . Retrieved 22 March 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Google+Play+Games+Beta+adds+new+titles+including+Clash+of+Clans&rft.pub=Google&rft.date=2023-10-23&rft_id=https%3A%2F%2Fblog.google%2Fproducts%2Fgoogle-play%2Fgoogle-play-games-beta-october-2023-update%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e790]:
+                - generic [ref=f5e791]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e792] [cursor=pointer]:
+                    - /url: "#cite_ref-gbcoc_4-0"
+                  - link [ref=f5e794] [cursor=pointer]:
+                    - /url: "#cite_ref-gbcoc_4-1"
+                  - link [ref=f5e795] [cursor=pointer]:
+                    - /url: "#cite_ref-gbcoc_4-2"
+                  - link [ref=f5e796] [cursor=pointer]:
+                    - /url: "#cite_ref-gbcoc_4-3"
+                - generic [ref=f5e797]:
+                  - generic [ref=f5e798]:
+                    - text: andalian (26 June 2016).
+                    - link "\"Clash of Clans\"" [ref=f5e799] [cursor=pointer]:
+                      - /url: https://www.giantbomb.com/clash-of-clans/3030-40108/
+                    - text: . Giant Bomb. BS Interactive Inc.
+                    - link "Archived" [ref=f5e800] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20170813142641/https://www.giantbomb.com/clash-of-clans/3030-40108/
+                    - text: from the original on 13 August 2017
+                    - generic [ref=f5e801]: . Retrieved 3 July 2017
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Giant+Bomb&rft.atitle=Clash+of+Clans&rft.date=2016-06-26&rft.au=andalian&rft_id=https%3A%2F%2Fwww.giantbomb.com%2Fclash-of-clans%2F3030-40108%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e802]:
+                - link "Jump up" [ref=f5e804] [cursor=pointer]:
+                  - /url: "#cite_ref-commto_5-0"
+                  - text: ^
+                - generic [ref=f5e805]:
+                  - generic [ref=f5e806]:
+                    - text: "Uysal, Ahmet (9 March 2016). \"Commitment to multiplayer online games: An investment model approach\". Computers in Human Behavior. 61 (August 2016): 357–363."
+                    - link "doi" [ref=f5e807] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Doi_(identifier)
+                    - text: ":"
+                    - link "10.1016/j.chb.2016.03.028" [ref=f5e808] [cursor=pointer]:
+                      - /url: https://doi.org/10.1016%2Fj.chb.2016.03.028
+                    - text: .
+                    - link "hdl" [ref=f5e809] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Hdl_(identifier)
+                    - text: ":"
+                    - generic "Freely accessible" [ref=f5e810]:
+                      - link "11511/56947" [ref=f5e811] [cursor=pointer]:
+                        - /url: https://hdl.handle.net/11511%2F56947
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Computers+in+Human+Behavior&rft.atitle=Commitment+to+multiplayer+online+games%3A+An+investment+model+approach&rft.volume=61&rft.issue=August+2016&rft.pages=357-363&rft.date=2016-03-09&rft_id=info%3Ahdl%2F11511%2F56947&rft_id=info%3Adoi%2F10.1016%2Fj.chb.2016.03.028&rft.aulast=Uysal&rft.aufirst=Ahmet&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e812]:
+                - link "Jump up" [ref=f5e814] [cursor=pointer]:
+                  - /url: "#cite_ref-6"
+                  - text: ^
+                - generic [ref=f5e815]:
+                  - generic [ref=f5e816]:
+                    - link "\"Clan Capital Release Notes\"" [ref=f5e817] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/clashofclans/blog/release-notes/clancapital-releasenotes/
+                    - text: . Supercell
+                    - generic [ref=f5e818]: . Retrieved 17 November 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell&rft.atitle=Clan+Capital+Release+Notes&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fclashofclans%2Fblog%2Frelease-notes%2Fclancapital-releasenotes%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e819]:
+                - link "Jump up" [ref=f5e821] [cursor=pointer]:
+                  - /url: "#cite_ref-7"
+                  - text: ^
+                - generic [ref=f5e822]:
+                  - generic [ref=f5e823]:
+                    - 'link "\"Clash of Clans Summer 2022 Update now live: Here''s what''s new\"" [ref=f5e824] [cursor=pointer]':
+                      - /url: https://apptrigger.com/2022/06/27/clash-clans-summer-2022-update-live/
+                    - text: . App Trigger. 27 June 2022.
+                    - link "Archived" [ref=f5e825] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20220704051724/https://apptrigger.com/2022/06/27/clash-clans-summer-2022-update-live/
+                    - text: from the original on 4 July 2022
+                    - generic [ref=f5e826]: . Retrieved 4 July 2022
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=App+Trigger&rft.atitle=Clash+of+Clans+Summer+2022+Update+now+live%3A+Here%27s+what%27s+new&rft.date=2022-06-27&rft_id=https%3A%2F%2Fapptrigger.com%2F2022%2F06%2F27%2Fclash-clans-summer-2022-update-live%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e827]:
+                - link "Jump up" [ref=f5e829] [cursor=pointer]:
+                  - /url: "#cite_ref-8"
+                  - text: ^
+                - generic [ref=f5e830]:
+                  - generic [ref=f5e831]:
+                    - link "\"Welcome to Clash Anytime Update!\"" [ref=f5e832] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/clashofclans/blog/release-notes/welcome-to-clash-anytime-update/
+                    - text: .
+                    - link "Supercell" [ref=f5e833] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Supercell_(company)
+                    - text: . 24 March 2025
+                    - generic [ref=f5e834]: . Retrieved 15 June 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Welcome+to+Clash+Anytime+Update%21&rft.pub=Supercell&rft.date=2025-03-24&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fclashofclans%2Fblog%2Frelease-notes%2Fwelcome-to-clash-anytime-update%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e835]:
+                - link "Jump up" [ref=f5e837] [cursor=pointer]:
+                  - /url: "#cite_ref-9"
+                  - text: ^
+                - generic [ref=f5e838]:
+                  - generic [ref=f5e839]:
+                    - 'link "\"Troop Training: The Wait is OVER!\"" [ref=f5e840] [cursor=pointer]':
+                      - /url: https://supercell.com/en/games/clashofclans/blog/news/troop-training-the-wait-is-over/
+                    - text: . Supercell. 11 March 2025
+                    - generic [ref=f5e841]: . Retrieved 28 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell&rft.atitle=Troop+Training%3A+The+Wait+is+OVER%21&rft.date=2025-03-11&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fclashofclans%2Fblog%2Fnews%2Ftroop-training-the-wait-is-over%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e842]:
+                - link "Jump up" [ref=f5e844] [cursor=pointer]:
+                  - /url: "#cite_ref-10"
+                  - text: ^
+                - generic [ref=f5e845]:
+                  - generic [ref=f5e846]:
+                    - link "\"Clash of Clans News Archive × Supercell\"" [ref=f5e847] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/clashofclans/blog/
+                    - text: . Supercell
+                    - generic [ref=f5e848]: . Retrieved 24 March 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell&rft.atitle=Clash+of+Clans+News+Archive+%C3%97+Supercell&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fclashofclans%2Fblog%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e849]:
+                - generic [ref=f5e850]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e851] [cursor=pointer]:
+                    - /url: "#cite_ref-tgcoc_11-0"
+                  - link [ref=f5e853] [cursor=pointer]:
+                    - /url: "#cite_ref-tgcoc_11-1"
+                  - link [ref=f5e854] [cursor=pointer]:
+                    - /url: "#cite_ref-tgcoc_11-2"
+                - generic [ref=f5e855]:
+                  - generic [ref=f5e856]:
+                    - link "\"Download Clash of Clans 8.116.2 for Android\"" [ref=f5e857] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20150323051054/http://downloads.tomsguide.com/Clash-of-Clans,0301-52982.html
+                    - text: . Editors Review. Purch. Archived from
+                    - link "the original" [ref=f5e858] [cursor=pointer]:
+                      - /url: https://downloads.tomsguide.com/Clash-of-Clans,0301-52982.html
+                    - text: on 23 March 2015
+                    - generic [ref=f5e859]: . Retrieved 3 July 2017
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Editors+Review&rft.atitle=Download+Clash+of+Clans+8.116.2+for+Android&rft_id=https%3A%2F%2Fdownloads.tomsguide.com%2FClash-of-Clans%2C0301-52982.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e860]:
+                - link "Jump up" [ref=f5e862] [cursor=pointer]:
+                  - /url: "#cite_ref-12"
+                  - text: ^
+                - generic [ref=f5e863]:
+                  - generic [ref=f5e864]:
+                    - link "\"Official Website\"" [ref=f5e865] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20170119051835/https://clashofclans.com/clash-basics
+                    - text: . Clash of Clans. Archived from
+                    - link "the original" [ref=f5e866] [cursor=pointer]:
+                      - /url: https://clashofclans.com/clash-basics
+                    - text: on January 19, 2017
+                    - generic [ref=f5e867]: . Retrieved August 26, 2016
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Clash+of+Clans&rft.atitle=Official+Website&rft_id=https%3A%2F%2Fclashofclans.com%2Fclash-basics&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e868]:
+                - generic [ref=f5e869]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e870] [cursor=pointer]:
+                    - /url: "#cite_ref-Newsweek_13-0"
+                  - link [ref=f5e872] [cursor=pointer]:
+                    - /url: "#cite_ref-Newsweek_13-1"
+                - generic [ref=f5e873]:
+                  - generic [ref=f5e874]:
+                    - link "\"Clash of Clans June – 2019 Update\"" [ref=f5e875] [cursor=pointer]:
+                      - /url: https://www.newsweek.com/clash-clans-june-2019-update-release-6th-builder-balance-patch-notes-1444617
+                    - text: . Newsweek. 18 June 2019.
+                    - link "Archived" [ref=f5e876] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20191008115911/https://www.newsweek.com/clash-clans-june-2019-update-release-6th-builder-balance-patch-notes-1444617
+                    - text: from the original on 8 October 2019
+                    - generic [ref=f5e877]: . Retrieved 8 October 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Newsweek&rft.atitle=Clash+of+Clans+June+%E2%80%93+2019+Update&rft.date=2019-06-18&rft_id=https%3A%2F%2Fwww.newsweek.com%2Fclash-clans-june-2019-update-release-6th-builder-balance-patch-notes-1444617&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e878]:
+                - generic [ref=f5e879]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e880] [cursor=pointer]:
+                    - /url: "#cite_ref-Pocket_14-0"
+                  - link [ref=f5e882] [cursor=pointer]:
+                    - /url: "#cite_ref-Pocket_14-1"
+                  - link [ref=f5e883] [cursor=pointer]:
+                    - /url: "#cite_ref-Pocket_14-2"
+                - generic [ref=f5e884]:
+                  - generic [ref=f5e885]:
+                    - text: Willington, Peter (18 December 2012).
+                    - link "\"Clash of Clans Review\"" [ref=f5e886] [cursor=pointer]:
+                      - /url: http://www.pocketgamer.co.uk/r/iPhone/Clash+of+Clans/review.asp?c=47309
+                    - text: .
+                    - link "Pocket Gamer" [ref=f5e887] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Pocket_Gamer
+                    - text: .
+                    - link "Archived" [ref=f5e888] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20170421174808/http://www.pocketgamer.co.uk/r/iPhone/Clash+of+Clans/review.asp?c=47309
+                    - text: from the original on 21 April 2017
+                    - generic [ref=f5e889]: . Retrieved 9 June 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash+of+Clans+Review&rft.pub=Pocket+Gamer&rft.date=2012-12-18&rft.aulast=Willington&rft.aufirst=Peter&rft_id=http%3A%2F%2Fwww.pocketgamer.co.uk%2Fr%2FiPhone%2FClash%2Bof%2BClans%2Freview.asp%3Fc%3D47309&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e890]:
+                - generic [ref=f5e891]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e892] [cursor=pointer]:
+                    - /url: "#cite_ref-148Apps_15-0"
+                  - link [ref=f5e894] [cursor=pointer]:
+                    - /url: "#cite_ref-148Apps_15-1"
+                  - link [ref=f5e895] [cursor=pointer]:
+                    - /url: "#cite_ref-148Apps_15-2"
+                - generic [ref=f5e896]:
+                  - generic [ref=f5e897]:
+                    - text: Rich, Rob (3 August 2012).
+                    - link "\"Clash of Clans Review\"" [ref=f5e898] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20190528155756/https://www.148apps.com/reviews/clash-clans-review/
+                    - text: . 148Apps. Archived from
+                    - link "the original" [ref=f5e899] [cursor=pointer]:
+                      - /url: http://www.148apps.com/reviews/clash-clans-review/
+                    - text: on 28 May 2019
+                    - generic [ref=f5e900]: . Retrieved 9 June 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash+of+Clans+Review&rft.pub=148Apps&rft.date=2012-08-03&rft.aulast=Rich&rft.aufirst=Rob&rft_id=http%3A%2F%2Fwww.148apps.com%2Freviews%2Fclash-clans-review%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e901]:
+                - link "Jump up" [ref=f5e903] [cursor=pointer]:
+                  - /url: "#cite_ref-TH12_release_16-0"
+                  - text: ^
+                - generic [ref=f5e904]:
+                  - generic [ref=f5e905]:
+                    - link "\"Town Hall 12 Release Notes\"" [ref=f5e906] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20221206044443/https://clashofclans.com/blog/release-notes/town-hall-12-release-notes
+                    - text: . Clash of Clans. Archived from
+                    - link "the original" [ref=f5e907] [cursor=pointer]:
+                      - /url: https://clashofclans.com/blog/release-notes/town-hall-12-release-notes
+                    - text: on 6 December 2022
+                    - generic [ref=f5e908]: . Retrieved 13 November 2023
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Clash+of+Clans&rft.atitle=Town+Hall+12+Release+Notes&rft_id=https%3A%2F%2Fclashofclans.com%2Fblog%2Frelease-notes%2Ftown-hall-12-release-notes&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e909]:
+                - link "Jump up" [ref=f5e911] [cursor=pointer]:
+                  - /url: "#cite_ref-17"
+                  - text: ^
+                - generic [ref=f5e912]:
+                  - generic [ref=f5e913]:
+                    - text: Barcenas, C. J. (27 June 2022).
+                    - link "\"Clash of Clans Free Troop Training Cost and More in the New Update\"" [ref=f5e914] [cursor=pointer]:
+                      - /url: https://www.spieltimes.com/news/clash-of-clans-free-troop-training-cost-and-more-in-the-new-update/
+                    - text: . Spiel Times
+                    - generic [ref=f5e915]: . Retrieved 1 August 2022
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Spiel+Times&rft.atitle=Clash+of+Clans+Free+Troop+Training+Cost+and+More+in+the+New+Update&rft.date=2022-06-27&rft.aulast=Barcenas&rft.aufirst=C.+J.&rft_id=https%3A%2F%2Fwww.spieltimes.com%2Fnews%2Fclash-of-clans-free-troop-training-cost-and-more-in-the-new-update%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e916]:
+                - link "Jump up" [ref=f5e918] [cursor=pointer]:
+                  - /url: "#cite_ref-18"
+                  - text: ^
+                - generic [ref=f5e919]:
+                  - generic [ref=f5e920]:
+                    - link "\"Welcome to Clash Anytime Update! × Clash of Clans\"" [ref=f5e921] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/clashofclans/blog/release-notes/welcome-to-clash-anytime-update/
+                    - text: . @clashofclans.
+                    - link "Archived" [ref=f5e922] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250401051715/https://supercell.com/en/games/clashofclans/blog/release-notes/welcome-to-clash-anytime-update/
+                    - text: from the original on 1 April 2025
+                    - generic [ref=f5e923]: . Retrieved 5 April 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=%40clashofclans&rft.atitle=Welcome+to+Clash+Anytime+Update%21+%C3%97+Clash+of+Clans&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fclashofclans%2Fblog%2Frelease-notes%2Fwelcome-to-clash-anytime-update%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e924]:
+                - link "Jump up" [ref=f5e926] [cursor=pointer]:
+                  - /url: "#cite_ref-19"
+                  - text: ^
+                - generic [ref=f5e927]:
+                  - generic [ref=f5e928]:
+                    - link "\"About Heroes & Pets\"" [ref=f5e929] [cursor=pointer]:
+                      - /url: https://support.supercell.com/clash-of-clans/en/articles/about-heroes-pets-5.html
+                    - text: . Supercell Support
+                    - generic [ref=f5e930]: . Retrieved 16 June 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support&rft.atitle=About+Heroes+%26+Pets&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fclash-of-clans%2Fen%2Farticles%2Fabout-heroes-pets-5.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e931]:
+                - link "Jump up" [ref=f5e933] [cursor=pointer]:
+                  - /url: "#cite_ref-20"
+                  - text: ^
+                - generic [ref=f5e934]:
+                  - generic [ref=f5e935]:
+                    - link "\"What are Super Troops?\"" [ref=f5e936] [cursor=pointer]:
+                      - /url: https://support.supercell.com/clash-of-clans/en/articles/what-are-super-troops-3.html
+                    - text: . Supercell Support
+                    - generic [ref=f5e937]: . Retrieved 1 July 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell+Support&rft.atitle=What+are+Super+Troops%3F&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fclash-of-clans%2Fen%2Farticles%2Fwhat-are-super-troops-3.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e938]:
+                - link "Jump up" [ref=f5e940] [cursor=pointer]:
+                  - /url: "#cite_ref-21"
+                  - text: ^
+                - generic [ref=f5e941]:
+                  - generic [ref=f5e942]:
+                    - text: Mahajan, Ishaan (19 January 2022).
+                    - 'link "\"Siege Machines in Clash of Clans: All you need to know\"" [ref=f5e943] [cursor=pointer]':
+                      - /url: https://www.sportskeeda.com/esports/siege-machines-clash-clans-all-need-know
+                    - text: . sportskeeda.com
+                    - generic [ref=f5e944]: . Retrieved 1 August 2022
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=sportskeeda.com&rft.atitle=Siege+Machines+in+Clash+of+Clans%3A+All+you+need+to+know&rft.date=2022-01-19&rft.aulast=Mahajan&rft.aufirst=Ishaan&rft_id=https%3A%2F%2Fwww.sportskeeda.com%2Fesports%2Fsiege-machines-clash-clans-all-need-know&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e945]:
+                - link "Jump up" [ref=f5e947] [cursor=pointer]:
+                  - /url: "#cite_ref-dotesports1_22-0"
+                  - text: ^
+                - generic [ref=f5e948]:
+                  - generic [ref=f5e949]:
+                    - link "\"Here are the patch notes for Clash of Clans' spring 2021 update\"" [ref=f5e950] [cursor=pointer]:
+                      - /url: https://dotesports.com/mobile/news/here-are-the-patch-notes-for-clash-of-clans-spring-2021-update
+                    - text: . 11 April 2021.
+                    - link "Archived" [ref=f5e951] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210412183509/https://dotesports.com/mobile/news/here-are-the-patch-notes-for-clash-of-clans-spring-2021-update
+                    - text: from the original on 12 April 2021
+                    - generic [ref=f5e952]: . Retrieved 12 April 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Here+are+the+patch+notes+for+Clash+of+Clans%27+spring+2021+update&rft.date=2021-04-11&rft_id=https%3A%2F%2Fdotesports.com%2Fmobile%2Fnews%2Fhere-are-the-patch-notes-for-clash-of-clans-spring-2021-update&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e953]:
+                - link "Jump up" [ref=f5e955] [cursor=pointer]:
+                  - /url: "#cite_ref-23"
+                  - text: ^
+                - generic [ref=f5e956]:
+                  - generic [ref=f5e957]:
+                    - link "\"Clan Wars FAQ\"" [ref=f5e958] [cursor=pointer]:
+                      - /url: http://forum.supercell.net/showthread.php/232849-Clan-Wars-FAQ
+                    - text: . Supercell. 4 April 2014.
+                    - link "Archived" [ref=f5e959] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20141018163919/http://forum.supercell.net/showthread.php/232849-Clan-Wars-FAQ
+                    - text: from the original on 18 October 2014
+                    - generic [ref=f5e960]: . Retrieved 9 June 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clan+Wars+FAQ&rft.pub=Supercell&rft.date=2014-04-04&rft_id=http%3A%2F%2Fforum.supercell.net%2Fshowthread.php%2F232849-Clan-Wars-FAQ&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e961]:
+                - link "Jump up" [ref=f5e963] [cursor=pointer]:
+                  - /url: "#cite_ref-24"
+                  - text: ^
+                - generic [ref=f5e964]:
+                  - generic [ref=f5e965]:
+                    - link "\"Clash Of Clans' Next Update To Add 5v5 Clan Wars Size & AI Tweaks\"" [ref=f5e966] [cursor=pointer]:
+                      - /url: https://www.player.one/clash-clans-update-5v5-clan-wars-ai-tweak-121591
+                    - text: . Player.One. 14 November 2017.
+                    - link "Archived" [ref=f5e967] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20201008225919/https://www.player.one/clash-clans-update-5v5-clan-wars-ai-tweak-121591
+                    - text: from the original on 8 October 2020
+                    - generic [ref=f5e968]: . Retrieved 4 October 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Player.One&rft.atitle=Clash+Of+Clans%27+Next+Update+To+Add+5v5+Clan+Wars+Size+%26+AI+Tweaks&rft.date=2017-11-14&rft_id=https%3A%2F%2Fwww.player.one%2Fclash-clans-update-5v5-clan-wars-ai-tweak-121591&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e969]:
+                - link "Jump up" [ref=f5e971] [cursor=pointer]:
+                  - /url: "#cite_ref-25"
+                  - text: ^
+                - generic [ref=f5e972]:
+                  - generic [ref=f5e973]:
+                    - link "\"Supercell Community Forums\"" [ref=f5e974] [cursor=pointer]:
+                      - /url: https://forum.supercell.com/showthread.php/1648168-The-official-war-search-5vs5-thread
+                    - text: .
+                    - link "Archived" [ref=f5e975] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20171117122113/https://forum.supercell.com/showthread.php/1648168-The-official-war-search-5vs5-thread
+                    - text: from the original on 17 November 2017
+                    - generic [ref=f5e976]: . Retrieved 17 November 2017
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Supercell+Community+Forums&rft_id=https%3A%2F%2Fforum.supercell.com%2Fshowthread.php%2F1648168-The-official-war-search-5vs5-thread&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e977]:
+                - link "Jump up" [ref=f5e979] [cursor=pointer]:
+                  - /url: "#cite_ref-26"
+                  - text: ^
+                - generic [ref=f5e980]:
+                  - generic [ref=f5e981]:
+                    - link "\"News! 5v5 Clan Wars! | Clash of Clans | Good or Bad?\"" [ref=f5e982] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=nWk1lP3LxdM
+                    - text: .
+                    - link "Archived" [ref=f5e983] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20200221051301/https://www.youtube.com/watch?v=nWk1lP3LxdM&gl=US&hl=en
+                    - text: from the original on 21 February 2020
+                    - generic [ref=f5e984]: . Retrieved 17 November 2017
+                    - text: – via
+                    - link "YouTube" [ref=f5e985] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/YouTube
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=News%21+5v5+Clan+Wars%21+%7C+Clash+of+Clans+%7C+Good+or+Bad%3F&rft_id=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DnWk1lP3LxdM&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e986]:
+                - link "Jump up" [ref=f5e988] [cursor=pointer]:
+                  - /url: "#cite_ref-27"
+                  - text: ^
+                - generic [ref=f5e989]:
+                  - generic [ref=f5e990]:
+                    - text: Srivastava, Mala (4 March 2016).
+                    - 'link "\"Clash of Clans March 2016 Update: Major Clan Wars matchmaking changes, war sizes 45v45, 35v35 will be removed, more emphasis on defensive progress\"" [ref=f5e991] [cursor=pointer]':
+                      - /url: http://en.yibada.com/articles/107712/20160304/clash-of-clans-march-2016-update-major-clan-wars-matchmaking-changes-war-sizes-45v45-35v35-will-be-removed-more-emphasis-on-defensive-progress.htm
+                    - text: . Yibada English.
+                    - link "Archived" [ref=f5e992] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20171114093514/http://en.yibada.com/articles/107712/20160304/clash-of-clans-march-2016-update-major-clan-wars-matchmaking-changes-war-sizes-45v45-35v35-will-be-removed-more-emphasis-on-defensive-progress.htm
+                    - text: from the original on 14 November 2017
+                    - generic [ref=f5e993]: . Retrieved 4 October 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Yibada+English&rft.atitle=Clash+of+Clans+March+2016+Update%3A+Major+Clan+Wars+matchmaking+changes%2C+war+sizes+45v45%2C+35v35+will+be+removed%2C+more+emphasis+on+defensive+progress&rft.date=2016-03-04&rft.aulast=Srivastava&rft.aufirst=Mala&rft_id=http%3A%2F%2Fen.yibada.com%2Farticles%2F107712%2F20160304%2Fclash-of-clans-march-2016-update-major-clan-wars-matchmaking-changes-war-sizes-45v45-35v35-will-be-removed-more-emphasis-on-defensive-progress.htm&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e994]:
+                - link "Jump up" [ref=f5e996] [cursor=pointer]:
+                  - /url: "#cite_ref-28"
+                  - text: ^
+                - generic [ref=f5e997]:
+                  - generic [ref=f5e998]:
+                    - text: Gunther, Cory (8 March 2016).
+                    - 'link "\"Clash of Clans Update: Clan War Matchmaking Improved\"" [ref=f5e999] [cursor=pointer]':
+                      - /url: https://www.gottabemobile.com/clash-of-clans-update-clan-war-matchmaking-improved/
+                    - text: . gottabemobile.com.
+                    - link "Archived" [ref=f5e1000] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20171114093555/https://www.gottabemobile.com/clash-of-clans-update-clan-war-matchmaking-improved/
+                    - text: from the original on 14 November 2017
+                    - generic [ref=f5e1001]: . Retrieved 4 October 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=gottabemobile.com&rft.atitle=Clash+of+Clans+Update%3A+Clan+War+Matchmaking+Improved&rft.date=2016-03-08&rft.aulast=Gunther&rft.aufirst=Cory&rft_id=https%3A%2F%2Fwww.gottabemobile.com%2Fclash-of-clans-update-clan-war-matchmaking-improved%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1002]:
+                - link "Jump up" [ref=f5e1004] [cursor=pointer]:
+                  - /url: "#cite_ref-29"
+                  - text: ^
+                - generic [ref=f5e1005]:
+                  - generic [ref=f5e1006]:
+                    - link "\"Clash of Clans update – March 2016 – Clash Today\"" [ref=f5e1007] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20171114093613/https://clashtoday.com/2016/04/01/clash-of-clans-update-march-2016/
+                    - text: . Archived from
+                    - link "the original" [ref=f5e1008] [cursor=pointer]:
+                      - /url: https://clashtoday.com/2016/04/01/clash-of-clans-update-march-2016/
+                    - text: on 14 November 2017
+                    - generic [ref=f5e1009]: . Retrieved 14 November 2017
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash+of+Clans+update+%E2%80%93+March+2016+%E2%80%93+Clash+Today&rft_id=https%3A%2F%2Fclashtoday.com%2F2016%2F04%2F01%2Fclash-of-clans-update-march-2016%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1010]:
+                - link "Jump up" [ref=f5e1012] [cursor=pointer]:
+                  - /url: "#cite_ref-30"
+                  - text: ^
+                - generic [ref=f5e1013]:
+                  - generic [ref=f5e1014]:
+                    - link "\"May 2016 Update Clash of Clans.com\"" [ref=f5e1015] [cursor=pointer]:
+                      - /url: https://clashofclans.com/blog/release-notes/friendly-challenge-update
+                    - text: . Clash of Clans.
+                    - link "Archived" [ref=f5e1016] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20160827094115/https://clashofclans.com/blog/release-notes/friendly-challenge-update
+                    - text: from the original on 27 August 2016
+                    - generic [ref=f5e1017]: . Retrieved 26 August 2016
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Clash+of+Clans&rft.atitle=May+2016+Update+Clash+of+Clans.com&rft_id=https%3A%2F%2Fclashofclans.com%2Fblog%2Frelease-notes%2Ffriendly-challenge-update&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1018]:
+                - link "Jump up" [ref=f5e1020] [cursor=pointer]:
+                  - /url: "#cite_ref-31"
+                  - text: ^
+                - generic [ref=f5e1021]:
+                  - generic [ref=f5e1022]:
+                    - link "\"Welcome to the Builder Base! | Clash of Clans\"" [ref=f5e1023] [cursor=pointer]:
+                      - /url: https://clashofclans.com/blog/news/welcome-to-the-builder-base
+                    - text: . Clash of Clans.
+                    - link "Archived" [ref=f5e1024] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20170910220859/https://clashofclans.com/blog/news/welcome-to-the-builder-base
+                    - text: from the original on 10 September 2017
+                    - generic [ref=f5e1025]: . Retrieved 13 June 2017
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Clash+of+Clans&rft.atitle=Welcome+to+the+Builder+Base%21+%7C+Clash+of+Clans&rft_id=https%3A%2F%2Fclashofclans.com%2Fblog%2Fnews%2Fwelcome-to-the-builder-base&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1026]:
+                - link "Jump up" [ref=f5e1028] [cursor=pointer]:
+                  - /url: "#cite_ref-Clash_of_Clans_32-0"
+                  - text: ^
+                - generic [ref=f5e1029]:
+                  - generic [ref=f5e1030]:
+                    - link "\"Clash of Clans Builder Base 2.0 update introduces a new attacking system\"" [ref=f5e1031] [cursor=pointer]:
+                      - /url: https://support.supercell.com/clash-of-clans/en/articles/builder-base-the-basics-2.html?q=1741001788
+                    - text: . Supercell. October 2024.
+                    - link "Archived" [ref=f5e1032] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20250311100141/https://support.supercell.com/clash-of-clans/en/articles/builder-base-the-basics-2.html?q=1741001788
+                    - text: from the original on 11 March 2025
+                    - generic [ref=f5e1033]: . Retrieved 20 October 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash+of+Clans+Builder+Base+2.0+update+introduces+a+new+attacking+system&rft.pub=Supercell&rft.date=2024-10&rft_id=https%3A%2F%2Fsupport.supercell.com%2Fclash-of-clans%2Fen%2Farticles%2Fbuilder-base-the-basics-2.html%3Fq%3D1741001788&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1034]:
+                - link "Jump up" [ref=f5e1036] [cursor=pointer]:
+                  - /url: "#cite_ref-BB2_33-0"
+                  - text: ^
+                - generic [ref=f5e1037]:
+                  - generic [ref=f5e1038]:
+                    - 'link "\"Builder Base 2.0: Layouts, Troop Levels and B.O.B!\"" [ref=f5e1039] [cursor=pointer]':
+                      - /url: https://clashofclans.com/blog/news/builder-base-2-0-layouts-troop-levels-and-bob.html
+                    - text: . Clash of Clans.
+                    - link "Archived" [ref=f5e1040] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20230524060542/https://clashofclans.com/blog/news/builder-base-2-0-layouts-troop-levels-and-bob.html
+                    - text: from the original on 24 May 2023
+                    - generic [ref=f5e1041]: . Retrieved 6 June 2023
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Clash+of+Clans&rft.atitle=Builder+Base+2.0%3A+Layouts%2C+Troop+Levels+and+B.O.B%21&rft_id=https%3A%2F%2Fclashofclans.com%2Fblog%2Fnews%2Fbuilder-base-2-0-layouts-troop-levels-and-bob.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1042]:
+                - link "Jump up" [ref=f5e1044] [cursor=pointer]:
+                  - /url: "#cite_ref-34"
+                  - text: ^
+                - generic [ref=f5e1045]:
+                  - generic [ref=f5e1046]:
+                    - link "\"Clan Games are on the way!\"" [ref=f5e1047] [cursor=pointer]:
+                      - /url: https://clashofclans.com/blog/news/the-clan-games-are-on-the-way
+                    - text: .
+                    - link "Archived" [ref=f5e1048] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20171221080922/https://clashofclans.com/blog/news/the-clan-games-are-on-the-way
+                    - text: from the original on 21 December 2017
+                    - generic [ref=f5e1049]: . Retrieved 7 January 2018
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clan+Games+are+on+the+way%21&rft_id=https%3A%2F%2Fclashofclans.com%2Fblog%2Fnews%2Fthe-clan-games-are-on-the-way&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1050]:
+                - link "Jump up" [ref=f5e1052] [cursor=pointer]:
+                  - /url: "#cite_ref-35"
+                  - text: ^
+                - generic [ref=f5e1053]:
+                  - generic [ref=f5e1054]:
+                    - link "\"what are magic items?\"" [ref=f5e1055] [cursor=pointer]:
+                      - /url: https://clashofclans.com/blog/news/what-are-magic-items
+                    - text: .
+                    - link "Archived" [ref=f5e1056] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20180107175124/https://clashofclans.com/blog/news/what-are-magic-items
+                    - text: from the original on 7 January 2018
+                    - generic [ref=f5e1057]: . Retrieved 7 January 2018
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=what+are+magic+items%3F&rft_id=https%3A%2F%2Fclashofclans.com%2Fblog%2Fnews%2Fwhat-are-magic-items&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1058]:
+                - link "Jump up" [ref=f5e1060] [cursor=pointer]:
+                  - /url: "#cite_ref-36"
+                  - text: ^
+                - generic [ref=f5e1061]:
+                  - generic [ref=f5e1062]:
+                    - link "\"Clan Capital Full Release Notes\"" [ref=f5e1063] [cursor=pointer]:
+                      - /url: https://clashofclans.com/blog/release-notes/clancapital-releasenotes.html
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clan+Capital+Full+Release+Notes&rft_id=https%3A%2F%2Fclashofclans.com%2Fblog%2Frelease-notes%2Fclancapital-releasenotes.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1064]:
+                - link "Jump up" [ref=f5e1066] [cursor=pointer]:
+                  - /url: "#cite_ref-37"
+                  - text: ^
+                - generic [ref=f5e1067]:
+                  - generic [ref=f5e1068]:
+                    - link "\"Capital Leagues, Player Housing & More!\"" [ref=f5e1069] [cursor=pointer]:
+                      - /url: https://clashofclans.com/blog/game-updates/new-in-clan-capital.html
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Capital+Leagues%2C+Player+Housing+%26+More%21&rft_id=https%3A%2F%2Fclashofclans.com%2Fblog%2Fgame-updates%2Fnew-in-clan-capital.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1070]:
+                - link "Jump up" [ref=f5e1072] [cursor=pointer]:
+                  - /url: "#cite_ref-38"
+                  - text: ^
+                - generic [ref=f5e1073]:
+                  - generic [ref=f5e1074]:
+                    - link "\"Full Patch Notes x Clash of Clans - Supercell\"" [ref=f5e1075] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/clashofclans/blog/release-notes/full-patch-notes-th16/
+                    - text: . Supercell. 12 December 2023
+                    - generic [ref=f5e1076]: . Retrieved 8 February 2026
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Full+Patch+Notes+x+Clash+of+Clans+-+Supercell&rft.pub=Supercell&rft.date=2023-12-12&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fclashofclans%2Fblog%2Frelease-notes%2Ffull-patch-notes-th16%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1077]:
+                - link "Jump up" [ref=f5e1079] [cursor=pointer]:
+                  - /url: "#cite_ref-39"
+                  - text: ^
+                - generic [ref=f5e1080]:
+                  - generic [ref=f5e1081]:
+                    - text: Gilbert, David (February 12, 2014).
+                    - link "\"Supercell Earns $30M a Month from Clash of Clans and Hay Day\"" [ref=f5e1082] [cursor=pointer]:
+                      - /url: http://www.ibtimes.co.uk/supercell-earns-30m-month-clash-clans-hay-day-1436122
+                    - text: .
+                    - link "International Business Times" [ref=f5e1084] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/International_Business_Times
+                    - text: .
+                    - link "Archived" [ref=f5e1085] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20160827022530/http://www.ibtimes.co.uk/supercell-earns-30m-month-clash-clans-hay-day-1436122
+                    - text: from the original on August 27, 2016
+                    - generic [ref=f5e1086]: . Retrieved August 27, 2016
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=International+Business+Times&rft.atitle=Supercell+Earns+%2430M+a+Month+from+Clash+of+Clans+and+Hay+Day&rft.date=2014-02-12&rft.aulast=Gilbert&rft.aufirst=David&rft_id=http%3A%2F%2Fwww.ibtimes.co.uk%2Fsupercell-earns-30m-month-clash-clans-hay-day-1436122&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1087]:
+                - generic [ref=f5e1088]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e1089] [cursor=pointer]:
+                    - /url: "#cite_ref-Chartrush_40-0"
+                  - link [ref=f5e1091] [cursor=pointer]:
+                    - /url: "#cite_ref-Chartrush_40-1"
+                  - link [ref=f5e1092] [cursor=pointer]:
+                    - /url: "#cite_ref-Chartrush_40-2"
+                  - link [ref=f5e1093] [cursor=pointer]:
+                    - /url: "#cite_ref-Chartrush_40-3"
+                - generic [ref=f5e1094]:
+                  - generic [ref=f5e1095]:
+                    - text: Jordan, Jon (17 October 2012).
+                    - 'link "\"Chart rush: The making of Clash of Clans\"" [ref=f5e1096] [cursor=pointer]':
+                      - /url: https://www.pocketgamer.biz/feature/45814/chart-rush-making-of-clash-of-clans/
+                    - text: . Pocketgamer.biz.
+                    - link "Archived" [ref=f5e1097] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20191201050415/https://www.pocketgamer.biz/feature/45814/chart-rush-making-of-clash-of-clans/
+                    - text: from the original on 1 December 2019
+                    - generic [ref=f5e1098]: . Retrieved 23 December 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Pocketgamer.biz&rft.atitle=Chart+rush%3A+The+making+of+Clash+of+Clans&rft.date=2012-10-17&rft.aulast=Jordan&rft.aufirst=Jon&rft_id=https%3A%2F%2Fwww.pocketgamer.biz%2Ffeature%2F45814%2Fchart-rush-making-of-clash-of-clans%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1099]:
+                - link "Jump up" [ref=f5e1101] [cursor=pointer]:
+                  - /url: "#cite_ref-keystosuccess_41-0"
+                  - text: ^
+                - generic [ref=f5e1102]:
+                  - generic [ref=f5e1103]:
+                    - text: Rose, Mike (28 January 2013).
+                    - link "\"Clash of Clans' 5 keys to success Exclusive\"" [ref=f5e1104] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20200207055936/https://www.gamasutra.com/view/news/185406/Clash_of_Clans_5_keys_to_success.php
+                    - text: . Gamasuitra. Archived from
+                    - link "the original" [ref=f5e1105] [cursor=pointer]:
+                      - /url: https://www.gamasutra.com/view/news/185406/Clash_of_Clans_5_keys_to_success.php
+                    - text: on 7 February 2020
+                    - generic [ref=f5e1106]: . Retrieved 23 December 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Gamasuitra&rft.atitle=Clash+of+Clans%27+5+keys+to+success+Exclusive&rft.date=2013-01-28&rft.aulast=Rose&rft.aufirst=Mike&rft_id=https%3A%2F%2Fwww.gamasutra.com%2Fview%2Fnews%2F185406%2FClash_of_Clans_5_keys_to_success.php&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1107]:
+                - link "Jump up" [ref=f5e1109] [cursor=pointer]:
+                  - /url: "#cite_ref-42"
+                  - text: ^
+                - generic [ref=f5e1110]:
+                  - generic [ref=f5e1111]:
+                    - link "\"'Clash-A-Rama' Animated Series Based on 'Clash of Clans' Coming in December – TouchArcade\"" [ref=f5e1112] [cursor=pointer]:
+                      - /url: https://toucharcade.com/2016/11/18/clash-a-rama-animated-series-based-on-clash-of-clans-coming-in-december/
+                    - text: . 18 November 2016
+                    - generic [ref=f5e1114]: . Retrieved 30 November 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=%27Clash-A-Rama%27+Animated+Series+Based+on+%27Clash+of+Clans%27+Coming+in+December+%E2%80%93+TouchArcade&rft.date=2016-11-18&rft_id=https%3A%2F%2Ftoucharcade.com%2F2016%2F11%2F18%2Fclash-a-rama-animated-series-based-on-clash-of-clans-coming-in-december%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1115]:
+                - link "Jump up" [ref=f5e1117] [cursor=pointer]:
+                  - /url: "#cite_ref-43"
+                  - text: ^
+                - generic [ref=f5e1118]:
+                  - generic [ref=f5e1119]:
+                    - text: Chitwood, Adam (2 February 2015).
+                    - link "\"Watch This Year's Best Super Bowl Commercials\"" [ref=f5e1120] [cursor=pointer]:
+                      - /url: https://collider.com/best-super-bowl-commercials-2015/
+                    - text: . Collider.com.
+                    - link "Archived" [ref=f5e1121] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20150205010311/http://collider.com/best-super-bowl-commercials-2015/
+                    - text: from the original on 5 February 2015
+                    - generic [ref=f5e1122]: . Retrieved 5 February 2015
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Watch+This+Year%27s+Best+Super+Bowl+Commercials&rft.pub=Collider.com&rft.date=2015-02-02&rft.aulast=Chitwood&rft.aufirst=Adam&rft_id=https%3A%2F%2Fcollider.com%2Fbest-super-bowl-commercials-2015%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1123]:
+                - link "Jump up" [ref=f5e1125] [cursor=pointer]:
+                  - /url: "#cite_ref-44"
+                  - text: ^
+                - generic [ref=f5e1126]:
+                  - generic [ref=f5e1127]:
+                    - text: D'Onfro, Jillian.
+                    - link "\"The 10 most-watched Super Bowl commercials on YouTube\"" [ref=f5e1128] [cursor=pointer]:
+                      - /url: http://www.businessinsider.com/most-popular-super-bowl-ads-on-youtube-2015-2
+                    - text: . Business Insider.
+                    - link "Archived" [ref=f5e1129] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20150718202052/http://www.businessinsider.com/most-popular-super-bowl-ads-on-youtube-2015-2
+                    - text: from the original on 18 July 2015
+                    - generic [ref=f5e1130]: . Retrieved 2 August 2015
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Business+Insider&rft.atitle=The+10+most-watched+Super+Bowl+commercials+on+YouTube&rft.aulast=D%27Onfro&rft.aufirst=Jillian&rft_id=http%3A%2F%2Fwww.businessinsider.com%2Fmost-popular-super-bowl-ads-on-youtube-2015-2&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1131]:
+                - link "Jump up" [ref=f5e1133] [cursor=pointer]:
+                  - /url: "#cite_ref-45"
+                  - text: ^
+                - generic [ref=f5e1134]:
+                  - generic [ref=f5e1135]:
+                    - text: Gruff, Jeff (6 February 2015).
+                    - link "\"Liam Neeson's Clash of Clan's spot is the most viewed Super Bowl ad on YouTube\"" [ref=f5e1136] [cursor=pointer]:
+                      - /url: https://venturebeat.com/2015/02/06/liam-neesons-clash-of-clans-spot-is-the-most-viewed-super-bowl-ad-on-youtube/
+                    - text: .
+                    - link "VentureBeat" [ref=f5e1137] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/VentureBeat
+                    - text: .
+                    - link "Archived" [ref=f5e1138] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20150324140216/http://venturebeat.com/2015/02/06/liam-neesons-clash-of-clans-spot-is-the-most-viewed-super-bowl-ad-on-youtube/
+                    - text: from the original on 24 March 2015
+                    - generic [ref=f5e1139]: . Retrieved 28 February 2015
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Liam+Neeson%27s+Clash+of+Clan%27s+spot+is+the+most+viewed+Super+Bowl+ad+on+YouTube&rft.pub=VentureBeat&rft.date=2015-02-06&rft.aulast=Gruff&rft.aufirst=Jeff&rft_id=https%3A%2F%2Fventurebeat.com%2F2015%2F02%2F06%2Fliam-neesons-clash-of-clans-spot-is-the-most-viewed-super-bowl-ad-on-youtube%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1140]:
+                - link "Jump up" [ref=f5e1142] [cursor=pointer]:
+                  - /url: "#cite_ref-46"
+                  - text: ^
+                - generic [ref=f5e1143]:
+                  - generic [ref=f5e1144]:
+                    - text: Grubb, Jeff (13 February 2015).
+                    - link "\"YouTube viewers voted Liam Neeson's Clash of Clans spot the No. 2 Super Bowl ad\"" [ref=f5e1145] [cursor=pointer]:
+                      - /url: https://venturebeat.com/2015/02/13/youtube-viewers-voted-liam-neesons-clash-of-clans-spot-the-no-2-super-bowl-ad/
+                    - text: .
+                    - link "VentureBeat" [ref=f5e1146] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/VentureBeat
+                    - text: .
+                    - link "Archived" [ref=f5e1147] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20150310183717/http://venturebeat.com/2015/02/13/youtube-viewers-voted-liam-neesons-clash-of-clans-spot-the-no-2-super-bowl-ad/
+                    - text: from the original on 10 March 2015
+                    - generic [ref=f5e1148]: . Retrieved 28 February 2015
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=YouTube+viewers+voted+Liam+Neeson%27s+Clash+of+Clans+spot+the+No.+2+Super+Bowl+ad&rft.pub=VentureBeat&rft.date=2015-02-13&rft.aulast=Grubb&rft.aufirst=Jeff&rft_id=https%3A%2F%2Fventurebeat.com%2F2015%2F02%2F13%2Fyoutube-viewers-voted-liam-neesons-clash-of-clans-spot-the-no-2-super-bowl-ad%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1149]:
+                - link "Jump up" [ref=f5e1151] [cursor=pointer]:
+                  - /url: "#cite_ref-47"
+                  - text: ^
+                - generic [ref=f5e1152]:
+                  - generic [ref=f5e1153]:
+                    - text: "@ClashofClans (30 April 2024)."
+                    - link "\"Haaland for the Win! That's right, long-time player of Clash of Clans, @ErlingHaaland is coming to Clash of Clans TOMORROW! Get ready for a full month of Challenges, Skins, Troops, Events, and more!\"" [ref=f5e1154] [cursor=pointer]:
+                      - /url: https://twitter.com/ClashofClans/status/1785172228507869389
+                    - text: (
+                    - link "Tweet" [ref=f5e1155] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Tweet_(social_media)
+                    - text: )
+                    - generic [ref=f5e1156]: . Retrieved 20 May 2024
+                    - text: – via
+                    - link "X (formerly Twitter)" [ref=f5e1157] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/X_(formerly_Twitter)
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Haaland+for+the+Win%21+That%27s+right%2C+long-time+player+of+Clash+of+Clans%2C+%40ErlingHaaland+is+coming+to+Clash+of+Clans+TOMORROW%21+Get+ready+for+a+full+month+of+Challenges%2C+Skins%2C+Troops%2C+Events%2C+and+more%21&rft.date=2024-04-30&rft.au=ClashofClans&rft_id=https%3A%2F%2Ftwitter.com%2FClashofClans%2Fstatus%2F1785172228507869389&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1158]:
+                - link "Jump up" [ref=f5e1160] [cursor=pointer]:
+                  - /url: "#cite_ref-48"
+                  - text: ^
+                - generic [ref=f5e1161]:
+                  - generic [ref=f5e1162]:
+                    - link "\"Welcome to Clash With Haaland Season!\"" [ref=f5e1163] [cursor=pointer]:
+                      - /url: https://supercell.com/en/games/clashofclans/blog/news/welcome-to-clash-with-haaland-season/
+                    - text: . Supercell. 1 May 2024
+                    - generic [ref=f5e1164]: . Retrieved 20 May 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell&rft.atitle=Welcome+to+Clash+With+Haaland+Season%21&rft.date=2024-05-01&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fgames%2Fclashofclans%2Fblog%2Fnews%2Fwelcome-to-clash-with-haaland-season%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1165]:
+                - link "Jump up" [ref=f5e1167] [cursor=pointer]:
+                  - /url: "#cite_ref-49"
+                  - text: ^
+                - generic [ref=f5e1168]:
+                  - generic [ref=f5e1169]:
+                    - text: Parrish, Ash (20 May 2025).
+                    - link "\"Netflix is turning mobile blockbuster Clash of Clans into an animated series\"" [ref=f5e1170] [cursor=pointer]:
+                      - /url: https://www.theverge.com/news/670547/clash-of-clans-netflix-animated-adaptation
+                    - text: . The Verge
+                    - generic [ref=f5e1171]: . Retrieved 23 May 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Verge&rft.atitle=Netflix+is+turning+mobile+blockbuster+Clash+of+Clans+into+an+animated+series&rft.date=2025-05-20&rft.aulast=Parrish&rft.aufirst=Ash&rft_id=https%3A%2F%2Fwww.theverge.com%2Fnews%2F670547%2Fclash-of-clans-netflix-animated-adaptation&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1172]:
+                - generic [ref=f5e1173]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e1174] [cursor=pointer]:
+                    - /url: "#cite_ref-GR_50-0"
+                  - link [ref=f5e1176] [cursor=pointer]:
+                    - /url: "#cite_ref-GR_50-1"
+                - generic [ref=f5e1177]:
+                  - generic [ref=f5e1178]:
+                    - link "\"Clash of Clans for iOS\"" [ref=f5e1179] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20150907175437/http://www.gamerankings.com/iphone/678942-clash-of-clans/index.html
+                    - text: .
+                    - link "GameRankings" [ref=f5e1180] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/GameRankings
+                    - text: . Archived from
+                    - link "the original" [ref=f5e1181] [cursor=pointer]:
+                      - /url: http://www.gamerankings.com/iphone/678942-clash-of-clans/index.html
+                    - text: on 7 September 2015
+                    - generic [ref=f5e1182]: . Retrieved 9 June 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash+of+Clans+for+iOS&rft.pub=GameRankings&rft_id=http%3A%2F%2Fwww.gamerankings.com%2Fiphone%2F678942-clash-of-clans%2Findex.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1183]:
+                - generic [ref=f5e1184]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e1185] [cursor=pointer]:
+                    - /url: "#cite_ref-MC_51-0"
+                  - link [ref=f5e1187] [cursor=pointer]:
+                    - /url: "#cite_ref-MC_51-1"
+                - generic [ref=f5e1188]:
+                  - generic [ref=f5e1189]:
+                    - link "\"Clash of Clans\"" [ref=f5e1190] [cursor=pointer]:
+                      - /url: https://www.metacritic.com/game/ios/clash-of-clans
+                    - text: .
+                    - link "Metacritic" [ref=f5e1192] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Metacritic
+                    - text: .
+                    - link "Fandom, Inc." [ref=f5e1193] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Fandom,_Inc.
+                    - generic [ref=f5e1194]: Retrieved 14 February 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Metacritic&rft.atitle=Clash+of+Clans&rft_id=https%3A%2F%2Fwww.metacritic.com%2Fgame%2Fios%2Fclash-of-clans&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1195]:
+                - link "Jump up" [ref=f5e1197] [cursor=pointer]:
+                  - /url: "#cite_ref-pomust_52-0"
+                  - text: ^
+                - generic [ref=f5e1198]:
+                  - generic [ref=f5e1199]:
+                    - text: Bertel King Jr (7 October 2013).
+                    - link "\"Popular Multiplayer Strategy Game Clash Of Clans Invades The Play Store In Search Of More Players\"" [ref=f5e1200] [cursor=pointer]:
+                      - /url: http://www.androidpolice.com/2013/10/07/new-game-popular-multiplayer-strategy-game-clash-of-clans-invades-the-play-store-in-search-of-more-players/
+                    - text: . Android Police. Illogical Robot LLC.
+                    - link "Archived" [ref=f5e1201] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20170323062649/http://www.androidpolice.com/2013/10/07/new-game-popular-multiplayer-strategy-game-clash-of-clans-invades-the-play-store-in-search-of-more-players/
+                    - text: from the original on 23 March 2017
+                    - generic [ref=f5e1202]: . Retrieved 3 July 2017
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Android+Police&rft.atitle=Popular+Multiplayer+Strategy+Game+Clash+Of+Clans+Invades+The+Play+Store+In+Search+Of+More+Players&rft.date=2013-10-07&rft.au=Bertel+King+Jr&rft_id=http%3A%2F%2Fwww.androidpolice.com%2F2013%2F10%2F07%2Fnew-game-popular-multiplayer-strategy-game-clash-of-clans-invades-the-play-store-in-search-of-more-players%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1203]:
+                - generic [ref=f5e1204]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e1205] [cursor=pointer]:
+                    - /url: "#cite_ref-Gamezebo_53-0"
+                  - link [ref=f5e1207] [cursor=pointer]:
+                    - /url: "#cite_ref-Gamezebo_53-1"
+                - generic [ref=f5e1208]:
+                  - generic [ref=f5e1209]:
+                    - text: Johnson, Leif (7 August 2012).
+                    - link "\"Clash of Clans Review\"" [ref=f5e1210] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20130828075508/http://www.gamezebo.com/games/clash-clans/review
+                    - text: .
+                    - link "Gamezebo" [ref=f5e1211] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Gamezebo
+                    - text: . Archived from
+                    - link "the original" [ref=f5e1212] [cursor=pointer]:
+                      - /url: https://www.gamezebo.com/reviews/clash-of-clans-review/
+                    - text: on 28 August 2013
+                    - generic [ref=f5e1213]: . Retrieved 9 June 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash+of+Clans+Review&rft.pub=Gamezebo&rft.date=2012-08-07&rft.aulast=Johnson&rft.aufirst=Leif&rft_id=https%3A%2F%2Fwww.gamezebo.com%2Freviews%2Fclash-of-clans-review%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1214]:
+                - generic [ref=f5e1215]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e1216] [cursor=pointer]:
+                    - /url: "#cite_ref-Modojo_54-0"
+                  - link [ref=f5e1218] [cursor=pointer]:
+                    - /url: "#cite_ref-Modojo_54-1"
+                - generic [ref=f5e1219]:
+                  - generic [ref=f5e1220]:
+                    - text: Bedford, John.
+                    - link "\"Clash of Clans Review\"" [ref=f5e1221] [cursor=pointer]:
+                      - /url: http://www.modojo.com/reviews/clash_of_clans
+                    - text: . Modojo.
+                    - link "Archived" [ref=f5e1222] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20140606015640/http://www.modojo.com/reviews/clash_of_clans
+                    - text: from the original on 6 June 2014
+                    - generic [ref=f5e1223]: . Retrieved 9 June 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash+of+Clans+Review&rft.pub=Modojo&rft.aulast=Bedford&rft.aufirst=John&rft_id=http%3A%2F%2Fwww.modojo.com%2Freviews%2Fclash_of_clans&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1224]:
+                - link "Jump up" [ref=f5e1226] [cursor=pointer]:
+                  - /url: "#cite_ref-Aptoide_55-0"
+                  - text: ^
+                - generic [ref=f5e1227]:
+                  - generic [ref=f5e1228]:
+                    - link "\"Clash of Clans - APK Download for Android\"" [ref=f5e1229] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20240526164441/https://clash-of-clans.en.aptoide.com/app
+                    - text: . Archived from
+                    - link "the original" [ref=f5e1230] [cursor=pointer]:
+                      - /url: https://clash-of-clans.en.aptoide.com/app
+                    - text: on 26 May 2024
+                    - generic [ref=f5e1231]: . Retrieved 26 May 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash+of+Clans+-+APK+Download+for+Android&rft_id=https%3A%2F%2Fclash-of-clans.en.aptoide.com%2Fapp&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1232]:
+                - link "Jump up" [ref=f5e1234] [cursor=pointer]:
+                  - /url: "#cite_ref-56"
+                  - text: ^
+                - generic [ref=f5e1235]:
+                  - generic [ref=f5e1236]:
+                    - text: Warner, Bernhard (2 May 2013).
+                    - link "\"Finland's Supercell mobile games with megaprofits\"" [ref=f5e1237] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20140917101529/http://www.businessweek.com/articles/2013-05-02/finlands-supercell-mobile-games-with-megaprofits
+                    - text: .
+                    - link "Bloomberg Businessweek" [ref=f5e1239] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Bloomberg_Businessweek
+                    - text: . Archived from
+                    - link "the original" [ref=f5e1240] [cursor=pointer]:
+                      - /url: http://www.businessweek.com/articles/2013-05-02/finlands-supercell-mobile-games-with-megaprofits
+                    - text: on 17 September 2014
+                    - generic [ref=f5e1241]: . Retrieved 7 June 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Bloomberg+Businessweek&rft.atitle=Finland%27s+Supercell+mobile+games+with+megaprofits&rft.date=2013-05-02&rft.aulast=Warner&rft.aufirst=Bernhard&rft_id=http%3A%2F%2Fwww.businessweek.com%2Farticles%2F2013-05-02%2Ffinlands-supercell-mobile-games-with-megaprofits&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1242]:
+                - link "Jump up" [ref=f5e1244] [cursor=pointer]:
+                  - /url: "#cite_ref-57"
+                  - text: ^
+                - generic [ref=f5e1245]:
+                  - generic [ref=f5e1246]:
+                    - text: Schade, Michael (20 September 2013).
+                    - link "\"Commanding troops on touch devices - Why mobile is the perfect platform for strategy\"" [ref=f5e1247] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20131110121548/http://www.gamasutra.com/blogs/MichaelSchade/20130920/200688/Commanding_Troops_on_Touch_Devices__Why_Mobile_is_the_perfect_Platform_for_Strategy_MMOs.php
+                    - text: .
+                    - link "Gamasutra" [ref=f5e1248] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/Gamasutra
+                    - text: . Archived from
+                    - link "the original" [ref=f5e1249] [cursor=pointer]:
+                      - /url: http://www.gamasutra.com/blogs/MichaelSchade/20130920/200688/Commanding_Troops_on_Touch_Devices__Why_Mobile_is_the_perfect_Platform_for_Strategy_MMOs.php
+                    - text: on 10 November 2013
+                    - generic [ref=f5e1250]: . Retrieved 7 June 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Commanding+troops+on+touch+devices+-+Why+mobile+is+the+perfect+platform+for+strategy&rft.pub=Gamasutra&rft.date=2013-09-20&rft.aulast=Schade&rft.aufirst=Michael&rft_id=http%3A%2F%2Fwww.gamasutra.com%2Fblogs%2FMichaelSchade%2F20130920%2F200688%2FCommanding_Troops_on_Touch_Devices__Why_Mobile_is_the_perfect_Platform_for_Strategy_MMOs.php&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1251]:
+                - link "Jump up" [ref=f5e1253] [cursor=pointer]:
+                  - /url: "#cite_ref-58"
+                  - text: ^
+                - generic [ref=f5e1254]:
+                  - generic [ref=f5e1255]:
+                    - text: Dredge, Stuart (10 July 2013).
+                    - 'link "\"Apple''s App Store at 5: 10 key moments on the road to 50bn downloads\"" [ref=f5e1256] [cursor=pointer]':
+                      - /url: https://www.theguardian.com/technology/appsblog/2013/jul/10/app-store-5-apple-ipad-iphone
+                    - text: .
+                    - link "The Guardian" [ref=f5e1258] [cursor=pointer]:
+                      - /url: https://en.wikipedia.org/wiki/The_Guardian
+                    - text: .
+                    - link "Archived" [ref=f5e1259] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20131017070140/http://www.theguardian.com/technology/appsblog/2013/jul/10/app-store-5-apple-ipad-iphone
+                    - text: from the original on 17 October 2013
+                    - generic [ref=f5e1260]: . Retrieved 20 October 2013
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+Guardian&rft.atitle=Apple%27s+App+Store+at+5%3A+10+key+moments+on+the+road+to+50bn+downloads&rft.date=2013-07-10&rft.aulast=Dredge&rft.aufirst=Stuart&rft_id=https%3A%2F%2Fwww.theguardian.com%2Ftechnology%2Fappsblog%2F2013%2Fjul%2F10%2Fapp-store-5-apple-ipad-iphone&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1261]:
+                - link "Jump up" [ref=f5e1263] [cursor=pointer]:
+                  - /url: "#cite_ref-59"
+                  - text: ^
+                - generic [ref=f5e1264]:
+                  - generic [ref=f5e1265]:
+                    - text: Mirani, Leo (30 January 2014).
+                    - link "\"Why free games are increasingly the most profitable apps\"" [ref=f5e1266] [cursor=pointer]:
+                      - /url: http://qz.com/172349/why-free-games-are-increasingly-the-most-profitable-apps/
+                    - text: . Quartz.
+                    - link "Archived" [ref=f5e1267] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20140714193058/http://qz.com/172349/why-free-games-are-increasingly-the-most-profitable-apps/
+                    - text: from the original on 14 July 2014
+                    - generic [ref=f5e1268]: . Retrieved 7 July 2014
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Quartz&rft.atitle=Why+free+games+are+increasingly+the+most+profitable+apps&rft.date=2014-01-30&rft.aulast=Mirani&rft.aufirst=Leo&rft_id=http%3A%2F%2Fqz.com%2F172349%2Fwhy-free-games-are-increasingly-the-most-profitable-apps%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1269]:
+                - link "Jump up" [ref=f5e1271] [cursor=pointer]:
+                  - /url: "#cite_ref-gpd_60-0"
+                  - text: ^
+                - generic [ref=f5e1272]:
+                  - generic [ref=f5e1273]:
+                    - text: Eddie Makuch (11 February 2014).
+                    - 'link "\"Report: Clash of Clans generates $654,000 per day\"" [ref=f5e1274] [cursor=pointer]':
+                      - /url: https://www.gamespot.com/articles/report-clash-of-clans-generates-654-000-per-day/1100-6417656/
+                    - text: . GameSpot. CBS Interactive Inc.
+                    - link "Archived" [ref=f5e1275] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20170729010110/https://www.gamespot.com/articles/report-clash-of-clans-generates-654-000-per-day/1100-6417656/
+                    - text: from the original on 29 July 2017
+                    - generic [ref=f5e1276]: . Retrieved 3 July 2017
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=GameSpot&rft.atitle=Report%3A+Clash+of+Clans+generates+%24654%2C000+per+day&rft.date=2014-02-11&rft.au=Eddie+Makuch&rft_id=https%3A%2F%2Fwww.gamespot.com%2Farticles%2Freport-clash-of-clans-generates-654-000-per-day%2F1100-6417656%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1277]:
+                - link "Jump up" [ref=f5e1279] [cursor=pointer]:
+                  - /url: "#cite_ref-61"
+                  - text: ^
+                - generic [ref=f5e1280]:
+                  - generic [ref=f5e1281]:
+                    - link "\"The top-grossing iPhone app makes a whopping $1.5 million a day\"" [ref=f5e1282] [cursor=pointer]:
+                      - /url: http://www.businessinsider.com/clash-of-clans-earns-15-million-a-day-as-top-grossing-app-2015-6
+                    - text: . Business Insider.
+                    - link "Archived" [ref=f5e1283] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20160227022146/http://www.businessinsider.com/clash-of-clans-earns-15-million-a-day-as-top-grossing-app-2015-6
+                    - text: from the original on 27 February 2016
+                    - generic [ref=f5e1284]: . Retrieved 4 February 2016
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Business+Insider&rft.atitle=The+top-grossing+iPhone+app+makes+a+whopping+%241.5+million+a+day&rft_id=http%3A%2F%2Fwww.businessinsider.com%2Fclash-of-clans-earns-15-million-a-day-as-top-grossing-app-2015-6&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1285]:
+                - link "Jump up" [ref=f5e1287] [cursor=pointer]:
+                  - /url: "#cite_ref-62"
+                  - text: ^
+                - generic [ref=f5e1288]:
+                  - generic [ref=f5e1289]:
+                    - link "\"Clash of Clans - Revenue estimates, app rankings & installs\"" [ref=f5e1290] [cursor=pointer]:
+                      - /url: https://thinkgaming.com/app-sales-data/1/clash-of-clans/
+                    - text: . thinkgaming.com.
+                    - link "Archived" [ref=f5e1291] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20160216134919/https://thinkgaming.com/app-sales-data/1/clash-of-clans/
+                    - text: from the original on 16 February 2016
+                    - generic [ref=f5e1292]: . Retrieved 4 February 2016
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=thinkgaming.com&rft.atitle=Clash+of+Clans+-+Revenue+estimates%2C+app+rankings+%26+installs&rft_id=https%3A%2F%2Fthinkgaming.com%2Fapp-sales-data%2F1%2Fclash-of-clans%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1293]:
+                - link "Jump up" [ref=f5e1295] [cursor=pointer]:
+                  - /url: "#cite_ref-63"
+                  - text: ^
+                - generic [ref=f5e1296]:
+                  - generic [ref=f5e1297]:
+                    - link "\"Clash of Clans hits 500 million downloads on the Play Store\"" [ref=f5e1298] [cursor=pointer]:
+                      - /url: https://www.androidpolice.com/2018/11/12/clash-clans-hits-500-million-downloads-play-store/
+                    - text: . Android Police. 12 November 2018.
+                    - link "Archived" [ref=f5e1299] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20190209124922/https://www.androidpolice.com/2018/11/12/clash-clans-hits-500-million-downloads-play-store/
+                    - text: from the original on 9 February 2019
+                    - generic [ref=f5e1300]: . Retrieved 8 February 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Android+Police&rft.atitle=Clash+of+Clans+hits+500+million+downloads+on+the+Play+Store&rft.date=2018-11-12&rft_id=https%3A%2F%2Fwww.androidpolice.com%2F2018%2F11%2F12%2Fclash-clans-hits-500-million-downloads-play-store%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1301]:
+                - generic [ref=f5e1302]:
+                  - text: ^
+                  - link "Jump up to:" [ref=f5e1303] [cursor=pointer]:
+                    - /url: "#cite_ref-:0_64-0"
+                  - link [ref=f5e1305] [cursor=pointer]:
+                    - /url: "#cite_ref-:0_64-1"
+                - generic [ref=f5e1306]:
+                  - generic [ref=f5e1307]:
+                    - text: Potuck, Michael (2 July 2018).
+                    - link "\"These are the all-time most popular iOS apps and games from 2010-2018\"" [ref=f5e1308] [cursor=pointer]:
+                      - /url: https://9to5mac.com/2018/07/02/all-time-most-popular-ios-apps-games/
+                    - text: . 9to5Mac.
+                    - link "Archived" [ref=f5e1309] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20190123162946/https://9to5mac.com/2018/07/02/all-time-most-popular-ios-apps-games/
+                    - text: from the original on 23 January 2019
+                    - generic [ref=f5e1310]: . Retrieved 8 February 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=9to5Mac&rft.atitle=These+are+the+all-time+most+popular+iOS+apps+and+games+from+2010-2018&rft.date=2018-07-02&rft.aulast=Potuck&rft.aufirst=Michael&rft_id=https%3A%2F%2F9to5mac.com%2F2018%2F07%2F02%2Fall-time-most-popular-ios-apps-games%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1311]:
+                - link "Jump up" [ref=f5e1313] [cursor=pointer]:
+                  - /url: "#cite_ref-65"
+                  - text: ^
+                - generic [ref=f5e1314]:
+                  - generic [ref=f5e1315]:
+                    - text: Fogel, Stefanie (5 March 2019).
+                    - link "\"'Clash Royale' Made $2.5 Billion in Revenue in Three Years (Analyst)\"" [ref=f5e1316] [cursor=pointer]:
+                      - /url: https://variety.com/2019/gaming/news/clash-royale-revenue-1203155393/
+                    - text: . Variety.
+                    - link "Archived" [ref=f5e1318] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20190822020107/https://variety.com/2019/gaming/news/clash-royale-revenue-1203155393/
+                    - text: from the original on 22 August 2019
+                    - generic [ref=f5e1319]: . Retrieved 22 August 2019
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Variety&rft.atitle=%27Clash+Royale%27+Made+%242.5+Billion+in+Revenue+in+Three+Years+%28Analyst%29&rft.date=2019-03-05&rft.aulast=Fogel&rft.aufirst=Stefanie&rft_id=https%3A%2F%2Fvariety.com%2F2019%2Fgaming%2Fnews%2Fclash-royale-revenue-1203155393%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1320]:
+                - link "Jump up" [ref=f5e1322] [cursor=pointer]:
+                  - /url: "#cite_ref-66"
+                  - text: ^
+                - generic [ref=f5e1323]:
+                  - generic [ref=f5e1324]:
+                    - link "\"Top Grossing Apps | US | Top App Store Rankings for Android\"" [ref=f5e1325] [cursor=pointer]:
+                      - /url: https://sensortower.com/android/rankings/top/mobile/us/overall?iap=all&watch_enabled&rankings_type=free&min_cost=0&max_cost&date=2020-12-01&show_store_data=true
+                    - text: . sensortower.com.
+                    - link "Archived" [ref=f5e1326] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210422041136/https://sensortower.com/android/rankings/top/mobile/us/overall?iap=all&watch_enabled=&rankings_type=free&min_cost=0&max_cost=&date=2020-12-01&show_store_data=true
+                    - text: from the original on 22 April 2021
+                    - generic [ref=f5e1327]: . Retrieved 1 December 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=sensortower.com&rft.atitle=Top+Grossing+Apps+%7C+US+%7C+Top+App+Store+Rankings+for+Android&rft_id=https%3A%2F%2Fsensortower.com%2Fandroid%2Frankings%2Ftop%2Fmobile%2Fus%2Foverall%3Fiap%3Dall%26watch_enabled%26rankings_type%3Dfree%26min_cost%3D0%26max_cost%26date%3D2020-12-01%26show_store_data%3Dtrue&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1328]:
+                - link "Jump up" [ref=f5e1330] [cursor=pointer]:
+                  - /url: "#cite_ref-67"
+                  - text: ^
+                - generic [ref=f5e1331]:
+                  - generic [ref=f5e1332]:
+                    - link "\"Top Grossing Apps | US | Top App Store Rankings for iOS\"" [ref=f5e1333] [cursor=pointer]:
+                      - /url: https://sensortower.com/ios/rankings/top/iphone/us/all-categories?iap=all&watch_enabled&rankings_type=free&min_cost=0&max_cost&date=2020-12-01&show_store_data=true
+                    - text: . sensortower.com.
+                    - link "Archived" [ref=f5e1334] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210422041156/https://sensortower.com/ios/rankings/top/iphone/us/all-categories?iap=all&watch_enabled=&rankings_type=free&min_cost=0&max_cost=&date=2020-12-01&show_store_data=true
+                    - text: from the original on 22 April 2021
+                    - generic [ref=f5e1335]: . Retrieved 1 December 2020
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=sensortower.com&rft.atitle=Top+Grossing+Apps+%7C+US+%7C+Top+App+Store+Rankings+for+iOS&rft_id=https%3A%2F%2Fsensortower.com%2Fios%2Frankings%2Ftop%2Fiphone%2Fus%2Fall-categories%3Fiap%3Dall%26watch_enabled%26rankings_type%3Dfree%26min_cost%3D0%26max_cost%26date%3D2020-12-01%26show_store_data%3Dtrue&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1336]:
+                - link "Jump up" [ref=f5e1338] [cursor=pointer]:
+                  - /url: "#cite_ref-68"
+                  - text: ^
+                - generic [ref=f5e1339]:
+                  - text: Alwani, Rishi (January 4, 2016).
+                  - link "\"Clash of Clans Developer Supercell Releases New Game, Clash Royale\"" [ref=f5e1340] [cursor=pointer]:
+                    - /url: http://gadgets.ndtv.com/games/news/clash-of-clans-developer-supercell-releases-new-game-clash-royale-785495
+                  - link "Archived" [ref=f5e1341] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170731041351/http://gadgets.ndtv.com/games/news/clash-of-clans-developer-supercell-releases-new-game-clash-royale-785495
+                  - text: July 31, 2017, at the
+                  - link "Wayback Machine" [ref=f5e1342] [cursor=pointer]:
+                    - /url: https://en.wikipedia.org/wiki/Wayback_Machine
+                  - text: . Gadgets 360. Retrieved January 14, 2016.
+              - listitem [ref=f5e1343]:
+                - link "Jump up" [ref=f5e1345] [cursor=pointer]:
+                  - /url: "#cite_ref-clash.com2_69-0"
+                  - text: ^
+                - generic [ref=f5e1346]:
+                  - generic [ref=f5e1347]:
+                    - link "\"Clash.com\"" [ref=f5e1348] [cursor=pointer]:
+                      - /url: https://clash.com/en
+                    - text: .
+                    - link "Archived" [ref=f5e1349] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210407110629/https://clash.com/en
+                    - text: from the original on 7 April 2021
+                    - generic [ref=f5e1350]: . Retrieved 12 April 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Clash.com&rft_id=https%3A%2F%2Fclash.com%2Fen&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1351]:
+                - link "Jump up" [ref=f5e1353] [cursor=pointer]:
+                  - /url: "#cite_ref-70"
+                  - text: ^
+                - generic [ref=f5e1354]:
+                  - generic [ref=f5e1355]:
+                    - link "\"Supercell reveals 3 new games in the Clash universe\"" [ref=f5e1356] [cursor=pointer]:
+                      - /url: https://dotesports.com/mobile/news/supercell-reveals-3-new-games-in-the-clash-universe
+                    - text: . 2 April 2021.
+                    - link "Archived" [ref=f5e1357] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20210412183509/https://dotesports.com/mobile/news/supercell-reveals-3-new-games-in-the-clash-universe
+                    - text: from the original on 12 April 2021
+                    - generic [ref=f5e1358]: . Retrieved 12 April 2021
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Supercell+reveals+3+new+games+in+the+Clash+universe&rft.date=2021-04-02&rft_id=https%3A%2F%2Fdotesports.com%2Fmobile%2Fnews%2Fsupercell-reveals-3-new-games-in-the-clash-universe&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1359]:
+                - link "Jump up" [ref=f5e1361] [cursor=pointer]:
+                  - /url: "#cite_ref-71"
+                  - text: ^
+                - generic [ref=f5e1362]:
+                  - generic [ref=f5e1363]:
+                    - text: Khayyat, Mehrdad (17 August 2022).
+                    - link "\"Supercell Discontinues The Development Of Clash Quest Before A Full Launch\"" [ref=f5e1364] [cursor=pointer]:
+                      - /url: https://www.dualshockers.com/supercell-ends-the-development-of-clash-quest-before-a-full-launch/
+                    - text: . DualShockers.
+                    - link "Archived" [ref=f5e1365] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20220818022629/https://www.dualshockers.com/supercell-ends-the-development-of-clash-quest-before-a-full-launch/
+                    - text: from the original on 18 August 2022
+                    - generic [ref=f5e1366]: . Retrieved 18 August 2022
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=DualShockers&rft.atitle=Supercell+Discontinues+The+Development+Of+Clash+Quest+Before+A+Full+Launch&rft.date=2022-08-17&rft.aulast=Khayyat&rft.aufirst=Mehrdad&rft_id=https%3A%2F%2Fwww.dualshockers.com%2Fsupercell-ends-the-development-of-clash-quest-before-a-full-launch%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1367]:
+                - link "Jump up" [ref=f5e1369] [cursor=pointer]:
+                  - /url: "#cite_ref-72"
+                  - text: ^
+                - generic [ref=f5e1370]:
+                  - generic [ref=f5e1371]:
+                    - link "\"Clash Mini Ending Development\"" [ref=f5e1372] [cursor=pointer]:
+                      - /url: https://supercell.com/en/news/clash-mini-ending-development/
+                    - text: . Supercell.
+                    - link "Archived" [ref=f5e1373] [cursor=pointer]:
+                      - /url: https://web.archive.org/web/20240501081234/https://supercell.com/en/news/clash-mini-ending-development/
+                    - text: from the original on 1 May 2024
+                    - generic [ref=f5e1374]: . Retrieved 10 April 2024
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Supercell&rft.atitle=Clash+Mini+Ending+Development&rft_id=https%3A%2F%2Fsupercell.com%2Fen%2Fnews%2Fclash-mini-ending-development%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1375]:
+                - link "Jump up" [ref=f5e1377] [cursor=pointer]:
+                  - /url: "#cite_ref-73"
+                  - text: ^
+                - generic [ref=f5e1378]:
+                  - generic [ref=f5e1379]:
+                    - text: Mohan, Aaryanshi (25 June 2024).
+                    - 'link "\"Supercell new game Project R.I.S.E: Pre alpha, features, and more\"" [ref=f5e1380] [cursor=pointer]':
+                      - /url: https://www.esports.net/news/mobile-games/supercell-new-game-project-rise/
+                    - text: . Esports.net
+                    - generic [ref=f5e1381]: . Retrieved 16 March 2025
+                    - text: .
+                  - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Esports.net&rft.atitle=Supercell+new+game+Project+R.I.S.E%3A+Pre+alpha%2C+features%2C+and+more&rft.date=2024-06-25&rft.aulast=Mohan&rft.aufirst=Aaryanshi&rft_id=https%3A%2F%2Fwww.esports.net%2Fnews%2Fmobile-games%2Fsupercell-new-game-project-rise%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3AClash+of+Clans"
+              - listitem [ref=f5e1382]:
+                - link "Jump up" [ref=f5e1384] [cursor=pointer]:
+                  - /url: "#cite_ref-74"
+                  - text: ^
+                - link "https://www.netflix.com/tudum/articles/clash-of-clans-series" [ref=f5e1386] [cursor=pointer]:
+                  - /url: https://www.netflix.com/tudum/articles/clash-of-clans-series
+          - region [ref=f5e1387]:
+            - generic [ref=f5e1388]:
+              - heading "External links" [level=2] [ref=f5e1389]
+              - generic [ref=f5e1390]:
+                - link "edit":
+                  - /url: /w/index.php?title=Clash_of_Clans&action=edit&section=16
+            - list [ref=f5e1391]:
+              - listitem [ref=f5e1392]:
+                - link "Official website" [ref=f5e1395] [cursor=pointer]:
+                  - /url: https://clashofclans.com
+              - listitem [ref=f5e1396]:
+                - link [ref=f5e1398] [cursor=pointer]:
+                  - /url: https://en.wikipedia.org/wiki/File:Commons-logo.svg
+                  - img "Wikimedia Commons logo" [ref=f5e1399]
+                - text: Media related to
+                - link "Clash of Clans" [ref=f5e1400] [cursor=pointer]:
+                  - /url: https://commons.wikimedia.org/wiki/Category:Clash%20of%20Clans
+                - text: at Wikimedia Commons
+            - navigation [ref=f5e1401]:
+              - table [ref=f5e1402]:
+                - rowgroup [ref=f5e1403]:
+                  - row [ref=f5e1404]:
+                    - columnheader [ref=f5e1405]:
+                      - button "[show]" [ref=f5e1406] [cursor=pointer]
+                      - list [ref=f5e1408]:
+                        - listitem [ref=f5e1409]:
+                          - link "v" [ref=f5e1410] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Template:Supercell
+                          - text: ·
+                        - listitem [ref=f5e1411]:
+                          - link "t" [ref=f5e1412] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Template_talk:Supercell
+                          - text: ·
+                        - listitem [ref=f5e1413]:
+                          - link "e" [ref=f5e1414] [cursor=pointer]:
+                            - /url: https://en.wikipedia.org/wiki/Special:EditPage/Template:Supercell
+                      - link "Supercell" [ref=f5e1416] [cursor=pointer]:
+                        - /url: https://en.wikipedia.org/wiki/Supercell_(company)
+                  - row: · · · · · ·
+            - navigation [ref=f5e1417]:
+              - table [ref=f5e1418]:
+                - rowgroup [ref=f5e1419]:
+                  - row [ref=f5e1420]:
+                    - columnheader [ref=f5e1421]:
+                      - button "[show]" [ref=f5e1422] [cursor=pointer]
+                      - generic [ref=f5e1423]:
+                        - link "Authority control databases" [ref=f5e1424] [cursor=pointer]:
+                          - /url: https://en.wikipedia.org/wiki/Help:Authority_control
+                        - link [ref=f5e1426] [cursor=pointer]:
+                          - /url: https://www.wikidata.org/wiki/Q13399098#identifiers
+                          - img "Edit this at Wikidata" [ref=f5e1427]
+                  - row
+                  - row: · ·
+        - generic [ref=f5e1429]:
+          - link "Categories" [ref=f5e1430] [cursor=pointer]:
+            - /url: /wiki/Help:Category
+          - text: ":"
+          - list [ref=f5e1431]:
+            - listitem [ref=f5e1432]:
+              - link "2010s fads and trends" [ref=f5e1433] [cursor=pointer]:
+                - /url: /wiki/Category:2010s_fads_and_trends
+            - listitem [ref=f5e1434]:
+              - link "2012 video games" [ref=f5e1435] [cursor=pointer]:
+                - /url: /wiki/Category:2012_video_games
+            - listitem [ref=f5e1436]:
+              - link "Android (operating system) games" [ref=f5e1437] [cursor=pointer]:
+                - /url: /wiki/Category:Android_(operating_system)_games
+            - listitem [ref=f5e1438]:
+              - link "City-building games" [ref=f5e1439] [cursor=pointer]:
+                - /url: /wiki/Category:City-building_games
+            - listitem [ref=f5e1440]:
+              - link "Fantasy video games" [ref=f5e1441] [cursor=pointer]:
+                - /url: /wiki/Category:Fantasy_video_games
+            - listitem [ref=f5e1442]:
+              - link "IOS games" [ref=f5e1443] [cursor=pointer]:
+                - /url: /wiki/Category:IOS_games
+            - listitem [ref=f5e1444]:
+              - link "Multiplayer and single-player video games" [ref=f5e1445] [cursor=pointer]:
+                - /url: /wiki/Category:Multiplayer_and_single-player_video_games
+            - listitem [ref=f5e1446]:
+              - link "Supercell (video game company) games" [ref=f5e1447] [cursor=pointer]:
+                - /url: /wiki/Category:Supercell_(video_game_company)_games
+            - listitem [ref=f5e1448]:
+              - link "Video games developed in Finland" [ref=f5e1449] [cursor=pointer]:
+                - /url: /wiki/Category:Video_games_developed_in_Finland
+            - listitem [ref=f5e1450]:
+              - link "Freemium games" [ref=f5e1451] [cursor=pointer]:
+                - /url: /wiki/Category:Freemium_games
+    - contentinfo [ref=f5e1453]:
+      - list [ref=f5e1454]:
+        - listitem [ref=f5e1455]: This page was last edited on 23 July 2026, at 12:33 (UTC).
+        - listitem [ref=f5e1456]:
+          - text: Page was rendered with
+          - link "Parsoid" [ref=f5e1457] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/wiki/Special:MyLanguage/Parsoid
+          - text: .
+        - listitem [ref=f5e1458]:
+          - text: Text is available under the
+          - link "Creative Commons Attribution-ShareAlike 4.0 License" [ref=f5e1459] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:Text_of_the_Creative_Commons_Attribution-ShareAlike_4.0_International_License
+          - text: ; additional terms may apply. By using this site, you agree to the
+          - link "Terms of Use" [ref=f5e1460] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use
+          - text: and
+          - link "Privacy Policy" [ref=f5e1461] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+          - text: . Wikipedia® is a registered trademark of the
+          - link "Wikimedia Foundation, Inc." [ref=f5e1462] [cursor=pointer]:
+            - /url: https://wikimediafoundation.org/
+          - text: ", a non-profit organization."
+      - list:
+        - listitem [ref=f5e1463]:
+          - link "Privacy policy" [ref=f5e1464] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+        - listitem [ref=f5e1465]:
+          - link "About Wikipedia" [ref=f5e1466] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:About
+        - listitem [ref=f5e1467]:
+          - link "Disclaimers" [ref=f5e1468] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:General_disclaimer
+        - listitem [ref=f5e1469]:
+          - link "Contact Wikipedia" [ref=f5e1470] [cursor=pointer]:
+            - /url: //en.wikipedia.org/wiki/Wikipedia:Contact_us
+        - listitem [ref=f5e1471]:
+          - link "Legal & safety contacts" [ref=f5e1472] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Wikimedia_Foundation_Legal_and_Safety_Contact_Information
+        - listitem [ref=f5e1473]:
+          - link "Code of Conduct" [ref=f5e1474] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Universal_Code_of_Conduct
+        - listitem [ref=f5e1475]:
+          - link "Developers" [ref=f5e1476] [cursor=pointer]:
+            - /url: https://developer.wikimedia.org
+        - listitem [ref=f5e1477]:
+          - link "Statistics" [ref=f5e1478] [cursor=pointer]:
+            - /url: https://stats.wikimedia.org/#/en.wikipedia.org
+        - listitem [ref=f5e1479]:
+          - link "Cookie statement" [ref=f5e1480] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Cookie_statement
+        - listitem [ref=f5e1481]:
+          - link "Mobile view" [ref=f5e1482] [cursor=pointer]:
+            - /url: //en.wikipedia.org/w/index.php?title=Clash_of_Clans&mobileaction=toggle_view_mobile
+      - list [ref=f5e1483]:
+        - listitem [ref=f5e1484]:
+          - link [ref=f5e1485] [cursor=pointer]:
+            - /url: https://www.wikimedia.org/
+            - img "Wikimedia Foundation" [ref=f5e1487]
+        - listitem [ref=f5e1488]:
+          - link [ref=f5e1489] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/
+            - img "Powered by MediaWiki" [ref=f5e1491]
+  - generic [ref=f5e1492]:
+    - list

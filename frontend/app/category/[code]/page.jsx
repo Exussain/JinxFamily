@@ -5,7 +5,7 @@ import StaticProductCard from '../../../components/StaticProductCard';
 import { fetchApiJson } from '../../../lib/serverFetch.mjs';
 import { SITE_ORIGIN } from '../../../lib/site.mjs';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const BASE_URL = SITE_ORIGIN;
 
@@ -30,7 +30,7 @@ const TITLES = {
 async function getCategory(code) {
   if (code === 'accounts' || code === 'account' || code === 'market') return { isMarketRedirect: true };
   if (!KNOWN_CODES.has(code)) return null;
-  return fetchApiJson(`/api/categories/${code.toUpperCase()}`);
+  return fetchApiJson(`/api/categories/${code.toUpperCase().replace(/-/g, '_')}`);
 }
 
 export function generateStaticParams() {
@@ -101,6 +101,14 @@ export default async function CategoryPage({ params, searchParams }) {
   const sub = (resolvedSearchParams.sub || '').toLowerCase();
   
   const code = (rawCode || '').toLowerCase();
+  const categoryCode = canonicalCode || code.toUpperCase().replace(/-/g, '_');
+  const canonicalPath = categoryPathFromCode(categoryCode);
+
+  // The former English-code addresses are retained only as permanent aliases;
+  // a category has one indexable, Persian human-readable address.
+  if (!canonicalCode) {
+    permanentRedirect(canonicalPath);
+  }
   const data = await getCategory(code);
 
   if (!data?.category) {
@@ -127,7 +135,7 @@ export default async function CategoryPage({ params, searchParams }) {
     '@type': 'CollectionPage',
     name: title,
     description: cat.description,
-    url: `${BASE_URL}/category/${code}`,
+    url: `${BASE_URL}${canonicalPath}`,
     inLanguage: 'fa-IR',
     isPartOf: { '@id': `${BASE_URL}/#website` },
     mainEntity: {
@@ -165,8 +173,8 @@ export default async function CategoryPage({ params, searchParams }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
         />
 
-        <section className="category-hero">
-          <div className="category-hero-glow" aria-hidden="true" />
+        <section className="category-page-top">
+          <h1 className="sr-only">{title}</h1>
           <div className="category-hero-top">
             <nav aria-label="مسیر صفحه" className="category-crumbs">
               <Link href="/" className="category-crumb-link">جینکس فمیلی</Link>

@@ -8,7 +8,7 @@ import {
   buildFaqJsonLd,
 } from "../../lib/seoJsonLd.mjs";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const LEGO_SLUG = "lego-starter-pack";
 const OG_DESCRIPTION =
@@ -58,7 +58,7 @@ export default async function LegoStarterPackPage() {
     path: "/lego",
     name: productData?.name_fa || "Operation Brite Starter Pack (لگو فورتنایت)",
     description: productData?.description || OG_DESCRIPTION,
-    image: productData?.image_url,
+    image: productData?.cover_16_9 || productData?.image_url,
     priceToman: productData?.min_price || productData?.price,
     stats,
     brand: "Epic Games",

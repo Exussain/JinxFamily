@@ -312,6 +312,8 @@ export default function HotProductsSection() {
         /* High-tech Action CTA */
         .magic-cta-wrapper {
           z-index: 2;
+          display: flex;
+          align-items: center;
         }
 
         .magic-action-btn {
@@ -360,16 +362,17 @@ export default function HotProductsSection() {
         /* Futuristic holographic portal container */
         .magic-portal-container {
           position: absolute;
-          left: 15px;
-          top: -25px;
-          bottom: -25px;
-          width: 150px;
-          height: 150px;
+          left: 16px;
+          top: 50%;
+          width: 120px;
+          height: 120px;
+          transform: translateY(-50%);
           display: flex;
           align-items: center;
           justify-content: center;
           pointer-events: none;
-          z-index: 4;
+          z-index: 10;
+          overflow: visible;
         }
 
         .magic-portal-ring {
@@ -593,7 +596,7 @@ export default function HotProductsSection() {
           background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 70%);
         }
 
-        /* Responsive Breakpoints */
+        /* Responsive Breakpoints Optimization */
         @media (max-width: 900px) {
           .magic-card-body {
             padding-left: 160px;
@@ -641,8 +644,11 @@ export default function HotProductsSection() {
             height: 105px;
             top: 50%;
             bottom: auto;
-            transform: translateY(-50%);
-            left: 10px;
+            transform: translateY(-50%) translateZ(0);
+            left: 6px;
+          }
+          .spin-banner-wheel-img {
+            transform: scale(1.15) translateZ(0);
           }
           .magic-portal-ring {
             width: 90px;

@@ -3,8 +3,10 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import PasswordInput from '../../../components/PasswordInput';
+import PlatformSelector from "../../../components/PlatformSelector";
 import SmartImage from "../../../components/SmartImage";
 import { useCart } from "../../../lib/useCart";
+import { getPlatformOption } from "../../../lib/platforms";
 import { resolveProductImage } from "../../../lib/productImageHelpers";
 import { adminCacheBustHref } from "../../../lib/adminUrl.mjs";
 import ProductJinxGuide from "../../../components/ProductJinxGuide";
@@ -138,7 +140,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
         }
       : { total: 0, rating: 0 }
   );
-  const [activeTab, setActiveTab] = useState("description");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState(null);
@@ -474,9 +475,7 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
   const productCategory = (product?.category || "").toLowerCase();
   const productCategoryTitle = product?.category_title || "";
   const hasCustomFields = customFields.length > 0;
-  const needs2FA = product?.requires_2fa === true;
-  const disable2faColor = product?.disable_2fa_color || "amber";
-  const disable2faText = product?.disable_2fa_text || "2FA را قبل از خرید خاموش کنید";
+  const isFortnite = productCategory === 'fortnite';
   const isCrew = product?.slug === "fortnite-crew-pack";
   const isStarterPack = slug === "fortnite-starter-pack" || product?.slug === "fortnite-starter-pack";
   const variants = Array.isArray(product?.variants) ? product.variants : [];
@@ -496,24 +495,9 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
     : (product?.original_price || 0);
   const displayPrice = Number(selectedVariant?.price ?? product?.price ?? product?.min_price ?? 0);
   const hasPrice = displayPrice > 0;
-  const isOutOfStock = !product || !!product.ordering_disabled || !!product.customer_ordering_disabled || !hasPrice;
+  const isOutOfStock = !product || !!product.ordering_disabled || !!product.customer_ordering_disabled || !hasPrice || product.purchasable === false;
 
   const isFieldRequired = (field) => field.required === true;
-
-  const parseDeliveryLine = (line) => {
-    const cleanLine = line.replace(/^[\d\u06F0-\u06F9]+[\.\-\s\u2022]*/, '').trim();
-    const parts = cleanLine.split(/[:：\-]/);
-    if (parts.length > 1) {
-      return {
-        title: parts[0].trim(),
-        desc: parts.slice(1).join(':').trim()
-      };
-    }
-    return {
-      title: '',
-      desc: cleanLine
-    };
-  };
 
   const isFieldValid = (field, value) => {
     const v = (value || "").trim();
@@ -522,11 +506,24 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
     return true;
   };
 
-  const handleAdd = () => {
+  const handleAdd = (e) => {
     if (!product) return;
     setShowValidation(true);
 
-    if (hasCustomFields) {
+    if (isFortnite) {
+      if (!fortnitePlatform) {
+        setFormError("پلتفرم را انتخاب کنید.");
+        return;
+      }
+      if (!fortniteEmail.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(fortniteEmail.trim())) {
+        setFormError("ایمیل معتبر وارد کنید.");
+        return;
+      }
+      if (!fortnitePassword.trim()) {
+        setFormError("رمز حساب را وارد کنید.");
+        return;
+      }
+    } else if (hasCustomFields) {
       for (const field of customFields) {
         const val = customFieldValues[field.key] || "";
         if (!isFieldValid(field, val)) {
@@ -557,13 +554,18 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
       image: productImage,
       category: product.category || "",
     };
-    if (hasCustomFields) {
+    if (isFortnite) {
+      item.account_email = fortniteEmail.trim();
+      item.account_type = fortnitePlatform;
+      item.account_password = fortnitePassword;
+    } else if (hasCustomFields) {
       item.custom_fields = {};
       for (const field of customFields) {
         item.custom_fields[field.key] = (customFieldValues[field.key] || "").trim();
       }
     }
     addItem(item);
+    createCartSplash(e);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("cart:add"));
     }
@@ -627,7 +629,128 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
 
                 {isOutOfStock ? (
                   <StockAlertForm product={product} apiBase={apiBase} />
-                ) : (hasCustomFields || needs2FA) && (
+                ) : isFortnite ? (
+                  <div
+                    className="info-card"
+                    style={{
+                      borderRadius: 14,
+                      padding: 16,
+                      background: "var(--card)",
+                      border: "2px solid var(--line)",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", marginBottom: 12 }}>
+                      <span style={{ color: "var(--text)", fontSize: 15 }}>اطلاعات لازم برای فعال‌سازی</span>
+                    </div>
+
+                    <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
+                      <div style={{ display: "grid", gap: 6, fontSize: 13 }}>
+                        <span style={{ fontWeight: 700, color: "var(--text)", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                          پلتفرم شما
+                        </span>
+                        <PlatformSelector
+                          value={fortnitePlatform}
+                          onChange={(value) => {
+                            setFortnitePlatform(value);
+                            setFormError("");
+                            if (showValidation) setShowValidation(false);
+                          }}
+                        />
+                      </div>
+
+                      <label style={{ display: "grid", gap: 6, fontSize: 13 }}>
+                        <span style={{
+                          fontWeight: 700,
+                          color: showValidation && !fortniteEmail.trim() ? "#ef4444" : "var(--text)",
+                          fontSize: 13,
+                        }}>
+                          ایمیل حساب {getPlatformOption(fortnitePlatform).name}
+                          {getPlatformOption(fortnitePlatform).english && <span> ({getPlatformOption(fortnitePlatform).english})</span>}
+                        </span>
+                        <input
+                          required
+                          value={fortniteEmail}
+                          onChange={(e) => {
+                            setFortniteEmail(e.target.value);
+                            setFormError("");
+                            if (showValidation) setShowValidation(false);
+                          }}
+                          placeholder={getPlatformOption(fortnitePlatform).email}
+                          style={{
+                            border: showValidation && !fortniteEmail.trim() ? "2px solid #ef4444" : "2px solid var(--line)",
+                            borderRadius: 10,
+                            padding: "12px 14px",
+                            background: "var(--card)",
+                            color: "var(--text)",
+                            fontSize: 14,
+                            fontWeight: 500,
+                            outline: "none",
+                          }}
+                        />
+                      </label>
+
+                      <label style={{ display: "grid", gap: 6, fontSize: 13 }}>
+                        <span style={{
+                          fontWeight: 700,
+                          color: showValidation && !fortnitePassword.trim() ? "#ef4444" : "var(--text)",
+                          fontSize: 13,
+                        }}>
+                          رمز عبور {getPlatformOption(fortnitePlatform).name}
+                          {getPlatformOption(fortnitePlatform).english && <span> ({getPlatformOption(fortnitePlatform).english})</span>}
+                        </span>
+                        <PasswordInput
+                          value={fortnitePassword}
+                          onChange={(e) => {
+                            setFortnitePassword(e.target.value);
+                            setFormError("");
+                            if (showValidation) setShowValidation(false);
+                          }}
+                          placeholder={getPlatformOption(fortnitePlatform).pass}
+                          style={{
+                            border: showValidation && !fortnitePassword.trim() ? "2px solid #ef4444" : "2px solid var(--line)",
+                            borderRadius: 10,
+                            padding: "12px 44px 12px 14px",
+                            background: "var(--card)",
+                            color: "var(--text)",
+                            fontSize: 14,
+                            fontWeight: 500,
+                            outline: "none",
+                          }}
+                        />
+                      </label>
+
+                      {formError && (
+                        <div style={{
+                          color: "var(--danger)",
+                          fontWeight: 800,
+                          fontSize: 13,
+                          padding: "10px 12px",
+                          background: "rgba(239,68,68,0.1)",
+                          border: "1px solid rgba(239,68,68,0.3)",
+                          borderRadius: 8
+                        }}>
+                          {formError}
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        className="btn primary"
+                        onClick={handleAdd}
+                        style={{
+                          width: '100%',
+                          padding: '14px 20px',
+                          fontSize: '16px',
+                          fontWeight: 900,
+                          marginTop: 8
+                        }}
+                      >
+                        افزودن به سبد خرید
+                      </button>
+                    </div>
+                  </div>
+                ) : hasCustomFields && (
                   <div
                     className="info-card purchase-panel"
                     style={{
@@ -1226,51 +1349,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
               .image-stack {
                 display: grid;
                 gap: 16px;
-              }
-              .guides-card {
-                border: 2px solid var(--line);
-                background: var(--card);
-                border-radius: 14px;
-                padding: 16px;
-                display: grid;
-                gap: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-              }
-              .guides-title {
-                color: var(--text);
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 15px;
-                font-weight: 900;
-              }
-              .guide-link-item {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 10px 14px;
-                background: var(--bg);
-                border: 2px solid var(--line);
-                border-radius: 10px;
-                color: var(--text);
-                font-size: 13px;
-                font-weight: 700;
-                text-decoration: none;
-                transition: all 0.2s ease;
-              }
-              .guide-link-item:hover {
-                border-color: var(--primary);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(44,75,255,0.08);
-                background: var(--card);
-              }
-              .guide-link-item svg {
-                color: var(--muted);
-                transition: transform 0.2s ease, color 0.2s ease;
-              }
-              .guide-link-item:hover svg {
-                color: var(--primary);
-                transform: translateX(-4px);
               }
               /* Mobile Utilities */
               .hide-mobile {
@@ -2009,7 +2087,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                 .product-highlights { order: 7; }
                 .desc-accordion { order: 8; }
                 .product-tabs { order: 9; }
-                .guides-card { order: 10; }
                 .details-stack h1 {
                   font-size: 20px;
                 }
@@ -2190,8 +2267,6 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
                 }
                 .plan-option-title {
                   font-size: 13px;
-                }
-              }
               }
 
               /* Related Guides Section */

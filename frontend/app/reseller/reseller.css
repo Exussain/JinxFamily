@@ -289,6 +289,7 @@
   flex-direction: column;
   gap: 6px;
   margin-bottom: 14px;
+  min-width: 0;
 }
 
 .reseller-form-row label {
@@ -334,7 +335,7 @@
 
 .reseller-form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -490,7 +491,7 @@
 /* orders list */
 .order-row {
   display: grid;
-  grid-template-columns: 100px 80px 1fr 110px 90px 120px 80px;
+  grid-template-columns: 80px 85px 1fr 60px 100px 110px 160px;
   gap: 12px;
   align-items: center;
   padding: 12px 14px;
@@ -814,6 +815,7 @@
   border: 1.5px solid var(--line);
   border-radius: 12px;
   background: var(--bg);
+  min-width: 0;
 }
 
 .reseller-product-chip .chip-thumb {
@@ -1859,6 +1861,7 @@
   border: 1.5px solid var(--glass-border) !important;
   border-radius: 16px !important;
   padding: 12px !important;
+  min-width: 0 !important;
 }
 .reseller-product-chip .chip-thumb {
   border-radius: 10px !important;

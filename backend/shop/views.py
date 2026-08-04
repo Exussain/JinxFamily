@@ -10,7 +10,7 @@ from urllib.parse import urljoin
 from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -21,6 +21,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils.html import escape
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.text import slugify
 from django.views.decorators.http import require_POST
@@ -61,8 +62,6 @@ from .email_service import (
     send_admin_new_order_email,
     send_customer_order_created_email,
     send_status_update_email,
-    _send_email,
-    _render_items_rows,
 )
 from .kavenegar_service import KavenegarService
 
@@ -166,7 +165,7 @@ def _discount_guardrail_warning(dc, line_items, gross_amount: int, discount_amou
     return None
 
 
-def _discount_preview_from_cart_payload(payload, dc):
+def _discount_preview_from_cart_payload(payload, dc, user=None):
     items_payload = payload.get("items") or []
     if not isinstance(items_payload, list) or not items_payload:
         return None
@@ -217,8 +216,81 @@ def _discount_preview_from_cart_payload(payload, dc):
     if payload.get("rush_order") and rush_fee > 0:
         gross_amount += rush_fee
 
-    discount_percent, nominal_discount = _discount_nominal_amount(dc, gross_amount)
-    warning = _discount_guardrail_warning(dc, line_items, gross_amount, nominal_discount)
+    if dc:
+        discount_percent, nominal_discount = _discount_nominal_amount(dc, gross_amount)
+        warning = _discount_guardrail_warning(dc, line_items, gross_amount, nominal_discount)
+    else:
+        discount_percent, nominal_discount = 0, 0
+        warning = None
+
+    amount_after_code = max(gross_amount - nominal_discount, 0)
+
+    # Calculate diamond discount based on dynamic profit guardrail
+    diamonds_use = 0
+    try:
+        diamonds_use = int(payload.get("diamonds_use") or 0)
+    except (TypeError, ValueError):
+        pass
+    diamonds_use = max(diamonds_use, 0)
+
+    diamonds_applied = 0
+    diamond_discount = 0
+    diamonds_max = 0
+    refund_credit_balance = 0
+    refund_credit_max = 0
+    refund_credit_applied = 0
+    if user is not None and user.is_authenticated:
+        try:
+            is_reseller = user.profile.tier == "reseller"
+        except Exception:
+            is_reseller = False
+        if not is_reseller:
+            from .rewards import diamonds_to_toman, toman_to_diamonds_ceil, MIN_DIAMONDS_TO_REDEEM
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            try:
+                from .rewards import line_items_cost
+                total_cost = line_items_cost(line_items)
+                allowed_diamond_discount = max(0, amount_after_code - total_cost)
+            except Exception:
+                logger.exception("profit guardrail for maximum diamonds failed in preview")
+                allowed_diamond_discount = amount_after_code
+            diamonds_max = min(
+                int(profile.points_balance or 0),
+                toman_to_diamonds_ceil(allowed_diamond_discount),
+            )
+            if diamonds_use >= MIN_DIAMONDS_TO_REDEEM:
+                usable_diamonds = min(diamonds_use, diamonds_max)
+                diamond_discount = min(diamonds_to_toman(usable_diamonds), amount_after_code)
+
+                # Profit guardrail for diamonds: never sell below cost, but the
+                # customer's own balance isn't subject to the promo profit floor
+                # (see rewards.py "Wallet credit ... NOT capped here").
+                try:
+                    from .rewards import line_items_cost
+                    total_cost = line_items_cost(line_items)
+
+                    diamond_discount = min(diamond_discount, allowed_diamond_discount)
+                except Exception:
+                    logger.exception("profit guardrail for diamonds failed in preview")
+
+                full_value = diamonds_to_toman(usable_diamonds)
+                diamonds_applied = (
+                    usable_diamonds if diamond_discount >= full_value
+                    else toman_to_diamonds_ceil(diamond_discount)
+                )
+
+            refund_credit_balance = int(profile.refund_credit or 0)
+
+    refund_credit_max = min(
+        refund_credit_balance,
+        max(0, amount_after_code - diamond_discount),
+    )
+    try:
+        refund_credit_requested = max(0, int(payload.get("refund_credit_use") or 0))
+    except (TypeError, ValueError):
+        refund_credit_requested = 0
+    refund_credit_applied = min(refund_credit_requested, refund_credit_max)
+
     return {
         "gross_amount": gross_amount,
         "percent": discount_percent,
@@ -226,6 +298,13 @@ def _discount_preview_from_cart_payload(payload, dc):
         "discount_amount": nominal_discount,
         "guardrail_warning": bool(warning),
         "guardrail": warning,
+        "diamond_discount": diamond_discount,
+        "diamonds_applied": diamonds_applied,
+        "diamonds_max": diamonds_max,
+        "refund_credit_balance": refund_credit_balance,
+        "refund_credit_max": refund_credit_max,
+        "refund_credit_applied": refund_credit_applied,
+        "final_amount": max(0, amount_after_code - diamond_discount - refund_credit_applied),
     }
 
 def _determine_account_type(category, slug, raw_type=""):
@@ -378,17 +457,17 @@ def _update_product_viewers(product_slug, session_key):
     for (slug, _), ts in _PRODUCT_VIEWERS.items():
         if slug == product_slug and ts >= cutoff:
             count += 1
-    
+
     # Scale down high numbers to a more realistic 5-12 range
     import hashlib
     import random
     seed = int(hashlib.md5(product_slug.encode()).hexdigest(), 16) % 1000
     rng = random.Random(seed)
-    
+
     base = rng.randint(5, 10)
     # Add a bit of real activity weight but keep it capped
     final_count = base + min(2, count // 10)
-    
+
     return final_count
 
 
@@ -454,9 +533,9 @@ def _verify_recaptcha(token: str) -> bool:
     """
     if not token:
         return False
-    
+
     provider = (_get_setting("captcha_provider", default="recaptcha").value_text or "").strip().lower()
-    
+
     if provider == "hcaptcha":
         secret = HCAPTCHA_SECRET or "0x0000000000000000000000000000000000000000"
         url = "https://hcaptcha.com/siteverify"
@@ -590,7 +669,7 @@ def _enforce_captcha(payload, phone_number, ip_address):
 def _normalize_login_identifier(value: str) -> str:
     """
     Normalize phone/email input for login:
-    - Convert Persian digits to English
+    - Convert Persian and Arabic digits to English
     - Remove spaces, hyphens, zero-width characters
     - Normalize +98/0098/98 prefixes to 0
     - If 10-digit starting with 9, prefix 0
@@ -598,8 +677,9 @@ def _normalize_login_identifier(value: str) -> str:
     if value is None:
         return ""
     persian_digits = "۰۱۲۳۴۵۶۷۸۹"
+    arabic_digits = "٠١٢٣٤٥٦٧٨٩"
     english_digits = "0123456789"
-    trans_table = str.maketrans(persian_digits, english_digits)
+    trans_table = str.maketrans(persian_digits + arabic_digits, english_digits * 2)
     s = value.translate(trans_table)
     s = re.sub(r"[ \-\u200c\u200d]", "", s)
     if s.startswith("+98"):
@@ -614,12 +694,13 @@ def _normalize_login_identifier(value: str) -> str:
 
 
 def _normalize_otp_code(code: str) -> str:
-    """Normalize OTP input (convert Persian digits, drop spaces)."""
+    """Normalize OTP input (convert Persian/Arabic digits, drop spaces)."""
     if code is None:
         return ""
     persian_digits = "۰۱۲۳۴۵۶۷۸۹"
+    arabic_digits = "٠١٢٣٤٥٦٧٨٩"
     english_digits = "0123456789"
-    trans_table = str.maketrans(persian_digits, english_digits)
+    trans_table = str.maketrans(persian_digits + arabic_digits, english_digits * 2)
     s = code.translate(trans_table)
     s = re.sub(r"\s+", "", s)
     return s.strip()
@@ -711,6 +792,7 @@ def _product_to_dict(p: Product, include_content=True):
         "purchasable": not (
             bool(getattr(p, "ordering_disabled", False))
             or bool(getattr(p, "customer_ordering_disabled", False))
+            or not bool(getattr(p, "active", True))
         ),
     }
     if include_content:
@@ -863,11 +945,12 @@ def products_list(request):
         sold_count=Subquery(sold_count_subquery, output_field=IntegerField()),
         category_order=Case(
             When(category='FORTNITE', then=Value(1)),
-            When(category='AI', then=Value(2)),
-            When(category='GIFTCARDS', then=Value(3)),
-            When(category='GAMES', then=Value(4)),
-            When(category='SUBSCRIPTIONS', then=Value(5)),
-            default=Value(6),
+            When(category='ROCKET_LEAGUE', then=Value(2)),
+            When(category='AI', then=Value(3)),
+            When(category='GIFTCARDS', then=Value(4)),
+            When(category='GAMES', then=Value(5)),
+            When(category='SUBSCRIPTIONS', then=Value(6)),
+            default=Value(7),
             output_field=IntegerField()
         ),
         slug_order=Case(
@@ -1270,7 +1353,7 @@ def product_viewers(request, slug):
         return HttpResponseNotAllowed(['GET', 'POST'])
 
     try:
-        Product.objects.get(slug=slug, active=True)
+        Product.objects.get(slug=slug)
     except Product.DoesNotExist:
         return JsonResponse({"viewers": 0})
 
@@ -1458,6 +1541,8 @@ def _order_item_is_gta6(item) -> bool:
 
 
 def _order_requires_created_xbox_account(order: Order) -> bool:
+    if getattr(order, "xbox_account_creation_skipped", False):
+        return False
     if not getattr(order, "xbox_create_account", False):
         return False
     xbox_items = list(order.items.filter(account_type="xbox").select_related("product"))
@@ -1580,7 +1665,7 @@ def create_order(request):
     if _crew_limits_enabled and crew_qty_new > 0 and rush_order and not is_admin:
         rush_processing_count = Order.objects.filter(
             rush_order=True,
-            status__in=['paid', 'registered', 'processing', 'needs_2fa', 'needs_tr_region', 'invalid_info']
+            status__in=['paid', 'registered', 'processing', 'needs_2fa', 'needs_tr_region', 'needs_xbox_info', 'invalid_info']
         ).count()
         if rush_processing_count >= 10:
             return JsonResponse({
@@ -1788,10 +1873,20 @@ def create_order(request):
     )
     order.save()
 
-    # mark any abandoned cart for this user as converted
+    # mark any abandoned cart for this user, phone, or email as converted
     try:
+        cart_filter = Q(user=user)
+        if phone:
+            normalized_phone = "".join(c for c in phone if c.isdigit())
+            if len(normalized_phone) >= 10:
+                last_10 = normalized_phone[-10:]
+                cart_filter |= Q(phone__endswith=last_10)
+        if contact_email:
+            cart_filter |= Q(email__iexact=contact_email)
+
         AbandonedCart.objects.filter(
-            user=user, converted_at__isnull=True
+            cart_filter,
+            converted_at__isnull=True
         ).update(converted_at=timezone.now())
     except Exception:
         pass
@@ -1916,7 +2011,7 @@ def create_order(request):
             today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
             # Check reseller specific daily limit
-            if is_reseller and getattr(p, "reseller_daily_order_limit", -1) >= 0:
+            if is_reseller and getattr(p, "reseller_daily_order_limit", -1) > 0:
                 ordered_today_reseller = OrderItem.objects.filter(
                     product=p,
                     order__created_at__gte=today_start,
@@ -1932,7 +2027,7 @@ def create_order(request):
                     )
 
             # Check customer specific daily limit
-            if not is_reseller and getattr(p, "customer_daily_order_limit", -1) >= 0:
+            if not is_reseller and getattr(p, "customer_daily_order_limit", -1) > 0:
                 ordered_today_customer = OrderItem.objects.filter(
                     product=p,
                     order__created_at__gte=today_start,
@@ -1948,7 +2043,7 @@ def create_order(request):
                     )
 
             # Check general daily limit
-            if getattr(p, "daily_order_limit", -1) >= 0:
+            if getattr(p, "daily_order_limit", -1) > 0:
                 ordered_today = OrderItem.objects.filter(
                     product=p,
                     order__created_at__gte=today_start,
@@ -2091,7 +2186,9 @@ def create_order(request):
                 usable_diamonds = min(diamonds_use, profile.points_balance)
                 diamond_discount = min(diamonds_to_toman(usable_diamonds), amount)
                 
-                # Profit guardrail for diamonds:
+                # Profit guardrail for diamonds: never sell below cost, but the
+                # customer's own balance isn't subject to the promo profit floor
+                # (see rewards.py "Wallet credit ... NOT capped here").
                 try:
                     from .rewards import line_items_cost
                     cost_lines = [
@@ -2099,13 +2196,8 @@ def create_order(request):
                         for it in order.items.select_related("product", "variant").all()
                     ]
                     total_cost = line_items_cost(cost_lines)
-                    if amount < 1000000:
-                        floor = max(170000, int(total_cost * 0.09))
-                    else:
-                        floor = max(290000, int(total_cost * 0.09))
-                    min_payable = total_cost + floor
-                    
-                    allowed_diamond_discount = max(0, amount - min_payable)
+
+                    allowed_diamond_discount = max(0, amount - total_cost)
                     diamond_discount = min(diamond_discount, allowed_diamond_discount)
                 except Exception:
                     logger.exception("profit guardrail for diamonds failed")
@@ -2145,11 +2237,46 @@ def create_order(request):
     order.amount = payable
     order.wallet_used = wallet_applied
     order.diamonds_used = diamonds_applied
+    order.refund_credit_used = refund_credit_used
     order.save()
 
+    # Verify expected_amount matches calculated order.amount to prevent silent price mismatch
+    expected_amount = payload.get('expected_amount')
+    if expected_amount is not None:
+        try:
+            expected_amount = int(expected_amount)
+            if abs(order.amount - expected_amount) > 10:  # allow tiny rounding difference
+                # rollback point deduction if any
+                if diamonds_applied > 0:
+                    from .rewards import award_points
+                    award_points(user, diamonds_applied, "adjust", note="بازگرداندن الماس به دلیل عدم ثبت سفارش")
+                # rollback refund credit if any
+                if refund_credit_used > 0:
+                    from .rewards import credit_refund_credit
+                    credit_refund_credit(
+                        user, refund_credit_used,
+                        related_order=order,
+                        idempotency_key=f"restore:expected:{order.pk}",
+                        kind="restore",
+                        note="بازگرداندن اعتبار بازگشتی به دلیل عدم ثبت سفارش",
+                    )
+                # rollback discount code used_count if any
+                if order.discount_code:
+                    try:
+                        dc = DiscountCode.objects.get(code=order.discount_code)
+                        dc.used_count = max(0, (dc.used_count or 0) - 1)
+                        dc.save(update_fields=["used_count"])
+                    except Exception:
+                        pass
+                # delete the order
+                order.delete()
+                return JsonResponse({"message": "مبلغ نهایی سفارش با سبد خرید شما همخوانی ندارد. لطفاً صفحه را مجدداً بارگذاری کنید."}, status=400)
+        except (ValueError, TypeError):
+            pass
+
     logger.info(
-        "Order saved: tracking=%s, amount=%s, rush_order=%s, rush_fee=%s, diamonds_applied=%s",
-        order.tracking_code, order.amount, order.rush_order, order.rush_fee, diamonds_applied
+        "Order saved: tracking=%s, amount=%s, rush_order=%s, rush_fee=%s, diamonds_applied=%s, refund_credit_used=%s",
+        order.tracking_code, order.amount, order.rush_order, order.rush_fee, diamonds_applied, refund_credit_used
     )
 
     # Send new order notification to contact@jinxfamily
@@ -2307,14 +2434,27 @@ def order_status(request, tracking):
         })
     latest_payment = order.payments.filter(status__in=['verified', 'success']).order_by('-created_at').first()
     
+    # Check if created outside working hours (Tehran timezone 00:00 to 10:00 AM)
+    is_outside_working_hours = False
+    try:
+        import zoneinfo
+        tehran_tz = zoneinfo.ZoneInfo("Asia/Tehran")
+        created_tehran = order.created_at.astimezone(tehran_tz) if timezone.is_aware(order.created_at) else order.created_at
+        if 0 <= created_tehran.hour < 10:
+            is_outside_working_hours = True
+    except Exception:
+        is_outside_working_hours = False
+
     # Estimate time remaining
     estimated_time = ""
     if order.status in ["paid", "registered", "processing"]:
-        if order.rush_order:
+        if is_outside_working_hours:
+            estimated_time = "ثبت شده خارج از ساعت کاری (تکمیل در ساعت کاری ۱۰ تا ۲۴ با اولویت زمان ثبت)"
+        elif order.rush_order:
             estimated_time = "تحویل در ساعت کاری (فوری)"
         else:
             estimated_time = "تحویل در ساعت کاری"
-    elif order.status in ["needs_2fa", "invalid_info", "needs_tr_region"]:
+    elif order.status in ["needs_2fa", "invalid_info", "needs_tr_region", "needs_xbox_info"]:
         estimated_time = "متوقف شده (نیاز به اقدام کاربر برای رفع مشکل اکانت)"
     elif order.status == "pending":
         estimated_time = "در انتظار پرداخت (روند انجام پس از پرداخت آغاز می‌شود)"
@@ -2337,6 +2477,7 @@ def order_status(request, tracking):
         "payment_ref_id": latest_payment.ref_id if latest_payment and latest_payment.ref_id else "",
         "payment_card_pan": latest_payment.card_pan if latest_payment and latest_payment.card_pan else "",
         "estimated_time": estimated_time,
+        "is_outside_working_hours": is_outside_working_hours,
     })
 
 
@@ -2473,6 +2614,8 @@ def login_view(request):
         "phone": user.username,
         "is_admin": _is_admin_user(user),
         "wallet_balance": profile.wallet_balance,
+        "points_balance": profile.points_balance,
+        "refund_credit": profile.refund_credit,
         "avatar_url": avatar_url,
     })
 
@@ -2508,12 +2651,15 @@ def me(request):
     data = {
         "id": user.id,
         "name": user.get_full_name() or user.username,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
         "email": user.email,
         "phone_number": phone_num,
         "phone": phone_num,
         "is_admin": is_admin,
         "wallet_balance": profile.wallet_balance,
         "points_balance": profile.points_balance,
+        "refund_credit": profile.refund_credit,
         "avatar_url": avatar_url,
     }
     if is_admin:
@@ -2529,11 +2675,17 @@ def my_referral(request):
     user = request.user
     from .rewards import (
         ensure_referral_code,
-        REFERRAL_MILESTONE_AMOUNT,
         REFERRAL_MILESTONE_COUNT,
+        REFERRAL_MILESTONE_POINTS,
     )
     code = ensure_referral_code(user)
-    invites = Referral.objects.filter(referrer=user).count()
+    referrals = Referral.objects.filter(referrer=user).order_by("created_at", "id")
+    invites = referrals.count()
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    acknowledged_count = min(profile.referral_notified_count, invites)
+    unseen_referrals = referrals[acknowledged_count:]
+    unseen_count = len(unseen_referrals)
+    unseen_diamonds = sum(referral.points_awarded for referral in unseen_referrals)
     points_earned = (
         PointsTransaction.objects.filter(user=user, reason="referral")
         .aggregate(s=Sum("amount"))["s"] or 0
@@ -2548,9 +2700,33 @@ def my_referral(request):
         "milestone": {
             "target": REFERRAL_MILESTONE_COUNT,
             "reached": invites >= REFERRAL_MILESTONE_COUNT,
-            "reward_amount": REFERRAL_MILESTONE_AMOUNT,
+            "reward_points": REFERRAL_MILESTONE_POINTS,
+            "rewards": [],
+        },
+        "unseen": {
+            "count": unseen_count,
+            "diamonds": unseen_diamonds,
+            "crossed_milestone": acknowledged_count < REFERRAL_MILESTONE_COUNT <= invites,
         },
     })
+
+
+@csrf_exempt
+def acknowledge_referrals(request):
+    """Mark all referral activity currently visible to this user as acknowledged."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+
+    with transaction.atomic():
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile = UserProfile.objects.select_for_update().get(pk=profile.pk)
+        current_count = Referral.objects.filter(referrer=request.user).count()
+        if profile.referral_notified_count != current_count:
+            profile.referral_notified_count = current_count
+            profile.save(update_fields=["referral_notified_count"])
+    return JsonResponse({"acknowledged_count": current_count})
 
 
 @csrf_exempt
@@ -2601,18 +2777,22 @@ def update_profile(request):
         profile = UserProfile.objects.filter(user=user).order_by('id').first()
 
     name = (payload.get('name') or '').strip()
-    email = (payload.get('email') or '').strip().lower()
+    requested_email = (payload.get('email') or '').strip().lower()
     password = payload.get('password') or ''
     password2 = (payload.get('password2') or password) if password else ''
 
-    if email:
-        if User.objects.filter(email=email).exclude(id=user.id).exists():
-            return JsonResponse({"message": "ایمیل قبلاً برای حساب دیگری ثبت شده است"}, status=400)
-        user.email = email
+    # Email is the account identifier and cannot be changed from the customer panel.
+    # Accepting the unchanged value keeps older clients compatible, but never writes it.
+    if requested_email and requested_email != (user.email or '').strip().lower():
+        return JsonResponse({"message": "ایمیل حساب قابل تغییر نیست."}, status=400)
 
-    if name:
-        # Store full name in first_name for simplicity
+    if 'first_name' in payload or 'last_name' in payload:
+        user.first_name = (payload.get('first_name') or '').strip()
+        user.last_name = (payload.get('last_name') or '').strip()
+    elif name:
+        # Backward compatibility for older clients that submit one display-name field.
         user.first_name = name
+        user.last_name = ''
 
     if password or password2:
         if password != password2:
@@ -2622,6 +2802,9 @@ def update_profile(request):
         user.set_password(password)
 
     user.save()
+    if password:
+        # set_password changes the session hash; keep this authenticated request signed in.
+        update_session_auth_hash(request, user)
     profile.save()
     profile_completion_award = 0
     try:
@@ -2641,12 +2824,15 @@ def update_profile(request):
     return JsonResponse({
         "id": user.id,
         "name": user.get_full_name() or user.username,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
         "phone_number": user.username,
         "phone": user.username,
         "email": user.email,
         "is_admin": profile.tier == "admin" or user.is_staff,
         "wallet_balance": profile.wallet_balance,
         "points_balance": profile.points_balance,
+        "refund_credit": profile.refund_credit,
         "avatar_url": avatar_url,
         "profile_completion_award": profile_completion_award,
     })
@@ -3291,7 +3477,11 @@ def _build_cart_data(order):
 def my_orders(request):
     if not request.user.is_authenticated:
         return JsonResponse({"detail": "authentication required"}, status=401)
-    orders_qs = Order.objects.filter(user=request.user).exclude(status='canceled').order_by('-created_at')
+    
+    cutoff_time = timezone.now() - timedelta(hours=72)
+    orders_qs = Order.objects.filter(user=request.user).exclude(status='canceled').filter(
+        Q(status='completed') | Q(created_at__gte=cutoff_time)
+    ).order_by('-created_at')
 
     def status_tag(code):
         return dict(Order.STATUS_CHOICES).get(code, code)
@@ -3328,6 +3518,7 @@ def my_orders(request):
             "amount": o.amount,
             "wallet_used": o.wallet_used,
             "diamonds_used": o.diamonds_used,
+            "refund_credit_used": o.refund_credit_used,
             "created_at": o.created_at.isoformat(),
             "first_item_name": first_item.name if first_item else "",
             "first_item_image": image_url,
@@ -3336,8 +3527,117 @@ def my_orders(request):
             "phone": o.phone,
             "telegram": o.telegram,
             "note": o.note,
+            "epic_username": o.epic_username,
+            "info_corrected": bool(getattr(o, "info_corrected", False)),
+            "info_corrected_at": o.info_corrected_at.isoformat() if getattr(o, "info_corrected_at", None) else None,
+            "can_edit_info": o.status in ["invalid_info", "needs_2fa", "needs_tr_region", "needs_xbox_info", "registered", "processing"],
         })
     return JsonResponse({"results": orders})
+
+
+@csrf_exempt
+def user_update_order_info(request, tracking):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    order = get_object_or_404(Order, tracking_code=tracking, user=request.user)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return JsonResponse({"message": "JSON نامعتبر"}, status=400)
+
+    xbox_email = (payload.get('xbox_email') or '').strip()
+    xbox_password = (payload.get('xbox_password') or '').strip()
+    epic_username = (payload.get('epic_username') or '').strip()
+    phone = (payload.get('phone') or '').strip()
+    telegram = (payload.get('telegram') or '').strip()
+    note = (payload.get('note') or '').strip()
+
+    update_fields = ['info_corrected', 'info_corrected_at']
+
+    if xbox_email and xbox_password:
+        existing_note = (order.note or '').strip()
+        timestamp_str = timezone.now().strftime("%Y-%m-%d %H:%M")
+        xbox_entry = f"🎮 [اطلاعات اکانت Xbox ارسالی کاربر - {timestamp_str}]: ایمیل: {xbox_email} | رمز عبور: {xbox_password}"
+        if note and note not in xbox_entry:
+            xbox_entry += f" | توضیحات: {note}"
+        order.note = f"{existing_note}\n\n{xbox_entry}".strip() if existing_note else xbox_entry
+        update_fields.append('note')
+    elif note:
+        existing_note = (order.note or '').strip()
+        timestamp_str = timezone.now().strftime("%Y-%m-%d %H:%M")
+        new_entry = f"🛠 [اصلاح اطلاعات کاربر - {timestamp_str}]: {note}"
+        order.note = f"{existing_note}\n\n{new_entry}".strip() if existing_note else new_entry
+        update_fields.append('note')
+
+    if epic_username:
+        order.epic_username = epic_username
+        update_fields.append('epic_username')
+    if phone:
+        order.phone = phone
+        update_fields.append('phone')
+    if telegram:
+        order.telegram = telegram
+        update_fields.append('telegram')
+
+    # Mark as corrected by user (PINNED for admin)
+    order.info_corrected = True
+    order.info_corrected_at = timezone.now()
+
+    # If status was invalid_info, needs_2fa or needs_xbox_info, transition to processing so admin re-evaluates
+    if order.status in ["invalid_info", "needs_2fa", "needs_tr_region", "needs_xbox_info"]:
+        order.status = "processing"
+        update_fields.append('status')
+
+    order.save(update_fields=update_fields)
+
+    # Create AI Evaluation Placeholder message (admin-only)
+    try:
+        ticket, _ = Ticket.objects.get_or_create(
+            user=request.user,
+            order=order,
+            defaults={
+                "subject": f"ارزیابی اطلاعات جدید سفارش #{order.tracking_code}",
+                "status": "open",
+            }
+        )
+        info_items = []
+        if xbox_email: info_items.append(f"ایمیل Xbox: {xbox_email}")
+        if xbox_password: info_items.append(f"رمز Xbox: {xbox_password}")
+        if epic_username: info_items.append(f"اپیک گیمز: {epic_username}")
+        if phone: info_items.append(f"تلفن: {phone}")
+        if telegram: info_items.append(f"تلگرام: {telegram}")
+        if note: info_items.append(f"توضیحات: {note}")
+
+        summary = " | ".join(info_items) if info_items else "اطلاعات جدید ثبت گردید"
+
+        TicketMessage.objects.create(
+            ticket=ticket,
+            sender_type="admin",
+            sender_user=None,
+            message=f"🤖 [پیش‌فرض ارزیابی هوش مصنوعی - فقط قابل مشاهده برای ادمین]\nاطلاعات جدید ثبت‌شده توسط کاربر:\n{summary}\n\nلطفاً با دکمه‌های اهرم اطمینان ادمین، صحت اطلاعات را تایید یا رد کنید.",
+            is_admin_only=True,
+        )
+    except Exception as ai_err:
+        logger.error(f"Error creating AI placeholder message: {ai_err}", exc_info=True)
+
+    return JsonResponse({
+        "success": True,
+        "message": "اطلاعات سفارش با موفقیت بروزرسانی شد و سفارش در بالای لیست ادمین پین گردید.",
+        "order": {
+            "tracking_code": order.tracking_code,
+            "status": order.status,
+            "status_fa": dict(Order.STATUS_CHOICES).get(order.status, order.status),
+            "epic_username": order.epic_username,
+            "phone": order.phone,
+            "telegram": order.telegram,
+            "note": order.note,
+            "info_corrected": order.info_corrected,
+        }
+    })
 
 
 @csrf_exempt
@@ -3373,6 +3673,17 @@ def cancel_order(request, tracking):
         award_points(
             order.user, order.diamonds_used, "redeem",
             related_order=order, note=f"بازگشت کوین سفارش لغوشده {order.tracking_code}",
+        )
+
+    # Refund refund-credit if used on the canceled order
+    if order.refund_credit_used > 0 and order.user:
+        from .rewards import credit_refund_credit
+        credit_refund_credit(
+            order.user, order.refund_credit_used,
+            related_order=order,
+            idempotency_key=f"restore:cancel:{order.pk}",
+            kind="restore",
+            note=f"بازگشت اعتبار بازگشتی سفارش لغوشده {order.tracking_code}",
         )
 
     # Permanently delete the canceled order (cascades to OrderItem + Payment)
@@ -3435,6 +3746,8 @@ def _admin_order_dict(o: Order):
         "amount": o.amount,
         "wallet_used": o.wallet_used,
         "diamonds_used": o.diamonds_used,
+        "refund_credit_used": o.refund_credit_used,
+        "refund_credit_granted_amount": o.refund_credit_granted_amount,
         "discount_code": o.discount_code,
         "discount_percent": o.discount_percent,
         "discount_amount": o.discount_amount,
@@ -3449,6 +3762,7 @@ def _admin_order_dict(o: Order):
         "telegram": o.telegram,
         "note": o.note,
         "xbox_create_account": o.xbox_create_account,
+        "xbox_account_creation_skipped": o.xbox_account_creation_skipped,
         "requires_created_xbox_account": requires_created_xbox_account,
         "created_xbox_email": o.created_xbox_email,
         "created_xbox_pass": o.created_xbox_pass,
@@ -3470,6 +3784,9 @@ def _admin_order_dict(o: Order):
         "is_test_order": bool(getattr(o, "is_test_order", False)),
         "is_reseller_order": bool(getattr(o, "is_reseller_order", False)),
         "reseller_seller_code": getattr(o, "reseller_seller_code", "") or "",
+        "reseller_info_updated": bool(getattr(o, "reseller_info_updated", False)),
+        "info_corrected": bool(getattr(o, "info_corrected", False)),
+        "info_corrected_at": o.info_corrected_at.isoformat() if getattr(o, "info_corrected_at", None) else None,
     }
 
 def _admin_product_dict(p: Product):
@@ -3480,6 +3797,7 @@ def _admin_product_dict(p: Product):
         "subtitle": p.subtitle,
         "category": p.category,
         "image_url": p.image_url,
+        "cover_16_9": p.cover_16_9,
         "price": p.price,
         "original_price": getattr(p, "original_price", 0),
         "price_lira": p.price_lira,
@@ -3534,6 +3852,8 @@ def _clean_daily_limit(value, field_label):
         raise ValueError(f"{field_label} نامعتبر است")
     if parsed < -1:
         raise ValueError(f"{field_label} نمی‌تواند منفی باشد")
+    if parsed == 0:
+        return -1
     return parsed
 
 
@@ -3563,6 +3883,8 @@ def _build_product_updates(payload, require_name=False):
         updates["subcategory"] = _clean_product_text(payload.get("subcategory"), 50)
     if "image_url" in payload:
         updates["image_url"] = _clean_product_text(payload.get("image_url"), 200)
+    if "cover_16_9" in payload:
+        updates["cover_16_9"] = _clean_product_text(payload.get("cover_16_9"), 200)
     if "category" in payload:
         updates["category"] = _clean_product_category(payload.get("category"))
     if "price" in payload:
@@ -4537,9 +4859,24 @@ def admin_orders(request):
     elif type_filter == "g4a4":
         base_qs = base_qs.filter(items__g4a4_variation__isnull=False).distinct()
     total_count = base_qs.count()
-    orders_qs = base_qs.select_related('user').prefetch_related('payments', 'items', 'items__product').order_by('-rush_order', '-created_at')[:limit]
+    orders_qs = base_qs.select_related('user').prefetch_related('payments', 'items', 'items__product').order_by('-info_corrected', '-rush_order', '-created_at')[:limit]
     data = [_admin_order_dict(o) for o in orders_qs]
     return JsonResponse({"results": data, "count": total_count})
+
+
+@csrf_exempt
+def admin_unpin_order(request, tracking):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    order = get_object_or_404(Order, tracking_code=tracking)
+    order.info_corrected = False
+    order.save(update_fields=['info_corrected'])
+    return JsonResponse({"success": True, "message": "پین سفارش برداشته شد"})
 
 
 def admin_previous_orders(request):
@@ -4897,20 +5234,6 @@ def admin_refund_notify(request, tracking):
     customer_email = ""
     customer_name = ""
     latest_payment = order.payments.order_by("-created_at").first()
-    card_pan = latest_payment.card_pan if latest_payment else (getattr(order, "payment_card_pan", "") or "")
-    def _mask_pan(pan: str):
-        digits = (pan or "").replace(" ", "").replace("-", "")
-        if not digits:
-            return ""
-        masked = digits
-        if len(digits) >= 10:
-            masked = f"{digits[:4]}****{digits[-4:]}"
-        elif len(digits) >= 6:
-            masked = f"{digits[:6]}****"
-        # Group with hyphens in 4-char chunks for clarity
-        grouped = "-".join([masked[i:i+4] for i in range(0, len(masked), 4)])
-        return grouped
-    masked_pan = _mask_pan(card_pan)
     if order.user:
         customer_email = order.user.email or ""
         customer_name = order.user.get_full_name() or order.user.username or ""
@@ -4922,18 +5245,16 @@ def admin_refund_notify(request, tracking):
     customer_email = _order_notify_email(order) or customer_email
 
     # Email content
-    email_subject = "عودت وجه سفارش شما"
+    email_subject = "اعتبار ریفاند به کیف پول شما اضافه شد"
     email_body_text = f"""{customer_name} عزیز،
-درخواست عودت وجه سفارش {order.tracking_code} ثبت شد.
-کارت شما برای واریز: {masked_pan or 'نامشخص'}
-در صورت نیاز به اطلاعات بیشتر با پشتیبانی در ارتباط باشید.
+مبلغ {refund_result.get('credit_added', 0):,} تومان بابت ریفاند سفارش {order.tracking_code} به اعتبار کیف پول شما اضافه شد.
+این اعتبار در checkout قابل استفاده است و تا سقف مبلغ سفارش از پرداخت کم می‌شود.
 """
     email_body_html = f"""
     <div style="direction:rtl;font-family:Tahoma, Arial,sans-serif;">
       <p>{customer_name} عزیز،</p>
-      <p>درخواست عودت وجه سفارش <b>{order.tracking_code}</b> ثبت شد.</p>
-      <p>کارت برای واریز: <b>{masked_pan or 'نامشخص'}</b></p>
-      <p>در صورت نیاز به اطلاعات بیشتر با پشتیبانی در ارتباط باشید.</p>
+      <p>مبلغ <b>{refund_result.get('credit_added', 0):,} تومان</b> بابت ریفاند سفارش <b>{order.tracking_code}</b> به اعتبار کیف پول شما اضافه شد.</p>
+      <p>این اعتبار در checkout قابل استفاده است و تا سقف مبلغ سفارش از پرداخت کم می‌شود.</p>
       <p style="margin-top:12px;font-size:13px;color:#64748b;">
         لطفاً از تماس یا مراجعه بی‌مورد به پشتیبانی خودداری کنید؛ این کار تنها باعث تعویق سفارش شما و سایرین خواهد شد.<br/>
         تیم جینکس فمیلی
@@ -4972,6 +5293,7 @@ def admin_refund_notify(request, tracking):
 
     return JsonResponse({
         "tracking_code": order.tracking_code,
+        "refund": refund_result,
         "email_sent": email_sent,
         "email_error": email_error,
         "sms_sent": sms_sent,
@@ -5147,7 +5469,7 @@ def admin_products(request):
             limit = 300
         limit = max(1, min(limit, 1000))
 
-        products = Product.objects.prefetch_related('variants').order_by('display_order', '-created_at')[:limit]
+        products = Product.objects.prefetch_related('variants').order_by('-active', 'display_order', '-created_at')[:limit]
         data = [_admin_product_dict(p) for p in products]
         return JsonResponse({"results": data})
 
@@ -5177,6 +5499,7 @@ def admin_products(request):
             category=updates.get("category", "FORTNITE"),
             subcategory=updates.get("subcategory", ""),
             image_url=updates.get("image_url", ""),
+            cover_16_9=updates.get("cover_16_9", ""),
             price=updates.get("price", 0),
             original_price=updates.get("original_price", 0),
             price_lira=updates.get("price_lira", 0),
@@ -5307,6 +5630,16 @@ def admin_product_detail(request, product_id: int):
             for k, v in updates.items():
                 setattr(product, k, v)
             product.save(update_fields=list(updates.keys()))
+
+        # The Crew Pack storefront always sells a selected duration variant.
+        # Keep its default (one-month/first) variant in sync when an admin
+        # changes the product's base price, including through the full editor.
+        # Other variant-based products deliberately retain their own prices.
+        if product.slug == CREW_SLUG and "price" in updates:
+            default_variant = product.variants.order_by("sort_order", "id").first()
+            if default_variant and default_variant.price != product.price:
+                default_variant.price = product.price
+                default_variant.save(update_fields=["price"])
 
         resp = _admin_product_dict(product)
         if variant_errors:
@@ -5444,6 +5777,38 @@ def admin_product_cover(request, product_id: int):
     saved_path = default_storage.save(path, uploaded)
     product.image_url = f"{settings.MEDIA_URL}{saved_path}".replace("//", "/")
     product.save(update_fields=["image_url"])
+
+    return JsonResponse(_admin_product_dict(product))
+
+
+@csrf_exempt
+def admin_product_cover_16_9(request, product_id: int):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    product = get_object_or_404(Product, id=product_id)
+    uploaded = request.FILES.get("cover") or request.FILES.get("image") or request.FILES.get("file")
+    if not uploaded:
+        return JsonResponse({"message": "فایل تصویر ارسال نشده است"}, status=400)
+
+    max_size = 5 * 1024 * 1024
+    if uploaded.size > max_size:
+        return JsonResponse({"message": "حجم تصویر نباید بیشتر از ۵ مگابایت باشد"}, status=400)
+    if uploaded.content_type and not uploaded.content_type.startswith("image/"):
+        return JsonResponse({"message": "فایل انتخاب شده تصویر نیست"}, status=400)
+
+    try:
+        path = _product_cover_upload_path(product, uploaded)
+    except ValueError as exc:
+        return JsonResponse({"message": str(exc)}, status=400)
+
+    saved_path = default_storage.save(path, uploaded)
+    product.cover_16_9 = f"{settings.MEDIA_URL}{saved_path}".replace("//", "/")
+    product.save(update_fields=["cover_16_9"])
 
     return JsonResponse(_admin_product_dict(product))
 
@@ -5701,32 +6066,29 @@ def admin_update_account_status(request, account_id: int):
         sms_sent = False
         sms_error = None
         
-        # Auto-update parent order status if all accounts have the same status or are completed?
-        # Priority: needs_2fa > invalid_info > needs_tr_region > processing > completed
+        # Unit states are independent from the overall reseller-order state.
+        #
+        # In particular, an exception on one unit (for example ``invalid_info``)
+        # must not move the entire order to that exception state: the reseller
+        # still needs to see and act on the affected unit, while the order stays
+        # in its admin-managed workflow.  The only safe aggregate transition is
+        # completion, and that can happen only after every unit is completed.
         order = account.item.order
         all_accounts = list(OrderItemAccount.objects.filter(item__order=order))
-        if all_accounts:
-            statuses = {a.status for a in all_accounts}
+        all_units_completed = bool(all_accounts) and all(
+            unit.status == "completed" for unit in all_accounts
+        )
+        if all_units_completed:
             was_status = order.status
-            if "needs_2fa" in statuses:
-                order.status = "needs_2fa"
-            elif "invalid_info" in statuses:
-                order.status = "invalid_info"
-            elif "needs_tr_region" in statuses:
-                order.status = "needs_tr_region"
-            elif "processing" in statuses:
-                order.status = "processing"
-            elif len(statuses) == 1 and "completed" in statuses:
+            if order.status != "completed":
                 order.status = "completed"
                 order.completed_at = timezone.now()
-            
-            if order.status != was_status:
                 update_fields = ["status"]
-                if order.status == "completed":
-                    update_fields.append("completed_at")
+                update_fields.append("completed_at")
                 order.save(update_fields=update_fields)
-                
-                # Send SMS for parent order status change
+
+                # The order is complete only when every unit is complete, so
+                # this is an order-level completion notification.
                 if getattr(order, "is_reseller_order", False):
                     try:
                         ok, msg = _send_order_status_sms_if_changed(order, order.status, was_status)
@@ -5736,17 +6098,18 @@ def admin_update_account_status(request, account_id: int):
                     except Exception as sms_err:
                         logger.error(f"Failed to send order status SMS: {sms_err}", exc_info=True)
                         sms_error = str(sms_err)
-            else:
-                # Send SMS for unit/account status change
-                if getattr(order, "is_reseller_order", False) and account.status != previous_status:
-                    try:
-                        ok, msg = _send_account_status_sms_if_changed(account, account.status, previous_status)
-                        sms_sent = bool(ok)
-                        if not ok:
-                            sms_error = msg
-                    except Exception as sms_err:
-                        logger.error(f"Failed to send account status SMS: {sms_err}", exc_info=True)
-                        sms_error = str(sms_err)
+        # Any other status change is about this unit only.  It must not alter
+        # the parent order's status or make its order-level notification claim
+        # that every unit has invalid details.
+        elif getattr(order, "is_reseller_order", False) and account.status != previous_status:
+            try:
+                ok, msg = _send_account_status_sms_if_changed(account, account.status, previous_status)
+                sms_sent = bool(ok)
+                if not ok:
+                    sms_error = msg
+            except Exception as sms_err:
+                logger.error(f"Failed to send account status SMS: {sms_err}", exc_info=True)
+                sms_error = str(sms_err)
 
         # Auto-archive the completed unit account details to reseller chest
         if account.status == "completed" and account.xbox_email and account.xbox_password:
@@ -5826,6 +6189,7 @@ def admin_update_order_status(request, tracking):
     # Xbox account credentials (when admin creates account for customer)
     created_xbox_email = (payload.get('created_xbox_email') or '').strip()
     created_xbox_pass = (payload.get('created_xbox_pass') or '').strip()
+    skip_xbox_account_creation = bool(payload.get('skip_xbox_account_creation'))
 
     valid_statuses = {s for s, _ in Order.STATUS_CHOICES}
     if status not in valid_statuses:
@@ -5843,12 +6207,19 @@ def admin_update_order_status(request, tracking):
             send_email = False
         send_sms = True
 
+    # An admin can explicitly confirm that no Xbox account was created.  This is
+    # distinct from a missing value, which remains invalid for orders that need one.
+    if skip_xbox_account_creation:
+        order.xbox_account_creation_skipped = True
+
     created_xbox_required = _order_requires_created_xbox_account(order)
     previous_status = order.status
     order.status = status
 
     # Set completed_at timestamp when order is marked as completed
     update_fields = ['status']
+    if skip_xbox_account_creation:
+        update_fields.append('xbox_account_creation_skipped')
     if previous_status != "completed" and status == "completed":
         order.completed_at = timezone.now()
         update_fields.append('completed_at')
@@ -5857,7 +6228,10 @@ def admin_update_order_status(request, tracking):
     if created_xbox_email and created_xbox_pass:
         order.created_xbox_email = created_xbox_email
         order.created_xbox_pass = created_xbox_pass
+        order.xbox_account_creation_skipped = False
         update_fields.extend(['created_xbox_email', 'created_xbox_pass'])
+        if 'xbox_account_creation_skipped' not in update_fields:
+            update_fields.append('xbox_account_creation_skipped')
 
     if created_xbox_required and status == "completed":
         effective_xbox_email = created_xbox_email or order.created_xbox_email
@@ -5925,6 +6299,8 @@ def admin_update_order_status(request, tracking):
     email_error = ""
     sms_sent = False
     sms_error = ""
+    ticket_created = False
+    ticket_id = None
     if paid_transitioned:
         try:
             _notify_customer_payment_success(order, ref_id="")
@@ -5960,7 +6336,7 @@ def admin_update_order_status(request, tracking):
         else:
             effective_xbox_email = created_xbox_email or order.created_xbox_email
             effective_xbox_pass = created_xbox_pass or order.created_xbox_pass
-            if created_xbox_required and (not effective_xbox_email or not effective_xbox_pass):
+            if status == "completed" and created_xbox_required and (not effective_xbox_email or not effective_xbox_pass):
                 email_error = "اطلاعات اکانت Xbox برای ارسال ایمیل کامل نیست."
                 return JsonResponse({
                     "tracking_code": order.tracking_code,
@@ -6142,7 +6518,7 @@ def admin_update_order_status(request, tracking):
             # پیامک برای مسترد شدن (فقط اگه وضعیت واقعاً تغییر کرده باشه)
             elif status == "refunded" and previous_status != "refunded":
                 # استفاده از قالب جدید با مبلغ
-                refund_amount = order.amount or 0
+                refund_amount = refund_result.get("credit_added") or order.amount or 0
                 ok, sms_msg = KavenegarService.send_refund_sms(
                     phone_number=phone,
                     amount=refund_amount,
@@ -6190,6 +6566,58 @@ def admin_update_order_status(request, tracking):
                 if not ok:
                     sms_error = sms_msg
 
+            # پیامک و تیکت خودکار برای مشکل اکانت ایکس باکس (فقط اگه وضعیت واقعاً تغییر کرده باشه)
+            elif status == "needs_xbox_info" and previous_status != "needs_xbox_info":
+                ticket_url = "https://nubixshop.ir/panel/user?tab=tickets"
+                if order.user:
+                    try:
+                        ticket, created_t = Ticket.objects.get_or_create(
+                            user=order.user,
+                            order=order,
+                            is_auto_created=True,
+                            defaults={
+                                "subject": f"مشکل اکانت ایکس باکس سفارش #{order.tracking_code}",
+                                "status": "open",
+                            }
+                        )
+                        if created_t or not ticket.messages.exists():
+                            cust_n = (order.user.get_full_name() or order.user.username or "کاربر").strip()
+                            TicketMessage.objects.create(
+                                ticket=ticket,
+                                sender_type="admin",
+                                sender_user=request.user if request.user.is_authenticated else None,
+                                message=(
+                                    f"سلام {cust_n} عزیز،\n"
+                                    f"ما سفارشاتو با اپیک میزنیم کروپک قبلی شما از ایکس باکس تکمیل شده و اپیک گیمز اجازه خرید نمیده "
+                                    f"لطف کنید اطلاعات اکانت ایکس باکس لینک به اپیک گیمزتون رو بفرستید و یا از اخرین فروشگاهی که خرید کردید بگیرید و برای پشتیبانی بفرستید"
+                                )
+                            )
+                        ticket_url = f"https://nubixshop.ir/panel/user?tab=tickets&ticket_id={ticket.id}"
+                        ticket_created = True
+                        ticket_id = ticket.id
+                    except Exception as t_err:
+                        logger.error(f"Error auto-creating ticket for xbox order {order.tracking_code}: {t_err}", exc_info=True)
+
+                if getattr(order, "is_reseller_order", False):
+                    ok, sms_msg = KavenegarService.send_status_sms(
+                        phone_number=phone,
+                        customer_name=customer_name,
+                        status_fa=order.tracking_code,
+                        template_name="nubix-re-wronginfo",
+                        include_status_token=False,
+                    )
+                else:
+                    ok, sms_msg = KavenegarService.send_status_sms(
+                        phone_number=phone,
+                        customer_name=customer_name,
+                        status_fa=ticket_url,
+                        template_name="nubixshop-action-required",
+                        include_status_token=False,
+                    )
+                sms_sent = bool(ok)
+                if not ok:
+                    sms_error = sms_msg
+
             # پیامک برای هر وضعیت دیگر (فقط اگه وضعیت واقعاً تغییر کرده باشه)
             elif status != previous_status:
                 status_fa = dict(Order.STATUS_CHOICES).get(status, status)
@@ -6208,10 +6636,13 @@ def admin_update_order_status(request, tracking):
         "tracking_code": order.tracking_code,
         "status": order.status,
         "status_fa": dict(Order.STATUS_CHOICES).get(order.status, order.status),
+        "refund": refund_result,
         "email_sent": email_sent,
         "email_error": email_error,
         "sms_sent": sms_sent,
         "sms_error": sms_error,
+        "ticket_created": ticket_created,
+        "ticket_id": ticket_id,
     }
     return JsonResponse(response_payload)
 
@@ -6480,19 +6911,23 @@ def discount_validate(request):
         return JsonResponse({"message": "JSON نامعتبر"}, status=400)
     code = (payload.get("code") or "").strip()
     req_user = request.user if request.user.is_authenticated else None
-    dc, error = _get_discount_code_status(code, req_user)
-    if error:
-        status_code = 400
-        if error == "کد تخفیف نامعتبر است.":
-            status_code = 404
-        return JsonResponse({"message": error}, status=status_code)
+    
+    dc = None
+    if code:
+        dc, error = _get_discount_code_status(code, req_user)
+        if error:
+            status_code = 400
+            if error == "کد تخفیف نامعتبر است.":
+                status_code = 404
+            return JsonResponse({"message": error}, status=status_code)
+            
     response = {
-        "code": dc.code,
-        "percent": dc.percent,
-        "amount": dc.amount,
-        "expires_at": dc.expires_at.isoformat() if dc.expires_at else None,
+        "code": dc.code if dc else None,
+        "percent": dc.percent if dc else 0,
+        "amount": dc.amount if dc else 0,
+        "expires_at": dc.expires_at.isoformat() if (dc and dc.expires_at) else None,
     }
-    preview = _discount_preview_from_cart_payload(payload, dc)
+    preview = _discount_preview_from_cart_payload(payload, dc, user=req_user)
     if preview is not None:
         response.update({
             "previewed": True,
@@ -6502,8 +6937,15 @@ def discount_validate(request):
             "capped": False,
             "guardrail_warning": preview["guardrail_warning"],
             "guardrail": preview["guardrail"],
+            "diamond_discount": preview["diamond_discount"],
+            "diamonds_applied": preview["diamonds_applied"],
+            "diamonds_max": preview["diamonds_max"],
+            "refund_credit_balance": preview["refund_credit_balance"],
+            "refund_credit_max": preview["refund_credit_max"],
+            "refund_credit_applied": preview["refund_credit_applied"],
+            "final_amount": preview["final_amount"],
         })
-        response["applicable"] = preview["discount_amount"] > 0
+        response["applicable"] = (preview["discount_amount"] > 0) or (preview["diamond_discount"] > 0)
     return JsonResponse(response)
 
 
@@ -6529,15 +6971,20 @@ def payment_request(request, tracking):
 
     # اگر مبلغ صفر باشد، نیازی به پرداخت نیست
     if order.amount == 0:
+        transitioned = order.status != 'paid'
         order.status = 'paid'
-        order.save()
+        order.save(update_fields=["status"])
         try:
-            from .rewards import award_purchase_points
-            award_purchase_points(order)
+            if transitioned:
+                from .rewards import award_purchase_points
+                award_purchase_points(order)
         except Exception:
             logger.exception("purchase points (zero-amount order) failed for %s", order.tracking_code)
-        _notify_customer_payment_success(order, ref_id="")
+        if transitioned:
+            _notify_customer_payment_success(order, ref_id="")
         return JsonResponse({
+            "success": True,
+            "payment_required": False,
             "message": "سفارش بدون پرداخت ثبت شد (مبلغ صفر)",
             "tracking_code": order.tracking_code,
             "status": order.status
@@ -6585,6 +7032,7 @@ def payment_request(request, tracking):
 
         return JsonResponse({
             "success": True,
+            "payment_required": True,
             "payment_url": data['payment_url'],
             "authority": data['authority']
         })
@@ -6640,6 +7088,7 @@ def payment_verify(request, tracking):
         payment = Payment.objects.filter(authority=authority, order=order).first()
         if payment:
             payment.status = 'verified'
+            payment.verified_at = payment.verified_at or timezone.now()
             payment.ref_id = str(data.get('ref_id', ''))
             payment.card_pan = data.get('card_pan', '')
             payment.card_hash = data.get('card_hash', '')
@@ -8129,6 +8578,531 @@ def _get_usd_rate_toman():
         pass
 
     return 65000  # Fallback Toman rate if everything fails
+
+
+FINANCIAL_COSTS_SETTING_KEY = "financial_monthly_fixed_costs"
+FINANCIAL_COST_PAYERS_SETTING_KEY = "financial_fixed_cost_payers"
+FINANCIAL_OPEN_ORDER_STATUSES = ("paid", "registered", "processing", "needs_2fa", "needs_tr_region", "needs_xbox_info", "invalid_info")
+FINANCIAL_PAID_PAYMENT_STATUSES = ("success", "verified", "refunded")
+
+
+def _financial_config():
+    """Return monthly fixed costs and their configured payment sources."""
+    defaults = {"kavenegar": 0, "server": 0, "cloud": 0}
+    raw = _get_setting(FINANCIAL_COSTS_SETTING_KEY, default=json.dumps(defaults, ensure_ascii=False)).value_text
+    try:
+        parsed = json.loads(raw or "{}")
+    except (TypeError, ValueError):
+        parsed = {}
+    costs = {}
+    for key in defaults:
+        try:
+            costs[key] = max(0, int(parsed.get(key, 0) or 0))
+        except (TypeError, ValueError):
+            costs[key] = 0
+
+    payer_defaults = {
+        "kavenegar": {"source": "main", "label": "حساب اصلی"},
+        "server": {"source": "main", "label": "حساب اصلی"},
+        "cloud": {"source": "external", "label": "ایلیا"},
+    }
+    raw_payers = _get_setting(
+        FINANCIAL_COST_PAYERS_SETTING_KEY,
+        default=json.dumps(payer_defaults, ensure_ascii=False),
+    ).value_text
+    try:
+        parsed_payers = json.loads(raw_payers or "{}")
+    except (TypeError, ValueError):
+        parsed_payers = {}
+    payers = {}
+    for key, default in payer_defaults.items():
+        raw_payer = parsed_payers.get(key, {})
+        if not isinstance(raw_payer, dict):
+            raw_payer = {}
+        source = raw_payer.get("source")
+        if source not in ("main", "external"):
+            source = default["source"]
+        label = str(raw_payer.get("label") or default["label"]).strip()[:80]
+        payers[key] = {"source": source, "label": label}
+    return costs, payers
+
+
+def _financial_bounds(start_date, end_date):
+    tz = timezone.get_current_timezone()
+    start = timezone.make_aware(datetime.combine(start_date, time.min), tz)
+    end = timezone.make_aware(datetime.combine(end_date, time.max), tz)
+    return start, end
+
+
+def _financial_lira_and_cost(order, lira_rate, gta_variant_cost):
+    total_lira = 0.0
+    total_cost = 0
+    for item in order.items.all():
+        qty = item.quantity or 1
+        line_lira = float(item.price_lira or (item.product.price_lira if item.product else 0) or 0) * qty
+        total_lira += line_lira
+        variant_cost = gta_variant_cost.get(str(item.variant_id)) if item.variant_id else None
+        total_cost += int(variant_cost * qty) if variant_cost else int(line_lira * lira_rate)
+    return total_lira, total_cost
+
+
+def _financial_gta_variant_costs():
+    config, _ = _gta6_load_config()
+    costs = {}
+    for edition in config.get("pricing", {}).values():
+        for cell in edition.values():
+            variant_id = cell.get("variant_id")
+            cost = int(cell.get("cost_toman", 0) or 0)
+            if variant_id and cost > 0:
+                costs[str(variant_id)] = cost
+    return costs
+
+
+def _hidden_accounting_fee(amount_toman):
+    """Third-party accounting fee. This value must never be exposed in the site UI."""
+    amount = max(0, int(amount_toman or 0))
+    if amount < 1_000_000:
+        return 0
+    if amount <= 5_000_000:
+        return 500_000
+    if amount <= 10_000_000:
+        return 800_000
+    if amount <= 20_000_000:
+        return 1_000_000
+    if amount <= 30_000_000:
+        return 1_500_000
+    if amount <= 40_000_000:
+        return 2_000_000
+    return 3_000_000
+
+
+def _zarinpal_datetime(value):
+    parsed = parse_datetime(str(value or ""))
+    if parsed and timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed)
+    return parsed
+
+
+def _zarinpal_amount_toman(value):
+    try:
+        amount = max(0, int(value or 0))
+    except (TypeError, ValueError):
+        amount = 0
+    currency = getattr(settings, "ZARINPAL_RECONCILIATION_CURRENCY", "IRT").upper()
+    return round(amount / 10) if currency == "IRR" else amount
+
+
+def _sync_zarinpal_reconciliations(start_date, end_date):
+    service = ZarinPalService()
+    if not service.accounting_api_configured:
+        return {
+            "configured": False,
+            "success": False,
+            "error": "توکن Bearer زرین‌پال روی سرور تنظیم نشده است.",
+        }
+    try:
+        terminal_id, rows = service.fetch_reconciliations(start_date, end_date)
+        synced = 0
+        with transaction.atomic():
+            for row in rows:
+                external_id = str(row.get("id") or "").strip()
+                if not external_id:
+                    continue
+                amount = _zarinpal_amount_toman(row.get("amount"))
+                ZarinpalReconciliation.objects.update_or_create(
+                    external_id=external_id,
+                    defaults={
+                        "terminal_id": terminal_id,
+                        "status": str(row.get("status") or "UNKNOWN").upper(),
+                        "amount": amount,
+                        "payable_at": _zarinpal_datetime(row.get("payable_at")),
+                        "reconciled_at": _zarinpal_datetime(row.get("reconciled_at")),
+                        "reference_id": str(row.get("reference_id") or "")[:160],
+                        "hidden_accounting_fee": _hidden_accounting_fee(amount),
+                        "raw_payload": row,
+                    },
+                )
+                synced += 1
+        return {"configured": True, "success": True, "synced": synced, "error": ""}
+    except Exception as exc:
+        logger.exception("ZarinPal reconciliation sync failed")
+        return {
+            "configured": True,
+            "success": False,
+            "error": str(exc) or "همگام‌سازی تسویه زرین‌پال ناموفق بود.",
+        }
+
+
+def _financial_reconciliation_totals(start_date, end_date):
+    start, end = _financial_bounds(start_date, end_date)
+    paid = ZarinpalReconciliation.objects.filter(
+        status="PAID",
+        reconciled_at__gte=start,
+        reconciled_at__lte=end,
+    )
+    aggregate = paid.aggregate(
+        amount=Sum("amount"),
+        hidden_fee=Sum("hidden_accounting_fee"),
+        count=Count("id"),
+    )
+    latest = paid.order_by("-reconciled_at").first()
+    in_progress = ZarinpalReconciliation.objects.filter(status="IN_PROGRESS").aggregate(
+        amount=Sum("amount"),
+        count=Count("id"),
+    )
+    return {
+        "amount": int(aggregate["amount"] or 0),
+        "hidden_fee": int(aggregate["hidden_fee"] or 0),
+        "count": int(aggregate["count"] or 0),
+        "latest_at": latest.reconciled_at if latest else None,
+        "latest_reference_id": latest.reference_id if latest else "",
+        "pending_amount": int(in_progress["amount"] or 0),
+        "pending_count": int(in_progress["count"] or 0),
+    }
+
+
+def _financial_period_totals(start_date, end_date, lira_rate):
+    start, end = _financial_bounds(start_date, end_date)
+    payments = list(
+        Payment.objects.filter(
+            verified_at__gte=start,
+            verified_at__lte=end,
+            status__in=FINANCIAL_PAID_PAYMENT_STATUSES,
+            order__is_test_order=False,
+        )
+        .exclude(order__note__icontains="شارژ کیف پول")
+        .exclude(order__status="wallet_topup")
+        .select_related("order")
+    )
+    order_ids = {payment.order_id for payment in payments}
+    orders = list(
+        Order.objects.filter(id__in=order_ids)
+        .prefetch_related("items", "items__product")
+    )
+    gta_costs = _financial_gta_variant_costs()
+    gross_revenue = sum(int(payment.amount or 0) for payment in payments)
+    gateway_fees = sum(int(payment.fee or 0) for payment in payments)
+    purchase_cost = 0
+    total_lira = 0.0
+    for order in orders:
+        if order.status in ("canceled", "refunded"):
+            continue
+        lira, cost = _financial_lira_and_cost(order, lira_rate, gta_costs)
+        purchase_cost += cost
+        total_lira += lira
+
+    refunds = int(
+        Order.objects.filter(
+            is_test_order=False,
+            refund_confirmed=True,
+            refund_date__gte=start,
+            refund_date__lte=end,
+        ).aggregate(total=Sum("refund_amount"))["total"] or 0
+    )
+    transactions = AccountingTransaction.objects.filter(created_at__gte=start, created_at__lte=end)
+    usd_rate = _get_usd_rate_toman()
+    other_expenses = other_income = 0
+    for txn in transactions:
+        value = int(float(txn.amount or 0) * (usd_rate if txn.currency == "usd" else 1))
+        if txn.entry_type == "expense":
+            other_expenses += value
+        else:
+            other_income += value
+    return {
+        "order_count": len(orders),
+        "gross_revenue": gross_revenue,
+        "gateway_fees": gateway_fees,
+        "refunds": refunds,
+        "purchase_cost": purchase_cost,
+        "total_lira": round(total_lira, 2),
+        "other_expenses": other_expenses,
+        "other_income": other_income,
+    }
+
+
+def admin_daily_lira_purchase(request):
+    """Compact daily lira plan backed by exact ZarinPal reconciliation data."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+
+    today = timezone.localdate()
+    _, today_end = _financial_bounds(today, today)
+    try:
+        lira_rate = max(0, int(_get_setting("lira_rate", default="0").value_text or 0))
+    except (TypeError, ValueError):
+        lira_rate = 0
+    gta_costs = _financial_gta_variant_costs()
+
+    open_orders = list(
+        Order.objects.filter(is_test_order=False, status__in=FINANCIAL_OPEN_ORDER_STATUSES)
+        .exclude(note__icontains="شارژ کیف پول")
+        .prefetch_related("items", "items__product")
+        .order_by("created_at")
+    )
+    open_summary = {status: {"count": 0, "lira": 0.0} for status in FINANCIAL_OPEN_ORDER_STATUSES}
+    open_rows = []
+    for order in open_orders:
+        lira, cost = _financial_lira_and_cost(order, lira_rate, gta_costs)
+        if lira <= 0:
+            continue
+        open_summary[order.status]["count"] += 1
+        open_summary[order.status]["lira"] += lira
+        open_rows.append({
+            "tracking_code": order.tracking_code,
+            "status": order.status,
+            "status_fa": dict(Order.STATUS_CHOICES).get(order.status, order.status),
+            "created_at": order.created_at.isoformat(),
+            "lira": round(lira, 2),
+            "purchase_cost": cost,
+        })
+
+    history_start = today - timedelta(days=30)
+    history_start_at = _financial_bounds(history_start, today)[0]
+    history_payments = list(
+        Payment.objects.filter(
+            verified_at__gte=history_start_at,
+            verified_at__lte=today_end,
+            status__in=FINANCIAL_PAID_PAYMENT_STATUSES,
+            order__is_test_order=False,
+        )
+        .exclude(order__note__icontains="شارژ کیف پول")
+        .exclude(order__status="wallet_topup")
+        .select_related("order")
+        .order_by("verified_at")
+    )
+    paid_dates = {}
+    for payment in history_payments:
+        paid_dates.setdefault(payment.order_id, timezone.localtime(payment.verified_at).date())
+    history_orders = list(
+        Order.objects.filter(id__in=paid_dates)
+        .exclude(status__in=("canceled", "refunded"))
+        .prefetch_related("items", "items__product")
+    )
+    daily_lira = {history_start + timedelta(days=i): 0.0 for i in range(31)}
+    product_daily = {}
+    for order in history_orders:
+        order_day = paid_dates[order.id]
+        for item in order.items.all():
+            qty = item.quantity or 1
+            lira = float(item.price_lira or (item.product.price_lira if item.product else 0) or 0) * qty
+            if lira <= 0:
+                continue
+            daily_lira[order_day] = daily_lira.get(order_day, 0.0) + lira
+            key = str(item.variant_id or item.product_id or item.name)
+            values = product_daily.setdefault(
+                key,
+                {history_start + timedelta(days=i): 0.0 for i in range(31)},
+            )
+            values[order_day] = values.get(order_day, 0.0) + lira
+    yesterday_lira = daily_lira.get(today - timedelta(days=1), 0.0)
+    recent_avg = sum(daily_lira.values()) / max(len(daily_lira), 1)
+    same_weekday = [value for date, value in daily_lira.items() if date.weekday() == today.weekday()]
+    same_weekday_avg = sum(same_weekday) / len(same_weekday) if same_weekday else recent_avg
+    # Weekly sine adjustment is bounded so a thin data day cannot create an extreme buy plan.
+    import math
+    sine_factor = 1 + 0.15 * math.sin((2 * math.pi * today.weekday()) / 7)
+    weekday_factor = same_weekday_avg / recent_avg if recent_avg else 1
+    seasonal_factor = min(1.3, max(0.7, sine_factor * weekday_factor))
+    forecast_lira = sum(
+        (0.8 * values.get(today - timedelta(days=1), 0.0) * seasonal_factor)
+        + (0.2 * (sum(values.values()) / max(len(values), 1)))
+        for values in product_daily.values()
+    )
+
+    costs, payers = _financial_config()
+    monthly_fixed_cost = sum(costs.values())
+    weekly_fixed_cost = round(monthly_fixed_cost * 12 / 52)
+    main_monthly_fixed_cost = sum(
+        amount for key, amount in costs.items() if payers[key]["source"] == "main"
+    )
+    main_account_reserve = round(main_monthly_fixed_cost * 12 / 52)
+    saturday_offset = (today.weekday() - 5) % 7
+    week_start = today - timedelta(days=saturday_offset)
+    sync = _sync_zarinpal_reconciliations(week_start, today + timedelta(days=1))
+    today_reconciliation = _financial_reconciliation_totals(today, today)
+    week_reconciliation = _financial_reconciliation_totals(week_start, today)
+    week_totals = _financial_period_totals(week_start, today, lira_rate)
+    net_profit = (
+        week_totals["gross_revenue"]
+        - week_totals["refunds"]
+        - week_totals["purchase_cost"]
+        - week_totals["gateway_fees"]
+        - weekly_fixed_cost
+        - week_reconciliation["hidden_fee"]
+        - week_totals["other_expenses"]
+        + week_totals["other_income"]
+    )
+    available_purchase_cash = max(
+        0,
+        week_reconciliation["amount"]
+        - week_totals["refunds"]
+        - main_account_reserve
+        - week_reconciliation["hidden_fee"],
+    )
+    latest_closure = FinancialWeekClosure.objects.order_by("-week_start").first()
+
+    return JsonResponse({
+        "today": today.isoformat(),
+        "lira_rate": lira_rate,
+        "open_lira": {
+            "count": len(open_rows),
+            "total_lira": round(sum(row["lira"] for row in open_rows), 2),
+            "purchase_cost": sum(row["purchase_cost"] for row in open_rows),
+            "registered_count": open_summary["registered"]["count"],
+            "registered_lira": round(open_summary["registered"]["lira"], 2),
+            "by_status": [{"status": status, "status_fa": dict(Order.STATUS_CHOICES).get(status, status), "count": value["count"], "lira": round(value["lira"], 2)} for status, value in open_summary.items() if value["count"]],
+            "orders": open_rows,
+        },
+        "forecast": {
+            "lira": round(forecast_lira, 2), "confidence": 80, "yesterday_lira": round(yesterday_lira, 2),
+            "monthly_daily_average": round(recent_avg, 2), "seasonal_factor": round(seasonal_factor, 3),
+            "method": "مدل ۸۰/۲۰: الگوی محصولی دیروز با ضریب سینوسی هفتگی + میانگین تکرار ۳۰ روز اخیر.",
+        },
+        "zarinpal_payout": {
+            "configured": sync["configured"],
+            "sync_ok": sync["success"],
+            "error": sync["error"],
+            "settled_today": today_reconciliation["amount"] if sync["success"] else None,
+            "settlement_count": today_reconciliation["count"] if sync["success"] else 0,
+            "last_reconciled_at": today_reconciliation["latest_at"].isoformat() if today_reconciliation["latest_at"] else None,
+            "latest_reference_id": today_reconciliation["latest_reference_id"] if sync["success"] else "",
+            "pending_amount": week_reconciliation["pending_amount"] if sync["success"] else None,
+            "pending_count": week_reconciliation["pending_count"] if sync["success"] else 0,
+        },
+        "weekly": {
+            "week_start": week_start.isoformat(),
+            "week_end": today.isoformat(),
+            "fixed_costs": costs,
+            "fixed_cost_payers": payers,
+            "monthly_fixed_cost": monthly_fixed_cost,
+            "weekly_fixed_cost": weekly_fixed_cost,
+            "main_account_reserve": main_account_reserve,
+            "available_purchase_cash": available_purchase_cash if sync["success"] else None,
+            "net_profit": net_profit if sync["success"] else None,
+            "can_close": today.weekday() == 5 and sync["success"],
+            "latest_closure": {
+                "week_start": latest_closure.week_start.isoformat(),
+                "closed_at": latest_closure.closed_at.isoformat(),
+            } if latest_closure else None,
+        },
+    })
+
+
+@csrf_exempt
+def admin_financial_config(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    try:
+        payload = json.loads(request.body or "{}")
+        raw_costs = payload.get("fixed_costs", {})
+        costs = {key: max(0, int(raw_costs.get(key, 0) or 0)) for key in ("kavenegar", "server", "cloud")}
+        raw_payers = payload.get("fixed_cost_payers", {})
+        payers = {}
+        default_labels = {"kavenegar": "حساب اصلی", "server": "حساب اصلی", "cloud": "ایلیا"}
+        for key in costs:
+            raw_payer = raw_payers.get(key, {})
+            source = raw_payer.get("source")
+            if source not in ("main", "external"):
+                raise ValueError("invalid payer")
+            label = str(raw_payer.get("label") or default_labels[key]).strip()[:80]
+            payers[key] = {"source": source, "label": label}
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return JsonResponse({"detail": "هزینه یا پرداخت‌کننده نامعتبر است"}, status=400)
+    SiteSetting.objects.update_or_create(
+        key=FINANCIAL_COSTS_SETTING_KEY,
+        defaults={"value_text": json.dumps(costs, ensure_ascii=False)},
+    )
+    SiteSetting.objects.update_or_create(
+        key=FINANCIAL_COST_PAYERS_SETTING_KEY,
+        defaults={"value_text": json.dumps(payers, ensure_ascii=False)},
+    )
+    return JsonResponse({"success": True, "fixed_costs": costs, "fixed_cost_payers": payers})
+
+
+@csrf_exempt
+def admin_close_financial_week(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    today = timezone.localdate()
+    if today.weekday() != 5:
+        return JsonResponse({"detail": "بستن پرونده فقط روز شنبه فعال است؛ دوره شنبه تا جمعه بسته می‌شود."}, status=400)
+    week_end = today - timedelta(days=1)
+    week_start = week_end - timedelta(days=6)
+    sync = _sync_zarinpal_reconciliations(week_start, today)
+    if not sync["success"]:
+        return JsonResponse({
+            "detail": "تا همگام‌سازی موفق تسویه‌های زرین‌پال، بستن پرونده مجاز نیست.",
+        }, status=503)
+    try:
+        lira_rate = max(0, int(_get_setting("lira_rate", default="0").value_text or 0))
+    except (TypeError, ValueError):
+        lira_rate = 0
+    with transaction.atomic():
+        if FinancialWeekClosure.objects.select_for_update().filter(week_start=week_start).exists():
+            return JsonResponse({"detail": "پرونده مالی این هفته قبلاً بسته شده است."}, status=409)
+        costs, payers = _financial_config()
+        totals = _financial_period_totals(week_start, week_end, lira_rate)
+        fixed_cost_share = round(sum(costs.values()) * 12 / 52)
+        main_account_reserve = round(
+            sum(amount for key, amount in costs.items() if payers[key]["source"] == "main") * 12 / 52
+        )
+        reconciliations = _financial_reconciliation_totals(week_start, week_end)
+        special_profit = totals["gross_revenue"] - totals["refunds"] - totals["purchase_cost"]
+        net_profit = (
+            special_profit
+            - totals["gateway_fees"]
+            - fixed_cost_share
+            - reconciliations["hidden_fee"]
+            - totals["other_expenses"]
+            + totals["other_income"]
+        )
+        available_purchase_cash = max(
+            0,
+            reconciliations["amount"]
+            - totals["refunds"]
+            - main_account_reserve
+            - reconciliations["hidden_fee"],
+        )
+        closure = FinancialWeekClosure.objects.create(
+            week_start=week_start,
+            week_end=week_end,
+            gross_revenue=totals["gross_revenue"],
+            refunds=totals["refunds"],
+            purchase_cost=totals["purchase_cost"],
+            fixed_cost_share=fixed_cost_share,
+            other_expenses=totals["other_expenses"],
+            other_income=totals["other_income"],
+            special_profit=special_profit,
+            net_profit=net_profit,
+            lira_rate=lira_rate,
+            settled_cash=reconciliations["amount"],
+            gateway_fees=totals["gateway_fees"],
+            hidden_accounting_fee=reconciliations["hidden_fee"],
+            main_account_reserve=main_account_reserve,
+            available_purchase_cash=available_purchase_cash,
+            closed_by=request.user,
+            snapshot={
+                "total_lira": totals["total_lira"],
+                "fixed_costs": costs,
+                "fixed_cost_payers": payers,
+                "hidden_accounting_fee": reconciliations["hidden_fee"],
+                "zarinpal_settlement_count": reconciliations["count"],
+                "order_count": totals["order_count"],
+            },
+        )
+    return JsonResponse({"success": True, "message": "پرونده مالی هفته با موفقیت بسته شد.", "closure": {"id": closure.id, "week_start": week_start.isoformat(), "week_end": week_end.isoformat(), "net_profit": net_profit}})
 
 
 def admin_accounting(request):

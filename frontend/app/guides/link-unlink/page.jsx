@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Navbar from "../../../components/Navbar";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import FaqSectionLayout from "../../../components/FaqSectionLayout";
 import HelpfulnessWidget from "../../faq/HelpfulnessWidget";
 
@@ -15,7 +14,7 @@ export default function LinkUnlinkGuidePage() {
       subtitle="آموزش گام‌به‌گام اتصال و قطع اتصال حساب‌های Epic Games، Xbox و PlayStation برای همگام‌سازی بازی‌ها و آیتم‌ها"
       activeSection="link-unlink"
     >
-      <div className="guide-article-container">
+      <article className="guide-article-container">
         <style jsx>{`
           .guide-article-container {
             display: flex;
@@ -108,6 +107,7 @@ export default function LinkUnlinkGuidePage() {
             color: var(--text);
             font-size: 16px;
             line-height: 1.9;
+            overflow-wrap: anywhere;
           }
           
           .guide-intro {
@@ -371,26 +371,81 @@ export default function LinkUnlinkGuidePage() {
           }
           
           @media (max-width: 768px) {
+            .guide-article-container {
+              gap: 16px;
+            }
+            .guide-article-box {
+              border-radius: 18px;
+            }
             .guide-article-banner {
-              height: 140px;
-              padding: 24px;
+              height: auto;
+              min-height: 132px;
+              padding: 20px 18px;
             }
             .guide-article-banner .page-banner-title {
               font-size: 20px;
+              line-height: 1.5;
             }
             .guide-article-info-bar {
-              padding: 12px 24px;
-              flex-wrap: wrap;
-              gap: 12px;
+              display: grid;
+              grid-template-columns: minmax(0, 1fr);
+              padding: 12px 16px;
+              gap: 8px;
             }
             .guide-article-content {
-              padding: 24px;
+              padding: 20px 16px;
+              font-size: 15px;
+            }
+            .guide-intro {
+              font-size: 15px;
+              line-height: 1.9;
+            }
+            .info-banner,
+            .warning-box,
+            .tip-box {
+              gap: 10px;
+              padding: 14px;
             }
             .action-tabs {
               flex-direction: column;
+              gap: 8px;
+            }
+            .action-tab {
+              min-height: 44px;
+              padding: 12px 14px;
             }
             .guide-content {
+              padding: 18px 14px;
+              border-radius: 16px;
+            }
+            .step {
+              gap: 12px;
+              margin-bottom: 20px;
+            }
+            .step-number {
+              width: 30px;
+              height: 30px;
+              font-size: 14px;
+            }
+            .guide-footer {
               padding: 20px 16px;
+              border-radius: 16px;
+            }
+            .support-btn {
+              width: 100%;
+              justify-content: center;
+              box-sizing: border-box;
+            }
+          }
+
+          @media (max-width: 380px) {
+            .guide-article-box {
+              border-radius: 16px;
+            }
+            .guide-article-banner-icon {
+              font-size: 56px;
+              top: 10px;
+              left: 12px;
             }
           }
         `}</style>
@@ -436,8 +491,13 @@ export default function LinkUnlinkGuidePage() {
               </div>
             </div>
 
-            <div className="action-tabs">
+            <div className="action-tabs" role="tablist" aria-label="نوع عملیات حساب">
               <button
+                id="link-tab"
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "link"}
+                aria-controls="link-panel"
                 className={`action-tab ${activeTab === "link" ? "active" : ""}`}
                 onClick={() => setActiveTab("link")}
               >
@@ -448,6 +508,11 @@ export default function LinkUnlinkGuidePage() {
                 لینک کردن (اتصال اکانت)
               </button>
               <button
+                id="unlink-tab"
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "unlink"}
+                aria-controls="unlink-panel"
                 className={`action-tab ${activeTab === "unlink" ? "active" : ""}`}
                 onClick={() => setActiveTab("unlink")}
               >
@@ -462,7 +527,7 @@ export default function LinkUnlinkGuidePage() {
 
             <div className="guide-content">
               {(
-                <div className="guide-section" hidden={activeTab !== "link"}>
+                <div id="link-panel" className="guide-section" role="tabpanel" aria-labelledby="link-tab" hidden={activeTab !== "link"}>
                   <h2>نحوه اتصال (Link) حساب‌ها به Epic Games</h2>
 
                   <div className="step">
@@ -514,7 +579,7 @@ export default function LinkUnlinkGuidePage() {
               )}
 
               {(
-                <div className="guide-section" hidden={activeTab !== "unlink"}>
+                <div id="unlink-panel" className="guide-section" role="tabpanel" aria-labelledby="unlink-tab" hidden={activeTab !== "unlink"}>
                   <h2>نحوه قطع اتصال (Unlink) حساب‌ها از Epic Games</h2>
 
                   <div className="warning-box">
@@ -593,7 +658,7 @@ export default function LinkUnlinkGuidePage() {
         </div>
 
         <HelpfulnessWidget />
-      </div>
+      </article>
     </FaqSectionLayout>
   );
 }

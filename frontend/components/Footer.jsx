@@ -2,27 +2,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { categoryPathFromCode } from "../lib/productCategoryRoutes";
 
 export default function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
 
   const scrollToTop = () => {
-    // Some layouts put the scrollable element on `document.documentElement`
-    // (the <html> tag, used by the Reseller portal). Try that first, then
-    // fall back to the body / window, so the button always jumps to the top
-    // regardless of which element owns the scroll.
-    const docEl = document.documentElement;
-    const scrollableEl =
-      docEl && docEl.scrollHeight > docEl.clientHeight ? docEl : null;
-    if (scrollableEl) {
-      try {
-        scrollableEl.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      } catch {
-        // Older browsers: fall through to the legacy two-arg form.
-        scrollableEl.scrollTop = 0;
-      }
-    }
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
@@ -103,8 +88,8 @@ export default function Footer() {
                 <li><Link href="/product/chatgpt-subscription">خرید اشتراک ChatGPT</Link></li>
                 <li><Link href="/gemini">خرید اشتراک Gemini</Link></li>
                 <li><Link href="/gta6">پیش‌خرید GTA 6</Link></li>
-                <li><Link href="/category/fortnite">محصولات فورتنایت</Link></li>
-                <li><Link href="/category/giftcards">گیفت کارت‌ها</Link></li>
+                <li><Link href={categoryPathFromCode("FORTNITE")}>محصولات فورتنایت</Link></li>
+                <li><Link href={categoryPathFromCode("GIFTCARDS")}>گیفت کارت‌ها</Link></li>
                 <li><Link href="/faq/track-my-order">پیگیری سفارش</Link></li>
               </ul>
             </div>
@@ -116,7 +101,7 @@ export default function Footer() {
                 <li><Link href="/faq">سوالات متداول</Link></li>
                 <li><Link href="/faq/about">درباره جینکس فمیلی</Link></li>
                 <li><Link href="/faq/how-to-buy">راهنمای خرید</Link></li>
-                <li><Link href="/blog">وبلاگ و مقالات</Link></li>
+                <li><Link href="/blog" prefetch={false}>وبلاگ و مقالات</Link></li>
                 <li><Link href="/guides/disable-2fa">آموزش غیرفعال‌سازی 2FA</Link></li>
                 <li><Link href="/faq/rules">قوانین و مقررات</Link></li>
                 <li><Link href="/faq/privacy">حریم خصوصی</Link></li>

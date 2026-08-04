@@ -5,27 +5,25 @@ Kept separate from the very large views.py so the spin / referral / points
 logic stays easy to read and test. All functions are import-cycle safe
 (reseller pricing is imported lazily).
 """
-import random
 import secrets
 import string
-from datetime import timedelta
+import uuid
 
 from django.db import transaction
-from django.utils import timezone
 
 from .models import (
     DiscountCode,
     PointsTransaction,
+    RefundCreditTransaction,
     Referral,
     SiteSetting,
     UserProfile,
 )
 
-# Referral reward bounds + milestone (see plan).
-REFERRAL_POINTS_MIN = 15
-REFERRAL_POINTS_MAX = 50
-REFERRAL_MILESTONE_COUNT = 10
-REFERRAL_MILESTONE_AMOUNT = 150000
+# Referral milestone: award diamonds once when the referrer hits N successful
+# signups (no per-invite diamond drip).
+REFERRAL_MILESTONE_COUNT = 3
+REFERRAL_MILESTONE_POINTS = 50
 
 # Coin (کوین) <-> Toman conversion for checkout redemption. 350 coins
 # = 110,000 toman; below MIN_DIAMONDS_TO_REDEEM a redeem attempt is ignored.
@@ -115,7 +113,6 @@ def ensure_referral_code(user) -> str | None:
 # ---------------------------------------------------------------------------
 def award_points(user, amount: int, reason: str, related_order=None, note: str = "") -> PointsTransaction | None:
     """Add (or subtract, if amount<0) points and write a ledger row atomically.
-
     Balance is floored at 0 so a debit can never push it negative.
     """
     if not user or not amount:
@@ -166,6 +163,134 @@ def award_points(user, amount: int, reason: str, related_order=None, note: str =
         except Exception:
             pass
         return txn
+
+
+def credit_refund_credit(user, amount_toman: int, *, related_order=None, note: str = "", idempotency_key: str | None = None, kind: str = "refund") -> int | None:
+    """Add refund credit (Toman) to a user's spendable balance atomically.
+
+    Returns the new balance, or None if nothing was credited. Refund credit is
+    the customer's own money returned to them, so it is tracked separately from
+    loyalty diamonds (points_balance) and can be spent up to 100% of an order.
+    """
+    if not user or not amount_toman or amount_toman <= 0:
+        return None
+    key = idempotency_key or f"{kind}:manual:{uuid.uuid4().hex}"
+    with transaction.atomic():
+        profile, _ = UserProfile.objects.select_for_update().get_or_create(user=user)
+        existing = RefundCreditTransaction.objects.filter(idempotency_key=key).first()
+        if existing:
+            return profile.refund_credit
+        profile.refund_credit = max(0, int(profile.refund_credit) + int(amount_toman))
+        profile.save(update_fields=["refund_credit"])
+        RefundCreditTransaction.objects.create(
+            user=user,
+            amount=int(amount_toman),
+            kind=kind,
+            balance_after=profile.refund_credit,
+            related_order=related_order,
+            idempotency_key=key,
+            note=note or f"اعتبار بازگشتی {amount_toman:,} تومان",
+        )
+        return profile.refund_credit
+
+
+def spend_refund_credit(user, amount_toman: int, *, related_order=None, note: str = "", idempotency_key: str | None = None) -> int:
+    """Deduct refund credit (Toman); returns the actually-spent amount (>=0).
+
+    Never goes negative — the balance is floored at 0.
+    """
+    if not user or not amount_toman or amount_toman <= 0:
+        return 0
+    key = idempotency_key or f"spend:manual:{uuid.uuid4().hex}"
+    with transaction.atomic():
+        profile, _ = UserProfile.objects.select_for_update().get_or_create(user=user)
+        existing = RefundCreditTransaction.objects.filter(idempotency_key=key).first()
+        if existing:
+            return max(0, -int(existing.amount))
+        spent = min(int(amount_toman), int(profile.refund_credit))
+        if spent <= 0:
+            return 0
+        new_balance = max(0, int(profile.refund_credit) - spent)
+        profile.refund_credit = new_balance
+        profile.save(update_fields=["refund_credit"])
+        RefundCreditTransaction.objects.create(
+            user=user,
+            amount=-spent,
+            kind="spend",
+            balance_after=new_balance,
+            related_order=related_order,
+            idempotency_key=key,
+            note=note or f"مصرف اعتبار بازگشتی {spent:,} تومان",
+        )
+        return spent
+
+
+def process_order_refund(order, *, previous_status: str | None = None) -> dict:
+    """Atomically return an order's actual tender and redeemed diamonds once.
+
+    `previous_status` is supplied by admin status transitions. An order already
+    marked refunded is intentionally a no-op, protecting historical bank
+    refunds and repeated admin clicks from accidental wallet credits.
+    """
+    from django.utils import timezone
+    from .models import Order, Payment
+
+    if not order or not getattr(order, "user_id", None):
+        return {"processed": False, "already_processed": False, "credit_added": 0, "diamonds_restored": 0}
+    if previous_status == "refunded":
+        return {"processed": False, "already_processed": True, "credit_added": 0, "diamonds_restored": 0}
+
+    with transaction.atomic():
+        locked = Order.objects.select_for_update().get(pk=order.pk)
+        if locked.refund_processed_at:
+            return {
+                "processed": False,
+                "already_processed": True,
+                "credit_added": locked.refund_credit_granted_amount,
+                "diamonds_restored": 0,
+            }
+
+        # `amount` is the actual gateway amount after discounts/diamonds. Add
+        # any prior refund-credit or legacy wallet tender consumed by the order.
+        credit_amount = max(0, int(locked.amount or 0))
+        credit_amount += max(0, int(locked.refund_credit_used or 0))
+        credit_amount += max(0, int(locked.wallet_used or 0))
+        credit_added = 0
+        if credit_amount > 0:
+            credit_added = credit_refund_credit(
+                locked.user,
+                credit_amount,
+                related_order=locked,
+                idempotency_key=f"refund:{locked.pk}",
+                note=f"استرداد سفارش {locked.tracking_code} به اعتبار بازگشتی",
+                kind="refund",
+            ) or 0
+
+        diamonds_restored = max(0, int(locked.diamonds_used or 0))
+        if diamonds_restored:
+            award_points(
+                locked.user,
+                diamonds_restored,
+                "adjust",
+                related_order=locked,
+                note=f"بازگشت الماس سفارش مستردشده {locked.tracking_code}",
+            )
+
+        latest_payment = locked.payments.order_by("-created_at").first()
+        if latest_payment and latest_payment.status != "refunded":
+            latest_payment.status = "refunded"
+            latest_payment.save(update_fields=["status"])
+
+        locked.status = "refunded"
+        locked.refund_processed_at = timezone.now()
+        locked.refund_credit_granted_amount = credit_amount
+        locked.save(update_fields=["status", "refund_processed_at", "refund_credit_granted_amount"])
+        return {
+            "processed": True,
+            "already_processed": False,
+            "credit_added": credit_amount,
+            "diamonds_restored": diamonds_restored,
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -225,6 +350,30 @@ def line_items_cost(line_items) -> int:
     return total
 
 
+def get_profit_floor(line_items, gross_amount: int) -> int:
+    """Calculate the profit floor dynamically, ensuring an 80,000 Toman floor
+    for fortnite-crew-pack, and standard floors for other items.
+    """
+    crew_qty = 0
+    non_crew_cost = 0
+    for product, variant, quantity in line_items:
+        slug = getattr(product, "slug", "") or ""
+        if slug == "fortnite-crew-pack":
+            crew_qty += quantity
+        else:
+            non_crew_cost += estimate_item_cost(product, variant, quantity)
+
+    if non_crew_cost > 0:
+        if int(gross_amount) < 1000000:
+            non_crew_floor = max(170000, int(non_crew_cost * 0.09))
+        else:
+            non_crew_floor = max(290000, int(non_crew_cost * 0.09))
+    else:
+        non_crew_floor = 0
+
+    return non_crew_floor + (80000 * crew_qty)
+
+
 def cap_discount_for_profit(line_items, gross_amount: int, discount_amount: int):
     """Clamp a discount so net profit can never fall below the floor.
 
@@ -236,13 +385,11 @@ def cap_discount_for_profit(line_items, gross_amount: int, discount_amount: int)
     Returns (capped_discount, total_cost, allowed_discount).
     """
     total_cost = line_items_cost(line_items)
-    if int(gross_amount) < 1000000:
-        floor = max(170000, int(total_cost * 0.09))
-    else:
-        floor = max(290000, int(total_cost * 0.09))
+    floor = get_profit_floor(line_items, gross_amount)
     allowed = max(0, int(gross_amount) - total_cost - floor)
     capped = min(int(discount_amount or 0), allowed)
     return capped, total_cost, allowed
+
 
 
 # ---------------------------------------------------------------------------
@@ -315,11 +462,13 @@ def award_profile_completion_points(user) -> int:
 
 
 def process_referral(new_user, ref_code: str):
-    """Credit a referrer when `new_user` registers via their code.
+    """Link a new signup to a referrer and credit the milestone reward.
 
     Idempotent per referee (the Referral.referee OneToOne also guards this).
-    Awards 15-50 points and, on the referrer's 10th successful invite, issues a
-    150,000-Toman milestone discount code. Returns points awarded, or None.
+    Invites 1..(N-1) only create a Referral row (0 diamonds). On the Nth
+    successful invite the referrer gets REFERRAL_MILESTONE_POINTS diamonds
+    once. Returns points awarded on this call (0 or 50), or None if the code
+    was invalid / already applied.
     """
     code = (ref_code or "").strip().upper()
     if not code:
@@ -337,20 +486,18 @@ def process_referral(new_user, ref_code: str):
     new_profile.referred_by = referrer
     new_profile.save(update_fields=["referred_by"])
 
-    pts = random.randint(REFERRAL_POINTS_MIN, REFERRAL_POINTS_MAX)
-    award_points(referrer, pts, "referral", note=f"معرفی کاربر {new_user.username}")
-    Referral.objects.create(referrer=referrer, referee=new_user, points_awarded=pts)
-
-    count = Referral.objects.filter(referrer=referrer).count()
-    if count == REFERRAL_MILESTONE_COUNT:
-        generate_discount_code(
-            amount=REFERRAL_MILESTONE_AMOUNT,
-            assigned_user=referrer,
-            single_use=True,
-            source="milestone",
-            prefix="GIFT",
-            expires_at=timezone.now() + timedelta(days=60),
+    # Count existing invites before inserting this one.
+    prior = Referral.objects.filter(referrer=referrer).count()
+    count = prior + 1
+    pts = REFERRAL_MILESTONE_POINTS if count == REFERRAL_MILESTONE_COUNT else 0
+    if pts:
+        award_points(
+            referrer,
+            pts,
+            "referral",
+            note=f"جایزه {REFERRAL_MILESTONE_COUNT} دعوت موفق",
         )
+    Referral.objects.create(referrer=referrer, referee=new_user, points_awarded=pts)
     return pts
 
 

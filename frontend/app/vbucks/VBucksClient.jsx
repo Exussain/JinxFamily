@@ -115,6 +115,12 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
     () => resolveProductImage(productData || { slug: "v-bucks" }),
     [productData]
   );
+  const heroSrc = useMemo(() => {
+    if (!productData?.cover_16_9) return productImage.imageSrc;
+    return productData.cover_16_9.startsWith("/media/")
+      ? `${apiBase.replace(/\/+$/, "")}${productData.cover_16_9}`
+      : productData.cover_16_9;
+  }, [productData, productImage.imageSrc, apiBase]);
   const productId = Number(productData?.id) || 3;
 
   const emailIsValid = (val) => {
@@ -241,15 +247,15 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
               className="hero-image"
               style={{
                 position: "relative",
-                aspectRatio: "1/1",
+                aspectRatio: productData?.cover_16_9 ? "16/9" : "1/1",
                 borderRadius: 18,
                 overflow: "hidden",
                 background: "linear-gradient(135deg,#0f2250,#141a3a)",
               }}
             >
               <SmartImage
-                src={productImage.imageSrc}
-                base={productImage.imageBase}
+                src={heroSrc}
+                base={heroSrc === productImage.imageSrc ? productImage.imageBase : undefined}
                 alt="V-Bucks فورتنایت"
                 fit="contain"
                 eager
@@ -350,62 +356,7 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
                 </button>
               </div>
             </div>
-            {/* Guides Card - LEFT col: shown at 960-1280px when right col has more space */}
-            <div className="guides-card guides-card-left">
-              <div className="guides-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-                صفحات مرتبط
-              </div>
-              <div style={{ display: "grid", gap: 10 }}>
-                <a
-                  href="/guides/disable-2fa"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="guide-link-item"
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>🛡️</span>
-                    آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </a>
 
-                <a
-                  href="/guides/link-unlink"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="guide-link-item"
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>🔗</span>
-                    آموزش اتصال و لینک کردن اکانت
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </a>
-
-                <a
-                  href="/guides/remove-restriction"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="guide-link-item"
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>⚠️</span>
-                    آموزش رفع محدودیت و ریستریکت اکانت
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </a>
-              </div>
-            </div>
           </div>
 
           <div className="details-stack" style={{ display: "grid", gap: 16 }}>
@@ -522,45 +473,7 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
               />
             )}
 
-            {/* Guides Card - RIGHT col: shown at >1280px when left col has more space */}
-            <div className="guides-card guides-card-right">
-              <div className="guides-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-                صفحات مرتبط
-              </div>
-              <div style={{ display: "grid", gap: 10 }}>
-                <a href="/guides/disable-2fa" target="_blank" rel="noopener noreferrer" className="guide-link-item">
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>🛡️</span>
-                    آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </a>
-                <a href="/guides/link-unlink" target="_blank" rel="noopener noreferrer" className="guide-link-item">
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>🔗</span>
-                    آموزش اتصال و لینک کردن اکانت
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </a>
-                <a href="/guides/remove-restriction" target="_blank" rel="noopener noreferrer" className="guide-link-item">
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>⚠️</span>
-                    آموزش رفع محدودیت و ریستریکت اکانت
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </a>
-              </div>
-            </div>
+
 
           </div>
         </section>
@@ -690,52 +603,6 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
           display: grid;
           gap: 16px;
         }
-        .guides-card {
-          border: 2px solid var(--line);
-          background: var(--card);
-          border-radius: 14px;
-          padding: 16px;
-          display: grid;
-          gap: 12px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-        }
-        .guides-title {
-          color: var(--text);
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 15px;
-          font-weight: 900;
-        }
-        .guide-link-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 10px 14px;
-          background: var(--bg);
-          border: 2px solid var(--line);
-          border-radius: 10px;
-          color: var(--text);
-          font-size: 13px;
-          font-weight: 700;
-          text-decoration: none;
-          transition: all 0.2s ease;
-        }
-        .guide-link-item:hover {
-          border-color: var(--primary);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(44,75,255,0.08);
-          background: var(--card);
-        }
-        .guide-link-item svg {
-          color: var(--muted);
-          transition: transform 0.2s ease, color 0.2s ease;
-        }
-        .guide-link-item:hover svg {
-          color: var(--primary);
-          transform: translateX(-4px);
-        }
-
         /* V-Bucks Options Styling */
         .vbucks-options {
           background: linear-gradient(135deg, rgba(0,213,255,0.06), rgba(108,92,231,0.04));
@@ -1274,7 +1141,6 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
           .info-card { order: 4; }
           .product-highlights { order: 5; }
           .product-tabs { order: 6; }
-          .guides-card { order: 7; }
           .features-grid {
             grid-template-columns: 1fr;
           }
@@ -1314,20 +1180,6 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
           .options-grid {
             grid-template-columns: 1fr;
           }
-        }
-        /* ── Responsive guides-card placement ──────────────────────────
-           >1280px  : left col spacious   → show in RIGHT col (under product-tabs)
-           960-1280px: right col has more space → show in LEFT col (under info-card)
-        ──────────────────────────────────────────────────────────────── */
-        @media (min-width: 961px) {
-          /* Default (wide): left col spacious — show right, hide left */
-          .guides-card-left  { display: none !important; }
-          .guides-card-right { display: grid; }
-        }
-        @media (min-width: 961px) and (max-width: 1280px) {
-          /* Medium-wide: right col has more space — show left, hide right */
-          .guides-card-left  { display: grid !important; }
-          .guides-card-right { display: none !important; }
         }
         @media (max-width: 640px) {
           .product-hero {
@@ -1378,8 +1230,6 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
           .step-desc {
             font-size: 12px;
           }
-        }
-
         }
       `}</style>
     </div>

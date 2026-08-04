@@ -123,7 +123,10 @@ export default function CounterStat({ to = 0, label = "سفارش‌های مو�
             <CountUp to={to || 1417} duration={2500} />
             <span className="stat-label"> {label}</span>
           </p>
-          <span className="stat-growth-text">هر روز درحال افزایش</span>
+          <span className="stat-growth-text">
+            <span className="growth-pulse-dot" />
+            هر روز درحال افزایش
+          </span>
         </div>
         
         <div className="stat-avatar-circle">

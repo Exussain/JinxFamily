@@ -13,20 +13,6 @@ export default function SmartImage({ src, alt, base, fit = "cover", eager = fals
   }
 
   const preserveOriginal = WEBP_IMAGE_RE.test(imageSrc);
-  if (DIRECT_IMAGE_RE.test(imageSrc)) {
-    return (
-      <img
-        src={imageSrc}
-        alt={alt}
-        loading={eager ? "eager" : "lazy"}
-        fetchPriority={eager ? "high" : undefined}
-        decoding="async"
-        style={{ width: "100%", height: "100%", objectFit: fit }}
-        draggable="false"
-      />
-    );
-  }
-
   return (
     <Image
       src={imageSrc}
@@ -39,6 +25,7 @@ export default function SmartImage({ src, alt, base, fit = "cover", eager = fals
       unoptimized={preserveOriginal}
       priority={eager}
       style={{ objectFit: fit }}
+      draggable="false"
     />
   );
 }

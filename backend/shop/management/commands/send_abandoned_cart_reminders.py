@@ -18,7 +18,7 @@ from django.utils import timezone
 
 from shop import email_service
 from shop.kavenegar_service import KavenegarService
-from shop.models import AbandonedCart
+from shop.models import AbandonedCart, Order
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +82,51 @@ class Command(BaseCommand):
                 logger.warning(
                     "Skipping abandoned cart id=%s — no phone/email", cart.id
                 )
+                continue
+
+            # Check if this user/phone/email has already placed a successful/paid order
+            # since this cart was created (or slightly before, using a 5-minute buffer)
+            has_purchased = False
+            successful_statuses = ['paid', 'registered', 'processing', 'completed', 'needs_2fa', 'needs_tr_region', 'invalid_info']
+            start_threshold = cart.created_at - timedelta(minutes=5)
+            
+            # 1. Check by user
+            if cart.user_id:
+                if Order.objects.filter(
+                    user=cart.user,
+                    status__in=successful_statuses,
+                    created_at__gte=start_threshold
+                ).exists():
+                    has_purchased = True
+
+            # 2. Check by phone number
+            if not has_purchased and phone:
+                normalized_phone = "".join(c for c in phone if c.isdigit())
+                if len(normalized_phone) >= 10:
+                    last_10 = normalized_phone[-10:]
+                    if Order.objects.filter(
+                        phone__endswith=last_10,
+                        status__in=successful_statuses,
+                        created_at__gte=start_threshold
+                    ).exists():
+                        has_purchased = True
+
+            # 3. Check by email
+            if not has_purchased and email:
+                if Order.objects.filter(
+                    user__email__iexact=email,
+                    status__in=successful_statuses,
+                    created_at__gte=start_threshold
+                ).exists():
+                    has_purchased = True
+
+            if has_purchased:
+                cart.converted_at = timezone.now()
+                cart.save(update_fields=["converted_at"])
+                logger.info(
+                    "Skipping abandoned cart id=%s — user has already purchased", cart.id
+                )
+                self.stdout.write(f"  ✓ id={cart.id} skipped (already purchased)")
                 continue
 
             try:

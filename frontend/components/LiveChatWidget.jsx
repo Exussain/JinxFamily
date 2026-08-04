@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
+import { mergeServerMessages, nextVisitorPollDelay } from '../lib/chatSync.mjs';
 import './LiveChatWidget.css';
 
 // ── Custom Voice Player ───────────────────────────────────────────────────────
@@ -126,6 +127,9 @@ const formatDividerDate = (dateStr) => {
   }
 };
 
+const ACTIVE_REPLY_POLL_WINDOW_MS = 60_000;
+const ACTIVE_CHAT_POLL_DELAY_MS = 2_500;
+
 // ── Main Widget ───────────────────────────────────────────────────────────────
 export default function LiveChatWidget({ initialOpen = false }) {
   const pathname = usePathname();
@@ -142,6 +146,7 @@ export default function LiveChatWidget({ initialOpen = false }) {
   const [uploadProgress, setUploadProgress] = useState(false);
   const [botMessages, setBotMessages] = useState([]);
   const [expectingTrackingCode, setExpectingTrackingCode] = useState(false);
+  const [remoteTyping, setRemoteTyping] = useState({ admin: false, ai: false });
 
   // Deduplicate: remove local botMessages whose text is already in DB messages (is_ai=true, sender=admin)
   const dbBotTexts = new Set(messages.filter(m => m.is_ai && m.sender === 'admin').map(m => m.text));
@@ -165,39 +170,23 @@ export default function LiveChatWidget({ initialOpen = false }) {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recordTimerRef = useRef(null);
+  const lastServerMessageIdRef = useRef(0);
+  const syncedSessionIdRef = useRef(null);
+  const syncNowRef = useRef(null);
+  const initPromiseRef = useRef(null);
+  const awaitingReplyRef = useRef(false);
+  const fastReplyPollingUntilRef = useRef(0);
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-
-  // ── Ding sound ──────────────────────────────────────────────────────────────
-  const playDingSound = () => {
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
-      gain1.gain.setValueAtTime(0.04, ctx.currentTime);
-      gain1.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
-      osc1.connect(gain1); gain1.connect(ctx.destination);
-      osc1.start(); osc1.stop(ctx.currentTime + 0.5);
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(783.99, ctx.currentTime + 0.08);
-      gain2.gain.setValueAtTime(0.04, ctx.currentTime + 0.08);
-      gain2.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08 + 0.7);
-      osc2.connect(gain2); gain2.connect(ctx.destination);
-      osc2.start(ctx.currentTime + 0.08); osc2.stop(ctx.currentTime + 0.08 + 0.7);
-    } catch (err) {}
-  };
 
   // ── Greeting bubble ─────────────────────────────────────────────────────────
   useEffect(() => {
     const dismissed = localStorage.getItem("liveChatGreetingDismissed");
     if (dismissed === "true") return;
     const timer = setTimeout(() => {
-      if (!isOpen && messages.length === 0) { setShowGreeting(true); playDingSound(); }
+      // Keep the visual greeting, but do not create an AudioContext before a
+      // user gesture. Browsers commonly suspend it and keep needless audio
+      // resources alive in the background.
+      if (!isOpen && messages.length === 0) setShowGreeting(true);
     }, 4000);
     return () => clearTimeout(timer);
   }, [isOpen, messages]);
@@ -226,7 +215,13 @@ export default function LiveChatWidget({ initialOpen = false }) {
         clearTimeout(t3);
       };
     }
-  }, [allMessages.length, isOpen, scrollToBottom]);
+  }, [
+    allMessages.length,
+    isOpen,
+    remoteTyping.admin,
+    remoteTyping.ai,
+    scrollToBottom,
+  ]);
 
   // ── Session init & botMessages persistence ───────────────────────────────────
   useEffect(() => {
@@ -244,58 +239,195 @@ export default function LiveChatWidget({ initialOpen = false }) {
     try {
       if (botMessages.length > 0) {
         sessionStorage.setItem("liveChatBotMessages", JSON.stringify(botMessages));
+      } else {
+        sessionStorage.removeItem("liveChatBotMessages");
       }
     } catch {}
   }, [botMessages]);
 
   const initChat = async () => {
-    if (!apiBase) return;
-    try {
-      const res = await fetch(`${apiBase}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'init', session_id: sessionId || null }),
-      });
-      const data = await res.json();
-      if (data.session_id) {
-        setSessionId(data.session_id);
-        localStorage.setItem("liveChatSessionId", data.session_id);
+    if (apiBase == null) return null;
+    if (initPromiseRef.current) return initPromiseRef.current;
+
+    const initPromise = (async () => {
+      // Read storage here as well as state so a very fast first click cannot
+      // race the mount effect that restores the previous session.
+      const storedSessionId = localStorage.getItem("liveChatSessionId");
+      const currentSessionId = sessionId || storedSessionId || null;
+      try {
+        const res = await fetch(`${apiBase}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ action: 'init', session_id: currentSessionId }),
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (data.session_id) {
+          if (currentSessionId && data.session_id !== currentSessionId) {
+            setMessages([]);
+            setBotMessages([]);
+            lastServerMessageIdRef.current = 0;
+          }
+          setSessionId(data.session_id);
+          localStorage.setItem("liveChatSessionId", data.session_id);
+          syncNowRef.current?.();
+          return data.session_id;
+        }
+      } catch (err) {
+        console.error("Failed to init chat", err);
       }
-    } catch (err) { console.error("Failed to init chat", err); }
+      return null;
+    })();
+
+    initPromiseRef.current = initPromise;
+    try {
+      return await initPromise;
+    } finally {
+      if (initPromiseRef.current === initPromise) {
+        initPromiseRef.current = null;
+      }
+    }
+  };
+
+  const ensureChatSession = async () => {
+    if (initPromiseRef.current) return initPromiseRef.current;
+    if (sessionId) return sessionId;
+    return initChat();
   };
 
   // ── Poll messages ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!sessionId || !apiBase) return;
-    let intervalId;
-    const fetchMessages = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/chat?session_id=${sessionId}`);
-        const data = await res.json();
-        if (data.messages) {
-          setMessages(prev => {
-            if (data.messages.length > prev.length && !isOpen) {
-              const newMsgs = data.messages.slice(prev.length);
-              const adminNew = newMsgs.filter(m => m.sender === 'admin').length;
-              if (adminNew > 0) { setUnreadCount(c => c + adminNew); playDingSound(); }
-            }
-            return data.messages;
-          });
-        }
-      } catch (err) {}
+    // A closed support widget must be completely network-idle. Previously a
+    // stored session caused a GET every 3 seconds for every returning visitor,
+    // even if they never opened chat.
+    if (!isOpen || !sessionId || apiBase == null) return;
+    let cancelled = false;
+    let timeoutId = null;
+    let controller = null;
+    let idlePolls = 0;
+
+    if (syncedSessionIdRef.current !== sessionId) {
+      syncedSessionIdRef.current = sessionId;
+      lastServerMessageIdRef.current = 0;
+      awaitingReplyRef.current = false;
+      fastReplyPollingUntilRef.current = 0;
+    }
+
+    const scheduleNext = (delay) => {
+      clearTimeout(timeoutId);
+      if (!cancelled && !document.hidden) {
+        timeoutId = setTimeout(fetchMessages, delay);
+      }
     };
+
+    const fetchMessages = async () => {
+      if (cancelled || document.hidden) return;
+      controller?.abort();
+      controller = new AbortController();
+      try {
+        const params = new URLSearchParams({
+          after_id: String(lastServerMessageIdRef.current),
+        });
+        const res = await fetch(`${apiBase}/api/chat?${params.toString()}`, {
+          credentials: 'include',
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          idlePolls += 1;
+          scheduleNext(nextVisitorPollDelay(idlePolls));
+          return;
+        }
+        const data = await res.json();
+        const incoming = Array.isArray(data.messages) ? data.messages : [];
+        const hasIncomingReply = incoming.some(message => message.sender === 'admin');
+        if (incoming.length) {
+          setMessages(previous => mergeServerMessages(previous, incoming));
+          idlePolls = 0;
+          if (hasIncomingReply) {
+            awaitingReplyRef.current = false;
+            fastReplyPollingUntilRef.current = 0;
+          } else if (incoming[incoming.length - 1]?.sender === 'user') {
+            if (!awaitingReplyRef.current) {
+              fastReplyPollingUntilRef.current =
+                Date.now() + ACTIVE_REPLY_POLL_WINDOW_MS;
+            }
+            awaitingReplyRef.current = true;
+          }
+        } else {
+          idlePolls += 1;
+        }
+        const humanIsTyping = Boolean(data.typing?.admin);
+        const typing = {
+          admin: humanIsTyping,
+          // A real operator taking over always wins over the AI indicator.
+          ai: Boolean(data.typing?.ai) && !humanIsTyping && !hasIncomingReply,
+        };
+        setRemoteTyping(typing);
+        lastServerMessageIdRef.current = Math.max(
+          lastServerMessageIdRef.current,
+          Number(data.next_after_id) || 0,
+        );
+        const isInFastReplyWindow = (
+          awaitingReplyRef.current &&
+          Date.now() < fastReplyPollingUntilRef.current
+        );
+        const delay = (
+          isInFastReplyWindow || typing.admin || typing.ai
+            ? ACTIVE_CHAT_POLL_DELAY_MS
+            : nextVisitorPollDelay(idlePolls)
+        );
+        scheduleNext(data.has_more ? 0 : delay);
+      } catch (err) {
+        if (err?.name !== 'AbortError') {
+          // A transient chat outage should not affect the rest of the page.
+          idlePolls += 1;
+          scheduleNext(nextVisitorPollDelay(idlePolls));
+        }
+      }
+    };
+
+    syncNowRef.current = () => {
+      if (cancelled || document.hidden) return;
+      clearTimeout(timeoutId);
+      fetchMessages();
+    };
+
+    const handleVisibilityChange = () => {
+      clearTimeout(timeoutId);
+      if (document.hidden) {
+        controller?.abort();
+      } else {
+        idlePolls = 0;
+        fetchMessages();
+      }
+    };
+
     fetchMessages();
-    intervalId = setInterval(fetchMessages, 3000);
-    return () => clearInterval(intervalId);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      controller?.abort();
+      if (syncNowRef.current) syncNowRef.current = null;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [sessionId, apiBase, isOpen]);
 
   // ── Toggle chat ─────────────────────────────────────────────────────────────
   const toggleChat = () => {
-    if (!isOpen && !sessionId) initChat();
+    // Revalidate the stored session on every open. This also upgrades legacy
+    // localStorage-only sessions to the signed HttpOnly ownership cookie.
+    if (!isOpen) initChat();
     setIsOpen(prev => !prev);
     if (!isOpen) {
       setUnreadCount(0); setShowGreeting(false);
       localStorage.setItem("liveChatGreetingDismissed", "true");
+    } else {
+      setRemoteTyping({ admin: false, ai: false });
+      awaitingReplyRef.current = false;
+      fastReplyPollingUntilRef.current = 0;
     }
   };
 
@@ -308,9 +440,10 @@ export default function LiveChatWidget({ initialOpen = false }) {
   // ── Bot reply helper — saves to DB (visible to admin) + shows locally ────────
   const sendBotReply = useCallback(async (text, sid) => {
     const currentSid = sid || sessionId;
+    const tempId = `bot-${Date.now()}`;
     // Optimistic: show immediately in local state
     setBotMessages(prev => [...prev, {
-      id: `bot-${Date.now()}`,
+      id: tempId,
       sender: "admin",
       message_type: "text",
       text,
@@ -318,13 +451,22 @@ export default function LiveChatWidget({ initialOpen = false }) {
       created_at: new Date().toISOString()
     }]);
     // Persist to DB so admin can see it
-    if (currentSid && apiBase) {
+    if (currentSid && apiBase != null) {
       try {
-        await fetch(`${apiBase}/api/chat`, {
+        const res = await fetch(`${apiBase}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ action: 'bot_reply', session_id: currentSid, text }),
         });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.message) {
+            setMessages(previous => mergeServerMessages(previous, [data.message]));
+            setBotMessages(previous => previous.filter(message => message.id !== tempId));
+          }
+          syncNowRef.current?.();
+        }
       } catch (err) { /* fire-and-forget — local state already updated */ }
     }
   }, [sessionId, apiBase]);
@@ -332,13 +474,17 @@ export default function LiveChatWidget({ initialOpen = false }) {
   // ── Upload helper ───────────────────────────────────────────────────────────
   const uploadFile = async (file, currentSessionId) => {
     const sid = currentSessionId || sessionId;
-    if (!sid || !apiBase) return null;
+    if (!sid || apiBase == null) return null;
     const form = new FormData();
     form.append("file", file);
     form.append("session_id", sid);
     setUploadProgress(true);
     try {
-      const res = await fetch(`${apiBase}/api/chat/upload`, { method: 'POST', body: form });
+      const res = await fetch(`${apiBase}/api/chat/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: form
+      });
       const data = await res.json();
       if (data.file_url) return data;
       return null;
@@ -351,8 +497,9 @@ export default function LiveChatWidget({ initialOpen = false }) {
   };
 
   // ── Send message helper ─────────────────────────────────────────────────────
-  const sendMessage = async ({ text = "", message_type = "text", file_url = "" }) => {
-    if (!sessionId || !apiBase) return;
+  const sendMessage = async ({ text = "", message_type = "text", file_url = "" }, overrideSessionId) => {
+    const sid = overrideSessionId || sessionId;
+    if (!sid || apiBase == null) return;
     // Optimistic
     const tempId = `temp-${Date.now()}`;
     setMessages(prev => [...prev, {
@@ -363,9 +510,26 @@ export default function LiveChatWidget({ initialOpen = false }) {
       const res = await fetch(`${apiBase}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'send', session_id: sessionId, message_type, text, file_url }),
+        credentials: 'include',
+        body: JSON.stringify({ action: 'send', session_id: sid, message_type, text, file_url }),
       });
-      if (!res.ok) setMessages(prev => prev.filter(m => m.id !== tempId));
+      if (!res.ok) {
+        setMessages(prev => prev.filter(m => m.id !== tempId));
+        return;
+      }
+      const data = await res.json();
+      if (data.message) {
+        setMessages(previous => mergeServerMessages(previous, [data.message]));
+      }
+      awaitingReplyRef.current = true;
+      fastReplyPollingUntilRef.current =
+        Date.now() + ACTIVE_REPLY_POLL_WINDOW_MS;
+      const humanIsTyping = Boolean(data.typing?.admin);
+      setRemoteTyping({
+        admin: humanIsTyping,
+        ai: Boolean(data.typing?.ai) && !humanIsTyping,
+      });
+      syncNowRef.current?.();
     } catch (err) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
     }
@@ -374,11 +538,13 @@ export default function LiveChatWidget({ initialOpen = false }) {
   // ── Text send ───────────────────────────────────────────────────────────────
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!inputText.trim() || !sessionId || !apiBase || isLoading) return;
+    if (!inputText.trim() || apiBase == null || isLoading) return;
+    const currentSid = await ensureChatSession();
+    if (!currentSid) return;
     const text = inputText.trim();
     setInputText("");
     setIsLoading(true);
-    await sendMessage({ text, message_type: "text" });
+    await sendMessage({ text, message_type: "text" }, currentSid);
 
     if (expectingTrackingCode) {
       setExpectingTrackingCode(false);
@@ -399,32 +565,27 @@ export default function LiveChatWidget({ initialOpen = false }) {
                         `رمز ایکس‌باکس: ${data.created_xbox_pass}\n`;
           }
           
-          sendBotReply(msgText);
+          sendBotReply(msgText, currentSid);
         } else {
-          sendBotReply("سفارشی با این کد پیگیری پیدا نشد. لطفاً کد را مجدداً و به درستی وارد کنید یا منتظر پشتیبان بمانید.");
+          sendBotReply("سفارشی با این کد پیگیری پیدا نشد. لطفاً کد را مجدداً و به درستی وارد کنید یا منتظر پشتیبان بمانید.", currentSid);
         }
       } catch (err) {
-        sendBotReply("خطا در برقراری ارتباط. لطفاً بعداً تلاش کنید.");
+        sendBotReply("خطا در برقراری ارتباط. لطفاً بعداً تلاش کنید.", currentSid);
       }
     }
     setIsLoading(false);
   };
 
   const handleQuickReply = async (type) => {
-    let sid = sessionId;
-    if (!sid) {
-      await initChat();
-      sid = localStorage.getItem("liveChatSessionId");
-      setSessionId(sid);
-    }
-    if (!sid || !apiBase || isLoading) return;
+    const sid = await ensureChatSession();
+    if (!sid || apiBase == null || isLoading) return;
     
     if (type === "track") {
-      await sendMessage({ text: "🔍 پیگیری وضعیت و زمان سفارش", message_type: "text" });
+      await sendMessage({ text: "🔍 پیگیری وضعیت و زمان سفارش", message_type: "text" }, sid);
       setExpectingTrackingCode(true);
       setTimeout(() => sendBotReply("لطفاً کد پیگیری سفارش خود را وارد کنید (مثال: 123456):", sid), 600);
     } else if (type === "2fa") {
-      await sendMessage({ text: "❓ راهنمای غیرفعال‌سازی 2FA", message_type: "text" });
+      await sendMessage({ text: "❓ راهنمای غیرفعال‌سازی 2FA", message_type: "text" }, sid);
       setTimeout(() => sendBotReply("برای خاموش کردن تایید دو مرحله‌ای (2FA):\n۱. وارد سایت Epic Games یا اکانت خود شوید.\n۲. به بخش تنظیمات حساب (Account Settings) و سپس بخش رمز عبور و امنیت (Password & Security) بروید.\n۳. گزینه Two-Factor Authentication را خاموش کنید.", sid), 600);
     } else if (type === "hours") {
       await sendMessage({ text: "📞 ساعات کاری پشتیبانی", message_type: "text" });
@@ -440,16 +601,11 @@ export default function LiveChatWidget({ initialOpen = false }) {
     if (!file) return;
     e.target.value = "";
 
-    let sid = sessionId;
-    if (!sid) {
-      await initChat();
-      sid = localStorage.getItem("liveChatSessionId");
-      setSessionId(sid);
-    }
+    const sid = await ensureChatSession();
 
     const result = await uploadFile(file, sid);
     if (result?.file_url) {
-      await sendMessage({ message_type: result.message_type, file_url: result.file_url });
+      await sendMessage({ message_type: result.message_type, file_url: result.file_url }, sid);
     }
   };
 
@@ -463,16 +619,11 @@ export default function LiveChatWidget({ initialOpen = false }) {
         if (!file) continue;
         e.preventDefault();
 
-        let sid = sessionId;
-        if (!sid) {
-          await initChat();
-          sid = localStorage.getItem("liveChatSessionId");
-          setSessionId(sid);
-        }
+        const sid = await ensureChatSession();
 
         const result = await uploadFile(file, sid);
         if (result?.file_url) {
-          await sendMessage({ message_type: result.message_type, file_url: result.file_url });
+          await sendMessage({ message_type: result.message_type, file_url: result.file_url }, sid);
         }
         break;
       }
@@ -550,16 +701,11 @@ export default function LiveChatWidget({ initialOpen = false }) {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
 
-        let sid = sessionId;
-        if (!sid) {
-          await initChat();
-          sid = localStorage.getItem("liveChatSessionId");
-          setSessionId(sid);
-        }
+        const sid = await ensureChatSession();
 
         const result = await uploadFile(file, sid);
         if (result?.file_url) {
-          await sendMessage({ message_type: "audio", file_url: result.file_url });
+          await sendMessage({ message_type: "audio", file_url: result.file_url }, sid);
           startCooldown();
         }
       };
@@ -658,6 +804,20 @@ export default function LiveChatWidget({ initialOpen = false }) {
                   </React.Fragment>
                 );
               })
+            )}
+            {(remoteTyping.admin || remoteTyping.ai) && (
+              <div
+                className="chat-typing-indicator"
+                role="status"
+                aria-label="سارینا، کارشناس پشتیبانی، در حال پاسخگویی است"
+              >
+                <div className="chat-typing-avatar">
+                  <img src="/support-team/sarina-profile.webp" alt="سارینا، کارشناس پشتیبانی" loading="lazy" />
+                </div>
+                <span className="chat-typing-dots" aria-hidden="true">
+                  <i></i><i></i><i></i>
+                </span>
+              </div>
             )}
             <div ref={messagesEndRef} />
           </div>

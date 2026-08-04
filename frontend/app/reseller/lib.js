@@ -25,6 +25,7 @@ export const STATUS_TAG = {
   completed: ["انجام شده", "completed"],
   needs_2fa: ["نیاز به 2FA", "needs_2fa"],
   needs_tr_region: ["نیاز به ریجن", "needs_tr_region"],
+  needs_xbox_info: ["مشکل ایکس باکس", "needs_xbox_info"],
   invalid_info: ["اطلاعات غلط", "invalid_info"],
   canceled: ["لغو شده", "canceled"],
   refunded: ["مسترد", "refunded"],
@@ -40,7 +41,7 @@ export function statusLabel(status) {
 // به‌ویژه "pending" (در انتظار پرداخت) قابل مرجوع نیست، چون پولی دریافت نشده.
 const REFUNDABLE_STATUSES = new Set([
   "paid", "registered", "processing", "completed",
-  "needs_2fa", "needs_tr_region", "invalid_info",
+  "needs_2fa", "needs_tr_region", "needs_xbox_info", "invalid_info",
 ]);
 
 export function isRefundableOrder(order) {

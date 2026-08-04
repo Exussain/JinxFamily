@@ -287,10 +287,44 @@ def _compute_behavior_discount(profile: ResellerProfile) -> dict:
 
     loyalty_score = min(100, spend_score + order_score + sr_score + age_score)
 
-    max_single = _setting_int("reseller_behavior_max_single", DEFAULT_CREW_BEHAVIOR_MAX_SINGLE)
-    min_single = _setting_int("reseller_behavior_min_single", DEFAULT_CREW_BEHAVIOR_MIN_SINGLE)
-    max_ten = _setting_int("reseller_behavior_max_ten", DEFAULT_CREW_BEHAVIOR_MAX_TEN)
-    min_ten = _setting_int("reseller_behavior_min_ten", DEFAULT_CREW_BEHAVIOR_MIN_TEN)
+    db_max_single = _setting_int("reseller_behavior_max_single", DEFAULT_CREW_BEHAVIOR_MAX_SINGLE)
+    db_min_single = _setting_int("reseller_behavior_min_single", DEFAULT_CREW_BEHAVIOR_MIN_SINGLE)
+    db_max_ten = _setting_int("reseller_behavior_max_ten", DEFAULT_CREW_BEHAVIOR_MAX_TEN)
+    db_min_ten = _setting_int("reseller_behavior_min_ten", DEFAULT_CREW_BEHAVIOR_MIN_TEN)
+
+    # scale behavior bounds based on database global price tiers if configured
+    crew_product = Product.objects.filter(slug=CREW_SLUG).first()
+    global_single_price = None
+    global_ten_price = None
+    if crew_product:
+        one_m_var = crew_product.variants.filter(title="۱ ماهه").first()
+        one_m_id = one_m_var.id if one_m_var else None
+        
+        global_tiers = list(ResellerPriceTier.objects.filter(
+            product=crew_product, reseller__isnull=True, active=True
+        ))
+        global_tiers.sort(key=lambda t: (t.min_quantity, 1 if t.variant_id == one_m_id else 0))
+        for t in global_tiers:
+            if t.min_quantity == 1:
+                global_single_price = t.price
+            elif t.min_quantity == 10:
+                global_ten_price = t.price
+
+    if global_single_price is not None:
+        margin_single = db_max_single - db_min_single
+        max_single = global_single_price
+        min_single = max(0, max_single - margin_single)
+    else:
+        max_single = db_max_single
+        min_single = db_min_single
+
+    if global_ten_price is not None:
+        margin_ten = db_max_ten - db_min_ten
+        max_ten = global_ten_price
+        min_ten = max(0, max_ten - margin_ten)
+    else:
+        max_ten = db_max_ten
+        min_ten = db_min_ten
 
     crew_single = max_single - int((loyalty_score / 100) * (max_single - min_single))
     crew_ten = max_ten - int((loyalty_score / 100) * (max_ten - min_ten))
@@ -988,10 +1022,23 @@ def reseller_catalog(request):
             return variant_tiers
 
         if is_crew:
-            crew_tiers, crew_override = _tiers_for_reseller(product.id, None, profile)
+            one_m_var = product.variants.filter(title="۱ ماهه").first()
+            one_m_vid = one_m_var.id if one_m_var else None
+            
+            c_tiers_1m, override_1m = _tiers_for_reseller(product.id, one_m_vid, profile) if one_m_vid else ([], False)
+            c_tiers_base, override_base = _tiers_for_reseller(product.id, None, profile)
+            
+            if override_1m:
+                crew_tiers, crew_override = c_tiers_1m, True
+            else:
+                crew_tiers, crew_override = c_tiers_base, override_base
+
             tiers = crew_tiers if crew_override else _crew_tiers_for_rate(lira_rate, cfg)
             lira_priced = True
             behavior_enabled = _setting_bool("reseller_behavior_pricing_enabled", BEHAVIOR_PRICING_ENABLED_DEFAULT)
+            if behavior_enabled and profile is not None and not crew_override:
+                if ResellerPriceTier.objects.filter(product=product, reseller=profile, active=True).exists():
+                    behavior_enabled = False
             if behavior_enabled and profile is not None and not crew_override:
                 crew_behavior = _compute_behavior_discount(profile)
                 tiers = [
@@ -1295,7 +1342,7 @@ def _parse_reseller_order_payload(request, profile: ResellerProfile) -> dict:
     today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     # 1. Check reseller-specific daily limit
-    if getattr(product, "reseller_daily_order_limit", -1) >= 0:
+    if getattr(product, "reseller_daily_order_limit", -1) > 0:
         ordered_today_reseller = OrderItem.objects.filter(
             product=product,
             order__created_at__gte=today_start,
@@ -1310,7 +1357,7 @@ def _parse_reseller_order_payload(request, profile: ResellerProfile) -> dict:
             ))
 
     # 2. Check general daily limit
-    if getattr(product, "daily_order_limit", -1) >= 0:
+    if getattr(product, "daily_order_limit", -1) > 0:
         ordered_today = OrderItem.objects.filter(
             product=product,
             order__created_at__gte=today_start,
@@ -1330,6 +1377,8 @@ def _parse_reseller_order_payload(request, profile: ResellerProfile) -> dict:
             variant = ProductVariant.objects.get(id=int(variant_id), product=product)
         except (ProductVariant.DoesNotExist, ValueError, TypeError):
             raise _OrderValidationError(JsonResponse({"message": "واریانت نامعتبر است."}, status=400))
+    elif product.variants.exists():
+        variant = product.variants.order_by("sort_order", "id").first()
 
     unit_price = _price_for_quantity(product.id, quantity, variant.id if variant else None, profile=profile)
     if unit_price <= 0:
@@ -1464,7 +1513,7 @@ def _build_reseller_order(request, profile: ResellerProfile, ctx: dict, status: 
         variant=ctx["variant"],
         name=ctx["variant"].title if ctx["variant"] else ctx["product"].name_fa,
         price=ctx["unit_price"],
-        price_lira=ctx["product"].price_lira,
+        price_lira=ctx["variant"].original_price if ctx.get("variant") and getattr(ctx["variant"], "original_price", 0) > 0 else (ctx["product"].price_lira if ctx.get("product") else 0),
         quantity=ctx["quantity"],
         account_type=ctx["account_type"],
         account_email=ctx["account_email"],
@@ -1630,12 +1679,9 @@ def reseller_order_diff(request, tracking):
 
 @csrf_exempt
 def reseller_order_fill_accounts(request, tracking):
-    """POST /api/reseller/orders/<tracking>/fill-accounts — تکمیل اطلاعات اکانت‌های رزروشده.
+    """POST /api/reseller/orders/<tracking>/fill-accounts — تکمیل/ویرایش اطلاعات اکانت‌های رزروشده یا عادی.
 
     Body: {"accounts": [{index, mode, account_type, account_email, account_password, xbox_email?, xbox_password?}, ...]}
-
-    در صورت عبور نوسان لیر از ۵٪، ما‌به‌التفاوت از کیف پول کسر می‌شود (در صورت کافی
-    بودن موجودی) و سفارش به وضعیت 'paid' منتقل می‌شود.
     """
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
@@ -1646,8 +1692,8 @@ def reseller_order_fill_accounts(request, tracking):
         return JsonResponse({"detail": "پروفایل همکار یافت نشد."}, status=404)
 
     order = get_object_or_404(Order, tracking_code=tracking, is_reseller_order=True, user_id=request.user.id)
-    if order.reserve_mode != "later":
-        return JsonResponse({"message": "این سفارش رزروشده نیست."}, status=400)
+    if order.status in ("completed", "refunded", "canceled"):
+        return JsonResponse({"message": "امکان ویرایش اطلاعات برای سفارش‌های تکمیل، مسترد یا لغو شده وجود ندارد."}, status=400)
 
     try:
         payload = json.loads(request.body.decode("utf-8") or "{}")
@@ -1666,7 +1712,7 @@ def reseller_order_fill_accounts(request, tracking):
     item = items[0]
     existing = {a.index: a for a in item.accounts.all()}
 
-    # اعتبارسنجی — اکانت‌های خالی یا تکراری را رد نمی‌کنیم
+    # اعتبارسنجی
     validated = []
     for a in accounts_in:
         if not isinstance(a, dict):
@@ -1677,9 +1723,11 @@ def reseller_order_fill_accounts(request, tracking):
             return JsonResponse({"message": "index هر ردیف الزامی است."}, status=400)
         if idx not in existing:
             return JsonResponse({"message": f"ردیف {idx} متعلق به این سفارش نیست."}, status=400)
-        # اکانتی که قبلاً تکمیل شده را رد می‌کنیم
-        if existing[idx].status == "filled":
+        
+        # اکانتی که قبلاً توسط ادمین تکمیل نهایی شده را رد می‌کنیم
+        if existing[idx].status == "completed":
             continue
+
         email = (a.get("account_email") or "").strip()
         password = (a.get("account_password") or "").strip()
         if not email or not password:
@@ -1702,20 +1750,30 @@ def reseller_order_fill_accounts(request, tracking):
 
     with transaction.atomic():
         # ثبت اطلاعات اکانت‌ها
+        info_actually_changed = False
         for v in validated:
             acc = existing[v["index"]]
+            if (acc.mode != v["mode"] or
+                acc.account_type != v["account_type"] or
+                acc.account_email != v["account_email"] or
+                acc.account_password != v["account_password"] or
+                acc.xbox_email != v["xbox_email"] or
+                acc.xbox_password != v["xbox_password"]):
+                info_actually_changed = True
+
             acc.mode = v["mode"]
             acc.account_type = v["account_type"]
             acc.account_email = v["account_email"]
             acc.account_password = v["account_password"]
             acc.xbox_email = v["xbox_email"]
             acc.xbox_password = v["xbox_password"]
-            acc.status = "filled"
+            if acc.status == "pending":
+                acc.status = "filled"
             acc.save(update_fields=["mode", "account_type", "account_email", "account_password",
                                     "xbox_email", "xbox_password", "status", "updated_at"])
 
         # به‌روزرسانی فیلدهای legacy روی OrderItem/Order (اولین اکانت تکمیل‌شده به ترتیب ایندکس)
-        first_filled = item.accounts.filter(status="filled").order_by("index").first()
+        first_filled = item.accounts.filter(status__in=["filled", "completed"]).order_by("index").first()
         if first_filled:
             item.account_type = first_filled.account_type
             item.account_email = first_filled.account_email
@@ -1724,13 +1782,19 @@ def reseller_order_fill_accounts(request, tracking):
             order.epic_username = first_filled.account_email
             order.save(update_fields=["epic_username"])
 
+        if info_actually_changed:
+            order.reseller_info_updated = True
+            if order.status in ["invalid_info", "needs_2fa", "needs_tr_region"]:
+                order.status = "paid"
+            order.save(update_fields=["reseller_info_updated", "status"])
+
         # آیا همه اکانت‌ها تکمیل شده‌اند؟
         all_filled = item.accounts.filter(status="pending").count() == 0
         diff_info = _reservation_diff(order)
         due = 0
 
-        if all_filled:
-            # بررسی نوسان لیر و کسر ما‌به‌التفاوت
+        if all_filled and order.reserve_mode == "later" and not order.reserve_filled_at:
+            # بررسی نوسان لیر و کسر ما‌به‌التفاوت (فقط اولین باری که اطلاعات رزرو تکمیل می‌شود)
             if diff_info.get("applicable") and diff_info.get("exceeded") and diff_info.get("due", 0) > 0:
                 due = diff_info["due"]
                 if profile.wallet_balance < due:
@@ -1755,7 +1819,8 @@ def reseller_order_fill_accounts(request, tracking):
                 )
 
             order.reserve_filled_at = timezone.now()
-            order.status = "paid"
+            if order.status == "registered":
+                order.status = "paid"
             order.save(update_fields=["reserve_filled_at", "lira_diff_charged", "status"])
 
     return JsonResponse({
@@ -1789,14 +1854,17 @@ def reseller_order_return_unit(request, tracking):
     except Exception:
         return JsonResponse({"message": "ایندکس واحد نامعتبر است."}, status=400)
 
-    order = get_object_or_404(Order, tracking_code=tracking, is_reseller_order=True, user_id=request.user.id)
+    # LOCK ORDER IMMEDIATELY to prevent concurrent modifications
+    order_qs = Order.objects.select_for_update().filter(tracking_code=tracking, is_reseller_order=True, user_id=request.user.id)
+    try:
+        order = order_qs.get()
+    except Order.DoesNotExist:
+        return JsonResponse({"message": "سفارش یافت نشد."}, status=404)
 
     if order.status in ("canceled", "refunded", "wallet_topup"):
         return JsonResponse({"message": "این سفارش قبلاً لغو یا مرجوع شده است."}, status=400)
 
     # حفاظت مالی: فقط سفارش‌هایی که واقعاً پرداخت شده‌اند قابل مرجوع کردن هستند.
-    # وضعیت "pending" یعنی پرداخت هنوز تأیید نشده (مثلاً کاربر در درگاه انصراف داده) —
-    # مرجوع کردن چنین سفارشی، کیف پول را بابت مبلغی که هرگز دریافت نشده شارژ می‌کند.
     PAID_STATUSES = {
         "paid", "registered", "processing", "completed",
         "needs_2fa", "needs_tr_region", "invalid_info",
@@ -1811,10 +1879,11 @@ def reseller_order_return_unit(request, tracking):
     if not item:
         return JsonResponse({"message": "آیتمی برای این سفارش یافت نشد."}, status=400)
 
+    # LOCK THE ACCOUNT RECORD to prevent double deletion or race conditions
     try:
-        acc = item.accounts.get(index=index)
+        acc = item.accounts.select_for_update().get(index=index)
     except OrderItemAccount.DoesNotExist:
-        return JsonResponse({"message": f"واحد {index} یافت نشد."}, status=404)
+        return JsonResponse({"message": f"واحد {index} یافت نشد (یا قبلاً مرجوع شده است)."}, status=404)
 
     if acc.status == "completed":
         return JsonResponse({"message": "این واحد قبلاً انجام شده است و امکان مرجوع کردن آن وجود ندارد."}, status=400)
@@ -1870,7 +1939,7 @@ def reseller_order_return_unit(request, tracking):
             a.save(update_fields=["index"])
 
     # Update legacy first_filled account if needed
-    first_filled = item.accounts.filter(status="filled").order_by("index").first()
+    first_filled = item.accounts.filter(status__in=["filled", "completed"]).order_by("index").first()
     if first_filled:
         item.account_type = first_filled.account_type
         item.account_email = first_filled.account_email
@@ -1928,6 +1997,7 @@ def reseller_order_return_unit(request, tracking):
         "wallet_balance": profile.wallet_balance,
         "message": f"واحد {index} مرجوع شد و مبلغ {unit_price:,} تومان به کیف پول بازگشت."
     })
+
 
 
 # -----------------------------------------------------------------------
@@ -2065,6 +2135,7 @@ def reseller_order_verify(request):
 
     with transaction.atomic():
         payment.status = "verified"
+        payment.verified_at = payment.verified_at or timezone.now()
         payment.ref_id = str(data.get("ref_id") or "")
         payment.card_pan = data.get("card_pan") or ""
         payment.card_hash = data.get("card_hash") or ""
@@ -2286,6 +2357,7 @@ def reseller_wallet_verify(request):
             return JsonResponse({"detail": "پروفایل همکار یافت نشد."}, status=404)
 
         payment.status = "verified"
+        payment.verified_at = payment.verified_at or timezone.now()
         payment.ref_id = str(data.get("ref_id") or "")
         payment.card_pan = data.get("card_pan") or ""
         payment.card_hash = data.get("card_hash") or ""

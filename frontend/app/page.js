@@ -234,6 +234,8 @@ export default async function Page(props) {
 
   const categories = [
     "فورتنایت",
+    "ولورانت",
+    "بازی‌ها",
     "هوش مصنوعی",
     "بازارچه اکانت‌ها",
     "اشتراک‌ها",

@@ -37,6 +37,14 @@ const CREWPACK_FAQ_ITEMS = [
   },
 ];
 
+function crewpackDurationMonths(duration) {
+  const value = String(duration || "").replace(/\s+/g, " ");
+  if (value.includes("۱ سال") || value.includes("یکساله") || value.includes("یک ساله") || value.includes("12")) return 12;
+  if (value.includes("۳") || value.includes("3") || value.includes("سه ماه")) return 3;
+  if (value.includes("۲") || value.includes("2") || value.includes("دو ماه")) return 2;
+  return 1;
+}
+
 export default function CrewPackClient({ initialProduct, initialStats, initialProducts = [] }) {
   const [showDeferredSections, setShowDeferredSections] = useState(false);
   const deferredRef = useRef(null);
@@ -76,6 +84,14 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
   const [crewProductId, setCrewProductId] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState(crewpackPresentation.selectedVariantId);
   const options = crewpackPresentation.options;
+  const selectedOption = options.find((option) => option.variant_id === selectedVariantId) || options[0];
+  const monthlyOption = options.find((option) => crewpackDurationMonths(option.duration) === 1) || options[0];
+  const selectedMonths = crewpackDurationMonths(selectedOption?.duration);
+  const monthlyReference = Number(monthlyOption?.price) || 0;
+  const selectedSavings = Math.max(0, monthlyReference * selectedMonths - (Number(selectedOption?.price) || 0));
+  const selectedDiscountPercent = monthlyReference && selectedMonths
+    ? Math.round((selectedSavings / (monthlyReference * selectedMonths)) * 100)
+    : 0;
 
   const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").trim();
 
@@ -134,7 +150,6 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
   const handleAdd = () => {
     setShowValidation(true);
 
-    const selectedOption = options.find((o) => o.variant_id === selectedVariantId) || options[0];
     const itemPrice = selectedOption.price;
     const itemName = `کروپک فورتنایت - ${selectedOption.duration}`;
 
@@ -198,7 +213,7 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
               className="hero-image"
               style={{
                 position: "relative",
-                aspectRatio: "1/1",
+                aspectRatio: crewProduct?.cover_16_9 ? "16/9" : "1/1",
                 borderRadius: 18,
                 overflow: "hidden",
                 background: "linear-gradient(135deg,#0f2250,#141a3a)",
@@ -357,62 +372,7 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
                 </button>
               </div>
             </div>
-            {/* Guides and Tutorials Card */}
-            <div className="guides-card">
-              <div className="guides-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-                صفحات مرتبط
-              </div>
-              <div style={{ display: "grid", gap: 10 }}>
-                <a
-                  href="/guides/disable-2fa"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="guide-link-item"
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>🛡️</span>
-                    آموزش خاموش کردن تایید دو مرحله‌ای (2FA)
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </a>
 
-                <a
-                  href="/guides/link-unlink"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="guide-link-item"
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>🔗</span>
-                    آموزش اتصال و لینک کردن اکانت
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </a>
-
-                <a
-                  href="/guides/remove-restriction"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="guide-link-item"
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>⚠️</span>
-                    آموزش رفع محدودیت و ریستریکت اکانت
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </a>
-              </div>
-            </div>
           </div>
 
           <div className="details-stack" style={{ display: "grid", gap: 16 }}>
@@ -443,18 +403,36 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
 
             <div className="price-row" style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
               <div className="price" style={{ fontSize: 24, lineHeight: 1.2, fontWeight: 900 }}>
-                {(() => {
-                  const selectedOption = options.find((o) => o.variant_id === selectedVariantId) || options[0];
-                  return selectedOption.price ? selectedOption.price.toLocaleString("fa-IR") : "...";
-                })()} تومان
+                {selectedOption?.price ? selectedOption.price.toLocaleString("fa-IR") : "..."} تومان
               </div>
+              {selectedDiscountPercent > 0 && (
+                <>
+                  <del style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>
+                    {(monthlyReference * selectedMonths).toLocaleString("fa-IR")} تومان
+                  </del>
+                  <span style={{ color: "#047857", background: "#d1fae5", borderRadius: 999, padding: "3px 8px", fontWeight: 900, fontSize: 12 }}>
+                    🔥 {selectedDiscountPercent.toLocaleString("fa-IR")}٪ تخفیف ویژه
+                  </span>
+                </>
+              )}
             </div>
 
             <div className="product-options" style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 8 }}>انتخاب مدت زمان:</div>
+              <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 8 }}>انتخاب مدت زمان و آفر حجمی:</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {options.map((option) => {
                   const isActive = selectedVariantId === option.variant_id;
+                  const months = crewpackDurationMonths(option.duration);
+                  const saving = Math.max(0, monthlyReference * months - (Number(option.price) || 0));
+                  const discountPercent = monthlyReference && months
+                    ? Math.round((saving / (monthlyReference * months)) * 100)
+                    : 0;
+                  const isBestValue = saving > 0 && saving === Math.max(
+                    ...options.map((item) => {
+                      const itemMonths = crewpackDurationMonths(item.duration);
+                      return Math.max(0, monthlyReference * itemMonths - (Number(item.price) || 0));
+                    })
+                  );
                   return (
                     <button
                       key={option.variant_id}
@@ -473,10 +451,34 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
                         outline: "none"
                       }}
                     >
-                      {option.duration}
+                      <span>{option.duration}</span>
+                      {discountPercent > 0 && (
+                        <span style={{ display: "block", marginTop: 3, fontSize: 10, color: isActive ? "#047857" : "#059669" }}>
+                          🔥 {discountPercent.toLocaleString("fa-IR")}٪ تخفیف ویژه
+                        </span>
+                      )}
+                      {isBestValue && (
+                        <span style={{ display: "block", marginTop: 2, fontSize: 10, color: "#b45309" }}>بیشترین تخفیف</span>
+                      )}
                     </button>
                   );
                 })}
+              </div>
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(16, 185, 129, 0.10))",
+                  border: "1px solid rgba(245, 158, 11, 0.28)",
+                  color: "var(--text)",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  lineHeight: 1.8,
+                }}
+              >
+                ⚡ آفر پلنی فعال است: با انتخاب مدت بیشتر، هزینه هر ماه کمتر می‌شود.
+                {selectedSavings > 0 && <> این پلن {selectedSavings.toLocaleString("fa-IR")} تومان نسبت به خرید ماه‌به‌ماه برایتان ذخیره می‌کند.</>}
               </div>
             </div>
 
@@ -655,51 +657,6 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
         .image-stack {
           display: grid;
           gap: 16px;
-        }
-        .guides-card {
-          border: 2px solid var(--line);
-          background: var(--card);
-          border-radius: 14px;
-          padding: 16px;
-          display: grid;
-          gap: 12px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-        }
-        .guides-title {
-          color: var(--text);
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 15px;
-          font-weight: 900;
-        }
-        .guide-link-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 10px 14px;
-          background: var(--bg);
-          border: 2px solid var(--line);
-          border-radius: 10px;
-          color: var(--text);
-          font-size: 13px;
-          font-weight: 700;
-          text-decoration: none;
-          transition: all 0.2s ease;
-        }
-        .guide-link-item:hover {
-          border-color: var(--primary);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(44,75,255,0.08);
-          background: var(--card);
-        }
-        .guide-link-item svg {
-          color: var(--muted);
-          transition: transform 0.2s ease, color 0.2s ease;
-        }
-        .guide-link-item:hover svg {
-          color: var(--primary);
-          transform: translateX(-4px);
         }
         /* Activation Options */
         .activation-options {
@@ -1168,7 +1125,6 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
           .info-card { order: 4; }
           .product-highlights { order: 5; }
           .product-tabs { order: 6; }
-          .guides-card { order: 7; }
           .product-highlights {
             grid-template-columns: repeat(3, 1fr);
             gap: 6px;
@@ -1246,10 +1202,6 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
             font-size: 14px;
           }
           .step-desc {
-            font-size: 12px;
-          }
-          .guide-link-item {
-            padding: 9px 12px;
             font-size: 12px;
           }
         }

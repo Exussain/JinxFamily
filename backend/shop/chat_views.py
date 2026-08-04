@@ -1,15 +1,26 @@
 import json
 import os
 import uuid
+from datetime import timedelta
 from pathlib import Path
+from django.core import signing
+from django.core.exceptions import ValidationError
+from django.core.signing import BadSignature, SignatureExpired
+from django.db.models import F
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 from django.conf import settings
 from .models import LiveChatSession, LiveChatMessage
 from .views import ADMIN_PHONE_WHITELIST
+
+
+_CHAT_COOKIE_NAME = "nubix_live_chat"
+_CHAT_COOKIE_SALT = "shop.live-chat-session"
+_CHAT_COOKIE_MAX_AGE = 60 * 60 * 24 * 31
+_MESSAGE_PAGE_SIZE = 100
+_ADMIN_TYPING_TTL_SECONDS = 6
 
 
 def _is_admin_user(user) -> bool:
@@ -35,6 +46,115 @@ def _admin_auth_error(request):
     if not _is_admin_user(request.user):
         return JsonResponse({"detail": "forbidden"}, status=403)
     return None
+
+
+def _chat_cookie_session_id(request) -> str | None:
+    token = request.COOKIES.get(_CHAT_COOKIE_NAME)
+    if not token:
+        return None
+    try:
+        data = signing.loads(
+            token,
+            salt=_CHAT_COOKIE_SALT,
+            max_age=_CHAT_COOKIE_MAX_AGE,
+        )
+    except (BadSignature, SignatureExpired, TypeError, ValueError):
+        return None
+    session_id = data.get("session_id") if isinstance(data, dict) else None
+    return str(session_id) if session_id else None
+
+
+def _set_chat_cookie(response, session_id) -> None:
+    token = signing.dumps(
+        {"session_id": str(session_id)},
+        salt=_CHAT_COOKIE_SALT,
+        compress=True,
+    )
+    response.set_cookie(
+        _CHAT_COOKIE_NAME,
+        token,
+        max_age=_CHAT_COOKIE_MAX_AGE,
+        httponly=True,
+        secure=settings.SESSION_COOKIE_SECURE,
+        samesite=settings.SESSION_COOKIE_SAMESITE,
+        path="/api/chat",
+    )
+
+
+def _user_can_access_session(request, session: LiveChatSession) -> bool:
+    if session.user_id:
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.id == session.user_id
+        )
+    return _chat_cookie_session_id(request) == str(session.id)
+
+
+def _get_user_session(request, session_id):
+    if not session_id:
+        return None
+    try:
+        session = LiveChatSession.objects.get(id=session_id)
+    except (LiveChatSession.DoesNotExist, ValidationError, ValueError, TypeError):
+        return None
+    return session if _user_can_access_session(request, session) else None
+
+
+def _parse_after_id(request) -> int | None:
+    raw = request.GET.get("after_id")
+    if raw in (None, ""):
+        return None
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _message_page(session: LiveChatSession, after_id: int | None):
+    messages = session.messages.all().order_by("id")
+    if after_id is None:
+        rows = list(messages)
+        return rows, False
+
+    rows = list(messages.filter(id__gt=after_id)[: _MESSAGE_PAGE_SIZE + 1])
+    has_more = len(rows) > _MESSAGE_PAGE_SIZE
+    return rows[:_MESSAGE_PAGE_SIZE], has_more
+
+
+def _messages_response(session: LiveChatSession, after_id: int | None):
+    messages, has_more = _message_page(session, after_id)
+    next_after_id = messages[-1].id if messages else (after_id or 0)
+    response = JsonResponse(
+        {
+            "messages": [_serialize_message(message) for message in messages],
+            "next_after_id": next_after_id,
+            "has_more": has_more,
+            "status": session.status,
+            "typing": _typing_payload(session),
+        }
+    )
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+def _typing_payload(session: LiveChatSession):
+    now = timezone.now()
+    return {
+        "admin": bool(
+            session.admin_typing_until
+            and session.admin_typing_until > now
+        ),
+        "ai": bool(
+            session.ai_typing_until
+            and session.ai_typing_until > now
+        ),
+    }
+
+
+def _valid_session_media_url(session_id, file_url: str) -> bool:
+    expected_prefix = f"{settings.MEDIA_URL.rstrip('/')}/chat/{session_id}/"
+    return file_url.startswith(expected_prefix) and ".." not in file_url
 
 # ── Allowed MIME categories & size limits ──────────────────────────────────────
 _ALLOWED = {
@@ -78,10 +198,13 @@ def chat_upload_api(request):
     if not session_id:
         return JsonResponse({"error": "session_id الزامی است"}, status=400)
 
-    # Validate session exists
+    # Admins may upload to any chat. Visitors must prove ownership through
+    # their authenticated account or the signed HttpOnly chat cookie.
     try:
-        LiveChatSession.objects.get(id=session_id)
-    except (LiveChatSession.DoesNotExist, Exception):
+        session = LiveChatSession.objects.get(id=session_id)
+    except (LiveChatSession.DoesNotExist, ValidationError, ValueError):
+        return JsonResponse({"error": "سشن یافت نشد"}, status=404)
+    if not _is_admin_user(request.user) and not _user_can_access_session(request, session):
         return JsonResponse({"error": "سشن یافت نشد"}, status=404)
 
     uploaded = request.FILES.get("file")
@@ -105,7 +228,7 @@ def chat_upload_api(request):
     filename = f"{uuid.uuid4().hex}{ext}"
     rel_path = f"chat/{session_id}/{filename}"
 
-    saved_path = default_storage.save(rel_path, ContentFile(uploaded.read()))
+    saved_path = default_storage.save(rel_path, uploaded)
     file_url = settings.MEDIA_URL + saved_path
 
     return JsonResponse({"file_url": file_url, "message_type": message_type})
@@ -133,16 +256,28 @@ def chat_user_api(request):
             data = {}
 
         action = data.get("action")
-
         # ۱. دریافت یا ایجاد سشن
         if action == "init":
             session_id = data.get("session_id")
-            session = None
-            if session_id:
-                try:
-                    session = LiveChatSession.objects.get(id=session_id)
-                except LiveChatSession.DoesNotExist:
-                    pass
+            session = _get_user_session(request, session_id)
+
+            # Recover from stale localStorage by trusting the signed cookie,
+            # never an unverified UUID supplied by the browser.
+            if not session:
+                cookie_session_id = _chat_cookie_session_id(request)
+                session = _get_user_session(request, cookie_session_id)
+
+            # Signed-in users can continue their latest open conversation on a
+            # new browser/device without relying on localStorage.
+            if not session and request.user.is_authenticated:
+                session = (
+                    LiveChatSession.objects.filter(
+                        user=request.user,
+                        status="open",
+                    )
+                    .order_by("-updated_at")
+                    .first()
+                )
 
             if not session:
                 user = request.user if request.user.is_authenticated else None
@@ -154,12 +289,24 @@ def chat_user_api(request):
                     session=session,
                     sender="admin",
                     message_type="text",
-                    text="سلام! چطور می‌توانیم کمکتان کنیم؟"
+                    text="سلام ، اگر کمک احتياج داشتين، ما آنلاينيم :)"
                 )
                 session.unread_user += 1
                 session.save()
+            else:
+                user = request.user if request.user.is_authenticated else None
+                if user and not session.user:
+                    session.user = user
+                    session.guest_name = ""
+                    session.save(update_fields=["user", "guest_name", "updated_at"])
+                if session.status == "closed":
+                    session.status = "open"
+                    session.save(update_fields=["status", "updated_at"])
 
-            return JsonResponse({"session_id": str(session.id), "status": session.status})
+            response = JsonResponse({"session_id": str(session.id), "status": session.status})
+            response["Cache-Control"] = "private, no-store"
+            _set_chat_cookie(response, session.id)
+            return response
 
         # ۲. ارسال پیام توسط کاربر
         elif action == "send":
@@ -177,10 +324,11 @@ def chat_user_api(request):
             if message_type not in ("text", "image", "video", "audio"):
                 return JsonResponse({"error": "نوع پیام نامعتبر"}, status=400)
 
-            try:
-                session = LiveChatSession.objects.get(id=session_id)
-            except LiveChatSession.DoesNotExist:
+            session = _get_user_session(request, session_id)
+            if not session:
                 return JsonResponse({"error": "سشن یافت نشد"}, status=404)
+            if message_type != "text" and not _valid_session_media_url(session.id, file_url):
+                return JsonResponse({"error": "آدرس فایل نامعتبر است"}, status=400)
 
             msg = LiveChatMessage.objects.create(
                 session=session,
@@ -189,19 +337,33 @@ def chat_user_api(request):
                 text=text,
                 file_url=file_url,
             )
-            session.unread_admin += 1
-            session.updated_at = timezone.now()
-            session.save()
+            LiveChatSession.objects.filter(id=session.id).update(
+                unread_admin=F("unread_admin") + 1,
+                status="open",
+                updated_at=timezone.now(),
+            )
+            session.status = "open"
 
             # Draft an AI support reply in the background (no-op if disabled or
             # a human agent has already taken over this conversation).
+            ai_typing_started = False
             try:
                 from . import ai_support
-                ai_support.maybe_autoreply(session)
+                ai_typing_started = bool(ai_support.maybe_autoreply(session))
             except Exception:
                 pass
 
-            return JsonResponse({"status": "ok", "msg_id": msg.id})
+            typing = _typing_payload(session)
+            if ai_typing_started:
+                typing["ai"] = True
+            return JsonResponse(
+                {
+                    "status": "ok",
+                    "msg_id": msg.id,
+                    "message": _serialize_message(msg),
+                    "typing": typing,
+                }
+            )
 
         # ۳. ثبت پیام ربات (bot_reply) — ارسال‌شده از طرف ویجت کاربر، نه ادمین واقعی
         elif action == "bot_reply":
@@ -213,9 +375,8 @@ def chat_user_api(request):
             if not text:
                 return JsonResponse({"error": "متن پیام خالی است"}, status=400)
 
-            try:
-                session = LiveChatSession.objects.get(id=session_id)
-            except LiveChatSession.DoesNotExist:
+            session = _get_user_session(request, session_id)
+            if not session:
                 return JsonResponse({"error": "سشن یافت نشد"}, status=404)
 
             msg = LiveChatMessage.objects.create(
@@ -225,32 +386,40 @@ def chat_user_api(request):
                 text=text,
                 is_ai=True,
             )
-            session.unread_user = max(0, (session.unread_user or 0))
-            session.updated_at = timezone.now()
-            session.save()
+            LiveChatSession.objects.filter(id=session.id).update(
+                status="open",
+                updated_at=timezone.now(),
+            )
 
-            return JsonResponse({"status": "ok", "msg_id": msg.id, "created_at": msg.created_at.isoformat()})
+            return JsonResponse(
+                {
+                    "status": "ok",
+                    "msg_id": msg.id,
+                    "created_at": msg.created_at.isoformat(),
+                    "message": _serialize_message(msg),
+                }
+            )
 
         return JsonResponse({"error": "action نامعتبر"}, status=400)
 
     elif request.method == "GET":
         # ۳. دریافت پیام‌های کاربر
-        session_id = request.GET.get("session_id")
+        session_id = request.GET.get("session_id") or _chat_cookie_session_id(request)
         if not session_id:
             return JsonResponse({"error": "session_id الزامی است"}, status=400)
 
-        try:
-            session = LiveChatSession.objects.get(id=session_id)
-        except LiveChatSession.DoesNotExist:
+        session = _get_user_session(request, session_id)
+        if not session:
             return JsonResponse({"error": "سشن یافت نشد"}, status=404)
 
         # صفر کردن خوانده نشده‌های کاربر
         if session.unread_user > 0:
-            session.unread_user = 0
-            session.save()
+            LiveChatSession.objects.filter(
+                id=session.id,
+                unread_user=session.unread_user,
+            ).update(unread_user=0)
 
-        messages = session.messages.all().order_by("created_at")
-        return JsonResponse({"messages": [_serialize_message(m) for m in messages]})
+        return _messages_response(session, _parse_after_id(request))
 
     return JsonResponse({"error": "متد نامعتبر"}, status=405)
 
@@ -271,7 +440,11 @@ def chat_admin_api(request):
 
         # ۱. لیست سشن‌ها
         if action == "sessions":
-            sessions = LiveChatSession.objects.filter(status="open").order_by("-updated_at")
+            sessions = (
+                LiveChatSession.objects.filter(status="open")
+                .select_related("user")
+                .order_by("-updated_at")
+            )
             data_list = []
             for s in sessions:
                 name = s.user.get_full_name() or s.user.username if s.user else s.guest_name or "مهمان"
@@ -281,7 +454,9 @@ def chat_admin_api(request):
                     "unread": s.unread_admin,
                     "updated_at": s.updated_at.isoformat()
                 })
-            return JsonResponse({"sessions": data_list})
+            response = JsonResponse({"sessions": data_list})
+            response["Cache-Control"] = "private, no-store"
+            return response
 
         # ۲. پیام‌های یک سشن خاص
         elif action == "messages":
@@ -291,16 +466,16 @@ def chat_admin_api(request):
 
             try:
                 session = LiveChatSession.objects.get(id=session_id)
-            except LiveChatSession.DoesNotExist:
+            except (LiveChatSession.DoesNotExist, ValidationError, ValueError):
                 return JsonResponse({"error": "سشن یافت نشد"}, status=404)
 
-            # صفر کردن خوانده نشده‌های ادمین
             if session.unread_admin > 0:
-                session.unread_admin = 0
-                session.save()
+                LiveChatSession.objects.filter(
+                    id=session.id,
+                    unread_admin=session.unread_admin,
+                ).update(unread_admin=0)
 
-            messages = session.messages.all().order_by("created_at")
-            return JsonResponse({"messages": [_serialize_message(m) for m in messages]})
+            return _messages_response(session, _parse_after_id(request))
 
         return JsonResponse({"error": "action نامعتبر"}, status=400)
 
@@ -311,6 +486,34 @@ def chat_admin_api(request):
             data = {}
 
         action = data.get("action")
+
+        if action == "typing":
+            session_id = data.get("session_id")
+            if not session_id:
+                return JsonResponse({"error": "session_id الزامی است"}, status=400)
+            try:
+                session = LiveChatSession.objects.get(id=session_id)
+            except (LiveChatSession.DoesNotExist, ValidationError, ValueError):
+                return JsonResponse({"error": "سشن یافت نشد"}, status=404)
+
+            # Only accept a JSON boolean. Values such as the string "false"
+            # must never accidentally turn presence on.
+            is_typing = data.get("is_typing") is True
+            typing_until = (
+                timezone.now() + timedelta(seconds=_ADMIN_TYPING_TTL_SECONDS)
+                if is_typing
+                else None
+            )
+            LiveChatSession.objects.filter(id=session.id).update(
+                admin_typing_until=typing_until,
+            )
+            return JsonResponse(
+                {
+                    "status": "ok",
+                    "typing": is_typing,
+                    "expires_in": _ADMIN_TYPING_TTL_SECONDS if is_typing else 0,
+                }
+            )
 
         if action == "send":
             session_id = data.get("session_id")
@@ -329,8 +532,10 @@ def chat_admin_api(request):
 
             try:
                 session = LiveChatSession.objects.get(id=session_id)
-            except LiveChatSession.DoesNotExist:
+            except (LiveChatSession.DoesNotExist, ValidationError, ValueError):
                 return JsonResponse({"error": "سشن یافت نشد"}, status=404)
+            if message_type != "text" and not _valid_session_media_url(session.id, file_url):
+                return JsonResponse({"error": "آدرس فایل نامعتبر است"}, status=400)
 
             msg = LiveChatMessage.objects.create(
                 session=session,
@@ -339,19 +544,40 @@ def chat_admin_api(request):
                 text=text,
                 file_url=file_url,
             )
-            session.unread_user += 1
-            session.updated_at = timezone.now()
-            session.save()
-            return JsonResponse({"status": "ok", "msg_id": msg.id})
+            LiveChatSession.objects.filter(id=session.id).update(
+                unread_user=F("unread_user") + 1,
+                status="open",
+                admin_typing_until=None,
+                ai_typing_until=None,
+                updated_at=timezone.now(),
+            )
+            return JsonResponse(
+                {
+                    "status": "ok",
+                    "msg_id": msg.id,
+                    "message": _serialize_message(msg),
+                }
+            )
 
         elif action == "close":
             session_id = data.get("session_id")
+            if not session_id:
+                return JsonResponse({"error": "session_id الزامی است"}, status=400)
             try:
                 session = LiveChatSession.objects.get(id=session_id)
                 session.status = "closed"
-                session.save()
+                session.admin_typing_until = None
+                session.ai_typing_until = None
+                session.save(
+                    update_fields=[
+                        "status",
+                        "admin_typing_until",
+                        "ai_typing_until",
+                        "updated_at",
+                    ]
+                )
                 return JsonResponse({"status": "ok"})
-            except LiveChatSession.DoesNotExist:
+            except (LiveChatSession.DoesNotExist, ValidationError, ValueError):
                 return JsonResponse({"error": "سشن یافت نشد"}, status=404)
 
         elif action == "delete":
@@ -360,7 +586,7 @@ def chat_admin_api(request):
                 return JsonResponse({"error": "session_id الزامی است"}, status=400)
             try:
                 session = LiveChatSession.objects.get(id=session_id)
-            except LiveChatSession.DoesNotExist:
+            except (LiveChatSession.DoesNotExist, ValidationError, ValueError):
                 return JsonResponse({"error": "سشن یافت نشد"}, status=404)
 
             # Clean up uploaded media files for this session before cascade-delete.

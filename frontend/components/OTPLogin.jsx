@@ -18,6 +18,7 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [referralCodeInput, setReferralCodeInput] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -42,6 +43,14 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
       if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
     };
   }, [avatarPreviewUrl]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = (window.localStorage.getItem("nubix_ref") || "").trim().toUpperCase();
+      if (stored) setReferralCodeInput(stored);
+    } catch {}
+  }, []);
 
   const cyclePresetAvatar = (delta) => {
     if (avatarAnimating) return;
@@ -201,7 +210,8 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
   };
 
   const validatePhoneNumber = (phone) => {
-    const cleaned = phone.trim().replace(/\s+/g, "");
+    let cleaned = phone.trim().replace(/\s+/g, "");
+    cleaned = cleaned.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
     if (!cleaned.startsWith("09")) {
       return { valid: false, message: "شماره تلفن باید با 09 شروع شود" };
     }
@@ -568,7 +578,8 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
   };
 
   const handleOtpChange = (e, idx) => {
-    const raw = e.target.value;
+    let raw = e.target.value;
+    raw = raw.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
     const cleaned = raw.replace(/[^0-9]/g, "");
 
     // Clear invalid OTP state when user starts typing
@@ -616,7 +627,9 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
 
   const handleOtpPaste = (e, idx) => {
     e.preventDefault();
-    const pasted = (e.clipboardData.getData("text") || "").replace(/[^0-9]/g, "");
+    let pastedText = e.clipboardData.getData("text") || "";
+    pastedText = pastedText.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+    const pasted = pastedText.replace(/[^0-9]/g, "");
     if (!pasted) return;
     const chars = otpCode.padEnd(6, " ").split("");
     for (let i = 0; i < pasted.length && idx + i < 6; i += 1) {
@@ -1419,6 +1432,31 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
                   <EyeToggleButton />
                 </div>
               </>
+            )}
+
+            {showProfileFields && isNewUser && (
+              <div className="field" style={{ marginTop: 12 }}>
+                <label>معرف دارید؟ <span style={{ color: "var(--muted)", fontWeight: 600 }}>(اختیاری)</span></label>
+                <input
+                  type="text"
+                  className="auth-input"
+                  dir="ltr"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  style={{
+                    fontWeight: 800,
+                    fontFamily: "Vazirmatn, system-ui, sans-serif",
+                    letterSpacing: "0.04em",
+                  }}
+                  value={referralCodeInput}
+                  onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                  placeholder="NX-XXXXXX"
+                />
+                <small style={{ color: "var(--muted)", marginTop: 4, display: "block" }}>
+                  اگر کد معرف دارید اینجا وارد کنید
+                </small>
+              </div>
             )}
 
             {error && (

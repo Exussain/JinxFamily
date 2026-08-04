@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { mergeServerMessages, nextAdminMessagePollDelay } from '../lib/chatSync.mjs';
 import './LiveChatWidget.css';
 
 // ── Custom Voice Player ───────────────────────────────────────────────────────
@@ -155,9 +156,72 @@ export default function AdminLiveChatWidget() {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recordTimerRef = useRef(null);
+  const lastServerMessageIdRef = useRef(0);
+  const syncedSessionIdRef = useRef(null);
+  const syncMessagesNowRef = useRef(null);
+  const typingStopTimerRef = useRef(null);
+  const typingSessionRef = useRef(null);
+  const lastTypingHeartbeatRef = useRef(0);
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
   const totalUnread = sessions.reduce((acc, s) => acc + (s.unread || 0), 0);
+
+  const sendTypingState = useCallback((sessionId, isTyping, keepalive = false) => {
+    if (!sessionId || apiBase == null) return;
+    fetch(`${apiBase}/api/admin/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      keepalive,
+      body: JSON.stringify({
+        action: 'typing',
+        session_id: sessionId,
+        is_typing: isTyping,
+      }),
+    }).catch(() => {});
+  }, [apiBase]);
+
+  const stopAdminTyping = useCallback((sessionId = typingSessionRef.current) => {
+    clearTimeout(typingStopTimerRef.current);
+    typingStopTimerRef.current = null;
+    if (sessionId) sendTypingState(sessionId, false, true);
+    if (!sessionId || typingSessionRef.current === sessionId) {
+      typingSessionRef.current = null;
+      lastTypingHeartbeatRef.current = 0;
+    }
+  }, [sendTypingState]);
+
+  const handleAdminInputChange = (event) => {
+    const value = event.target.value;
+    setInputText(value);
+    if (!activeSessionId || !value.trim()) {
+      stopAdminTyping(activeSessionId);
+      return;
+    }
+
+    const now = Date.now();
+    if (
+      typingSessionRef.current !== activeSessionId ||
+      now - lastTypingHeartbeatRef.current >= 2000
+    ) {
+      typingSessionRef.current = activeSessionId;
+      lastTypingHeartbeatRef.current = now;
+      sendTypingState(activeSessionId, true);
+    }
+
+    clearTimeout(typingStopTimerRef.current);
+    typingStopTimerRef.current = setTimeout(() => {
+      stopAdminTyping(activeSessionId);
+    }, 3500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typingSessionRef.current === activeSessionId) {
+        stopAdminTyping(activeSessionId);
+      }
+    };
+  }, [activeSessionId, stopAdminTyping]);
 
   const scrollToBottom = useCallback((smooth = true) => {
     if (chatMessagesRef.current) {
@@ -186,67 +250,168 @@ export default function AdminLiveChatWidget() {
 
   // ── Poll sessions ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!apiBase) return;
-    let intervalId;
+    if (apiBase == null) return;
+    let cancelled = false;
+    let timeoutId = null;
+    let controller = null;
+
+    const scheduleNext = () => {
+      clearTimeout(timeoutId);
+      if (!cancelled && !document.hidden) {
+        timeoutId = setTimeout(fetchSessions, isOpen ? 5000 : 15000);
+      }
+    };
+
     const fetchSessions = async () => {
+      if (cancelled || document.hidden) return;
+      controller?.abort();
+      controller = new AbortController();
       try {
-        const res = await fetch(`${apiBase}/api/admin/chat?action=sessions`);
+        const res = await fetch(`${apiBase}/api/admin/chat?action=sessions`, {
+          credentials: 'include',
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
         const data = await res.json();
         if (data.sessions) setSessions(data.sessions);
-      } catch (err) {}
+      } catch (err) {
+        if (err?.name !== 'AbortError') {
+          // Keep the admin panel usable during a transient chat outage.
+        }
+      } finally {
+        scheduleNext();
+      }
     };
+
+    const handleVisibilityChange = () => {
+      clearTimeout(timeoutId);
+      if (document.hidden) {
+        controller?.abort();
+      } else {
+        fetchSessions();
+      }
+    };
+
     fetchSessions();
-    intervalId = setInterval(fetchSessions, 5000);
-    return () => clearInterval(intervalId);
-  }, [apiBase]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      controller?.abort();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [apiBase, isOpen]);
 
   // ── Poll messages for active session ────────────────────────────────────────
   useEffect(() => {
-    if (!activeSessionId || !apiBase) return;
-    let intervalId;
-    const fetchMessages = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/admin/chat?action=messages&session_id=${activeSessionId}`);
-        const data = await res.json();
-        if (data.messages) {
-          setMessages(prev => {
-            const serverMsgs = data.messages;
-            // Keep optimistic admin messages that the server hasn't confirmed yet.
-            const pendingTemp = prev.filter(m =>
-              typeof m.id === 'string' && m.id.startsWith('temp-') &&
-              !serverMsgs.some(sm =>
-                sm.sender === 'admin' &&
-                sm.message_type === m.message_type &&
-                (sm.text || '') === (m.text || '') &&
-                (sm.file_url || '') === (m.file_url || '')
-              )
-            );
-            const combined = [...serverMsgs, ...pendingTemp].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-            return combined;
-          });
-        }
-      } catch (err) {}
+    if (!isOpen || !activeSessionId || apiBase == null) return;
+    let cancelled = false;
+    let timeoutId = null;
+    let controller = null;
+    let idlePolls = 0;
+
+    if (syncedSessionIdRef.current !== activeSessionId) {
+      syncedSessionIdRef.current = activeSessionId;
+      lastServerMessageIdRef.current = 0;
+    }
+
+    const scheduleNext = (delay) => {
+      clearTimeout(timeoutId);
+      if (!cancelled && !document.hidden) {
+        timeoutId = setTimeout(fetchMessages, delay);
+      }
     };
+
+    const fetchMessages = async () => {
+      if (cancelled || document.hidden) return;
+      controller?.abort();
+      controller = new AbortController();
+      try {
+        const params = new URLSearchParams({
+          action: 'messages',
+          session_id: activeSessionId,
+          after_id: String(lastServerMessageIdRef.current),
+        });
+        const res = await fetch(`${apiBase}/api/admin/chat?${params.toString()}`, {
+          credentials: 'include',
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          idlePolls += 1;
+          scheduleNext(nextAdminMessagePollDelay(idlePolls));
+          return;
+        }
+        const data = await res.json();
+        const incoming = Array.isArray(data.messages) ? data.messages : [];
+        if (incoming.length) {
+          setMessages(previous => mergeServerMessages(previous, incoming));
+          idlePolls = 0;
+        } else {
+          idlePolls += 1;
+        }
+        lastServerMessageIdRef.current = Math.max(
+          lastServerMessageIdRef.current,
+          Number(data.next_after_id) || 0,
+        );
+        scheduleNext(data.has_more ? 0 : nextAdminMessagePollDelay(idlePolls));
+      } catch (err) {
+        if (err?.name !== 'AbortError') {
+          idlePolls += 1;
+          scheduleNext(nextAdminMessagePollDelay(idlePolls));
+        }
+      }
+    };
+
+    syncMessagesNowRef.current = () => {
+      if (cancelled || document.hidden) return;
+      clearTimeout(timeoutId);
+      fetchMessages();
+    };
+
+    const handleVisibilityChange = () => {
+      clearTimeout(timeoutId);
+      if (document.hidden) {
+        controller?.abort();
+      } else {
+        idlePolls = 0;
+        fetchMessages();
+      }
+    };
+
     fetchMessages();
-    intervalId = setInterval(fetchMessages, 3000);
-    return () => clearInterval(intervalId);
-  }, [activeSessionId, apiBase]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      controller?.abort();
+      if (syncMessagesNowRef.current) syncMessagesNowRef.current = null;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [activeSessionId, apiBase, isOpen]);
 
   const handleSelectSession = (id) => {
+    stopAdminTyping();
     setActiveSessionId(id);
     setMessages([]);
+    setInputText("");
     setSessions(prev => prev.map(s => s.id === id ? { ...s, unread: 0 } : s));
   };
 
   // ── Upload helper ───────────────────────────────────────────────────────────
   const uploadFile = async (file) => {
-    if (!activeSessionId || !apiBase) return null;
+    if (!activeSessionId || apiBase == null) return null;
     const form = new FormData();
     form.append("file", file);
     form.append("session_id", activeSessionId);
     setUploadProgress(true);
     try {
-      const res = await fetch(`${apiBase}/api/chat/upload`, { method: 'POST', body: form });
+      const res = await fetch(`${apiBase}/api/chat/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: form,
+      });
       const data = await res.json();
       return data.file_url ? data : null;
     } catch (err) {
@@ -259,7 +424,7 @@ export default function AdminLiveChatWidget() {
 
   // ── Send message helper ─────────────────────────────────────────────────────
   const sendMessage = async ({ text = "", message_type = "text", file_url = "" }) => {
-    if (!activeSessionId || !apiBase) return;
+    if (!activeSessionId || apiBase == null) return;
     const tempId = `temp-${Date.now()}`;
     setMessages(prev => [...prev, {
       id: tempId, sender: 'admin', message_type, text, file_url,
@@ -270,9 +435,18 @@ export default function AdminLiveChatWidget() {
       const res = await fetch(`${apiBase}/api/admin/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ action: 'send', session_id: activeSessionId, message_type, text, file_url }),
       });
-      if (!res.ok) setMessages(prev => prev.filter(m => m.id !== tempId));
+      if (!res.ok) {
+        setMessages(prev => prev.filter(m => m.id !== tempId));
+        return;
+      }
+      const data = await res.json();
+      if (data.message) {
+        setMessages(previous => mergeServerMessages(previous, [data.message]));
+      }
+      syncMessagesNowRef.current?.();
     } catch (err) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
     }
@@ -283,6 +457,7 @@ export default function AdminLiveChatWidget() {
     e.preventDefault();
     if (!inputText.trim() || !activeSessionId || isLoading || isRecording) return;
     const text = inputText.trim();
+    stopAdminTyping(activeSessionId);
     setInputText("");
     setIsLoading(true);
     await sendMessage({ text, message_type: "text" });
@@ -418,9 +593,14 @@ export default function AdminLiveChatWidget() {
 
   const formatSeconds = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-  const closeActiveChat = () => setActiveSessionId(null);
+  const closeActiveChat = () => {
+    stopAdminTyping(activeSessionId);
+    setInputText("");
+    setActiveSessionId(null);
+  };
 
   const toggleWidget = () => {
+    if (isOpen) stopAdminTyping(activeSessionId);
     setIsOpen(prev => !prev);
     if (isOpen) setActiveSessionId(null);
   };
@@ -429,7 +609,7 @@ export default function AdminLiveChatWidget() {
   const [deletingId, setDeletingId] = useState(null);
 
   const deleteSession = async (sessionId, { skipConfirm = false, label = 'این گفتگو' } = {}) => {
-    if (!apiBase || !sessionId) return;
+    if (apiBase == null || !sessionId) return;
     if (!skipConfirm) {
       const ok = window.confirm(`${label} برای همیشه حذف شود؟ این عملیات غیرقابل بازگشت است.`);
       if (!ok) return;
@@ -439,6 +619,7 @@ export default function AdminLiveChatWidget() {
       const res = await fetch(`${apiBase}/api/admin/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ action: 'delete', session_id: sessionId }),
       });
       if (!res.ok) {
@@ -448,6 +629,7 @@ export default function AdminLiveChatWidget() {
       }
       setSessions(prev => prev.filter(s => s.id !== sessionId));
       if (activeSessionId === sessionId) {
+        stopAdminTyping(sessionId);
         setActiveSessionId(null);
         setMessages([]);
       }
@@ -635,7 +817,8 @@ export default function AdminLiveChatWidget() {
                   type="text"
                   placeholder="پاسخ خود را بنویسید..."
                   value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
+                  onChange={handleAdminInputChange}
+                  onBlur={() => stopAdminTyping(activeSessionId)}
                   onPaste={handlePaste}
                   disabled={isLoading || isRecording}
                 />

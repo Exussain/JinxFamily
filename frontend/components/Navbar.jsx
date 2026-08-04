@@ -123,7 +123,7 @@ function NavbarContent() {
   const authMenuRef = useRef(null);
   const searchListRef = useRef(null);
   const router = useRouter();
-  const params = useSearchParams();
+  // Removed params to fix ISR
   const apiBase = '';
   const { items, total, addItem, setQty, removeItem } = useCart();
   const { theme, toggleTheme } = useTheme();
@@ -194,9 +194,18 @@ function NavbarContent() {
     }
   };
 
-  useEffect(() => {
-    setQ(params?.get('q') || '');
-  }, [params]);
+  const prevSearchParamRef = useRef(null);
+  function SearchParamSync() {
+    const params = useSearchParams();
+    useEffect(() => {
+      const urlQ = params?.get('q') || '';
+      if (prevSearchParamRef.current !== urlQ) {
+        prevSearchParamRef.current = urlQ;
+        setQ(urlQ);
+      }
+    }, [params]);
+    return null;
+  }
 
   useEffect(() => {
     const loadMe = async () => {
@@ -482,6 +491,9 @@ function NavbarContent() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <SearchParamSync />
+      </Suspense>
       <header className="site-header">
         <nav className="navbar fortnite-nav">
           <div className="container nav-inner">
@@ -660,7 +672,7 @@ function NavbarContent() {
               </div>
               {user && (
                 <Link
-                  href={user.is_admin ? "/panel/admin" : "/panel/user"}
+                  href="/panel/user"
                   className="icon-btn nav-user-shortcut-btn"
                   aria-label="داشبورد"
                   title="داشبورد"
@@ -790,8 +802,16 @@ function NavbarContent() {
             </div>
 
             {/* Center: Search */}
-            <div className="search fortnite-search search-with-preview">
-              <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5m-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
+            <div 
+              className="search fortnite-search search-with-preview"
+              onClick={(e) => {
+                const inputEl = e.currentTarget.querySelector('input');
+                if (inputEl && document.activeElement !== inputEl) {
+                  inputEl.focus();
+                }
+              }}
+            >
+              <svg className="search-icon" style={{ pointerEvents: 'none' }} width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5m-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/></svg>
               <input
                 placeholder="دنبال چی میگردی؟ جستجو در محصولات…"
                 value={q}
@@ -1716,14 +1736,10 @@ function NavbarContent() {
           
           <button
             type="button"
-            className={`bottom-nav-item ${pathname.includes('cat') ? 'active' : ''}`}
+            className={`bottom-nav-item ${pathname === '/products' || pathname.includes('category') ? 'active' : ''}`}
             onClick={() => {
               setShowSearchMobileOverlay(false);
-              if (pathname !== '/') {
-                router.push('/?openCatSidebar=true');
-              } else {
-                window.dispatchEvent(new CustomEvent('open-category-sidebar'));
-              }
+              router.push('/products');
             }}
           >
             <div className="bottom-nav-icon-container">
