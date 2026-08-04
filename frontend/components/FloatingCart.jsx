@@ -24,6 +24,18 @@ export default function FloatingCart() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Listen for global open-mini-cart event from Navbar or external buttons
+  useEffect(() => {
+    const handleOpenCart = () => setIsOpen(true);
+    const handleToggleCart = () => setIsOpen((prev) => !prev);
+    window.addEventListener("open-mini-cart", handleOpenCart);
+    window.addEventListener("toggle-mini-cart", handleToggleCart);
+    return () => {
+      window.removeEventListener("open-mini-cart", handleOpenCart);
+      window.removeEventListener("toggle-mini-cart", handleToggleCart);
+    };
+  }, []);
+
   // Listen to adding items to cart to trigger a badge pulse/bump animation
   useEffect(() => {
     if (totalQty > 0) {
@@ -52,40 +64,39 @@ export default function FloatingCart() {
     }
   };
 
-  // Only display on mobile screen sizes
-  if (!isMobile) return null;
-
   return (
     <>
-      {/* Floating Action Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className={`floating-cart-btn ${totalQty > 0 ? "visible" : ""} ${pulse ? "bump" : ""}`}
-        aria-label="نمایش سبد خرید"
-      >
-        <div className="cart-btn-icon-wrap">
-          <svg
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-          </svg>
-        </div>
-        
-        {totalQty > 0 && (
-          <span className={`cart-btn-badge ${pulse ? "pop" : ""}`}>
-            {totalQty}
-          </span>
-        )}
-      </button>
+      {/* Floating Action Button (Mobile Viewports) */}
+      {isMobile && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className={`floating-cart-btn ${totalQty > 0 ? "visible" : ""} ${pulse ? "bump" : ""}`}
+          aria-label="نمایش سبد خرید"
+        >
+          <div className="cart-btn-icon-wrap">
+            <svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+          </div>
+          
+          {totalQty > 0 && (
+            <span className={`cart-btn-badge ${pulse ? "pop" : ""}`}>
+              {totalQty}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Mini-Cart Overlay Modal */}
       {isOpen && (

@@ -569,7 +569,11 @@ function NavbarContent() {
                   className={`icon-btn nav-cart-btn ${cartBounce ? 'cart-bounce' : ''}`}
                   aria-label="سبد خرید"
                   onClick={() => {
-                    setShowCartPreview((v) => !v);
+                    if (window.innerWidth <= 900) {
+                      window.dispatchEvent(new CustomEvent('open-mini-cart'));
+                    } else {
+                      setShowCartPreview((v) => !v);
+                    }
                   }}
                 >
                   <svg width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2m10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2M7.17 14l-.94-2h11.53c.79 0 1.48-.46 1.82-1.17L22 6.25a1 1 0 0 0-.9-1.45H6.21l-.94-2H2v2h2l3.6 7.59-.95 1.72C6.17 14.77 6 15.37 6 16a2 2 0 0 0 2 2h12v-2H8.42c-.14 0-.25-.11-.25-.25 0-.04.01-.07.02-.1l.98-1.8z"/></svg>

@@ -9328,34 +9328,54 @@ input, button, select, textarea { font: inherit; }
 .mini-cart-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 26, 60, 0.7);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background: rgba(10, 14, 29, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1099;
+  z-index: 999999;
   padding: 16px;
 }
 
 /* Modal Dialog */
 .mini-cart-modal {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   max-height: 85vh;
-  background: rgba(22, 18, 38, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #14172b;
+  border: 1.5px solid rgba(139, 92, 246, 0.3);
   border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(139, 92, 246, 0.2);
   display: flex;
   flex-direction: column;
-  animation: modal-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: modal-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  z-index: 1000000;
+  overflow: hidden;
 }
+
+:root[data-theme="light"] .mini-cart-modal {
+  background: #ffffff;
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 0 30px rgba(139, 92, 246, 0.12);
+}
+
 :root[data-theme="dark"] .mini-cart-modal {
-  background: rgba(16, 26, 53, 0.95);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 30px rgba(96, 165, 250, 0.18);
+  background: #12162b;
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(139, 92, 246, 0.25);
+}
+
+@media (max-width: 640px) {
+  .mini-cart-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .mini-cart-modal {
+    max-width: 100%;
+    max-height: 88vh;
+    border-radius: 24px 24px 0 0;
+    margin: 0;
+  }
 }
 
 .mini-cart-header {
