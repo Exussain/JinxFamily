@@ -1,7 +1,7 @@
 import os
 import django
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nubixstore.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jinxfamily.settings")
 django.setup()
 
 from shop.models import Product

@@ -13,7 +13,7 @@ export default function PriorityNoticeModal({ user }) {
   const [ack, setAck] = useState(false);
 
   const storageKey = useMemo(() => {
-    return user?.id ? `nubix-priority-notice-ack-v1-${user.id}` : null;
+    return user?.id ? `jinx-priority-notice-ack-v1-${user.id}` : null;
   }, [user?.id]);
   const displayName = useMemo(() => {
     return (user?.name || user?.first_name || user?.username || "کاربر") + " گرامی";

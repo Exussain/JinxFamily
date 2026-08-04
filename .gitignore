@@ -76,3 +76,13 @@ Thumbs.db
 # Miscellaneous feedback screenshots dropped in the repo root (not source).
 # Scoped to the root so real website image assets in subfolders are unaffected.
 /*.jpg
+
+# Build caches & browser binaries
+pw-browsers/
+**/pw-browsers/
+**/.next-build/
+**/.next-prev/
+chrome_user_data/
+chrome_user_data_scraper/
+frontend/test-results/
+

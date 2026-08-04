@@ -127,9 +127,9 @@ const formatDividerDate = (dateStr) => {
 };
 
 // ── Main Widget ───────────────────────────────────────────────────────────────
-export default function LiveChatWidget() {
+export default function LiveChatWidget({ initialOpen = false }) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(initialOpen);
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -428,7 +428,7 @@ export default function LiveChatWidget() {
       setTimeout(() => sendBotReply("برای خاموش کردن تایید دو مرحله‌ای (2FA):\n۱. وارد سایت Epic Games یا اکانت خود شوید.\n۲. به بخش تنظیمات حساب (Account Settings) و سپس بخش رمز عبور و امنیت (Password & Security) بروید.\n۳. گزینه Two-Factor Authentication را خاموش کنید.", sid), 600);
     } else if (type === "hours") {
       await sendMessage({ text: "📞 ساعات کاری پشتیبانی", message_type: "text" });
-      setTimeout(() => sendBotReply("ساعات کاری پشتیبانی تلفنی:\nشنبه تا چهارشنبه از ۱۱:۰۰ الی ۱۶:۰۰\nیکشنبه‌ها از ۱۳:۰۰ الی ۱۶:۰۰\n\nپشتیبانی تلگرام به صورت ۲۴ ساعته در آی‌دی @Nubixsupport پاسخگوی شماست.", sid), 600);
+      setTimeout(() => sendBotReply("ساعات کاری پشتیبانی تلفنی:\nشنبه تا چهارشنبه از ۱۱:۰۰ الی ۱۶:۰۰\nیکشنبه‌ها از ۱۳:۰۰ الی ۱۶:۰۰\n\nپشتیبانی تلگرام به صورت ۲۴ ساعته در آی‌دی @JinxFamilySupport پاسخگوی شماست.", sid), 600);
     }
   };
 
@@ -593,21 +593,16 @@ export default function LiveChatWidget() {
       {isOpen && (
         <div className="live-chat-window glass-panel">
           <div className="chat-header">
-              <div className="chat-header-info">
-                <div className="chat-avatar-group" aria-label="تیم پشتیبانی نوبیکس">
-                  <span className="chat-avatar-pic">
-                    <img src="/support-team/agent-2.webp" alt="کارشناس پشتیبانی" loading="lazy" />
-                  </span>
-                  <span className="chat-avatar-pic">
-                    <img src="/support-team/agent-1.webp" alt="کارشناس پشتیبانی" loading="lazy" />
-                  </span>
-                  <span className="online-indicator"></span>
-                </div>
+            <div className="chat-header-info">
+              <div className="chat-avatar-single" aria-label="جینکس فمیلی پشتیبانی">
+                <img src="/images/jinx-avatar.webp" alt="جینکس پشتیبان" className="chat-avatar-img-single" loading="lazy" />
+                <span className="online-indicator"></span>
+              </div>
               <div>
-                <h4>پشتیبانی آنلاین نوبیکس</h4>
+                <h4>جینکس (پشتیبانی آنلاین)</h4>
                 <p>
-                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#10b981', marginRight: 4 }}></span>
-                  تیم پشتیبانی آماده کمک به شماست
+                  <span className="online-indicator-dot"></span>
+                  پاسخگوی سوالات شما
                 </p>
               </div>
             </div>
@@ -626,7 +621,7 @@ export default function LiveChatWidget() {
                   <p style={{ margin: 0 }}>
                     برای پاسخ عجله دارید؟ پشتیبانی در{' '}
                     <a
-                      href="https://t.me/NubixSupport"
+                      href="https://t.me/JinxFamilySupport"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="auto-message-link"
@@ -814,16 +809,9 @@ export default function LiveChatWidget() {
         {!isOpen && unreadCount > 0 && (
           <span className="unread-badge">{unreadCount}</span>
         )}
-        {isOpen ? (
-          <svg className="fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        ) : (
-          <svg className="fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-        )}
+        <svg className="fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
       </button>
     </div>
   );

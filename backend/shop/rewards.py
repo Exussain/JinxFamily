@@ -27,7 +27,7 @@ REFERRAL_POINTS_MAX = 50
 REFERRAL_MILESTONE_COUNT = 10
 REFERRAL_MILESTONE_AMOUNT = 150000
 
-# Diamond (الماس) <-> Toman conversion for checkout redemption. 350 diamonds
+# Coin (کوین) <-> Toman conversion for checkout redemption. 350 coins
 # = 110,000 toman; below MIN_DIAMONDS_TO_REDEEM a redeem attempt is ignored.
 DIAMOND_TO_TOMAN_NUMERATOR = 110000
 DIAMOND_TO_TOMAN_DENOMINATOR = 350
@@ -140,7 +140,7 @@ def award_points(user, amount: int, reason: str, related_order=None, note: str =
         )
         try:
             from .models import SiteNotification
-            title = "دریافت الماس جدید 💎" if amount > 0 else "مصرف الماس 💎"
+            title = "دریافت کوین جدید 🪙" if amount > 0 else "مصرف کوین 🪙"
             desc_reason = note or reason
             if desc_reason == "purchase":
                 desc_reason = "خرید محصول"
@@ -149,14 +149,14 @@ def award_points(user, amount: int, reason: str, related_order=None, note: str =
             elif desc_reason == "spin_win":
                 desc_reason = "برنده شدن در گردونه شانس"
             elif desc_reason == "exchange":
-                desc_reason = "تبدیل الماس به کد تخفیف"
+                desc_reason = "تبدیل کوین به کد تخفیف"
             elif desc_reason == "milestone":
                 desc_reason = "جایزه دعوت دوستان (میلانستون)"
             elif desc_reason == "redeem":
-                desc_reason = "تبدیل الماس به تخفیف خرید"
+                desc_reason = "تبدیل کوین به تخفیف خرید"
 
             verb = "به حساب شما اضافه شد" if amount > 0 else "از حساب شما کسر شد"
-            msg = f"تعداد {abs(amount):,} الماس {verb}. بابت: {desc_reason}"
+            msg = f"تعداد {abs(amount):,} کوین {verb}. بابت: {desc_reason}"
             SiteNotification.objects.create(
                 user=user,
                 title=title,

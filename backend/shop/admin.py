@@ -207,7 +207,7 @@ class OrderAdmin(admin.ModelAdmin):
                 customer_name = order.epic_username or "مشتری"
 
             if not customer_name:
-                customer_name = "مشتری نوبیکس"
+                customer_name = "مشتری جینکس فمیلی"
 
             success = False
             message = ""
@@ -218,7 +218,7 @@ class OrderAdmin(admin.ModelAdmin):
                     phone_number=phone,
                     customer_name=customer_name,
                     status_fa=status_text,
-                    template_name="nubixshop-order-done",
+                    template_name="jinxfamily-order-done",
                     include_status_token=False,
                 )
             elif new_status == "refunded":
@@ -232,7 +232,7 @@ class OrderAdmin(admin.ModelAdmin):
                     phone_number=phone,
                     customer_name=customer_name,
                     status_fa="",
-                    template_name="nubixshop-wrong-details",
+                    template_name="jinxfamily-wrong-details",
                     include_status_token=False,
                 )
             elif new_status in ("needs_2fa", "needs_tr_region"):
@@ -240,7 +240,7 @@ class OrderAdmin(admin.ModelAdmin):
                     phone_number=phone,
                     customer_name=customer_name,
                     status_fa="رسیدگی",
-                    template_name="nubixshop-alert",
+                    template_name="jinxfamily-alert",
                     include_status_token=True,
                 )
             else:
@@ -250,7 +250,7 @@ class OrderAdmin(admin.ModelAdmin):
                     phone_number=phone,
                     customer_name=customer_name,
                     status_fa=status_fa,
-                    template_name="nubixshop-alert",
+                    template_name="jinxfamily-alert",
                     include_status_token=True,
                 )
 

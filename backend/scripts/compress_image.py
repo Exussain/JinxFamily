@@ -1,7 +1,7 @@
 from PIL import Image, ImageFilter
 
-INPUT_PATH = "/root/NubixShop/public/frontend/public/products/chatgpt.webp.bak"
-OUTPUT_PATH = "/root/NubixShop/public/frontend/public/products/chatgpt.webp"
+INPUT_PATH = "/root/jinxfamily/public/frontend/public/products/chatgpt.webp.bak"
+OUTPUT_PATH = "/root/jinxfamily/public/frontend/public/products/chatgpt.webp"
 
 print("Loading image for compression...")
 try:

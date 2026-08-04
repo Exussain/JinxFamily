@@ -24,11 +24,11 @@ from .rewards import _setting_int, anonymize_name, award_points, generate_discou
 SPIN_SEGMENTS = [
     {"index": 0, "type": "blank",      "label": "پوچ",                  "percent": 0,  "diamonds": 0},
     {"index": 1, "type": "discount5",  "label": "کد تخفیف ۵٪",          "percent": 5,  "diamonds": 0},
-    {"index": 2, "type": "wallet",     "label": "۵۰ الماس",             "percent": 0,  "diamonds": 50},
+    {"index": 2, "type": "wallet",     "label": "۵۰ کوین",             "percent": 0,  "diamonds": 50},
     {"index": 3, "type": "discount5",  "label": "کد تخفیف ۵٪",          "percent": 5,  "diamonds": 0},
     {"index": 4, "type": "blank",      "label": "پوچ",                  "percent": 0,  "diamonds": 0},
     {"index": 5, "type": "discount20", "label": "کد تخفیف ۲۰٪",         "percent": 20, "diamonds": 0},
-    {"index": 6, "type": "wallet",     "label": "۵۰ الماس",             "percent": 0,  "diamonds": 50},
+    {"index": 6, "type": "wallet",     "label": "۵۰ کوین",             "percent": 0,  "diamonds": 50},
     {"index": 7, "type": "discount5",  "label": "کد تخفیف ۵٪",          "percent": 5,  "diamonds": 0},
 ]
 
@@ -36,6 +36,7 @@ SPIN_SEGMENTS = [
 
 # 72 hours (3 days) expiration for spin discount codes
 CODE_TTL_DAYS = 3
+WEEK_START_WEEKDAY = 5  # Saturday (Monday is 0 in datetime.weekday())
 
 
 def _public_segments():
@@ -48,6 +49,15 @@ def _launch_active() -> bool:
 
 def _spin_cost(launch_active: bool) -> int:
     return 0
+
+
+def _current_week_start(now=None):
+    """Return the most recent Saturday at 00:00 in the site's timezone."""
+    local_now = timezone.localtime(now or timezone.now())
+    days_since_saturday = (local_now.weekday() - WEEK_START_WEEKDAY) % 7
+    return (local_now - timedelta(days=days_since_saturday)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
 
 
 def _eligibility(user):
@@ -67,11 +77,9 @@ def _eligibility(user):
 
     last_spin = SpinResult.objects.filter(user=user).order_by("-created_at").first()
     if last_spin:
-        now = timezone.now()
-        days_since_wed = (now.weekday() - 2) % 7 # Wednesday is 2
-        week_start = (now - timedelta(days=days_since_wed)).replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start = _current_week_start()
         if last_spin.created_at >= week_start:
-            return False, "شما این هفته شانس خود را امتحان کرده‌اید. چهارشنبه بعدی دوباره سر بزنید!", False, 0, points
+            return False, "شما این هفته شانس خود را امتحان کرده‌اید. شنبهٔ بعدی دوباره سر بزنید!", False, 0, points
 
     return True, "", False, 0, points
 
@@ -132,7 +140,7 @@ def spin(request):
     # New odds:
     # blank: 50%
     # wallet (diamonds): 10%
-    # discount20: 10% (limited to max 1 winner per week starting Wednesday)
+    # discount20: 10% (limited to max 1 winner per week starting Saturday)
     # discount5: 30%
     roll = secrets.randbelow(100)
     if roll < 50:
@@ -145,10 +153,9 @@ def spin(request):
         win_type = "discount5"
 
     if win_type == "discount20":
-        # Check if anyone has already won a 20% discount code this week (since Wednesday)
+        # Check if anyone has already won a 20% discount code this week (since Saturday).
         now = timezone.now()
-        days_since_wed = (now.weekday() - 2) % 7 # Wednesday is 2
-        week_start = (now - timedelta(days=days_since_wed)).replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start = _current_week_start(now)
 
         # Admin debug spins don't count against the real-customer weekly slot.
         from .views import _is_admin_user

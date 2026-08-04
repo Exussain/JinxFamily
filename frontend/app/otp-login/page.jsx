@@ -48,7 +48,9 @@ export default function OTPLoginPage() {
           <h1 className="login-mobile-title">ورود سریع</h1>
           <p className="login-mobile-subtitle" style={{ marginBottom: "20px" }}>شماره موبایل خود را وارد کنید تا کد ورود یکبار مصرف برای شما ارسال شود</p>
 
-          <OTPLogin />
+          <div className="login-mobile-card" style={{ animation: "mobileCardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
+            <OTPLogin />
+          </div>
 
           {/* Password Login Link */}
           <div className="login-mobile-signup-row" style={{ marginTop: "20px" }}>
@@ -62,8 +64,8 @@ export default function OTPLoginPage() {
         {/* Bottom Logo */}
         <div className="login-mobile-logo-section">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/web_logo.webp" alt="Nubix Logo" className="login-mobile-logo-img" width="112" height="28" />
-          <span className="login-mobile-logo-text">فروشگاه نوبیکس</span>
+          <img src="/logo.webp" alt="JinxFamily Logo" className="login-mobile-logo-img" width="48" height="48" />
+          <span className="login-mobile-logo-text">فروشگاه جینکس فمیلی</span>
         </div>
       </div>
     );

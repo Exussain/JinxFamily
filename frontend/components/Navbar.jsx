@@ -1,6 +1,6 @@
 "use client";
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCart } from '../lib/useCart';
 import { adminCacheBustHref } from '../lib/adminUrl.mjs';
@@ -13,7 +13,7 @@ import { useTheme } from './ThemeProvider';
 import ProductRequestModal from './ProductRequestModal';
 
 
-export default function Navbar() {
+function NavbarContent() {
   const [q, setQ] = useState('');
   const [user, setUser] = useState(null);
   const [showCartPreview, setShowCartPreview] = useState(false);
@@ -32,20 +32,90 @@ export default function Navbar() {
   const [mobileSearchLoading, setMobileSearchLoading] = useState(false);
   const [showSearchMobileOverlay, setShowSearchMobileOverlay] = useState(false);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+
+  // Accordion states for mobile sub-navbar
+  const [mobileMarketExpanded, setMobileMarketExpanded] = useState(false);
+  const [mobileProductsExpanded, setMobileProductsExpanded] = useState(false);
+  const [mobileEpicExpanded, setMobileEpicExpanded] = useState(false);
+  const [mobileMobileGamesExpanded, setMobileMobileGamesExpanded] = useState(false);
+  const [desktopMarketExpanded, setDesktopMarketExpanded] = useState(false);
+  const [desktopProductsExpanded, setDesktopProductsExpanded] = useState(false);
+  const [desktopProductGroupExpanded, setDesktopProductGroupExpanded] = useState(null);
   
   // Notification center states
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Mobile vs Desktop viewport detection
+  const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Close menus on route change
   useEffect(() => {
     setShowAuthMenu(false);
     setShowUserMenu(false);
     setShowMobileMenu(false);
+    setMobileMarketExpanded(false);
+    setMobileProductsExpanded(false);
+    setMobileEpicExpanded(false);
+    setMobileMobileGamesExpanded(false);
+    setDesktopMarketExpanded(false);
+    setDesktopProductsExpanded(false);
+    setDesktopProductGroupExpanded(null);
     setShowSearchMobileOverlay(false);
     setShowNotifMenu(false);
   }, [pathname]);
+
+  const closeMobileMenu = () => {
+    setShowMobileMenu(false);
+    setMobileMarketExpanded(false);
+    setMobileProductsExpanded(false);
+    setMobileEpicExpanded(false);
+    setMobileMobileGamesExpanded(false);
+  };
+
+  const closeDesktopMenus = () => {
+    setDesktopMarketExpanded(false);
+    setDesktopProductsExpanded(false);
+    setDesktopProductGroupExpanded(null);
+  };
+
+  useEffect(() => {
+    if (!showMobileMenu || !isMobile) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') closeMobileMenu();
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showMobileMenu, isMobile]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') closeDesktopMenus();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const cartRef = useRef(null);
   const hasLoadedUserRef = useRef(false);
@@ -417,6 +487,16 @@ export default function Navbar() {
           <div className="container nav-inner">
             {/* Left: Controls */}
             <div className="nav-actions">
+              {/* Integrated Desktop Store Status Badge */}
+              <div className="sub-nav-status-badge desktop-only-status">
+                <span className="status-badge-pulse">
+                  <span className="status-badge-tick">✓</span>
+                </span>
+                <span className="status-badge-text">فروشگاه آماده خدمت‌رسانی</span>
+                <span className="status-badge-divider">•</span>
+                <span className="status-badge-date">{todayFa}</span>
+              </div>
+
               {user?.is_admin && (
                 <a href={adminCacheBustHref()} className="admin-pill" aria-label="پنل">
                   <span className="admin-dot" />
@@ -502,7 +582,7 @@ export default function Navbar() {
                       {items.map((it) => {
                         const quantity = it.quantity || 0;
                         return (
-                          <div key={it.product_id} className="cart-preview-item">
+                          <div key={it.line_key || `${it.product_id}-${it.variant_id ?? ""}`} className="cart-preview-item">
                             <div className="cart-preview-image">
                               {it.image ? (
                                 <SmartImage src={it.image} alt={it.name} fit="contain" />
@@ -525,9 +605,9 @@ export default function Navbar() {
                                   className="qty-btn"
                                   onClick={() => {
                                     if (quantity <= 1) {
-                                      removeItem(it.product_id);
+                                      removeItem(it.product_id, it.variant_id, it.line_key);
                                     } else {
-                                      setQty(it.product_id, quantity - 1);
+                                      setQty(it.product_id, quantity - 1, it.variant_id, it.line_key);
                                     }
                                   }}
                                   aria-label="کاهش تعداد"
@@ -538,7 +618,7 @@ export default function Navbar() {
                                 <button
                                   type="button"
                                   className="qty-btn"
-                                  onClick={() => setQty(it.product_id, quantity + 1)}
+                                  onClick={() => setQty(it.product_id, quantity + 1, it.variant_id, it.line_key)}
                                   aria-label="افزایش تعداد"
                                 >
                                   +
@@ -547,7 +627,7 @@ export default function Navbar() {
                               <button
                                 type="button"
                                 className="ghost-btn cart-preview-remove"
-                                onClick={() => removeItem(it.product_id)}
+                                onClick={() => removeItem(it.product_id, it.variant_id, it.line_key)}
                               >
                                 حذف
                               </button>
@@ -651,6 +731,9 @@ export default function Navbar() {
                         <div className="notif-dropdown__footer">
                           <Link href="/panel/user" onClick={() => setShowNotifMenu(false)} className="notif-link-btn">
                             👤 داشبورد
+                          </Link>
+                          <Link href="/panel/user/listings" onClick={() => setShowNotifMenu(false)} className="notif-link-btn">
+                            📦 آگهی‌های من
                           </Link>
                           <button
                             onClick={async () => {
@@ -760,7 +843,7 @@ export default function Navbar() {
                           marginTop: '4px'
                         }}
                       >
-                        درخواست تهیه این محصول توسط نوبیکس شاپ
+                        درخواست تهیه این محصول توسط جینکس فمیلی
                       </button>
                     </div>
                   )}
@@ -839,19 +922,19 @@ export default function Navbar() {
             </div>
 
             {/* Right: Logo */}
-            <Link className="brand logo" href="/" aria-label="نوبیکس">
+            <Link className="brand logo" href="/" aria-label="جینکس فمیلی">
               <picture>
                 <source srcSet="/web_logo.webp" media="(min-width: 1024px)" />
                 <img
                   src="/web_logo.webp"
-                  alt="Nubix Logo"
+                  alt="JinxFamily Logo"
                   className="nav-logo-img"
                   width="52"
                   height="52"
                   loading="eager"
                 />
               </picture>
-              <span className="nav-logo-text">فروشگاه نوبیکس</span>
+              <span className="nav-logo-text">جینکس فمیلی</span>
             </Link>
 
             {/* Mobile Bento Menu Button */}
@@ -874,99 +957,721 @@ export default function Navbar() {
         </nav>
 
         {/* Mobile Menu Overlay */}
-        <div className={`mobile-menu-overlay ${showMobileMenu ? 'show' : ''}`} onClick={() => setShowMobileMenu(false)}></div>
+        <div className={`mobile-menu-overlay ${showMobileMenu ? 'show' : ''}`} onClick={closeMobileMenu}></div>
 
         {/* Sub-Navbar */}
         <div className={`sub-navbar ${showMobileMenu ? 'mobile-open' : ''}`}>
           <div className="container sub-navbar-inner">
-            <div className="mobile-menu-header">
-              {user ? (
-                <Link href="/panel/user" onClick={() => setShowMobileMenu(false)} className="mobile-menu-user-card" style={{ textDecoration: "none" }}>
-                  <span className="mobile-menu-user-avatar">
-                    {user.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.name || 'پروفایل'} width="36" height="36" />
-                    ) : (
-                      (user.name || 'شما')?.[0] || '?'
-                    )}
-                  </span>
-                  <div className="mobile-menu-user-info">
-                    <span className="mobile-menu-user-name">{user.name || 'کاربر نوبیکس'}</span>
-                    <span className="mobile-menu-user-pill">مشاهده پنل کاربری</span>
-                  </div>
-                </Link>
-              ) : (
-                <Link href="/login" onClick={() => setShowMobileMenu(false)} className="mobile-menu-user-card guest-card" style={{ textDecoration: "none" }}>
-                  <span className="mobile-menu-user-avatar guest-avatar">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </span>
-                  <div className="mobile-menu-user-info">
-                    <span className="mobile-menu-user-name">ورود / عضویت</span>
-                    <span className="mobile-menu-user-pill">وارد حساب کاربری خود شوید</span>
-                  </div>
-                </Link>
-              )}
-              <button className="mobile-menu-close" onClick={() => setShowMobileMenu(false)} aria-label="بستن منو">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
+            {(!isMounted || isMobile) && (
+              <div className="mobile-menu-header">
+                {user ? (
+                  <Link href="/panel/user" onClick={closeMobileMenu} className="mobile-menu-user-card" style={{ textDecoration: "none" }}>
+                    <span className="mobile-menu-user-avatar">
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} alt={user.name || 'پروفایل'} width="36" height="36" />
+                      ) : (
+                        (user.name || 'شما')?.[0] || '?'
+                      )}
+                    </span>
+                    <div className="mobile-menu-user-info">
+                      <span className="mobile-menu-user-name">{user.name || 'کاربر جینکس فمیلی'}</span>
+                      <span className="mobile-menu-user-pill">مشاهده پنل کاربری</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <Link href="/login" onClick={closeMobileMenu} className="mobile-menu-user-card guest-card" style={{ textDecoration: "none" }}>
+                    <span className="mobile-menu-user-avatar guest-avatar">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                    </span>
+                    <div className="mobile-menu-user-info">
+                      <span className="mobile-menu-user-name">ورود / عضویت</span>
+                      <span className="mobile-menu-user-pill">وارد حساب کاربری خود شوید</span>
+                    </div>
+                  </Link>
+                )}
+                <button className="mobile-menu-close" onClick={closeMobileMenu} aria-label="بستن منو">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            )}
             {/* Right side: navigation links (RTL) */}
-            <ul className="sub-nav-links">
+            {/* Desktop Mega-Dropdown Navigation Menu */}
+            {(!isMounted || !isMobile) && (
+              <ul className="sub-nav-links desktop-only-menu" aria-label="منوی اصلی دسکتاپ">
               <li>
-                <Link href="/" onClick={() => setShowMobileMenu(false)}>
+                <Link href="/">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                   <span>صفحه اصلی</span>
                 </Link>
               </li>
-              <li>
-                <Link href="/products" onClick={() => setShowMobileMenu(false)}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M12 12h.01"></path><path d="M17 12h.01"></path><path d="M7 12h2"></path><path d="M8 11v2"></path></svg>
-                  <span>محصولات</span>
-                </Link>
+
+              {/* 1. دسته محصولات */}
+              <li className={`nav-dropdown-wrapper ${desktopProductsExpanded ? 'is-open' : ''}`}>
+                <button
+                  type="button"
+                  className="menu-pill-btn purple-pink-gradient desktop-menu-trigger"
+                  aria-expanded={desktopProductsExpanded}
+                  aria-controls="desktop-product-categories"
+                  onClick={() => {
+                    setDesktopProductsExpanded((expanded) => !expanded);
+                    setDesktopMarketExpanded(false);
+                    setDesktopProductGroupExpanded(null);
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="pill-icon-left">
+                    <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                    <path d="M12 12h.01"></path>
+                    <path d="M17 12h.01"></path>
+                    <path d="M7 12h2"></path>
+                    <path d="M8 11v2"></path>
+                  </svg>
+                  <span>دسته محصولات</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="pill-icon-right">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div id="desktop-product-categories" className="desktop-products-dropdown" onClick={(event) => {
+                  if (event.target.closest('a')) closeDesktopMenus();
+                }}>
+                  <div className="desktop-products-dropdown-list">
+                    <Link href="/products" className="desktop-products-dropdown-item desktop-menu-view-all">
+                      <div className="desktop-products-dropdown-item-content">
+                        <span>مشاهده همه محصولات</span>
+                      </div>
+                    </Link>
+                    {/* Submenu 1: Epic Games / Fortnite */}
+                    <div className={`desktop-products-dropdown-item-wrapper ${desktopProductGroupExpanded === 'epic' ? 'is-open' : ''}`}>
+                      <button
+                        type="button"
+                        className="desktop-products-dropdown-item"
+                        aria-expanded={desktopProductGroupExpanded === 'epic'}
+                        aria-controls="desktop-products-epic"
+                        onClick={() => setDesktopProductGroupExpanded((group) => group === 'epic' ? null : 'epic')}
+                      >
+                        <div className="desktop-products-dropdown-item-content">
+                          <img src="/icons/epic.svg" alt="Epic Games" className="desktop-products-dropdown-icon" />
+                          <span>اپیک گیمز و فورتنایت</span>
+                        </div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="desktop-products-submenu-chevron">
+                          <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                      </button>
+                      <div id="desktop-products-epic" className="desktop-products-submenu">
+                        <div className="desktop-products-submenu-list">
+                          <Link href="/category/fortnite" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/categories/category_fortnite.webp" alt="Fortnite Products" className="desktop-products-dropdown-icon" />
+                              <span>ویباکس، کروپک و بتل پس</span>
+                            </div>
+                          </Link>
+                          <Link href="/market?game=fortnite" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/fortnite.webp" alt="Fortnite Accounts" className="desktop-products-dropdown-icon" />
+                              <span>خرید اکانت فورتنایت</span>
+                            </div>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Submenu 2: In-Game Currencies */}
+                    <div className={`desktop-products-dropdown-item-wrapper ${desktopProductGroupExpanded === 'ingame' ? 'is-open' : ''}`}>
+                      <button
+                        type="button"
+                        className="desktop-products-dropdown-item"
+                        aria-expanded={desktopProductGroupExpanded === 'ingame'}
+                        aria-controls="desktop-products-ingame"
+                        onClick={() => setDesktopProductGroupExpanded((group) => group === 'ingame' ? null : 'ingame')}
+                      >
+                        <div className="desktop-products-dropdown-item-content">
+                          <img src="/categories/category_ingame.webp" alt="In-Game Currencies" className="desktop-products-dropdown-icon" />
+                          <span>جم و سکه بازی‌ها</span>
+                        </div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="desktop-products-submenu-chevron">
+                          <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                      </button>
+                      <div id="desktop-products-ingame" className="desktop-products-submenu">
+                        <div className="desktop-products-submenu-list">
+                          <Link href="/category/ingame?sub=pubg-mobile" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/pubg.webp" alt="PUBG Mobile" className="desktop-products-dropdown-icon" />
+                              <span>یوسی پابجی موبایل</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/ingame?sub=free-fire" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/free-fire.webp" alt="Free Fire" className="desktop-products-dropdown-icon" />
+                              <span>الماس فری فایر</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/ingame?sub=cod-cp" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/cod-mobile.webp" alt="Call of Duty Mobile" className="desktop-products-dropdown-icon" />
+                              <span>سی پی کالاف موبایل</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/ingame?sub=valorant-points" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/wild-rift.webp" alt="Valorant Points" className="desktop-products-dropdown-icon" />
+                              <span>ولورانت پوینت</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/ingame?sub=roblox" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/brawl.webp" alt="Roblox Robux" className="desktop-products-dropdown-icon" />
+                              <span>روباکس روبلاکس</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/ingame?sub=mobile-legends" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/ml.webp" alt="Mobile Legends" className="desktop-products-dropdown-icon" />
+                              <span>الماس موبایل لجندز</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/ingame?sub=supercell" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/coc.webp" alt="Supercell Gems" className="desktop-products-dropdown-icon" />
+                              <span>جم سوپرسل (کلش و...)</span>
+                            </div>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Submenu 3: Gift Cards */}
+                    <div className={`desktop-products-dropdown-item-wrapper ${desktopProductGroupExpanded === 'giftcards' ? 'is-open' : ''}`}>
+                      <button
+                        type="button"
+                        className="desktop-products-dropdown-item"
+                        aria-expanded={desktopProductGroupExpanded === 'giftcards'}
+                        aria-controls="desktop-products-giftcards"
+                        onClick={() => setDesktopProductGroupExpanded((group) => group === 'giftcards' ? null : 'giftcards')}
+                      >
+                        <div className="desktop-products-dropdown-item-content">
+                          <img src="/categories/category_giftcard.webp" alt="Gift Cards" className="desktop-products-dropdown-icon" />
+                          <span>گیفت کارت‌ها</span>
+                        </div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="desktop-products-submenu-chevron">
+                          <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                      </button>
+                      <div id="desktop-products-giftcards" className="desktop-products-submenu">
+                        <div className="desktop-products-submenu-list">
+                          <Link href="/category/giftcards?sub=steam" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/steam.webp" alt="Steam Gift Card" className="desktop-products-dropdown-icon" />
+                              <span>گیفت کارت استیم</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/giftcards?sub=ps" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/psn.webp" alt="PlayStation Gift Card" className="desktop-products-dropdown-icon" />
+                              <span>گیفت کارت پلی‌استیشن</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/giftcards?sub=xbox" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/images/games/xbox.webp" alt="Xbox Gift Card" className="desktop-products-dropdown-icon" />
+                              <span>گیفت کارت ایکس‌باکس</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/giftcards?sub=itunes" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/categories/category_giftcard.webp" alt="iTunes Gift Card" className="desktop-products-dropdown-icon" />
+                              <span>گیفت کارت آیتونز / اپل</span>
+                            </div>
+                          </Link>
+                          <Link href="/category/giftcards?sub=googleplay" className="desktop-products-dropdown-item">
+                            <div className="desktop-products-dropdown-item-content">
+                              <img src="/categories/category_giftcard.webp" alt="Google Play Gift Card" className="desktop-products-dropdown-icon" />
+                              <span>گیفت کارت گوگل‌پلی</span>
+                            </div>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Submenu 4: Battle.net & Blizzard */}
+                    <Link href="/category/battlenet" className="desktop-products-dropdown-item">
+                      <div className="desktop-products-dropdown-item-content">
+                        <img src="/images/games/battlenet.webp" alt="Battle.net & Blizzard" className="desktop-products-dropdown-icon" />
+                        <span>محصولات بتل نت و اورواچ ۲</span>
+                      </div>
+                    </Link>
+
+                    {/* Submenu 5: Artificial Intelligence */}
+                    <Link href="/category/ai" className="desktop-products-dropdown-item">
+                      <div className="desktop-products-dropdown-item-content">
+                        <img src="/categories/category_ai.webp?v=4" alt="AI Subscriptions" className="desktop-products-dropdown-icon" />
+                        <span>اشتراک هوش مصنوعی (ChatGPT / Gemini)</span>
+                      </div>
+                    </Link>
+
+                    {/* Submenu 6: Console & PC Games */}
+                    <Link href="/category/games" className="desktop-products-dropdown-item">
+                      <div className="desktop-products-dropdown-item-content">
+                        <img src="/products/gta6/ps5-standard.webp" alt="Games & Preorders" className="desktop-products-dropdown-icon" />
+                        <span>بازی‌ها و پیش‌خرید GTA 6</span>
+                      </div>
+                    </Link>
+
+                    {/* Submenu 7: Digital Subscriptions */}
+                    <Link href="/category/subscriptions" className="desktop-products-dropdown-item">
+                      <div className="desktop-products-dropdown-item-content">
+                        <img src="/categories/category_subscriptions.webp" alt="Subscriptions" className="desktop-products-dropdown-icon" />
+                        <span>اشتراک‌های دیجیتال (اسپاتیفای)</span>
+                      </div>
+                    </Link>
+
+                    {/* Submenu 8: Accounts Marketplace */}
+                    <Link href="/market?game=fortnite" className="desktop-products-dropdown-item">
+                      <div className="desktop-products-dropdown-item-content">
+                        <img src="/categories/category_accounts.webp?v=4" alt="Account Marketplace" className="desktop-products-dropdown-icon" />
+                        <span>بازارچه خرید و فروش اکانت‌ها</span>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </li>
+
+              {/* 2. داشبورد اکانت‌ها */}
+              <li className={`nav-dropdown-wrapper ${desktopMarketExpanded ? 'is-open' : ''}`}>
+                <button
+                  type="button"
+                  className="menu-pill-btn purple-pink-gradient desktop-menu-trigger"
+                  aria-expanded={desktopMarketExpanded}
+                  aria-controls="desktop-market-categories"
+                  onClick={() => {
+                    setDesktopMarketExpanded((expanded) => !expanded);
+                    setDesktopProductsExpanded(false);
+                    setDesktopProductGroupExpanded(null);
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="pill-icon-left">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
+                  <span>داشبورد اکانت‌ها</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="pill-icon-right">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div id="desktop-market-categories" className="desktop-market-dropdown" onClick={(event) => {
+                  if (event.target.closest('a')) closeDesktopMenus();
+                }}>
+                  <div className="desktop-market-dropdown-list">
+                    <Link href="/market" className="desktop-market-dropdown-item desktop-menu-view-all">
+                      <span>مشاهده همه اکانت‌ها</span>
+                    </Link>
+                    <Link href="/market?game=fortnite" className="desktop-market-dropdown-item">
+                      <img src="/images/games/fortnite.webp" alt="Fortnite" className="desktop-market-dropdown-icon" />
+                      <span>خرید اکانت فورتنایت</span>
+                    </Link>
+                    <Link href="/market?game=pubg" className="desktop-market-dropdown-item">
+                      <img src="/images/games/pubg.webp" alt="PUBG Mobile" className="desktop-market-dropdown-icon" />
+                      <span>خرید اکانت پابجی موبایل</span>
+                    </Link>
+                    <Link href="/market?game=cod-mobile" className="desktop-market-dropdown-item">
+                      <img src="/images/games/cod-mobile.webp" alt="Call of Duty Mobile" className="desktop-market-dropdown-icon" />
+                      <span>خرید اکانت کالاف دیوتی موبایل</span>
+                    </Link>
+                    <Link href="/market?game=free-fire" className="desktop-market-dropdown-item">
+                      <img src="/images/games/free-fire.webp" alt="Free Fire" className="desktop-market-dropdown-icon" />
+                      <span>خرید اکانت فری فایر</span>
+                    </Link>
+                    <Link href="/market?game=coc" className="desktop-market-dropdown-item">
+                      <img src="/images/games/coc.webp" alt="Clash of Clans" className="desktop-market-dropdown-icon" />
+                      <span>خرید اکانت کلش آف کلنز</span>
+                    </Link>
+                    <Link href="/market?game=clash-royale" className="desktop-market-dropdown-item">
+                      <img src="/images/games/clash-royale.webp" alt="Clash Royale" className="desktop-market-dropdown-icon" />
+                      <span>خرید اکانت کلش رویال</span>
+                    </Link>
+                    <Link href="/market?game=brawl" className="desktop-market-dropdown-item">
+                      <img src="/images/games/brawl.webp" alt="Brawl Stars" className="desktop-market-dropdown-icon" />
+                      <span>خرید اکانت براول استارز</span>
+                    </Link>
+                    <Link href="/market?game=wild-rift" className="desktop-market-dropdown-item">
+                      <img src="/images/games/wild-rift.webp" alt="Wild Rift" className="desktop-market-dropdown-icon" />
+                      <span>خرید اکانت وایلدریفت</span>
+                    </Link>
+                    <Link href="/market?game=steam" className="desktop-market-dropdown-item">
+                      <img src="/images/games/steam.webp" alt="Steam" className="desktop-market-dropdown-icon" />
+                      <span>اکانت استیم</span>
+                    </Link>
+                    <Link href="/market?game=ps" className="desktop-market-dropdown-item">
+                      <img src="/images/games/psn.webp" alt="PlayStation" className="desktop-market-dropdown-icon" />
+                      <span>اکانت پلی استیشن</span>
+                    </Link>
+                    <Link href="/market?game=xbox" className="desktop-market-dropdown-item">
+                      <img src="/images/games/xbox.webp" alt="Xbox" className="desktop-market-dropdown-icon" />
+                      <span>اکانت ایکس باکس</span>
+                    </Link>
+                  </div>
+                </div>
               </li>
 
               <li>
-                <Link href="/reseller" onClick={() => setShowMobileMenu(false)}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                  <span>همکاری با ما</span>
+                <Link href="/market/sell" className="nav-neon-rgb-btn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span>آگهی اکانت شما</span>
                 </Link>
               </li>
               <li>
-                <Link href="/blog" onClick={() => setShowMobileMenu(false)}>
+                <Link href="/blog">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                  <span>وبلاگ و مقالات</span>
+                  <span>مقالات و آموزش</span>
                 </Link>
               </li>
-
               <li>
-                <Link href="/faq" onClick={() => setShowMobileMenu(false)}>
+                <Link href="/faq">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                   <span>سوالات متداول</span>
                 </Link>
               </li>
               <li>
-                <Link href="/faq/contact" onClick={() => setShowMobileMenu(false)}>
+                <Link href="/faq/contact">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                   <span>تماس با ما</span>
                 </Link>
               </li>
+              <li>
+                <Link href="/reseller">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  <span>همکاری با ما</span>
+                </Link>
+              </li>
             </ul>
+            )}
 
-          {/* Left side: store status & date (RTL) moved below */}
-          </div>
-          
-          <div className="sub-nav-status-bar">
-            <div className="status-indicator">
-              <span className="status-tick">✓</span>
-              <span className="status-text">فروشگاه آماده خدمت‌رسانی</span>
-              <span className="status-date-divider">•</span>
-              <span className="status-date">{todayFa}</span>
-            </div>
+            {/* Mobile Navigation Drawer (Expandable Accordions) */}
+            {(!isMounted || isMobile) && (
+              <ul className="sub-nav-links mobile-only-menu" aria-label="منوی اصلی موبایل">
+              <li>
+                <Link href="/" onClick={closeMobileMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                  <span>صفحه اصلی</span>
+                </Link>
+              </li>
+
+              {/* 1. بازار اکانت (Accordion / Dropdown) */}
+              <li className={`sub-nav-accordion-item ${mobileMarketExpanded ? 'expanded' : ''}`}>
+                <button
+                  type="button"
+                  className="accordion-trigger"
+                  aria-expanded={mobileMarketExpanded}
+                  aria-controls="mobile-market-categories"
+                  onClick={() => {
+                    setMobileMarketExpanded((expanded) => !expanded);
+                    setMobileProductsExpanded(false);
+                    setMobileEpicExpanded(false);
+                    setMobileMobileGamesExpanded(false);
+                  }}
+                >
+                  <div className="accordion-trigger-left">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>داشبورد اکانت‌ها</span>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`accordion-chevron ${mobileMarketExpanded ? 'rotated' : ''}`}>
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                {mobileMarketExpanded && (
+                  <ul id="mobile-market-categories" className="accordion-content">
+                    <li>
+                      <Link href="/market" onClick={closeMobileMenu}>
+                        <span>مشاهده همه اکانت‌ها</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=fortnite" onClick={closeMobileMenu}>
+                        <img src="/images/games/fortnite.webp" alt="Fortnite" className="submenu-icon" />
+                        <span>خرید اکانت فورتنایت</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=wild-rift" onClick={closeMobileMenu}>
+                        <img src="/images/games/wild-rift.webp" alt="Wild Rift" className="submenu-icon" />
+                        <span>خرید اکانت وایلدریفت</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=coc" onClick={closeMobileMenu}>
+                        <img src="/images/games/coc.webp" alt="Clash of Clans" className="submenu-icon" />
+                        <span>خرید اکانت کلش آف کلنز</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=brawl" onClick={closeMobileMenu}>
+                        <img src="/images/games/brawl.webp" alt="Brawl Stars" className="submenu-icon" />
+                        <span>خرید اکانت براول استارز</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=clash-royale" onClick={closeMobileMenu}>
+                        <img src="/images/games/clash-royale.webp" alt="Clash Royale" className="submenu-icon" />
+                        <span>خرید اکانت کلش رویال</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=pubg" onClick={closeMobileMenu}>
+                        <img src="/images/games/pubg.webp" alt="PUBG Mobile" className="submenu-icon" />
+                        <span>خرید اکانت پابجی موبایل</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=free-fire" onClick={closeMobileMenu}>
+                        <img src="/images/games/free-fire.webp" alt="Free Fire" className="submenu-icon" />
+                        <span>خرید اکانت فری فایر</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=steam" onClick={closeMobileMenu}>
+                        <img src="/images/games/steam.webp" alt="Steam" className="submenu-icon" />
+                        <span>اکانت استیم</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=ps" onClick={closeMobileMenu}>
+                        <img src="/images/games/psn.webp" alt="PlayStation" className="submenu-icon" />
+                        <span>اکانت پلی استیشن</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=xbox" onClick={closeMobileMenu}>
+                        <img src="/images/games/xbox.webp" alt="Xbox" className="submenu-icon" />
+                        <span>اکانت ایکس باکس</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=cod-mobile" onClick={closeMobileMenu}>
+                        <img src="/images/games/cod-mobile.webp" alt="Call of Duty Mobile" className="submenu-icon" />
+                        <span>خرید اکانت کالاف دیوتی موبایل</span>
+                      </Link>
+                    </li>
+                  </ul>
+                )}
+              </li>
+
+              {/* 2. دسته محصولات (Accordion / Mega-Dropdown) */}
+              <li className={`sub-nav-accordion-item ${mobileProductsExpanded ? 'expanded' : ''}`}>
+                <button
+                  type="button"
+                  className="accordion-trigger"
+                  aria-expanded={mobileProductsExpanded}
+                  aria-controls="mobile-product-categories"
+                  onClick={() => {
+                    setMobileProductsExpanded((expanded) => !expanded);
+                    setMobileMarketExpanded(false);
+                    setMobileEpicExpanded(false);
+                    setMobileMobileGamesExpanded(false);
+                  }}
+                >
+                  <div className="accordion-trigger-left">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M12 12h.01"></path><path d="M17 12h.01"></path><path d="M7 12h2"></path><path d="M8 11v2"></path></svg>
+                    <span>دسته محصولات</span>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`accordion-chevron ${mobileProductsExpanded ? 'rotated' : ''}`}>
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                {mobileProductsExpanded && (
+                  <ul id="mobile-product-categories" className="accordion-content">
+                    <li>
+                      <Link href="/products" onClick={closeMobileMenu}>
+                        <span>مشاهده همه محصولات</span>
+                      </Link>
+                    </li>
+                    {/* Epic Games Submenu */}
+                    <li className={`sub-nav-accordion-item ${mobileEpicExpanded ? 'expanded' : ''}`}>
+                      <button
+                        type="button"
+                        className="accordion-trigger"
+                        aria-expanded={mobileEpicExpanded}
+                        aria-controls="mobile-product-epic"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMobileEpicExpanded((expanded) => !expanded);
+                          setMobileMobileGamesExpanded(false);
+                        }}
+                      >
+                        <div className="accordion-trigger-left">
+                          <img src="/icons/epic.svg" alt="Epic Games" className="submenu-icon" />
+                          <span>اپیک گیمز</span>
+                        </div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`accordion-chevron ${mobileEpicExpanded ? 'rotated' : ''}`}>
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </button>
+                      {mobileEpicExpanded && (
+                        <ul id="mobile-product-epic" className="accordion-content deep-nested-content">
+                          <li>
+                            <Link href="/market?game=fortnite" onClick={closeMobileMenu}>
+                              <img src="/images/games/fortnite.webp" alt="Fortnite" className="submenu-icon" />
+                              <span>خرید اکانت فورتنایت</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/category/fortnite" onClick={closeMobileMenu}>
+                              <img src="/categories/category_fortnite.webp" alt="Fortnite Products" className="submenu-icon" />
+                              <span>محصولات فورتنایت</span>
+                            </Link>
+                          </li>
+                        </ul>
+                      )}
+                    </li>
+
+                    {/* Mobile Game Items Submenu */}
+                    <li className={`sub-nav-accordion-item ${mobileMobileGamesExpanded ? 'expanded' : ''}`}>
+                      <button
+                        type="button"
+                        className="accordion-trigger"
+                        aria-expanded={mobileMobileGamesExpanded}
+                        aria-controls="mobile-product-mobile-games"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMobileMobileGamesExpanded((expanded) => !expanded);
+                          setMobileEpicExpanded(false);
+                        }}
+                      >
+                        <div className="accordion-trigger-left">
+                          <img src="/images/diamond_logo.webp" alt="Mobile Games" className="submenu-icon" />
+                          <span>آیتم بازی‌های موبایل</span>
+                        </div>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`accordion-chevron ${mobileMobileGamesExpanded ? 'rotated' : ''}`}>
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </button>
+                      {mobileMobileGamesExpanded && (
+                        <ul id="mobile-product-mobile-games" className="accordion-content deep-nested-content">
+                          <li>
+                            <Link href="/product/mobile-legends-diamonds" onClick={closeMobileMenu}>
+                              <img src="/images/games/ml.webp" alt="Mobile Legends" className="submenu-icon" />
+                              <span>الماس موبایل لجندز</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/product/uc-pubg-mobile" onClick={closeMobileMenu}>
+                              <img src="/images/games/pubg.webp" alt="PUBG Mobile" className="submenu-icon" />
+                              <span>یوسی پابجی موبایل</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/product/%d8%b3%db%8c-%d9%be%db%8c-%da%a9%d8%a7%d9%84%d8%a7%d9%81-%d9%85%d9%88%d8%a8%d8%a7%db%8c%d9%84" onClick={closeMobileMenu}>
+                              <img src="/images/games/cod-mobile.webp" alt="Call of Duty Mobile" className="submenu-icon" />
+                              <span>سی پی کالاف موبایل</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/product/clash-royale-gems" onClick={closeMobileMenu}>
+                              <img src="/images/games/clash-royale.webp" alt="Clash Royale" className="submenu-icon" />
+                              <span>خرید جم کلش رویال</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/product/clash-of-clans-gems" onClick={closeMobileMenu}>
+                              <img src="/images/games/coc.webp" alt="Clash of Clans" className="submenu-icon" />
+                              <span>خرید جم کلش اف کلنز</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/product/brawl-stars-gems" onClick={closeMobileMenu}>
+                              <img src="/images/games/brawl.webp" alt="Brawl Stars" className="submenu-icon" />
+                              <span>خرید جم براول استارز</span>
+                            </Link>
+                          </li>
+                        </ul>
+                      )}
+                    </li>
+
+                    <li>
+                      <Link href="/product/steam-giftcard" onClick={closeMobileMenu}>
+                        <img src="/images/games/steam.webp" alt="Steam" className="submenu-icon" />
+                        <span>استیم</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/market?game=wild-rift" onClick={closeMobileMenu}>
+                        <img src="/images/games/wild-rift.webp" alt="Wild Rift" className="submenu-icon" />
+                        <span>رایوت گیمز</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/product/playstation-giftcard" onClick={closeMobileMenu}>
+                        <img src="/images/games/psn.webp" alt="PlayStation" className="submenu-icon" />
+                        <span>پلی استیشن</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/product/xbox-giftcard" onClick={closeMobileMenu}>
+                        <img src="/images/games/xbox.webp" alt="Xbox" className="submenu-icon" />
+                        <span>ایکس باکس</span>
+                      </Link>
+                    </li>
+                  </ul>
+                )}
+              </li>
+
+              <li>
+                <Link href="/market/sell" onClick={closeMobileMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span>آگهی اکانت شما</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/panel/user/listings" onClick={closeMobileMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                  <span>آگهی‌های من</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" onClick={closeMobileMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                  <span>مقالات و آموزش</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" onClick={closeMobileMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  <span>سوالات متداول</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq/contact" onClick={closeMobileMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                  <span>تماس با ما</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/reseller" onClick={closeMobileMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="nav-link-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  <span>همکاری با ما</span>
+                </Link>
+              </li>
+            </ul>
+            )}
+
+            {/* Mobile Menu Status Badge Chip */}
+            {(!isMounted || isMobile) && (
+              <div className="mobile-menu-status-card mobile-only-status">
+                <div className="mobile-status-left">
+                  <span className="status-badge-pulse">
+                    <span className="status-badge-tick">✓</span>
+                  </span>
+                  <span className="status-badge-text">فروشگاه آماده خدمت‌رسانی</span>
+                </div>
+                <span className="status-badge-date">{todayFa}</span>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -981,9 +1686,9 @@ export default function Navbar() {
               <div className="tg-glow"></div>
             </div>
             <p className="promo-kicker">کد تخفیف و خبرهای روز</p>
-            <h3>به کانال رسمی نوبیکس بپیوندید</h3>
+            <h3>به کانال رسمی جینکس فمیلی بپیوندید</h3>
             <p className="promo-text">آخرین کدهای تخفیف، خبرهای آیتم‌های ویژه و جشنواره‌ها را مستقیم در تلگرام دریافت کنید.</p>
-            <a className="btn primary promo-btn" href="https://t.me/NubixShopIR" target="_blank" rel="noopener noreferrer">
+            <a className="btn primary promo-btn" href="https://t.me/JinxFamily" target="_blank" rel="noopener noreferrer">
               ورود به کانال رسمی
             </a>
           </div>
@@ -1050,7 +1755,7 @@ export default function Navbar() {
             <svg className="mobile-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <input
               type="text"
-              placeholder="جستجو در محصولات نوبیکس شاپ..."
+              placeholder="جستجو در محصولات جینکس فمیلی..."
               value={mobileQ}
               onChange={(e) => setMobileQ(e.target.value)}
               onKeyDown={(e) => {
@@ -1130,7 +1835,7 @@ export default function Navbar() {
                   textAlign: 'center'
                 }}
               >
-                درخواست تهیه این محصول توسط نوبیکس شاپ
+                درخواست تهیه این محصول توسط جینکس فمیلی
               </button>
             </div>
           )}
@@ -1142,5 +1847,20 @@ export default function Navbar() {
         initialProductName={q || mobileQ}
       />
     </>
+  );
+}
+
+export default function Navbar() {
+  return (
+    <Suspense fallback={
+      <header className="site-header" style={{ minHeight: '76px', background: 'var(--card, #0a0d1d)', borderBottom: '1px solid var(--line, rgba(255,255,255,0.08))' }}>
+        <div className="container nav-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '76px', padding: '0 16px' }}>
+          <div style={{ width: '120px', height: '36px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }} />
+          <div style={{ width: '200px', height: '36px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }} />
+        </div>
+      </header>
+    }>
+      <NavbarContent />
+    </Suspense>
   );
 }

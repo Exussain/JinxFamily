@@ -1,24 +1,33 @@
 {
-  "name": "nubixstore-frontend",
+  "name": "jinxfamily-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002 -H 0.0.0.0 --webpack",
-    "dev:https": "sh -c 'CERT_DIR=$(cd .. && pwd)/.certs; NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_EXTRA_CA_CERTS=\"$CERT_DIR/nubixshop-local.crt\" exec next dev -p 3002 -H 0.0.0.0 --experimental-https --experimental-https-key \"$CERT_DIR/nubixshop-local.key\" --experimental-https-cert \"$CERT_DIR/nubixshop-local.crt\" \"$@\"' --",
-    "build": "next build",
+    "dev:https": "sh -c 'CERT_DIR=$(cd .. && pwd)/.certs; NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_EXTRA_CA_CERTS=\"$CERT_DIR/jinxfamily-local.crt\" exec next dev -p 3002 -H 0.0.0.0 --experimental-https --experimental-https-key \"$CERT_DIR/jinxfamily-local.key\" --experimental-https-cert \"$CERT_DIR/jinxfamily-local.crt\" \"$@\"' --",
+    "build": "next build --webpack",
     "start": "next start -p 3002",
-    "deploy": "npm run build && pm2 restart nubix-frontend"
+    "deploy": "npm run build && pm2 restart jinxfamily-frontend",
+    "test:unit": "node --test lib/*.test.mjs components/*.test.mjs",
+    "test:browser": "playwright test",
+    "performance:budget": "node scripts/check-build-budgets.mjs",
+    "performance:lighthouse": "node scripts/lighthouse-mobile.mjs",
+    "verify:public": "npm run test:unit && npm run build && npm run performance:budget && npm run test:browser"
   },
   "dependencies": {
     "@hcaptcha/react-hcaptcha": "^1.16.0",
     "https-proxy-agent": "^9.1.0",
     "isomorphic-dompurify": "^3.18.0",
+    "lucide-react": "^0.468.0",
     "next": "^16.2.7",
     "node-fetch": "^3.3.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0"
+    "@playwright/test": "^1.55.0",
+    "cross-env": "^10.1.0",
+    "lighthouse": "^12.8.2",
+    "shadcn": "^4.13.0"
   }
 }

@@ -936,7 +936,7 @@ function CatalogInner() {
                               });
                             }}
                           />
-                          <span>اکانت ایکس‌باکس توسط نوبیکس ساخته شود (امکان لینک کردن وجود دارد)</span>
+                          <span>اکانت ایکس‌باکس توسط جینکس فمیلی ساخته شود (امکان لینک کردن وجود دارد)</span>
                         </label>
                       </div>
                     )}
@@ -1004,7 +1004,7 @@ function CatalogInner() {
                     {a.account_type !== "xbox" && a.mode === "create_for_me" && (
                       <div className="acc-row-create-note" style={{ color: "#10b981", background: "rgba(16, 185, 129, 0.08)", borderRight: "3px solid #10b981", display: "flex", alignItems: "center", gap: 6, gridColumn: "1 / -1" }}>
                         <XboxLogo />
-                        <span>اکانت ایکس‌باکس توسط تیم نوبیکس ساخته می‌شود — فقط ایمیل/رمز {a.account_type === "epic" ? "اپیک" : "PSN"} کافی است.</span>
+                        <span>اکانت ایکس‌باکس توسط تیم جینکس فمیلی ساخته می‌شود — فقط ایمیل/رمز {a.account_type === "epic" ? "اپیک" : "PSN"} کافی است.</span>
                       </div>
                     )}
                   </div>

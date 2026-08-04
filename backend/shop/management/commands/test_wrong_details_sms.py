@@ -41,7 +41,7 @@ class Command(BaseCommand):
             phone_number=phone,
             customer_name=name,
             status_fa="",
-            template_name="nubixshop-wrong-details",
+            template_name="jinxfamily-wrong-details",
             include_status_token=False
         )
 

@@ -1,3 +1,5 @@
+import '../../globals.css';
+
 export const metadata = {
   title: 'آموزش رفع محدودیت خرید اکانت اپیک گیمز',
   description: 'راهنمای گام‌به‌گام رفع محدودیت (Restriction) خرید در اکانت Epic Games برای فعال‌سازی محصولات فورتنایت.',
@@ -8,9 +10,9 @@ const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: 'https://nubixshop.ir' },
-    { '@type': 'ListItem', position: 2, name: 'مرکز پشتیبانی', item: 'https://nubixshop.ir/faq' },
-    { '@type': 'ListItem', position: 3, name: 'آموزش رفع محدودیت خرید اکانت اپیک گیمز', item: 'https://nubixshop.ir/guides/remove-restriction' },
+    { '@type': 'ListItem', position: 1, name: 'جینکس فمیلی', item: 'https://jinxfamily.ir' },
+    { '@type': 'ListItem', position: 2, name: 'مرکز پشتیبانی', item: 'https://jinxfamily.ir/faq' },
+    { '@type': 'ListItem', position: 3, name: 'آموزش رفع محدودیت خرید اکانت اپیک گیمز', item: 'https://jinxfamily.ir/guides/remove-restriction' },
   ],
 };
 
@@ -25,4 +27,3 @@ export default function GuideLayout({ children }) {
     </>
   );
 }
-

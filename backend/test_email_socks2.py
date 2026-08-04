@@ -3,7 +3,7 @@ import django
 import smtplib
 import socks
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nubixstore.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jinxfamily.settings')
 django.setup()
 
 from shop.email_service import ZEPTO_SMTP_SERVER, ZEPTO_SMTP_PORT, ZEPTO_USERNAME, ZEPTO_PASSWORD

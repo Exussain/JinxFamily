@@ -143,7 +143,7 @@ export default function FloatingCart() {
               ) : (
                 <div className="mini-cart-items-list">
                   {items.map((item) => {
-                    const itemKey = `${item.product_id}-${item.variant_id ?? ""}`;
+                    const itemKey = item.line_key || `${item.product_id}-${item.variant_id ?? ""}`;
                     return (
                       <div key={itemKey} className="mini-cart-item">
                         {/* Item Image */}
@@ -170,7 +170,7 @@ export default function FloatingCart() {
                           <div className="mini-cart-qty-control">
                             <button
                               type="button"
-                              onClick={() => setQty(item.product_id, (item.quantity || 0) + 1, item.variant_id)}
+                              onClick={() => setQty(item.product_id, (item.quantity || 0) + 1, item.variant_id, item.line_key)}
                               className="mini-cart-qty-btn"
                               aria-label="افزایش تعداد"
                             >
@@ -183,9 +183,9 @@ export default function FloatingCart() {
                               type="button"
                               onClick={() => {
                                 if (item.quantity <= 1) {
-                                  removeItem(item.product_id, item.variant_id);
+                                  removeItem(item.product_id, item.variant_id, item.line_key);
                                 } else {
-                                  setQty(item.product_id, item.quantity - 1, item.variant_id);
+                                  setQty(item.product_id, item.quantity - 1, item.variant_id, item.line_key);
                                 }
                               }}
                               className="mini-cart-qty-btn"
@@ -197,7 +197,7 @@ export default function FloatingCart() {
                           
                           <button
                             type="button"
-                            onClick={() => removeItem(item.product_id, item.variant_id)}
+                            onClick={() => removeItem(item.product_id, item.variant_id, item.line_key)}
                             className="mini-cart-delete-btn"
                             aria-label="حذف محصول"
                           >

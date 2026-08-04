@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'jinxfamily.ir', pathname: '/media/**' },
+      { protocol: 'https', hostname: 'www.jinxfamily.ir', pathname: '/media/**' },
+    ],
+    formats: ['image/avif', 'image/webp'],
+  },
   turbopack: {},
   webpack: (config, { dev }) => {
     if (dev) {
@@ -13,9 +20,9 @@ const nextConfig = {
           '**/node_modules/**',
           '**/next.config.js',
           'Z:/root/!(Projects)/**',
-          'Z:/root/Projects/!(NubixShop)/**',
-          'Z:/root/Projects/NubixShop/!(frontend)/**',
-          'Z:/root/Projects/NubixShop/frontend/!(app|components|lib|public)/**',
+          'Z:/root/Projects/!(JinxFamily)/**',
+          'Z:/root/Projects/JinxFamily/!(frontend)/**',
+          'Z:/root/Projects/JinxFamily/frontend/!(app|components|lib|public)/**',
         ],
       };
     }
@@ -25,14 +32,13 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/product/nubixshopirproductstelegram-premium-3',
+        source: '/product/jinxfamilyirproductstelegram-premium-3',
         destination: '/product/telegram-premium',
         permanent: true,
       },
       // SEO consolidation: each dedicated landing page is the single canonical
       // URL for its product — the generic /product/* twins 308 here so Google
       // stops splitting ranking signals between two competing pages.
-      { source: '/product/fortnite-crew-pack', destination: '/crewpack', permanent: true },
       { source: '/product/gta6', destination: '/gta6', permanent: true },
       { source: '/product/v-bucks', destination: '/vbucks', permanent: true },
       { source: '/product/gemini-subscription', destination: '/gemini', permanent: true },
@@ -64,6 +70,16 @@ const nextConfig = {
       // Next serves the PWA manifest at /manifest.webmanifest (app/manifest.js);
       // old crawlers still request /manifest.json.
       { source: '/manifest.json', destination: '/manifest.webmanifest', permanent: true },
+      // Legacy WordPress WooCommerce redirects
+      { source: '/shop-4', destination: '/products', permanent: true },
+      { source: '/new/shop', destination: '/products', permanent: true },
+      { source: '/product-category/epicgames/buy-fortnite-account', destination: '/market/fortnite', permanent: true },
+      { source: '/about-us', destination: '/faq/about', permanent: true },
+      { source: '/lost-password', destination: '/forgot-password', permanent: true },
+      { source: '/my-account', destination: '/login', permanent: true },
+      { source: '/favorites', destination: '/panel/user', permanent: true },
+      { source: '/cart', destination: '/checkout', permanent: true },
+      { source: '/new/:path*', destination: '/:path*', permanent: true },
     ];
   },
   async rewrites() {
@@ -83,6 +99,12 @@ const nextConfig = {
       {
         key: "Cache-Control",
         value: "private, no-cache, no-store, max-age=0, must-revalidate",
+      },
+    ];
+    const publicShortCache = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=60, stale-while-revalidate=300",
       },
     ];
     const forceCacheBust = [
@@ -108,22 +130,25 @@ const nextConfig = {
       { source: '/categories/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
       { source: '/media/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
       { source: '/icons/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
-      { source: '/web_logo.webp', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
-      { source: '/', headers: noStore },
+      { source: '/logo.webp', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
+      { source: '/', headers: publicShortCache },
+      { source: '/faq/about', headers: noStore },
       // NOTE: crewpack/checkout must NOT use Clear-Site-Data. They have no
       // captcha, and "cache" wipes the immutable /_next/static chunks on every
       // visit -> every visitor re-downloads ~700KB, which buckles the hero
       // product page under load. no-store keeps prices fresh; assets stay cached.
       { source: '/checkout', headers: noStore },
-      { source: '/crewpack', headers: noStore },
-      { source: '/vbucks', headers: noStore },
-      { source: '/products', headers: noStore },
-      { source: '/lego', headers: noStore },
-      { source: '/gemini', headers: noStore },
+      { source: '/crewpack', headers: publicShortCache },
+      { source: '/vbucks', headers: publicShortCache },
+      { source: '/products', headers: publicShortCache },
+      { source: '/category/:path*', headers: publicShortCache },
+      { source: '/lego', headers: publicShortCache },
+      { source: '/gemini', headers: publicShortCache },
+      { source: '/gta6', headers: publicShortCache },
       { source: '/login', headers: noStore },
       { source: '/signup', headers: noStore },
       { source: '/otp-login', headers: noStore },
-      { source: '/product/:slug*', headers: noStore },
+      { source: '/product/:slug*', headers: publicShortCache },
       { source: '/panel/admin', headers: noStore },
       { source: '/panel/admin/:path*', headers: noStore },
       { source: '/reseller', headers: noStore },

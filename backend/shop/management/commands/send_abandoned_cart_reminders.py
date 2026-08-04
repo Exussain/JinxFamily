@@ -7,7 +7,7 @@
 - هر سبد فقط یک بار یادآوری می‌گیرد (اسپم نداریم).
 
 این دستور باید به‌صورت دوره‌ای توسط cron اجرا شود، مثلاً هر ۵ دقیقه یک بار:
-    */5 * * * * cd /root/NubixShop/public/backend && .venv/bin/python manage.py send_abandoned_cart_reminders >> /var/log/nubix_cart_reminders.log 2>&1
+    */5 * * * * cd /root/jinxfamily/public/backend && .venv/bin/python manage.py send_abandoned_cart_reminders >> /var/log/jinxfamily_cart_reminders.log 2>&1
 """
 import logging
 from datetime import timedelta
@@ -67,7 +67,7 @@ class Command(BaseCommand):
                 )
             return
 
-        site_url = getattr(settings, "SITE_URL", "https://nubixshop.ir")
+        site_url = getattr(settings, "SITE_URL", "https://jinxfamily.ir")
         sent_count = 0
         for cart in candidates:
             phone = (cart.phone or "").strip()

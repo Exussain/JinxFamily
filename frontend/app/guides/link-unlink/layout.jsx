@@ -1,3 +1,5 @@
+import '../../globals.css';
+
 export const metadata = {
   title: 'آموزش اتصال و قطع اتصال اکانت اپیک گیمز',
   description: 'راهنمای گام‌به‌گام لینک و آنلینک کردن اکانت Epic Games به کنسول و پلتفرم‌های دیگر.',
@@ -8,9 +10,9 @@ const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: 'https://nubixshop.ir' },
-    { '@type': 'ListItem', position: 2, name: 'مرکز پشتیبانی', item: 'https://nubixshop.ir/faq' },
-    { '@type': 'ListItem', position: 3, name: 'آموزش اتصال و قطع اتصال اکانت اپیک گیمز', item: 'https://nubixshop.ir/guides/link-unlink' },
+    { '@type': 'ListItem', position: 1, name: 'جینکس فمیلی', item: 'https://jinxfamily.ir' },
+    { '@type': 'ListItem', position: 2, name: 'مرکز پشتیبانی', item: 'https://jinxfamily.ir/faq' },
+    { '@type': 'ListItem', position: 3, name: 'آموزش اتصال و قطع اتصال اکانت اپیک گیمز', item: 'https://jinxfamily.ir/guides/link-unlink' },
   ],
 };
 
@@ -25,4 +27,3 @@ export default function GuideLayout({ children }) {
     </>
   );
 }
-

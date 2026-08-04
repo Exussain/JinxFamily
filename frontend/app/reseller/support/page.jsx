@@ -9,7 +9,7 @@ export default function ResellerSupportPage() {
   return (
     <>
       <h1 className="reseller-page-title">پشتیبانی</h1>
-      <p className="reseller-page-subtitle">سؤال یا مشکلی دارید؟ از طریق چت زنده با تیم نوبیکس در ارتباط باشید.</p>
+      <p className="reseller-page-subtitle">سؤال یا مشکلی دارید؟ از طریق چت زنده با تیم جینکس فمیلی در ارتباط باشید.</p>
 
       <div className="reseller-card">
         <h2><span className="icon">💬</span> چت زنده</h2>

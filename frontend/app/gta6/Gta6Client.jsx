@@ -341,6 +341,75 @@ export default function Gta6Client() {
           </div>
         </section>
 
+        {/* ───────────────────────── VIP CLUB CARDS ───────────────────────── */}
+        <section className="gta-vip-section card" style={{ background: "linear-gradient(135deg, rgba(217,119,6,0.15) 0%, rgba(0,0,0,0.8) 100%)", border: "2px solid #d97706", borderRadius: "24px", padding: "32px", color: "#fff", direction: "rtl", position: "relative", overflow: "hidden", marginTop: "24px" }}>
+          <div style={{ position: "absolute", top: "-20px", right: "-20px", width: "150px", height: "150px", background: "radial-gradient(circle, rgba(217,119,6,0.4) 0%, transparent 70%)" }} />
+          
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "32px", alignItems: "center" }}>
+            <div>
+              <span style={{ background: "#d97706", color: "#000", padding: "4px 12px", borderRadius: "12px", fontSize: "12px", fontWeight: "900" }}>بخش ویژه جینکس فمیلی</span>
+              <h2 style={{ fontSize: "28px", fontWeight: "900", margin: "12px 0 8px", color: "#fbbf24" }}>کارت‌های ویژه VIP جی تی ای VI ✦</h2>
+              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.8)", lineHeight: "1.8", margin: "0 0 20px" }}>
+                با پیش‌خرید کارت‌های VIP علاوه بر دسترسی کامل به بازی، از فعال‌سازی فوق‌سریع اولویت‌دار، گارانتی طلایی مادام‌العمر، دسترسی به سرور خصوصی دیسکورد، و پکیج فیزیکی استیکر اختصاصی جینکسی درب منزل بهره‌مند شوید.
+              </p>
+              
+              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                <div style={{ background: "rgba(255,255,255,0.05)", padding: "12px 20px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>مزایای فعال‌سازی</div>
+                  <strong style={{ fontSize: "14px", color: "#fbbf24" }}>اولویت اول در تحویل</strong>
+                </div>
+                <div style={{ background: "rgba(255,255,255,0.05)", padding: "12px 20px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>پکیج فیزیکی</div>
+                  <strong style={{ fontSize: "14px", color: "#fbbf24" }}>استیکرهای جینکسی</strong>
+                </div>
+                <div style={{ background: "rgba(255,255,255,0.05)", padding: "12px 20px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>پشتیبانی</div>
+                  <strong style={{ fontSize: "14px", color: "#fbbf24" }}>پشتیبان VIP اختصاصی</strong>
+                </div>
+              </div>
+            </div>
+            
+            {/* VIP Card Graphic */}
+            <div style={{ background: "linear-gradient(135deg, #111 0%, #222 100%)", border: "2px solid #fbbf24", borderRadius: "20px", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between", height: "200px", boxShadow: "0 10px 30px rgba(217,119,6,0.3)", position: "relative" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: "18px", fontWeight: "900", color: "#fbbf24", letterSpacing: "1px" }}>JINX FAMILY</div>
+                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>GTA VI PRE-ORDER VIP CARD</div>
+                </div>
+                <span style={{ fontSize: "24px" }}>💳</span>
+              </div>
+              
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                <div>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>قیمت کارت VIP</div>
+                  <div style={{ fontSize: "20px", fontWeight: "900", color: "#fff" }}>۳۸۰,۰۰۰ تومان</div>
+                </div>
+                <button
+                  onClick={() => {
+                    addItem({
+                      product_id: 999998,
+                      variant_id: 999998,
+                      name: "کارت طلایی VIP پیش‌خرید GTA VI",
+                      price: 380000,
+                      quantity: 1,
+                      slug: "gta6",
+                      image: "https://jinxfamily.ir/products/gta6/ps5-ultimate.webp",
+                      category: "games"
+                    });
+                    if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("cart:add"));
+                    router.push("/checkout");
+                  }}
+                  className="btn-accent"
+                  style={{ background: "#fbbf24", color: "#000", border: "none", borderRadius: "10px", padding: "10px 16px", fontWeight: "900", cursor: "pointer", fontSize: "13px", transition: "all 0.15s ease" }}
+                >
+                  سفارش کارت 🛒
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
         {/* ───────────────────────── INTRO ───────────────────────── */}
         <section className="card gta-section">
           <div className="gta-sec-head">

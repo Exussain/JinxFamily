@@ -929,6 +929,25 @@
 }
 .prose p { margin: 0 0 18px; line-height: 2.15; font-size: 16px; color: var(--muted); }
 .prose strong { color: var(--text); }
+.sectionImage {
+  margin: 24px 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+.sectionImage:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+.secImg {
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  object-fit: cover;
+  display: block;
+}
 
 /* Quest stages: the numbered how-to steps as a codex checklist. */
 .stagesHead {

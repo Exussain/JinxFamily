@@ -78,7 +78,7 @@ export default function ResellerApplyPage() {
     return (
       <div className="reseller-login">
         <div className="reseller-login-card">
-          <Image src="/web_logo.webp" alt="NubixShop" width={56} height={56} className="logo" priority />
+          <Image src="/logo.webp" alt="JinxFamily" width={56} height={56} className="logo" priority />
           <h1>ثبت‌نام شما انجام شد 🎉</h1>
           <p className="sub">{result.warning}</p>
 
@@ -125,7 +125,7 @@ export default function ResellerApplyPage() {
   return (
     <div className="reseller-login">
       <form className="reseller-login-card" onSubmit={handleSubmit}>
-        <Image src="/web_logo.webp" alt="NubixShop" width={56} height={56} className="logo" priority />
+        <Image src="/logo.webp" alt="JinxFamily" width={56} height={56} className="logo" priority />
         <h1>شرایط همکاری با ما</h1>
         <p className="sub">قبل از ثبت‌نام، شرایط زیر را مطالعه و تایید کنید</p>
 

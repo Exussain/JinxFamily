@@ -1,0 +1,62 @@
+[
+  {
+    "step": 117,
+    "name": "multi_replace_file_content",
+    "args": {
+      "ArtifactMetadata": {
+        "RequestFeedback": false,
+        "Summary": "Added wishlist dropdown preview to desktop Navbar.jsx. Exposed ids in useWishlist and fetched wishlist items in Navbar.jsx.",
+        "UserFacing": true
+      },
+      "Description": "Implemented a wishlist preview dropdown on the desktop Navbar. Instead of forcing guest users to sign in by redirecting to the user panel, they can now click the wishlist icon to see their wishlisted items in a beautiful dropdown, add them to the cart without authentication, and only get prompted to log in at checkout.",
+      "Instruction": "Add wishlist dropdown preview and useWishlist hook integration.",
+      "ReplacementChunks": [
+        {
+          "AllowMultiple": false,
+          "EndLine": 6,
+          "ReplacementContent": "import { useCart } from '../lib/useCart';\nimport { useWishlist } from '../lib/useWishlist';\nimport { adminCacheBustHref } from '../lib/adminUrl.mjs';",
+          "StartLine": 5,
+          "TargetContent": "import { useCart } from '../lib/useCart';\nimport { adminCacheBustHref } from '../lib/adminUrl.mjs';"
+        },
+        {
+          "AllowMultiple": false,
+          "EndLine": 22,
+          "ReplacementContent": "  const [q, setQ] = useState('');\n  const [user, setUser] = useState(null);\n  const [showCartPreview, setShowCartPreview] = useState(false);\n  const [searchResults, setSearchResults] = useState([]);\n  const [showSearchResults, setShowSearchResults] = useState(false);\n  const [searchLoading, setSearchLoading] = useState(false);\n  const [cartBounce, setCartBounce] = useState(false);\n\n  const { ids, toggleWishlist } = useWishlist();\n  const [showWishlistPreview, setShowWishlistPreview] = useState(false);\n  const [wishlistItems, setWishlistItems] = useState([]);",
+          "StartLine": 16,
+          "TargetContent": "  const [q, setQ] = useState('');\n  const [user, setUser] = useState(null);\n  const [showCartPreview, setShowCartPreview] = useState(false);\n  const [searchResults, setSearchResults] = useState([]);\n  const [showSearchResults, setShowSearchResults] = useState(false);\n  const [searchLoading, setSearchLoading] = useState(false);\n  const [cartBounce, setCartBounce] = useState(false);"
+        },
+        {
+          "AllowMultiple": false,
+          "EndLine": 80,
+          "ReplacementContent": "  const desktopCartRef = useRef(null);\n  const mobileCartRef = useRef(null);\n  const desktopWishlistRef = useRef(null);\n  const hasLoadedUserRef = useRef(false);\n  const userMenuRef = useRef(null);\n  const authMenuRef = useRef(null);\n  const searchListRef = useRef(null);",
+          "StartLine": 75,
+          "TargetContent": "  const desktopCartRef = useRef(null);\n  const mobileCartRef = useRef(null);\n  const hasLoadedUserRef = useRef(false);\n  const userMenuRef = useRef(null);\n  const authMenuRef = useRef(null);\n  const searchListRef = useRef(null);"
+        },
+        {
+          "AllowMultiple": false,
+          "EndLine": 175,
+          "ReplacementContent": "  }, [apiBase]);\n\n  // Fetch wishlist items for either logged-in user or guest (resolved via API)\n  useEffect(() => {\n    const fetchWishlist = async () => {\n      if (user) {\n        try {\n          const res = await fetch(`${apiBase}/api/me/wishlist`, { credentials: \"include\" });\n          if (res.ok) {\n            const data = await res.json();\n            setWishlistItems(data || []);\n          }\n        } catch (err) {\n          console.error(err);\n        }\n      } else {\n        if (ids && ids.length > 0) {\n          try {\n            const res = await fetch(`${apiBase}/api/products`, { cache: \"no-store\" });\n            if (res.ok) {\n              const data = await res.json();\n              const allProducts = data.results || [];\n              const resolved = ids.map(id => {\n                const prod = allProducts.find(p => String(p.id) === String(id)) || placeholderFeatured.find(p => String(p.id) === String(id));\n                if (prod) {\n                  return {\n                    product_id: prod.id,\n                    name: prod.name_fa,\n                    slug: prod.slug,\n                    price: Number(prod.price) || Number(prod.min_price) || 0,\n                    image: prod.image_url || prod.image\n                  };\n                }\n                return null;\n              }).filter(Boolean);\n              setWishlistItems(resolved);\n            }\n          } catch (err) {\n            console.error(err);\n          }\n        } else {\n          setWishlistItems([]);\n        }\n      }\n    };\n\n    fetchWishlist();\n  }, [ids, user, apiBase]);",
+          "StartLine": 174,
+          "TargetContent": "  }, [apiBase]);"
+        },
+        {
+          "AllowMultiple": false,
+          "EndLine": 363,
+          "ReplacementContent": "  }, [showCartPreview]);\n\n  // Close wishlist preview when clicking outside\n  useEffect(() => {\n    if (!showWishlistPreview) return;\n    const handleClickOutside = (event) => {\n      if (desktopWishlistRef.current && !desktopWishlistRef.current.contains(event.target)) {\n        setShowWishlistPreview(false);\n      }\n    };\n    document.addEventListener('mousedown', handleClickOutside);\n    return () => {\n      document.removeEventListener('mousedown', handleClickOutside);\n    };\n  }, [showWishlistPreview]);\n\n  // Close user menu when clicking outside",
+          "StartLine": 361,
+          "TargetContent": "  }, [showCartPreview]);\n\n  // Close user menu when clicking outside"
+        },
+        {
+          "AllowMultiple": false,
+          "EndLine": 869,
+          "ReplacementContent": "              <div ref={desktopWishlistRef} style={{ position: 'relative', display: 'inline-flex' }}>\n                <button\n                  type=\"button\"\n                  className={`action-icon-btn wishlist-icon ${wishlistItems.length > 0 ? 'has-items' : ''}`}\n                  onClick={(e) => {\n                    e.preventDefault();\n                    setShowWishlistPreview(v => !v);\n                    setShowCartPreview(false);\n                    setShowDesktopUserMenu(false);\n                  }}\n                  aria-label=\"علاقه‌مندی‌ها\"\n                >\n                  <svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" strokeWidth=\"2.5\" strokeLinecap=\"round\" strokeLinejoin=\"round\">\n                    <path d=\"M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z\" />\n                  </svg>\n                  {wishlistItems.length > 0 && (\n                    <span className=\"cart-badge-cyan\" style={{ background: '#ec4899' }}>{wishlistItems.length}</span>\n                  )}\n                </button>\n\n                {showWishlistPreview && (\n                  <div className=\"cart-preview desktop-cart-preview-align wishlist-preview\">\n                    <div className=\"cart-preview-header\">\n                      <span>علاقه‌مندی‌ها</span>\n                      <span className=\"muted\" style={{ fontSize: 12 }}>\n                        {wishlistItems.length} آیتم\n                      </span>\n                    </div>\n                    <div className=\"cart-preview-list\">\n                      {wishlistItems.length === 0 && (\n                        <div className=\"muted\">لیست علاقه‌مندی‌های شما خالی است.</div>\n                      )}\n                      {wishlistItems.map((it) => {\n                        return (\n                          <div key={it.product_id} className=\"cart-preview-item\">\n                            <div className=\"cart-preview-image\">\n                              {it.image ? (\n                                <SmartImage src={it.image} alt={it.name} fit=\"contain\" />\n                              ) : (\n                                <svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"currentColor\">\n                                  <path d=\"M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z\"/>\n                                </svg>\n                              )}\n                            </div>\n                            <div className=\"cart-preview-item-main\">\n                              <Link \n                                href={productHref(it.slug)} \n                                className=\"cart-preview-name\" \n                                style={{ textDecoration: 'none', color: 'inherit' }}\n                                onClick={() => setShowWishlistPreview(false)}\n                              >\n                                {it.name}\n                              </Link>\n                              <div className=\"cart-preview-meta\">\n                                {it.price > 0 ? `${it.price.toLocaleString('fa-IR')} تومان` : 'ناموجود'}\n                              </div>\n                            </div>\n                            <div className=\"cart-preview-actions\">\n                              {it.price > 0 && (\n                                <button\n                                  type=\"button\"\n                                  className=\"btn primary block\"\n                                  style={{ padding: '6px 12px', fontSize: 12, borderRadius: 8 }}\n                                  onClick={() => {\n                                    addItem({\n                                      product_id: it.product_id,\n                                      name: it.name,\n                                      price: it.price,\n                                      quantity: 1,\n                                      slug: it.slug,\n                                      image: it.image\n                                    });\n                                    setCartBounce(true);\n                                    setTimeout(() => setCartBounce(false), 500);\n                                    window.dispatchEvent(new CustomEvent(\"cart:add\"));\n                                    toggleWishlist(it.product_id);\n                                  }}\n                                >\n                                  افزودن به سبد\n                                </button>\n                              )}\n                              <button\n                                type=\"button\"\n                                className=\"ghost-btn cart-preview-remove\"\n                                onClick={() => toggleWishlist(it.product_id)}\n                              >\n                                حذف\n                              </button>\n                            </div>\n                          </div>\n                        );\n                      })}\n                    </div>\n                  </div>\n                )}\n              </div>",
+          "StartLine": 864,
+          "TargetContent": "              <Link href=\"/panel/user\" className=\"action-icon-btn wishlist-icon\" aria-label=\"علاقه‌مندی‌ها\">\n                <svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" strokeWidth=\"2.5\" strokeLinecap=\"round\" strokeLinejoin=\"round\">\n                  <path d=\"M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z\" />\n                </svg>\n              </Link>"
+        }
+      ],
+      "TargetFile": "/root/jinxfamily/frontend/components/Navbar.jsx",
+      "toolAction": "Modifying Navbar.jsx to add wishlist dropdown",
+      "toolSummary": "Edit Navbar.jsx"
+    }
+  }
+]

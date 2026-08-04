@@ -8,7 +8,7 @@ export default function SocialLinksCard() {
       <p>از تخفیف‌ها و جشنواره‌ها باخبر شوید</p>
       <div className="social-links-actions">
         <a
-          href="https://t.me/NubixShopIR"
+          href="https://t.me/JinxFamily"
           className="social-link-btn telegram"
           target="_blank"
           rel="noopener noreferrer"
@@ -19,7 +19,7 @@ export default function SocialLinksCard() {
           تلگرام
         </a>
         <a
-          href="https://instagram.com/NubixShop.ir"
+          href="https://www.instagram.com/gameorbital"
           className="social-link-btn instagram"
           target="_blank"
           rel="noopener noreferrer"

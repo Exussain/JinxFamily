@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect("/root/NubixShop/public/backend/db.sqlite3")
+conn = sqlite3.connect("/root/jinxfamily/public/backend/db.sqlite3")
 cursor = conn.cursor()
 
 tables = ['shop_product', 'shop_productvariant']

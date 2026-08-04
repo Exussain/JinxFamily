@@ -2,10 +2,12 @@ import { preload } from "react-dom";
 import CrewPackClient from "./CrewPackClient";
 import { fetchReviewStats, buildProductJsonLd, buildBreadcrumbJsonLd, buildFaqJsonLd } from "../../lib/seoJsonLd.mjs";
 import { fetchApiJson } from "../../lib/serverFetch.mjs";
+import Navbar from "../../components/Navbar";
+import '../globals.css';
 
 export const dynamic = 'force-dynamic';
 
-const OG_IMAGE = 'https://nubixshop.ir/media/products/fortnite-crew-pack-20260701063129.webp';
+const OG_IMAGE = 'https://jinxfamily.ir/media/products/fortnite-crew-pack-20260701063129.webp';
 const OG_DESCRIPTION = 'اشتراک کروپک فورتنایت با فعال‌سازی قانونی — اسکین انحصاری، ۱۰۰۰ وی‌باکس و بتل پس.';
 
 export const metadata = {
@@ -14,16 +16,16 @@ export const metadata = {
   alternates: { canonical: '/crewpack' },
   openGraph: {
     type: 'website',
-    siteName: 'نوبیکس شاپ',
+    siteName: 'جینکس فمیلی',
     locale: 'fa_IR',
-    title: 'خرید کروپک فورتنایت (Fortnite Crew) | نوبیکس شاپ',
+    title: 'خرید کروپک فورتنایت (Fortnite Crew) | جینکس فمیلی',
     description: OG_DESCRIPTION,
-    url: 'https://nubixshop.ir/crewpack',
+    url: 'https://jinxfamily.ir/crewpack',
     images: [{ url: OG_IMAGE, alt: 'خرید کروپک فورتنایت' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'خرید کروپک فورتنایت (Fortnite Crew) | نوبیکس شاپ',
+    title: 'خرید کروپک فورتنایت (Fortnite Crew) | جینکس فمیلی',
     description: OG_DESCRIPTION,
     images: [OG_IMAGE],
   },
@@ -33,7 +35,7 @@ export default async function CrewPackPage() {
   const [initialProduct, stats, productsPayload] = await Promise.all([
     fetchApiJson("/api/products/fortnite-crew-pack"),
     fetchReviewStats("fortnite-crew-pack"),
-    fetchApiJson("/api/products"),
+    fetchApiJson("/api/products?view=card&limit=20", { next: { revalidate: 60 } }),
   ]);
   // The hero image is the LCP element — start its download from the <head>
   // instead of waiting for body parse (React 19 dedupes into one preload).
@@ -49,7 +51,7 @@ export default async function CrewPackPage() {
     variants: initialProduct?.variants,
   });
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: "نوبیکس شاپ", path: "/" },
+    { name: "جینکس فمیلی", path: "/" },
     { name: "کروپک فورتنایت", path: "/crewpack" },
   ]);
   const faqLd = buildFaqJsonLd(initialProduct?.faq);
@@ -61,6 +63,7 @@ export default async function CrewPackPage() {
       {faqLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       )}
+      <Navbar />
       <CrewPackClient
         initialProduct={initialProduct}
         initialStats={stats}

@@ -1,15 +1,15 @@
 export default function manifest() {
   return {
-    name: 'نوبیکس شاپ',
-    short_name: 'نوبیکس',
+    name: 'جینکس فمیلی',
+    short_name: 'جینکس فمیلی',
     description:
-      'خرید و فعال‌سازی قانونی محصولات دیجیتال: وی باکس و کروپک فورتنایت، اشتراک ChatGPT و Gemini، گیفت کارت و اشتراک‌های آنلاین',
+      'بازار خرید و فروش اکانت‌های بازی و ارائه دهنده رسمی وی‌باکس، کوین بازی‌ها و اشتراک‌های دیجیتال',
     start_url: '/',
     display: 'standalone',
     dir: 'rtl',
     lang: 'fa-IR',
     background_color: '#ffffff',
-    theme_color: '#7c3aed',
+    theme_color: '#150a26',
     icons: [
       { src: '/icons/app/icon-192.png', sizes: '192x192', type: 'image/png' },
       { src: '/icons/app/icon-512.png', sizes: '512x512', type: 'image/png' },

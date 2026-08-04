@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function HotProductsSection() {
-  const [isWednesday, setIsWednesday] = useState(false);
+  const [isSaturday, setIsSaturday] = useState(false);
 
   useEffect(() => {
-    setIsWednesday(new Date().getDay() === 3);
+    setIsSaturday(new Date().getDay() === 6);
   }, []);
 
   const openSpin = (e) => {
@@ -18,38 +18,53 @@ export default function HotProductsSection() {
   };
 
   return (
-    <section className="hot-section">
-      {/* 3D Spin Wheel Banner */}
-      <Link href="/spin" className={`spin-banner ${isWednesday ? "is-wednesday" : ""}`} onClick={openSpin}>
-        {/* Glow ambient background elements clipped inside the banner */}
-        <div className="spin-banner-glows-wrapper" aria-hidden="true">
-          <div className="spin-banner-glow-1" />
-          <div className="spin-banner-glow-2" />
+    <section className="promo-section">
+      {/* 3D Cosmic Spin Wheel Magic Card */}
+      <Link 
+        href="/spin" 
+        className={`wheel-magic-card ${isSaturday ? "event-active" : ""}`} 
+        onClick={openSpin}
+      >
+        {/* Dynamic Holographic Background Particles */}
+        <div className="magic-ambient-glows" aria-hidden="true">
+          <div className="magic-glow-pulse-pink" />
+          <div className="magic-glow-pulse-violet" />
         </div>
 
-        <div className="spin-banner-inner">
+        <div className={`magic-card-body ${isSaturday ? "is-saturday" : ""}`}>
           {/* Right side content (RTL) */}
-          <div className="spin-banner-content">
-            <span className="spin-banner-badge">
-              {isWednesday ? "امروز چهارشنبه‌ست ✨" : "🎡 چهارشنبه‌های طلایی نوبیکس"}
+          <div className="magic-card-details">
+            <span className="magic-pill-badge">
+              <span className="badge-pulse-dot"></span>
+              {isSaturday ? "⚡ رویداد ویژه شنبه طلایی" : "🔮 تالار جوایز طلایی جینکس"}
             </span>
-            <div className="spin-banner-text">
-              <strong>{isWednesday ? "چهارشنبه‌ست، بیا گردونتو بچرخون" : "گردونه شانس رو بچرخون!"}</strong>
-              <span>{isWednesday ? "امروز شانس طلایی داری: الماس، کد تخفیف یا جایزه واقعی بگیر." : "هر هفته بچرخان، تا ۲۰٪ تخفیف یا الماس رایگان برنده شو."}</span>
+            <div className="magic-message-group">
+              <strong>
+                {isSaturday ? "همین حالا گردونه طلایی فعال شد!" : "شانست رو امتحان کن! ✨"}
+              </strong>
+              <span>
+                {isSaturday 
+                  ? "شانس امروزت رو از دست نده: کوین رایگان، تخفیف‌های ویژه و هدایای اختصاصی" 
+                  : "هر هفته یک فرصت رایگان برای برنده شدن تا ۲۰٪ تخفیف و کوین رایگان"
+                }
+              </span>
             </div>
           </div>
 
           {/* Button CTA */}
-          <div className="spin-banner-action">
-            <span className="spin-banner-btn">{isWednesday ? "گردونه طلایی رو بچرخون" : "بچرخون! 🚀"}</span>
+          <div className="magic-cta-wrapper">
+            <span className="magic-action-btn">
+              {isSaturday ? "شروع چرخش طلایی 🚀" : "بچرخون و برنده شو 🎰"}
+            </span>
           </div>
 
-          {/* Left side 3D asset overflowing the container */}
-          <div className="spin-banner-image-container">
+          {/* Left side 3D asset with holographic portal rings */}
+          <div className="magic-portal-container">
+            <div className="magic-portal-ring" />
             <img
-              src="/images/lucky_chest.webp"
-              alt="صندوقچه شانس نوبیکس"
-              className="spin-banner-wheel-img"
+              src="/images/arcane_lucky_chest.webp"
+              alt="صندوقچه شانس جینکس فمیلی"
+              className="portal-chest-asset"
               loading="lazy"
               decoding="async"
             />
@@ -58,274 +73,292 @@ export default function HotProductsSection() {
       </Link>
 
       <style jsx>{`
-        .hot-section {
+        .promo-section {
           margin: 30px 0;
           display: flex;
           flex-direction: column;
           gap: 16px;
         }
 
-        /* Spin Banner Container */
-        .spin-banner {
+        /* Unique Holographic Card Styles */
+        .wheel-magic-card {
           display: block;
           text-decoration: none;
           color: inherit;
-          background:
-            radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.35), transparent 22%),
-            linear-gradient(110deg, #fef3c7 0%, #fcd34d 28%, #f59e0b 50%, #fcd34d 72%, #fef3c7 100%);
-          background-size: 100% 100%, 220% 100%;
-          background-position: 0% 0%, 0% 50%;
-          animation: goldShimmer 6s ease-in-out infinite;
-          border-radius: 20px;
+          background: linear-gradient(135deg, #060412 0%, #0d0922 50%, #150828 100%);
+          border-radius: 24px;
           cursor: pointer;
-          box-shadow: 0 12px 32px rgba(217, 119, 6, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-          border: 1px solid rgba(217, 119, 6, 0.35);
-          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1), box-shadow 0.3s ease;
-          overflow: visible; /* To allow the 3D asset to overflow top & bottom */
+          border: 1px solid rgba(139, 92, 246, 0.25);
+          box-shadow: 0 12px 30px rgba(139, 92, 246, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+          transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1), box-shadow 0.4s ease;
+          overflow: visible;
           position: relative;
-        }
-        @keyframes goldShimmer {
-          0%, 100% { background-position: 0% 0%, 0% 50%; }
-          50% { background-position: 0% 0%, 100% 50%; }
+          animation: pulseCardGlow 6s ease-in-out infinite;
         }
 
-        /* Ambient Glow Behind Content */
-        .spin-banner-glows-wrapper {
+        @keyframes pulseCardGlow {
+          0%, 100% { box-shadow: 0 12px 30px rgba(139, 92, 246, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
+          50% { box-shadow: 0 12px 40px rgba(236, 72, 153, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.15); }
+        }
+
+        /* Ambient Glow behind card */
+        .magic-ambient-glows {
           position: absolute;
           inset: 0;
           overflow: hidden;
-          border-radius: 20px;
+          border-radius: 24px;
           pointer-events: none;
           z-index: 1;
         }
-        .spin-banner-glow-1 {
+
+        .magic-glow-pulse-pink {
           position: absolute;
-          right: -40px;
-          top: -40px;
-          width: 200px;
-          height: 200px;
-          background: radial-gradient(circle, rgba(252, 211, 77, 0.5) 0%, transparent 70%);
+          right: -30px;
+          top: -30px;
+          width: 180px;
+          height: 180px;
+          background: radial-gradient(circle, rgba(236, 72, 153, 0.25) 0%, transparent 70%);
           pointer-events: none;
-        }
-        .spin-banner-glow-2 {
-          position: absolute;
-          left: 40px;
-          bottom: -40px;
-          width: 200px;
-          height: 200px;
-          background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%);
-          pointer-events: none;
+          animation: ambientFloat 4s ease-in-out infinite alternate;
         }
 
-        /* Shine Reflection Effect */
-        .spin-banner::before {
+        .magic-glow-pulse-violet {
+          position: absolute;
+          left: 30px;
+          bottom: -30px;
+          width: 180px;
+          height: 180px;
+          background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+          pointer-events: none;
+          animation: ambientFloat 4s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes ambientFloat {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(10px, -10px) scale(1.1); }
+        }
+
+        /* Shimmer Sheen effect over the card */
+        .wheel-magic-card::before {
           content: '';
           position: absolute;
           top: 0; left: -100%; width: 55%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
           transform: skewX(-20deg);
-          animation: shine 4.5s infinite;
+          animation: sheenSweep 5s infinite;
           z-index: 2;
-          border-radius: 20px;
+          border-radius: 24px;
           pointer-events: none;
         }
-        @keyframes shine {
+
+        @keyframes sheenSweep {
           0% { left: -100%; }
-          18% { left: 200%; }
+          20% { left: 200%; }
           100% { left: 200%; }
         }
 
-        /* Sparkle particles — 4-pointed twinkles painted with radial-gradients.
-           Lightweight: only opacity is animated, no layout/paint cost. */
-        .spin-banner::after {
+        /* Dynamic sparkles */
+        .wheel-magic-card::after {
           content: '';
           position: absolute;
           inset: 0;
-          border-radius: 20px;
+          border-radius: 24px;
           pointer-events: none;
           z-index: 2;
           background-image:
-            radial-gradient(circle at 12% 30%, rgba(255, 255, 255, 0.95) 0px, rgba(255, 255, 255, 0) 1.8px),
-            radial-gradient(circle at 28% 70%, rgba(255, 255, 255, 0.9) 0px, rgba(255, 255, 255, 0) 2.2px),
-            radial-gradient(circle at 46% 18%, rgba(255, 255, 255, 0.95) 0px, rgba(255, 255, 255, 0) 1.6px),
-            radial-gradient(circle at 62% 78%, rgba(255, 255, 255, 0.9) 0px, rgba(255, 255, 255, 0) 2px),
-            radial-gradient(circle at 78% 35%, rgba(255, 255, 255, 0.95) 0px, rgba(255, 255, 255, 0) 1.8px),
-            radial-gradient(circle at 88% 62%, rgba(255, 255, 255, 0.85) 0px, rgba(255, 255, 255, 0) 1.5px);
+            radial-gradient(circle at 15% 25%, rgba(255, 255, 255, 0.6) 0px, transparent 1.5px),
+            radial-gradient(circle at 35% 75%, rgba(255, 255, 255, 0.5) 0px, transparent 2px),
+            radial-gradient(circle at 55% 15%, rgba(255, 255, 255, 0.6) 0px, transparent 1.5px),
+            radial-gradient(circle at 75% 85%, rgba(255, 255, 255, 0.5) 0px, transparent 2px);
           background-size: 100% 100%;
           background-repeat: no-repeat;
-          animation: sparkles 3.5s ease-in-out infinite;
+          animation: sparklesGlow 4s ease-in-out infinite;
           mix-blend-mode: screen;
         }
-        @keyframes sparkles {
-          0%, 100% { opacity: 0.35; }
-          50% { opacity: 1; }
+
+        @keyframes sparklesGlow {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 0.8; }
         }
 
-        .spin-banner:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 18px 44px rgba(217, 119, 6, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-        }
-        .spin-banner.is-wednesday {
-          background:
-            radial-gradient(circle at 18% 50%, rgba(255, 255, 255, 0.26), transparent 18%),
-            linear-gradient(135deg, #3b2600 0%, #8a5200 42%, #f59e0b 100%);
-          border-color: rgba(253, 230, 138, 0.65);
-          box-shadow: 0 18px 42px rgba(217, 119, 6, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-        }
-        .spin-banner.is-wednesday:hover {
-          box-shadow: 0 22px 55px rgba(217, 119, 6, 0.48);
-        }
-        .spin-banner.is-wednesday .spin-banner-badge {
-          color: #3b2600;
-          background: linear-gradient(90deg, #fff7ed, #fde68a);
-          border-color: rgba(255, 255, 255, 0.55);
-          text-shadow: none;
-        }
-        .spin-banner.is-wednesday .spin-banner-btn {
-          background: #111827;
-          color: #fde68a;
-          box-shadow: 0 10px 24px rgba(17, 24, 39, 0.28);
+        .wheel-magic-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 20px 45px rgba(139, 92, 246, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2);
         }
 
-        /* Inner Content Wrapper */
-        .spin-banner-inner {
+        /* Saturday Special Theme overrides */
+        .wheel-magic-card.event-active {
+          background: linear-gradient(135deg, #100a00 0%, #291800 50%, #3d2700 100%);
+          border-color: rgba(245, 158, 11, 0.4);
+          animation: pulseSaturdayGlow 6s ease-in-out infinite;
+        }
+
+        @keyframes pulseSaturdayGlow {
+          0%, 100% { box-shadow: 0 12px 30px rgba(245, 158, 11, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
+          50% { box-shadow: 0 12px 45px rgba(251, 191, 36, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15); }
+        }
+
+        .wheel-magic-card.event-active:hover {
+          box-shadow: 0 20px 50px rgba(245, 158, 11, 0.45);
+        }
+
+        /* Inside Content layout with solid custom background color */
+        .magic-card-body {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 22px 30px;
-          padding-left: 180px; /* Leave space for absolute image on left */
+          padding: 24px 32px;
+          padding-left: 190px;
           position: relative;
           z-index: 3;
           direction: rtl;
+          background: #110d26; /* Premium solid deep indigo-violet background color */
+          border-radius: 24px;
+          border: 1px solid rgba(139, 92, 246, 0.2);
         }
 
-        /* Content Info Block */
-        .spin-banner-content {
+        .magic-card-body.is-saturday {
+          background: #2a1801; /* Premium solid deep gold-amber event background color */
+          border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .magic-card-details {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 10px;
           z-index: 2;
         }
 
-        /* Golden Pill Badge */
-        .spin-banner-badge {
-          font-size: 11.5px;
-          font-weight: 800;
-          color: #fbbf24;
-          background: rgba(251, 191, 36, 0.08);
-          border: 1px solid rgba(251, 191, 36, 0.2);
-          padding: 4px 12px;
-          border-radius: 100px;
+        /* Micro pill-badge */
+        .magic-pill-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          font-weight: 850;
+          color: #c084fc;
+          background: rgba(168, 85, 247, 0.12);
+          border: 1px solid rgba(168, 85, 247, 0.3);
+          padding: 5px 12px;
+          border-radius: 50px;
           width: fit-content;
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-          box-shadow: 0 2px 8px rgba(251, 191, 36, 0.1);
+          box-shadow: 0 2px 8px rgba(168, 85, 247, 0.08);
         }
 
-        /* Text Block Styling */
-        .spin-banner-text {
+        .badge-pulse-dot {
+          width: 6px;
+          height: 6px;
+          background-color: #a855f7;
+          border-radius: 50%;
+          animation: badgePulse 1.8s infinite;
+        }
+
+        @keyframes badgePulse {
+          0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7); }
+          70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(168, 85, 247, 0); }
+          100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+        }
+
+        .magic-card-body.is-saturday .magic-pill-badge {
+          color: #fbbf24;
+          background: rgba(251, 191, 36, 0.12);
+          border-color: rgba(251, 191, 36, 0.35);
+        }
+
+        .magic-card-body.is-saturday .badge-pulse-dot {
+          background-color: #fbbf24;
+          animation: badgePulseGold 1.8s infinite;
+        }
+
+        @keyframes badgePulseGold {
+          0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+          70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(251, 191, 36, 0); }
+          100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+        }
+
+        /* Typography groups */
+        .magic-message-group {
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 4px;
         }
-        .spin-banner-text strong {
-          font-size: 19px;
+
+        .magic-message-group strong {
+          font-size: 20px;
           font-weight: 950;
-          color: #ffffff;
-          text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+          background: linear-gradient(90deg, #ffffff, #c084fc);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
-        .spin-banner-text span {
+
+        .magic-message-group span {
           font-size: 13.5px;
-          color: #cbd5e1;
+          color: #94a3b8;
           font-weight: 500;
           opacity: 0.9;
         }
 
-        /* CTA Button Container and Design */
-        .spin-banner-action {
+        .magic-card-body.is-saturday .magic-message-group strong {
+          background: linear-gradient(90deg, #ffffff, #fcd34d);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .magic-card-body.is-saturday .magic-message-group span {
+          color: #e2e8f0;
+        }
+
+        /* High-tech Action CTA */
+        .magic-cta-wrapper {
           z-index: 2;
         }
-        .spin-banner-btn {
-          background: #ffffff;
-          color: #171242;
+
+        .magic-action-btn {
+          background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+          color: #ffffff;
           border: none;
-          padding: 11px 26px;
-          border-radius: 12px;
+          padding: 12px 28px;
+          border-radius: 14px;
           font-weight: 900;
-          font-size: 14.5px;
-          box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25);
-          cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          font-size: 14px;
+          box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           display: inline-block;
           text-align: center;
-        }
-        .spin-banner:hover .spin-banner-btn {
-          background: #f8fafc;
-          transform: scale(1.06);
-          box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
+          position: relative;
+          overflow: hidden;
         }
 
-        /* Light Theme Adaptations */
-        :global(:root[data-theme="light"]) .spin-banner {
-          background: linear-gradient(135deg, #f5f3ff 0%, #e0e7ff 100%);
-          box-shadow: 0 10px 25px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-          border: 1px solid rgba(99, 102, 241, 0.12);
-        }
-        :global(:root[data-theme="light"]) .spin-banner-badge {
-          color: #6366f1;
-          background: rgba(99, 102, 241, 0.08);
-          border: 1px solid rgba(99, 102, 241, 0.2);
-          text-shadow: none;
-          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.05);
-        }
-        :global(:root[data-theme="light"]) .spin-banner-text strong {
-          color: #1e1b4b;
-          text-shadow: none;
-        }
-        :global(:root[data-theme="light"]) .spin-banner-text span {
-          color: #4f46e5;
-          opacity: 0.95;
-        }
-        :global(:root[data-theme="light"]) .spin-banner-btn {
-          background: #6366f1;
-          color: #ffffff;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-        }
-        :global(:root[data-theme="light"]) .spin-banner:hover {
-          box-shadow: 0 16px 35px rgba(99, 102, 241, 0.25);
-        }
-        :global(:root[data-theme="light"]) .spin-banner:hover .spin-banner-btn {
-          background: #4f46e5;
-          box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
-        }
-        :global(:root[data-theme="light"]) .spin-banner.is-wednesday {
-          background:
-            radial-gradient(circle at 18% 50%, rgba(255, 255, 255, 0.55), transparent 18%),
-            linear-gradient(135deg, #fff7ed 0%, #fde68a 48%, #f59e0b 100%);
-          border-color: rgba(217, 119, 6, 0.35);
-          box-shadow: 0 16px 38px rgba(217, 119, 6, 0.18);
-        }
-        :global(:root[data-theme="light"]) .spin-banner.is-wednesday .spin-banner-badge {
-          color: #92400e;
-          background: rgba(255, 255, 255, 0.55);
-          border-color: rgba(217, 119, 6, 0.22);
-        }
-        :global(:root[data-theme="light"]) .spin-banner.is-wednesday .spin-banner-text strong {
-          color: #431407;
-        }
-        :global(:root[data-theme="light"]) .spin-banner.is-wednesday .spin-banner-text span {
-          color: #78350f;
-        }
-        :global(:root[data-theme="light"]) .spin-banner.is-wednesday .spin-banner-btn {
-          background: #111827;
-          color: #fde68a;
-          box-shadow: 0 8px 20px rgba(17, 24, 39, 0.2);
-        }
-        :global(:root[data-theme="light"]) .spin-banner-image-container::before {
-          background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(236, 72, 153, 0.02) 50%, transparent 70%);
+        .magic-action-btn::before {
+          content: '';
+          position: absolute;
+          top: 0; left: -100%; width: 100%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+          transition: 0.5s ease;
         }
 
-        /* 3D Wheel Image Asset & Positioning */
-        .spin-banner-image-container {
+        .wheel-magic-card:hover .magic-action-btn::before {
+          left: 100%;
+        }
+
+        .wheel-magic-card:hover .magic-action-btn {
+          transform: translateY(-2px) scale(1.04);
+          box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+        }
+
+        .magic-card-body.is-saturday .magic-action-btn {
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+          color: #1c1100;
+        }
+
+        .wheel-magic-card.event-active:hover .magic-action-btn {
+          box-shadow: 0 8px 24px rgba(245, 158, 11, 0.5);
+        }
+
+        /* Futuristic holographic portal container */
+        .magic-portal-container {
           position: absolute;
           left: 15px;
           top: -25px;
@@ -338,100 +371,300 @@ export default function HotProductsSection() {
           pointer-events: none;
           z-index: 4;
         }
-        .spin-banner-image-container::before {
+
+        .magic-portal-ring {
+          position: absolute;
+          width: 135px;
+          height: 135px;
+          border: 2px dashed rgba(168, 85, 247, 0.4);
+          border-radius: 50%;
+          animation: portalRotate 10s linear infinite;
+          z-index: 1;
+        }
+
+        .magic-portal-ring::before {
           content: '';
           position: absolute;
-          width: 130px;
-          height: 130px;
-          background: radial-gradient(circle, rgba(168, 85, 247, 0.45) 0%, rgba(236, 72, 153, 0.05) 50%, transparent 70%);
-          z-index: -1;
-          animation: pulse-glow 3s ease-in-out infinite alternate;
-          pointer-events: none;
+          inset: -6px;
+          border: 1px solid rgba(236, 72, 153, 0.2);
+          border-radius: 50%;
+          animation: portalRotateInverse 15s linear infinite;
         }
-        .spin-banner-wheel-img {
+
+        .magic-portal-container::after {
+          content: '';
+          position: absolute;
+          width: 110px;
+          height: 110px;
+          background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%);
+          z-index: -1;
+          animation: pulsePortalGlow 3s ease-in-out infinite alternate;
+        }
+
+        .magic-card-body.is-saturday .magic-portal-ring {
+          border-color: rgba(251, 191, 36, 0.45);
+        }
+
+        .magic-card-body.is-saturday .magic-portal-ring::before {
+          border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .magic-card-body.is-saturday .magic-portal-container::after {
+          background: radial-gradient(circle, rgba(251, 191, 36, 0.35) 0%, transparent 70%);
+        }
+
+        @keyframes portalRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes portalRotateInverse {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
+        }
+
+        @keyframes pulsePortalGlow {
+          0% { transform: scale(0.9); opacity: 0.4; }
+          100% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        /* Floating 3D lucky chest asset */
+        .portal-chest-asset {
           width: 100%;
           height: 100%;
           object-fit: contain;
-          animation: float-chest 4s ease-in-out infinite;
-          filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.55));
+          z-index: 2;
+          animation: floatChest 4s ease-in-out infinite;
+          filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
           transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .spin-banner:hover .spin-banner-wheel-img {
-          transform: scale(1.1) translateY(-6px) rotate(-2deg);
-          filter: drop-shadow(0 20px 40px rgba(168, 85, 247, 0.25)) drop-shadow(0 15px 30px rgba(0, 0, 0, 0.65));
-        }
 
-        @keyframes float-chest {
-          0% { transform: translateY(0px) rotate(0deg); }
+        @keyframes floatChest {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-7px) rotate(1.5deg); }
-          100% { transform: translateY(0px) rotate(0deg); }
         }
 
-        @keyframes pulse-glow {
-          0% { transform: scale(0.9); opacity: 0.5; }
-          100% { transform: scale(1.15); opacity: 0.95; }
+        .wheel-magic-card:hover .portal-chest-asset {
+          transform: scale(1.1) translateY(-5px) rotate(-2deg);
+          filter: drop-shadow(0 20px 35px rgba(168, 85, 247, 0.3)) drop-shadow(0 15px 25px rgba(0, 0, 0, 0.6));
+        }
+
+        .wheel-magic-card.event-active:hover .portal-chest-asset {
+          filter: drop-shadow(0 20px 35px rgba(251, 191, 36, 0.3)) drop-shadow(0 15px 25px rgba(0, 0, 0, 0.6));
+        }
+
+        /* Light Theme Adaptation */
+        :global(:root[data-theme="light"]) .wheel-magic-card {
+          background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+          border-color: rgba(99, 102, 241, 0.18);
+          box-shadow: 0 10px 25px rgba(99, 102, 241, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+          animation: pulseLightGlow 6s ease-in-out infinite;
+        }
+
+        @keyframes pulseLightGlow {
+          0%, 100% { box-shadow: 0 10px 25px rgba(99, 102, 241, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.8); }
+          50% { box-shadow: 0 10px 30px rgba(99, 102, 241, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.95); }
+        }
+
+        :global(:root[data-theme="light"]) .magic-card-body {
+          background: #f8fafc; /* Solid light slate background */
+          border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        :global(:root[data-theme="light"]) .magic-pill-badge {
+          color: #4f46e5;
+          background: rgba(99, 102, 241, 0.08);
+          border-color: rgba(99, 102, 241, 0.25);
+          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.03);
+        }
+
+        :global(:root[data-theme="light"]) .badge-pulse-dot {
+          background-color: #4f46e5;
+          animation: badgePulseLight 1.8s infinite;
+        }
+
+        @keyframes badgePulseLight {
+          0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.6); }
+          70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
+          100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+
+        :global(:root[data-theme="light"]) .magic-message-group strong {
+          color: #1e1b4b;
+          background: none;
+          -webkit-text-fill-color: initial;
+        }
+
+        :global(:root[data-theme="light"]) .magic-message-group span {
+          color: #4b5563;
+        }
+
+        :global(:root[data-theme="light"]) .magic-action-btn {
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+          box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+          color: #ffffff;
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card:hover {
+          box-shadow: 0 16px 35px rgba(99, 102, 241, 0.2);
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card:hover .magic-action-btn {
+          box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+        }
+
+        :global(:root[data-theme="light"]) .magic-portal-ring {
+          border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        :global(:root[data-theme="light"]) .magic-portal-ring::before {
+          border-color: rgba(99, 102, 241, 0.15);
+        }
+
+        :global(:root[data-theme="light"]) .magic-portal-container::after {
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
+        }
+
+        /* Light Theme Saturday overrides */
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active {
+          background: linear-gradient(135deg, #fffbeb 0%, #fde68a 100%);
+          border-color: rgba(245, 158, 11, 0.3);
+          animation: pulseLightSaturdayGlow 6s ease-in-out infinite;
+        }
+
+        @keyframes pulseLightSaturdayGlow {
+          0%, 100% { box-shadow: 0 10px 25px rgba(245, 158, 11, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.8); }
+          50% { box-shadow: 0 10px 30px rgba(245, 158, 11, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.95); }
+        }
+
+        :global(:root[data-theme="light"]) .magic-card-body.is-saturday {
+          background: #fffbeb; /* Solid light amber background */
+          border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active .magic-pill-badge {
+          color: #b45309;
+          background: rgba(245, 158, 11, 0.08);
+          border-color: rgba(245, 158, 11, 0.25);
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active .badge-pulse-dot {
+          background-color: #d97706;
+          animation: badgePulseSaturdayLight 1.8s infinite;
+        }
+
+        @keyframes badgePulseWednesdayLight {
+          0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6); }
+          70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+          100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active .magic-message-group strong {
+          color: #78350f;
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active .magic-message-group span {
+          color: #92400e;
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active .magic-action-btn {
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+          color: #ffffff;
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active:hover {
+          box-shadow: 0 16px 35px rgba(245, 158, 11, 0.25);
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active:hover .magic-action-btn {
+          box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35);
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active .magic-portal-ring {
+          border-color: rgba(245, 158, 11, 0.35);
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active .magic-portal-ring::before {
+          border-color: rgba(245, 158, 11, 0.15);
+        }
+
+        :global(:root[data-theme="light"]) .wheel-magic-card.event-active .magic-portal-container::after {
+          background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 70%);
         }
 
         /* Responsive Breakpoints */
         @media (max-width: 900px) {
-          .spin-banner-inner {
-            padding-left: 150px;
+          .magic-card-body {
+            padding-left: 160px;
           }
-          .spin-banner-image-container {
+          .magic-portal-container {
             width: 130px;
             height: 130px;
             top: -15px;
             bottom: -15px;
           }
+          .magic-portal-ring {
+            width: 115px;
+            height: 115px;
+          }
         }
 
         @media (max-width: 768px) {
-          .spin-banner {
-            border-radius: 16px;
+          .wheel-magic-card {
+            border-radius: 20px;
           }
-          .spin-banner-inner {
+          .magic-card-body {
             flex-direction: column;
             align-items: flex-start;
             gap: 14px;
-            padding: 16px 20px;
-            padding-left: 120px; /* Leave room for mobile sized image on left */
+            padding: 20px 24px;
+            padding-left: 125px;
           }
-          .spin-banner-badge {
-            font-size: 10.5px;
-            padding: 3px 10px;
+          .magic-pill-badge {
+            font-size: 10px;
+            padding: 4px 10px;
           }
-          .spin-banner-text strong {
-            font-size: 15.5px;
+          .magic-message-group strong {
+            font-size: 16.5px;
           }
-          .spin-banner-text span {
-            font-size: 11.5px;
+          .magic-message-group span {
+            font-size: 12px;
           }
-          .spin-banner-btn {
-            padding: 8px 18px;
-            font-size: 12.5px;
-            border-radius: 10px;
+          .magic-action-btn {
+            padding: 10px 22px;
+            font-size: 13px;
+            border-radius: 12px;
           }
-          .spin-banner-image-container {
-            width: 100px;
-            height: 100px;
+          .magic-portal-container {
+            width: 105px;
+            height: 105px;
             top: 50%;
             bottom: auto;
             transform: translateY(-50%);
             left: 10px;
           }
-          .spin-banner:hover .spin-banner-wheel-img {
-            transform: scale(1.05) rotate(15deg);
+          .magic-portal-ring {
+            width: 90px;
+            height: 90px;
+          }
+          .wheel-magic-card:hover .portal-chest-asset {
+            transform: scale(1.06) rotate(8deg);
           }
         }
 
         @media (max-width: 480px) {
-          .spin-banner-inner {
+          .magic-card-body {
             padding-left: 105px;
           }
-          .spin-banner-image-container {
+          .magic-portal-container {
             width: 85px;
             height: 85px;
             left: 5px;
+          }
+          .magic-portal-ring {
+            width: 72px;
+            height: 72px;
           }
         }
       `}</style>

@@ -7,14 +7,14 @@ import BlogArchiveClient from './BlogArchiveClient';
 import { fetchApiJson } from '../../lib/serverFetch.mjs';
 import { ARTICLES } from '../../lib/articlesMockData.mjs';
 
-const BASE_URL = 'https://nubixshop.ir';
+const BASE_URL = 'https://jinxfamily.ir';
 
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata() {
-  const title = 'وبلاگ نوبیکس شاپ؛ مقالات و آموزش‌های گیمینگ';
+  const title = 'وبلاگ جینکس فمیلی؛ مقالات و آموزش‌های گیمینگ';
   const description =
-    'آخرین اخبار، آموزش‌ها و راهنمای خرید وی‌باکس، کروپک فورتنایت، اشتراک ChatGPT و دنیای گیم را در وبلاگ نوبیکس شاپ بخوانید.';
+    'آخرین اخبار، آموزش‌ها و راهنمای خرید وی‌باکس، کروپک فورتنایت، اشتراک ChatGPT و دنیای گیم را در وبلاگ جینکس فمیلی بخوانید.';
   return {
     title,
     description,
@@ -24,16 +24,16 @@ export async function generateMetadata() {
     },
     openGraph: {
       title,
-      description: 'مقالات و آموزش‌های دنیای گیم و محصولات دیجیتال در وبلاگ نوبیکس شاپ.',
+      description: 'مقالات و آموزش‌های دنیای گیم و محصولات دیجیتال در وبلاگ جینکس فمیلی.',
       url: `${BASE_URL}/blog`,
       type: 'website',
       locale: 'fa_IR',
-      images: [{ url: `${BASE_URL}/og-image.webp`, alt: 'وبلاگ نوبیکس شاپ' }],
+      images: [{ url: `${BASE_URL}/og-image.webp`, alt: 'وبلاگ جینکس فمیلی' }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
-      description: 'مقالات و آموزش‌های دنیای گیم و محصولات دیجیتال در وبلاگ نوبیکس شاپ.',
+      description: 'مقالات و آموزش‌های دنیای گیم و محصولات دیجیتال در وبلاگ جینکس فمیلی.',
       images: [`${BASE_URL}/og-image.webp`],
     },
   };
@@ -54,7 +54,7 @@ function mapPost(p) {
     slug: p.slug,
     cat: 'guides',
     tag: p.category || 'راهنما',
-    author: p.author && p.author !== 'admin' ? p.author : 'تیم نوبیکس شاپ',
+    author: p.author && p.author !== 'admin' ? p.author : 'تیم جینکس فمیلی',
     date: toFaDate(p.created_at),
     createdAt: p.created_at,
     title: p.title,
@@ -92,7 +92,7 @@ export default async function BlogPage() {
   const blogJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'وبلاگ نوبیکس شاپ',
+    name: 'وبلاگ جینکس فمیلی',
     url: `${BASE_URL}/blog`,
     inLanguage: 'fa-IR',
     publisher: { '@id': `${BASE_URL}/#organization` },
@@ -101,7 +101,7 @@ export default async function BlogPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: BASE_URL },
+      { '@type': 'ListItem', position: 1, name: 'جینکس فمیلی', item: BASE_URL },
       { '@type': 'ListItem', position: 2, name: 'وبلاگ', item: `${BASE_URL}/blog` },
     ],
   };

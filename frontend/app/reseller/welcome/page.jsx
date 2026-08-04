@@ -207,14 +207,14 @@ export default function ResellerWelcomePage() {
         <div className="wl-stage">
           <div className="wl-card">
             <div className="wl-logo-row">
-              <Image src="/web_logo.webp" alt="NubixShop" width={52} height={52} className="wl-logo" priority />
+              <Image src="/logo.webp" alt="JinxFamily" width={52} height={52} className="wl-logo" priority />
               <div className="wl-brand-text">
-                <span className="wl-brand-name">NubixShop</span>
-                <span className="wl-brand-tag">پلتفرم همکاری نوبیکس</span>
+                <span className="wl-brand-name">JinxFamily</span>
+                <span className="wl-brand-tag">پلتفرم همکاری جینکس فمیلی</span>
               </div>
             </div>
 
-            <h1 className="wl-title">به پلتفرم همکاری نوبیکس خوش آمدید 🎉</h1>
+            <h1 className="wl-title">به پلتفرم همکاری جینکس فمیلی خوش آمدید 🎉</h1>
             <p className="wl-subtitle">
               از اینجا به بعد، سفارش‌های مشتریانتان سریع، شفاف و کاملاً به نام خودتان انجام می‌شود.
               در ادامه مزایا، قوانین مهم و یک تور کوتاه از پنل را با هم مرور می‌کنیم.
@@ -238,8 +238,8 @@ export default function ResellerWelcomePage() {
               <div className="wl-benefit full">
                 <div className="wl-benefit-icon">🏷️</div>
                 <div>
-                  <h3 className="wl-benefit-title">کاملاً وایت‌لیبل — بدون برندینگ «نوبیکس»</h3>
-                  <p className="wl-benefit-text">هیچ‌گونه اسم یا برندینگی از «نوبیکس» برای مشتری شما ارسال نمی‌شود. سفارش کاملاً به نام و برند خودتان است.</p>
+                  <h3 className="wl-benefit-title">کاملاً وایت‌لیبل — بدون برندینگ «جینکس فمیلی»</h3>
+                  <p className="wl-benefit-text">هیچ‌گونه اسم یا برندینگی از «جینکس فمیلی» برای مشتری شما ارسال نمی‌شود. سفارش کاملاً به نام و برند خودتان است.</p>
                 </div>
               </div>
               <div className="wl-benefit">
@@ -263,7 +263,7 @@ export default function ResellerWelcomePage() {
                   <p className="wl-benefit-text">می‌توانید تعداد کروپک را هم‌اکنون از کیف پول <b>رزرو</b> کنید و اطلاعات اکانت مشتری‌ها را <b>بعداً</b> تکمیل کنید.
                   قیمت بر اساس نرخ لیر لحظه‌ای محاسبه و در زمان رزرو <b>قفل</b> می‌شود. اگر نوسان لیر تا ۵٪ باشد مابه‌التفاوتی ندارید؛
                   بیش از آن، مابه‌التفاوت قیمت هنگام تکمیل از کیف پول محاسبه می‌شود. هر واحد هم می‌تواند با ایمیل/رمز اکانت <b>موجود</b> مشتری یا
-                  با گزینه‌ی <b>«ساخت توسط نوبیکس»</b> ثبت شود.</p>
+                  با گزینه‌ی <b>«ساخت توسط جینکس فمیلی»</b> ثبت شود.</p>
                 </div>
               </div>
             </div>
@@ -271,9 +271,9 @@ export default function ResellerWelcomePage() {
             <div className="wl-support">
               <h3 className="wl-support-title">💙 از شما دعوت می‌کنیم</h3>
               <p className="wl-support-text">
-                چون سفارش‌ها کاملاً به نام خودتان و بدون هیچ اثری از نوبیکس انجام می‌شود، تنها چیزی که از شما
+                چون سفارش‌ها کاملاً به نام خودتان و بدون هیچ اثری از جینکس فمیلی انجام می‌شود، تنها چیزی که از شما
                 می‌خواهیم حفظ کیفیت تجربه‌ی مشتری‌تان است. اگر از همکاری راضی بودید، خوشحال می‌شویم همکاران
-                جدید را با <b>کد معرف</b> خود به نوبیکس دعوت کنید — برای هر همکار که اولین خرید موفق را انجام دهد،
+                جدید را با <b>کد معرف</b> خود به جینکس فمیلی دعوت کنید — برای هر همکار که اولین خرید موفق را انجام دهد،
                 پاداش نقدی به کیف پول شما اضافه می‌شود. موفق باشید 🌿
               </p>
             </div>
@@ -328,7 +328,7 @@ export default function ResellerWelcomePage() {
               </div>
               <div className="wl-rule critical">
                 <div className="wl-rule-num">۶</div>
-                <p className="wl-rule-text">در سفارش پلکانی (مثلاً ۱۰ عدد)، به‌ازای <b>هر واحد</b> یک ردیف ایمیل/رمز اکانت الزامی است. هر واحد یا با اکانت <b>موجود</b> مشتری ثبت می‌شود یا با گزینه‌ی <b>«ساخت توسط نوبیکس»</b> (فقط ایمیل/رمز اپیک).</p>
+                <p className="wl-rule-text">در سفارش پلکانی (مثلاً ۱۰ عدد)، به‌ازای <b>هر واحد</b> یک ردیف ایمیل/رمز اکانت الزامی است. هر واحد یا با اکانت <b>موجود</b> مشتری ثبت می‌شود یا با گزینه‌ی <b>«ساخت توسط جینکس فمیلی»</b> (فقط ایمیل/رمز اپیک).</p>
               </div>
               <div className="wl-rule critical">
                 <div className="wl-rule-num">۷</div>
@@ -370,7 +370,7 @@ export default function ResellerWelcomePage() {
       <div className="wl-tour-bg">
         <header className="reseller-topbar">
           <div className="brand">
-            <span>NubixShop</span>
+            <span>JinxFamily</span>
             <span className="badge-vip">همکاران</span>
           </div>
           <div className="user-info">

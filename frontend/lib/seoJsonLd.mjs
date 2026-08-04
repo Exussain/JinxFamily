@@ -1,6 +1,8 @@
-const BASE_URL = "https://nubixshop.ir";
+import { SITE_ORIGIN } from "./site.mjs";
 
-export async function fetchReviewStats(slug) {
+const BASE_URL = SITE_ORIGIN;
+
+export async function fetchReviewStats(slug, init = { cache: "no-store" }) {
   const bases = [
     (process.env.INTERNAL_API_BASE_URL || "").trim(),
     "http://127.0.0.1:8001",
@@ -11,7 +13,7 @@ export async function fetchReviewStats(slug) {
     try {
       const res = await fetch(
         `${base.replace(/\/+$/, "")}/api/products/${encodeURIComponent(slug)}/comments`,
-        { cache: "no-store" }
+        init
       );
       if (!res.ok) continue;
       const data = await res.json();
@@ -63,6 +65,15 @@ export function buildProductJsonLd({ path, name, description, image, priceToman,
   const priceValidUntil = new Date(Date.now() + 30 * 24 * 3600 * 1000)
     .toISOString()
     .slice(0, 10);
+  const validFrom = new Date(Date.now() - 30 * 24 * 3600 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const availability = path.includes("/gta6")
+    ? "https://schema.org/PreOrder"
+    : (price === 0 && (!variantPrices.length || variantPrices.every((p) => p === 0)))
+      ? "https://schema.org/OutOfStock"
+      : "https://schema.org/InStock";
 
   const offers =
     variantPrices.length > 1 && highPrice > price
@@ -72,7 +83,9 @@ export function buildProductJsonLd({ path, name, description, image, priceToman,
           highPrice: String(highPrice),
           offerCount: variantPrices.length,
           priceCurrency: "IRR",
-          availability: "https://schema.org/InStock",
+          priceValidUntil,
+          validFrom,
+          availability,
           url: `${BASE_URL}${path}`,
           hasMerchantReturnPolicy: RETURN_POLICY,
           shippingDetails: SHIPPING_DETAILS,
@@ -83,7 +96,8 @@ export function buildProductJsonLd({ path, name, description, image, priceToman,
             price: String(price),
             priceCurrency: "IRR",
             priceValidUntil,
-            availability: "https://schema.org/InStock",
+            validFrom,
+            availability,
             url: `${BASE_URL}${path}`,
             hasMerchantReturnPolicy: RETURN_POLICY,
             shippingDetails: SHIPPING_DETAILS,
@@ -95,9 +109,9 @@ export function buildProductJsonLd({ path, name, description, image, priceToman,
     "@type": "Product",
     name,
     description,
-    image: absolutize(image) || `${BASE_URL}/web_logo.webp`,
+    image: absolutize(image) || `${BASE_URL}/logo.webp`,
     url: `${BASE_URL}${path}`,
-    brand: { "@type": "Brand", name: brand || "نوبیکس شاپ" },
+    brand: { "@type": "Brand", name: brand || "جینکس فمیلی" },
     ...(offers && { offers }),
     ...(stats && {
       aggregateRating: {

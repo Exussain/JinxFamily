@@ -1,30 +1,31 @@
 import Gta6Client from "./Gta6Client";
+import '../globals.css';
 import { fetchReviewStats, buildProductJsonLd, buildBreadcrumbJsonLd, buildFaqJsonLd } from "../../lib/seoJsonLd.mjs";
 import { fetchApiJson } from "../../lib/serverFetch.mjs";
 
 export const dynamic = "force-dynamic";
 
-const OG_IMAGE = "https://nubixshop.ir/products/gta6/ps5-ultimate.webp";
+const OG_IMAGE = "https://jinxfamily.ir/products/gta6/ps5-ultimate.webp";
 const OG_DESCRIPTION =
   "پیش‌خرید Grand Theft Auto VI برای PS5 و Xbox — نسخه استاندارد و آلتیمیت با ظرفیت‌های مختلف و فعال‌سازی قانونی.";
 
 export const metadata = {
   title: "پیش‌خرید GTA VI (Grand Theft Auto VI) — PS5 و Xbox",
   description:
-    "پیش‌خرید رسمی Grand Theft Auto VI برای PS5 و Xbox Series X|S — نسخه استاندارد و آلتیمیت، ظرفیت‌های ۱، ۲، ۳ و کامل، فعال‌سازی قانونی و راهنمای کامل. نوبیکس شاپ.",
+    "پیش‌خرید رسمی Grand Theft Auto VI برای PS5 و Xbox Series X|S — نسخه استاندارد و آلتیمیت، ظرفیت‌های ۱، ۲، ۳ و کامل، فعال‌سازی قانونی و راهنمای کامل. جینکس فمیلی.",
   alternates: { canonical: "/gta6" },
   openGraph: {
     type: "website",
-    siteName: "نوبیکس شاپ",
+    siteName: "جینکس فمیلی",
     locale: "fa_IR",
-    title: "پیش‌خرید GTA VI | نوبیکس شاپ",
+    title: "پیش‌خرید GTA VI | جینکس فمیلی",
     description: OG_DESCRIPTION,
-    url: "https://nubixshop.ir/gta6",
+    url: "https://jinxfamily.ir/gta6",
     images: [{ url: OG_IMAGE, width: 512, height: 512, alt: "GTA VI Pre Order" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "پیش‌خرید GTA VI | نوبیکس شاپ",
+    title: "پیش‌خرید GTA VI | جینکس فمیلی",
     description: OG_DESCRIPTION,
     images: [OG_IMAGE],
   },
@@ -47,7 +48,7 @@ export default async function Gta6Page() {
     variants: product?.variants,
   });
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: "نوبیکس شاپ", path: "/" },
+    { name: "جینکس فمیلی", path: "/" },
     { name: "پیش‌خرید GTA VI", path: "/gta6" },
   ]);
   const faqLd = buildFaqJsonLd(product?.faq);

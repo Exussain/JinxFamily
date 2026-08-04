@@ -61,15 +61,15 @@ export default function ResellerLoginPage() {
     <div className="reseller-login">
       <form className="reseller-login-card" onSubmit={handleSubmit}>
         <Image
-          src="/web_logo.webp"
-          alt="NubixShop"
+          src="/logo.webp"
+          alt="JinxFamily"
           width={56}
           height={56}
           className="logo"
           priority
         />
-        <h1>پنل همکاران NubixShop</h1>
-        <p className="sub">با نوبیکس شاپ همکار شوید و از فروش محصولات کسب درآمد کنید</p>
+        <h1>پنل همکاران JinxFamily</h1>
+        <p className="sub">با جینکس فمیلی همکار شوید و از فروش محصولات کسب درآمد کنید</p>
 
         {!showTokenForm ? (
           <>
@@ -123,7 +123,7 @@ export default function ResellerLoginPage() {
             {error && <div className="reseller-error">{error}</div>}
 
             <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>
-              توکن خود را هنگام ثبت‌نام یا از ادمین NubixShop دریافت کرده‌اید.
+              توکن خود را هنگام ثبت‌نام یا از ادمین JinxFamily دریافت کرده‌اید.
             </p>
           </>
         )}

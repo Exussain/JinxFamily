@@ -40,20 +40,6 @@ export default function Footer() {
 
   return (
     <footer className="site-footer">
-      {/* Scroll to Top Wave Header */}
-      <div className="footer-wave-header">
-        <button 
-          onClick={scrollToTop} 
-          className="footer-scroll-top-btn" 
-          aria-label="بازگشت به بالا"
-          title="بازگشت به بالا"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="18 15 12 9 6 15"></polyline>
-          </svg>
-        </button>
-      </div>
-
       <div className="footer-content-wrapper">
         <div className="container">
           <div className="footer-grid-new">
@@ -62,27 +48,27 @@ export default function Footer() {
               <div className="footer-logo-new">
                 <Image
                   src="/web_logo.webp"
-                  alt="نوبیکس"
+                  alt="جینکس فمیلی"
                   width={64}
                   height={64}
                   className="logo-img-new"
                   quality={95}
                   unoptimized
                 />
-                <span className="footer-brand-title">فروشگاه نوبیکس</span>
+                <span className="footer-brand-title">فروشگاه جینکس فمیلی</span>
               </div>
               <p className="footer-desc-new">
-                نوبیکس، مرجع تخصصی فعال‌سازی محصولات دیجیتال؛ از گیم‌پس، اشتراک‌های هوش مصنوعی تا گیفت‌کارت و وی‌باکس فورتنایت، با بیش از ۴ سال سابقه. ما متعهد به ارائه بهترین خدمات با قیمت مناسب و تحویل سریع هستیم.
+                جینکس فمیلی، مرجع تخصصی فعال‌سازی محصولات دیجیتال؛ از گیم‌پس، اشتراک‌های هوش مصنوعی تا گیفت‌کارت و وی‌باکس فورتنایت، با بیش از ۴ سال سابقه. ما متعهد به ارائه بهترین خدمات با قیمت مناسب و تحویل سریع هستیم.
               </p>
               
               {/* Contact Info Row */}
               <div className="footer-contacts-row">
-                <a href="mailto:support@nubixshop.ir" className="footer-contact-item">
+                <a href="mailto:support@jinxfamily.ir" className="footer-contact-item">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                     <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
-                  <span>support@nubixshop.ir</span>
+                  <span>support@jinxfamily.ir</span>
                 </a>
                 <a href="tel:+982191694759" className="footer-contact-item" dir="ltr">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -128,7 +114,7 @@ export default function Footer() {
               <h4 className="footer-title-new">خدمات مشتریان</h4>
               <ul className="footer-links-new">
                 <li><Link href="/faq">سوالات متداول</Link></li>
-                <li><Link href="/faq/about">درباره نوبیکس</Link></li>
+                <li><Link href="/faq/about">درباره جینکس فمیلی</Link></li>
                 <li><Link href="/faq/how-to-buy">راهنمای خرید</Link></li>
                 <li><Link href="/blog">وبلاگ و مقالات</Link></li>
                 <li><Link href="/guides/disable-2fa">آموزش غیرفعال‌سازی 2FA</Link></li>
@@ -143,19 +129,19 @@ export default function Footer() {
               <h4 className="footer-title-new">مجوزهای ما</h4>
               <div className="footer-badges-grid">
                 <a 
-                  href="https://trustseal.enamad.ir/?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2" 
+                  href="https://trustseal.enamad.ir/?id=755815&Code=J7VuAPCB8AJfKBYOo4D7w4bBK3ngu24r" 
                   target="_blank" 
                   referrerPolicy="origin"
                   className="footer-badge-card"
                   aria-label="نماد اعتماد الکترونیکی"
                 >
                   <img 
-                    src="https://trustseal.enamad.ir/logo.aspx?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2" 
+                    src="https://trustseal.enamad.ir/logo.aspx?id=755815&Code=J7VuAPCB8AJfKBYOo4D7w4bBK3ngu24r" 
                     alt="نماد اعتماد الکترونیکی" 
                     loading="lazy" 
                     decoding="async" 
                     style={{ cursor: 'pointer' }}
-                    code="BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2"
+                    code="J7VuAPCB8AJfKBYOo4D7w4bBK3ngu24r"
                     referrerPolicy="origin"
                   />
                 </a>
@@ -169,7 +155,7 @@ export default function Footer() {
                   <img src="/samandehi_logo.webp" alt="ساماندهی" loading="lazy" decoding="async" />
                 </a>
                 <a 
-                  href="https://www.zarinpal.com/trustPage/nubixshop.ir" 
+                  href="https://www.zarinpal.com/trustPage/jinxfamily.shop" 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="footer-badge-card"
@@ -184,19 +170,12 @@ export default function Footer() {
 
               <h4 className="footer-title-new footer-title-social">شبکه‌های اجتماعی</h4>
               <div className="footer-social-row">
-                <a href="https://t.me/NubixShopIR" target="_blank" rel="noopener noreferrer" className="footer-social-btn" aria-label="کانال تلگرام">
+                <a href="https://t.me/JinxFamily" target="_blank" rel="noopener noreferrer" className="footer-social-btn" aria-label="کانال تلگرام">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.242-1.865-.442-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.121.099.155.232.171.325.016.093.036.305.02.471z"/>
                   </svg>
                 </a>
-                <a href="https://instagram.com/NubixShop.ir" target="_blank" rel="noopener noreferrer" className="footer-social-btn" aria-label="اینستاگرام">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                  </svg>
-                </a>
-                <a href="https://t.me/Nubixsupport" target="_blank" rel="noopener noreferrer" className="footer-social-btn" aria-label="پشتیبانی تلگرام">
+                <a href="https://t.me/MissJinxPW" target="_blank" rel="noopener noreferrer" className="footer-social-btn" aria-label="پشتیبانی تلگرام">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21.5 3.5 2.5 10.5l5 2 2 6 4-3 4.5 3.5 3.5-15z"/>
                   </svg>
@@ -208,7 +187,7 @@ export default function Footer() {
           {/* Bottom copyright bar */}
           <div className="footer-bottom-new">
             <div className="footer-copyright-text">
-              تمامی حقوق مادی و معنوی این سایت متعلق به <strong>فروشگاه نوبیکس</strong> می‌باشد.
+              تمامی حقوق مادی و معنوی این سایت متعلق به <strong>فروشگاه جینکس فمیلی</strong> می‌باشد.
             </div>
             <div className="footer-credit-text">
               طراحی و توسعه با ❤️ توسط{" "}

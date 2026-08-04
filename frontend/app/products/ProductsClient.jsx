@@ -343,8 +343,36 @@ export default function ProductsClient({ categories = [] }) {
       .products-sidebar-container {
         position: relative;
         top: 0;
-        padding: 20px;
-        border-radius: 20px;
+        padding: 12px;
+        border-radius: 16px;
+        flex-direction: row;
+        align-items: flex-end;
+        gap: 10px;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: thin;
+      }
+
+      .products-sidebar-container .filter-group {
+        flex: 0 0 auto;
+        min-width: 180px;
+        gap: 7px;
+      }
+
+      .products-sidebar-container .filter-group:nth-child(2) {
+        min-width: max-content;
+      }
+
+      .sidebar-cat-list {
+        flex-direction: row;
+        gap: 6px;
+      }
+
+      .sidebar-cat-btn {
+        width: auto;
+        min-height: 42px;
+        padding: 9px 12px;
+        white-space: nowrap;
       }
 
       .products-clean-grid {
@@ -353,6 +381,125 @@ export default function ProductsClient({ categories = [] }) {
     }
 
     @media (max-width: 576px) {
+      .products-page-main {
+        padding: 18px 12px 44px !important;
+      }
+
+      .products-client-container {
+        margin-inline: -4px;
+      }
+
+      .products-minimal-header {
+        padding: 8px 0 12px;
+        margin-bottom: 14px;
+      }
+
+      .products-minimal-top {
+        margin-bottom: 8px !important;
+      }
+
+      .products-minimal-top .category-home-btn {
+        padding: 7px 9px !important;
+      }
+
+      .products-minimal-top .category-home-btn span:not(.category-home-btn-arrow) {
+        display: none;
+      }
+
+      .products-minimal-title {
+        margin-top: 4px;
+        font-size: 21px;
+      }
+
+      .products-fomo-subtitle {
+        font-size: 11.5px;
+      }
+
+      .products-layout-wrapper {
+        gap: 16px;
+        margin-top: 14px;
+      }
+
+      .products-sidebar-container {
+        margin-inline: -8px;
+        padding: 8px;
+        gap: 8px;
+        border-radius: 12px;
+      }
+
+      .products-sidebar-container .filter-title {
+        display: none !important;
+      }
+
+      .products-sidebar-container .filter-group {
+        min-width: 158px;
+        gap: 0;
+      }
+
+      .products-sidebar-container .filter-group:nth-child(2) {
+        min-width: max-content;
+      }
+
+      .products-sidebar-container .filter-group:nth-child(3) {
+        min-width: max-content;
+        align-self: center;
+      }
+
+      .search-input,
+      .sort-select {
+        min-height: 40px;
+        padding: 9px 11px;
+        border-width: 1px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .sidebar-cat-btn {
+        min-height: 40px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .checkbox-label {
+        min-height: 40px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        white-space: nowrap;
+        font-size: 12px;
+      }
+
+      .checkbox-input {
+        width: 16px;
+        height: 16px;
+      }
+
+      .cat-section-header {
+        padding-bottom: 10px;
+      }
+
+      .cat-section-gradient-icon {
+        width: 34px !important;
+        height: 34px !important;
+      }
+
+      .cat-section-title-wrapper h2 {
+        font-size: 16px;
+      }
+
+      .cat-section-count {
+        padding: 5px 8px;
+        font-size: 10px;
+      }
+
+      .products-clean-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+    }
+
+    @media (max-width: 340px) {
       .products-clean-grid {
         grid-template-columns: 1fr;
       }
@@ -367,7 +514,7 @@ export default function ProductsClient({ categories = [] }) {
       <section className="products-minimal-header">
         <div className="products-minimal-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
           <nav aria-label="مسیر صفحه" className="category-crumbs" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Link href="/" className="category-crumb-link" style={{ color: 'var(--muted)', fontSize: '13.5px', textDecoration: 'none' }}>نوبیکس شاپ</Link>
+            <Link href="/" className="category-crumb-link" style={{ color: 'var(--muted)', fontSize: '13.5px', textDecoration: 'none' }}>جینکس فمیلی</Link>
             <span className="category-crumb-sep" style={{ color: 'var(--muted)', fontSize: '12px' }}>/</span>
             <span className="category-crumb-current" style={{ color: 'var(--text)', fontSize: '13.5px', fontWeight: '700' }}>محصولات فروشگاه</span>
           </nav>
@@ -376,7 +523,7 @@ export default function ProductsClient({ categories = [] }) {
             <span>بازگشت به صفحه اصلی</span>
           </Link>
         </div>
-        <h1 className="products-minimal-title">محصولات نوبیکس شاپ</h1>
+        <h1 className="products-minimal-title">محصولات جینکس فمیلی</h1>
         <div className="products-fomo-subtitle">
           <span className="products-fomo-pulse"></span>
           <span>هر روز تخفیف‌های ویژه برای تمام سرویس‌ها</span>

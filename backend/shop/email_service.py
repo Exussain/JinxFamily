@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Resend Configuration
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "support.ir")
-SENDER_NAME = "Nubix Shop"
+SENDER_NAME = "JinxFamily"
 ADMIN_NOTIFICATION_EMAIL = os.environ.get("ADMIN_NOTIFICATION_EMAIL", "")
 ADMIN_NOTIFICATION_EMAIL_CC = os.environ.get("ADMIN_NOTIFICATION_EMAIL_CC", "")
 
@@ -304,7 +304,7 @@ def send_admin_new_order_email(tracking_code, order_items, total_amount, phone="
             </div>
 
             <div class="summary">
-                لینک سفارش: <a class="link" href="https://nubixshop.ir/track/{tracking_code}">track/{tracking_code}</a>
+                لینک سفارش: <a class="link" href="https://jinxfamily.ir/track/{tracking_code}">track/{tracking_code}</a>
             </div>
         </div>
         <div class="footer">
@@ -335,10 +335,10 @@ def send_status_update_email(customer_email, subject, body_html, body_text=None)
     """
     advisory = (
         "\n\nکاربر گرامی، هرگونه تماس یا مراجعه بی‌مورد به پشتیبانی فقط باعث تعویق در روند سفارش شما و سایرین می‌شود؛ "
-        "لطفاً تنها در صورت نیاز واقعی پیام دهید. تیم نوبیکس"
+        "لطفاً تنها در صورت نیاز واقعی پیام دهید. تیم جینکس فمیلی"
     )
     merged_text = (body_text or body_html or "") + advisory
-    merged_html = (body_html or "") + "<br/><p style='color:#64748b;font-size:12px;'>کاربر گرامی، هرگونه تماس یا مراجعه بی‌مورد به پشتیبانی فقط باعث تعویق در روند سفارش شما و سایرین می‌شود؛ لطفاً تنها در صورت نیاز واقعی پیام دهید. تیم نوبیکس</p>"
+    merged_html = (body_html or "") + "<br/><p style='color:#64748b;font-size:12px;'>کاربر گرامی، هرگونه تماس یا مراجعه بی‌مورد به پشتیبانی فقط باعث تعویق در روند سفارش شما و سایرین می‌شود؛ لطفاً تنها در صورت نیاز واقعی پیام دهید. تیم جینکس فمیلی</p>"
     return _send_email(
         [customer_email],
         subject,
@@ -370,7 +370,7 @@ def send_customer_order_created_email(customer_email, customer_name, order_track
             slug = item.get('slug', '')
             if slug:
                 review_links += f"""
-                    <a href="https://nubixshop.ir/product/{slug}#reviews" style="display: inline-block; margin: 4px; padding: 10px 16px; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                    <a href="https://jinxfamily.ir/product/{slug}#reviews" style="display: inline-block; margin: 4px; padding: 10px 16px; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600;">
                         ثبت نظر برای {item.get('name', 'محصول')[:20]}
                     </a>
                 """
@@ -436,7 +436,7 @@ def send_customer_order_created_email(customer_email, customer_name, order_track
         <div class="content">
             <div class="greeting">
                 سلام <strong style="color: #6c5ce7;">{customer_name}</strong> عزیز،<br/>
-                از اعتماد شما به نوبیکس شاپ سپاسگزاریم! سفارش شما با موفقیت ثبت شد و تیم ما در حال پردازش آن است.
+                از اعتماد شما به جینکس فمیلی سپاسگزاریم! سفارش شما با موفقیت ثبت شد و تیم ما در حال پردازش آن است.
             </div>
 
             <div class="status-card">
@@ -469,7 +469,7 @@ def send_customer_order_created_email(customer_email, customer_name, order_track
                 <span class="total-amount">{total_amount:,} تومان</span>
             </div>
 
-            <a class="btn-primary" href="https://nubixshop.ir/track/{order_tracking}">
+            <a class="btn-primary" href="https://jinxfamily.ir/track/{order_tracking}">
                 پیگیری وضعیت سفارش
             </a>
 
@@ -485,12 +485,12 @@ def send_customer_order_created_email(customer_email, customer_name, order_track
         <div class="footer">
             <div class="footer-text">
                 اگر سوالی دارید، با پشتیبانی ما در تماس باشید.<br/>
-                از اینکه نوبیکس شاپ را انتخاب کردید، سپاسگزاریم!
+                از اینکه جینکس فمیلی را انتخاب کردید، سپاسگزاریم!
             </div>
             <div class="social-links">
-                <a href="https://t.me/nubixshop">تلگرام</a>
+                <a href="https://t.me/jinxfamily">تلگرام</a>
                 <span style="color: #cbd5e1;">|</span>
-                <a href="https://nubixshop.ir">وب‌سایت</a>
+                <a href="https://jinxfamily.ir">وب‌سایت</a>
             </div>
         </div>
     </div>
@@ -535,8 +535,8 @@ def send_order_confirmation_email(customer_email, customer_name, order_tracking,
 با ثبت نظر برای محصولات خریداری شده، اعتبار هدیه به کیف پول شما اضافه می‌شود!
 
 با تشکر از خرید شما
-تیم نوبیکس
-https://nubixshop.ir
+تیم جینکس فمیلی
+https://jinxfamily.ir
 """
 
         # Generate product review links
@@ -545,7 +545,7 @@ https://nubixshop.ir
             slug = item.get('slug', '')
             if slug:
                 review_links += f"""
-                    <a href="https://nubixshop.ir/product/{slug}#reviews" style="display: inline-block; margin: 4px; padding: 10px 16px; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                    <a href="https://jinxfamily.ir/product/{slug}#reviews" style="display: inline-block; margin: 4px; padding: 10px 16px; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600;">
                         ثبت نظر برای {item.get('name', 'محصول')[:20]}
                     </a>
                 """
@@ -604,7 +604,7 @@ https://nubixshop.ir
         <div class="content">
             <div class="greeting">
                 سلام <strong style="color: #667eea;">{customer_name}</strong> عزیز،<br/>
-                سفارش شما با موفقیت در سیستم ثبت شد. تیم نوبیکس در حال پردازش سفارش شماست.
+                سفارش شما با موفقیت در سیستم ثبت شد. تیم جینکس فمیلی در حال پردازش سفارش شماست.
             </div>
 
             <div class="order-info">
@@ -641,7 +641,7 @@ https://nubixshop.ir
                 <span class="total-amount">{total_amount:,} تومان</span>
             </div>
 
-            <a class="cta" href="https://nubixshop.ir/track/{order_tracking}">پیگیری وضعیت سفارش</a>
+            <a class="cta" href="https://jinxfamily.ir/track/{order_tracking}">پیگیری وضعیت سفارش</a>
 
             <div class="reward-card">
                 <div class="reward-icon">🎁</div>
@@ -654,7 +654,7 @@ https://nubixshop.ir
         </div>
         <div class="footer">
             این ایمیل به صورت خودکار ارسال شده است.<br/>
-            از اعتماد شما به نوبیکس شاپ سپاسگزاریم!
+            از اعتماد شما به جینکس فمیلی سپاسگزاریم!
         </div>
     </div>
 </body>
@@ -694,8 +694,8 @@ def send_payment_success_email(customer_email, customer_name, order_tracking, re
 یادآوری: پس از تحویل سفارش، با ثبت نظر برای محصولات خریداری شده، اعتبار هدیه به کیف پول شما اضافه می‌شود!
 
 سپاس از اعتماد شما
-تیم نوبیکس
-https://nubixshop.ir
+تیم جینکس فمیلی
+https://jinxfamily.ir
 """
         html_content = f"""
 <!DOCTYPE html>
@@ -817,7 +817,7 @@ https://nubixshop.ir
                 </li>
             </ul>
 
-            <a class="cta" href="https://nubixshop.ir/track/{order_tracking}">پیگیری وضعیت سفارش</a>
+            <a class="cta" href="https://jinxfamily.ir/track/{order_tracking}">پیگیری وضعیت سفارش</a>
 
             <div class="reward-card">
                 <div class="reward-icon">🎁</div>
@@ -830,9 +830,9 @@ https://nubixshop.ir
         <div class="footer">
             این ایمیل به صورت خودکار ارسال شده است.<br/>
             <div class="social-links">
-                <a href="https://t.me/nubixshop">تلگرام</a>
+                <a href="https://t.me/jinxfamily">تلگرام</a>
                 <span style="color: #cbd5e1;">|</span>
-                <a href="https://nubixshop.ir">وب‌سایت</a>
+                <a href="https://jinxfamily.ir">وب‌سایت</a>
             </div>
         </div>
     </div>
@@ -927,7 +927,7 @@ def send_xbox_account_email(customer_email, customer_name, order_tracking, xbox_
         </div>
         <div class="footer">
             این ایمیل به صورت خودکار ارسال شده است.<br/>
-            با تشکر از اعتماد شما - تیم نوبیکس
+            با تشکر از اعتماد شما - تیم جینکس فمیلی
         </div>
     </div>
 </body>
@@ -949,7 +949,7 @@ def send_xbox_account_email(customer_email, customer_name, order_tracking, xbox_
 - این اطلاعات را در جای امنی ذخیره کنید.
 
 با تشکر
-تیم نوبیکس
+تیم جینکس فمیلی
 """
         sent = _send_email(
             [customer_email],
@@ -1032,7 +1032,7 @@ def send_abandoned_cart_email(customer_email, items, total_value, site_url):
 """
         sent = _send_email(
             [customer_email],
-            "🛒 سبد خریدت در نوبیکس شاپ منتظره",
+            "🛒 سبد خریدت در جینکس فمیلی منتظره",
             html_content,
         )
         if sent:
@@ -1041,3 +1041,110 @@ def send_abandoned_cart_email(customer_email, items, total_value, site_url):
     except Exception as e:
         logger.error(f"Failed to send abandoned cart email: {e}")
         return False
+
+
+def send_admin_new_listing_email(listing):
+    """
+    Sends email to admin when a new listing is created.
+    """
+    try:
+        from django.conf import settings
+        recipient = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", "contact.jinxfamily@gmail.com") or "contact.jinxfamily@gmail.com"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>آگهی جدید در انتظار تایید</title>
+</head>
+<body style="font-family: Tahoma, Arial, sans-serif; background: #0f172a; color: #fff; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: #1e293b; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #a855f7, #7e22ce); padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 20px; color: #fff;">🔑 ثبت آگهی جدید در بازارچه</h1>
+        </div>
+        <div style="padding: 24px; line-height: 1.8;">
+            <p style="font-size: 16px; margin-top: 0;">یک آگهی جدید برای فروش اکانت ثبت شده و در انتظار تایید شما است:</p>
+            <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <strong>عنوان آگهی:</strong> {listing.title}<br>
+                <strong>بازی:</strong> {listing.get_game_display()}<br>
+                <strong>قیمت:</strong> {listing.price:,} تومان<br>
+                <strong>فروشنده:</strong> {listing.seller.username}<br>
+                <strong>پلتفرم:</strong> {listing.platform or "—"}<br>
+                <strong>ریجن:</strong> {listing.region or "—"}<br>
+                <strong>تاریخ ثبت:</strong> {listing.created_at.strftime('%Y-%m-%d %H:%M') if listing.created_at else 'اکنون'}<br>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <strong>توضیحات آگهی:</strong>
+                <p style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; font-size: 13px; margin: 8px 0 0 0;">{listing.description}</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="https://jinxfamily.ir/panel/admin" style="display: inline-block; padding: 12px 24px; background: #a855f7; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">ورود به پنل مدیریت</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+"""
+        sent = _send_email(
+            [recipient],
+            f"🔑 آگهی جدید بازارچه در انتظار تایید - {listing.title}",
+            html_content,
+        )
+        if sent:
+            logger.info(f"Admin new listing email notification sent to {recipient}")
+        return sent
+    except Exception as e:
+        logger.error(f"Failed to send admin listing email notification: {e}")
+        return False
+
+
+def send_listing_rejected_email(listing, reason=""):
+    """
+    Sends an email notification to the seller when their listing is rejected.
+    """
+    seller_email = getattr(listing.seller, "email", "") or ""
+    if not seller_email:
+        return False
+
+    try:
+        reason_display = reason or "عدم انطباق با قوانین سایت"
+        html_content = f"""
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"></head>
+<body style="font-family: Tahoma, Arial, sans-serif; background-color: #121216; color: #e0e0e0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #1a1a24; border-radius: 12px; padding: 24px; border: 1px solid #ff4444;">
+        <h2 style="color: #ff4444; margin-top: 0; text-align: center;">❌ عدم تایید آگهی در بازارچه جینکس فمیلی</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #ccc;">
+            کاربر گرامی <strong>{listing.seller.username}</strong>، با سلام.<br>
+            آگهی شما با عنوان <strong>«{listing.title}»</strong> مورد بررسی قرار گرفت و به علت زیر منتشر نشد:
+        </p>
+
+        <div style="background: rgba(255, 68, 68, 0.1); border-right: 4px solid #ff4444; padding: 14px; border-radius: 8px; margin: 20px 0; font-size: 14px; color: #ff8888;">
+            <strong>علت رد آگهی:</strong><br>
+            <p style="margin: 8px 0 0 0; white-space: pre-wrap;">{reason_display}</p>
+        </div>
+
+        <p style="font-size: 13px; color: #aaa;">
+            شما می‌توانید با ورود به <a href="https://jinxfamily.ir/panel/user/listings" style="color: #a855f7; text-decoration: underline;">پنل کاربری -> آگهی‌های من</a> آگهی خود را ویرایش نموده و مجدداً ارسال کنید.
+        </p>
+    </div>
+</body>
+</html>
+"""
+        sent = _send_email(
+            [seller_email],
+            f"❌ عدم تایید آگهی شما - {listing.title}",
+            html_content,
+        )
+        if sent:
+            logger.info(f"Listing rejection email sent to seller {seller_email}")
+        return sent
+    except Exception as e:
+        logger.error(f"Failed to send listing rejection email: {e}")
+        return False
+
+

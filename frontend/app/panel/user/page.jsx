@@ -29,6 +29,21 @@ export default function UserPanelPage() {
   const [cancellingOrder, setCancellingOrder] = useState(null);
   const [activeTab, setActiveTab] = useState("orders");
 
+  // Wallet and Wishlist states
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [walletTxns, setWalletTxns] = useState([]);
+  const [topupAmount, setTopupAmount] = useState("");
+  const [submittingTopup, setSubmittingTopup] = useState(false);
+  const [topupMessage, setTopupMessage] = useState("");
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [kycCode, setKycCode] = useState("");
+  const [kycStatus, setKycStatus] = useState("unverified");
+  const [kycRejectReason, setKycRejectReason] = useState("");
+  const [kycCardUrl, setKycCardUrl] = useState("");
+  const [kycFile, setKycFile] = useState(null);
+  const [kycSubmitting, setKycSubmitting] = useState(false);
+  const [kycMsg, setKycMsg] = useState("");
+
   // Exchange diamonds state
   const [exchanging, setExchanging] = useState(false);
   const [exchangeSuccess, setExchangeSuccess] = useState("");
@@ -74,6 +89,37 @@ export default function UserPanelPage() {
           const rData = await refRes.json();
           setReferralData(rData);
         }
+
+        const walletRes = await fetch(`${apiBase}/api/me/wallet`, {
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (walletRes.ok) {
+          const wData = await walletRes.json();
+          setWalletBalance(wData.balance || 0);
+          setWalletTxns(wData.transactions || []);
+        }
+
+        const wishlistRes = await fetch(`${apiBase}/api/me/wishlist`, {
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (wishlistRes.ok) {
+          const wlData = await wishlistRes.json();
+          setWishlistItems(wlData || []);
+        }
+
+        const kycRes = await fetch(`${apiBase}/api/me/verify-identity`, {
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (kycRes.ok) {
+          const kData = await kycRes.json();
+          setKycCode(kData.national_code || "");
+          setKycStatus(kData.verification_status || "unverified");
+          setKycRejectReason(kData.verification_reject_reason || "");
+          setKycCardUrl(kData.national_card_image || "");
+        }
       } finally {
         setLoading(false);
       }
@@ -97,6 +143,51 @@ export default function UserPanelPage() {
     }
   };
 
+  const handleRemoveWishlist = async (productId) => {
+    try {
+      const res = await fetch(`${apiBase}/api/me/wishlist/toggle`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ product_id: productId }),
+      });
+      if (res.ok) {
+        setWishlistItems(prev => prev.filter(item => item.product_id !== productId));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleWalletTopup = async (e) => {
+    e.preventDefault();
+    const parsed = parseInt(topupAmount, 10);
+    if (isNaN(parsed) || parsed < 5000) {
+      setTopupMessage("حداقل مبلغ شارژ ۵,۰۰۰ تومان است.");
+      return;
+    }
+    setSubmittingTopup(true);
+    setTopupMessage("");
+    try {
+      const res = await fetch(`${apiBase}/api/me/wallet/topup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ amount: parsed }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.redirect_url) {
+        window.location.href = data.redirect_url;
+      } else {
+        setTopupMessage(data.message || "خطا در برقراری ارتباط با درگاه پرداخت.");
+      }
+    } catch (err) {
+      setTopupMessage("خطایی رخ داد. مجددا تلاش کنید.");
+    } finally {
+      setSubmittingTopup(false);
+    }
+  };
+
   const displayName = (profileName || user?.name || user?.first_name || "").trim();
   const phoneNumber = user?.phone_number || user?.phone || "";
   const displayPhone = loading ? "" : phoneNumber || "ثبت نشده";
@@ -111,7 +202,7 @@ export default function UserPanelPage() {
   const handleCelebrationClose = () => {
     setShowCelebration(false);
     if (typeof window !== "undefined" && celebrationOrder?.tracking_code) {
-      window.localStorage.setItem("nubix_last_celebration", celebrationOrder.tracking_code);
+      window.localStorage.setItem("jinxfamily_last_celebration", celebrationOrder.tracking_code);
     }
   };
 
@@ -125,6 +216,43 @@ export default function UserPanelPage() {
       // ignore
     }
     window.location.href = "/";
+  };
+
+  const handleKycSubmit = async (e) => {
+    e.preventDefault();
+    if (!kycCode || kycCode.length !== 10 || isNaN(kycCode)) {
+      setKycMsg("لطفاً یک کد ملی معتبر ۱۰ رقمی وارد کنید.");
+      return;
+    }
+    if (!kycFile && !kycCardUrl) {
+      setKycMsg("لطفاً تصویر کارت ملی را انتخاب کنید.");
+      return;
+    }
+    setKycSubmitting(true);
+    setKycMsg("");
+    try {
+      const formData = new FormData();
+      formData.append("national_code", kycCode);
+      if (kycFile) {
+        formData.append("national_card_image", kycFile);
+      }
+      const res = await fetch(`${apiBase}/api/me/verify-identity`, {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setKycStatus("pending");
+        setKycMsg(data.message || "مدارک شما با موفقیت ثبت شد.");
+      } else {
+        setKycMsg(data.message || "خطا در ثبت مدارک.");
+      }
+    } catch (err) {
+      setKycMsg("خطا در ارتباط با سرور.");
+    } finally {
+      setKycSubmitting(false);
+    }
   };
 
   const handleCancelOrder = async (tracking_code) => {
@@ -176,7 +304,7 @@ export default function UserPanelPage() {
     const award = Number(data.profile_completion_award || 0);
     setProfileSuccess(
       award > 0
-        ? `آواتار ذخیره شد و ${award.toLocaleString("fa-IR")} الماس جایزه تکمیل پروفایل گرفتید.`
+        ? `آواتار ذخیره شد و ${award.toLocaleString("fa-IR")} کوین جایزه تکمیل پروفایل گرفتید.`
         : "تصویر پروفایل با موفقیت به‌روزرسانی شد."
     );
   };
@@ -255,7 +383,7 @@ export default function UserPanelPage() {
       const award = Number(data.profile_completion_award || 0);
       setProfileSuccess(
         award > 0
-          ? `پروفایل ذخیره شد و ${award.toLocaleString("fa-IR")} الماس جایزه تکمیل پروفایل گرفتید.`
+          ? `پروفایل ذخیره شد و ${award.toLocaleString("fa-IR")} کوین جایزه تکمیل پروفایل گرفتید.`
           : "پروفایل با موفقیت به‌روزرسانی شد."
       );
     } catch (err) {
@@ -277,7 +405,7 @@ export default function UserPanelPage() {
       return;
     }
     if (typeof window === "undefined") return;
-    const lastCelebrated = window.localStorage.getItem("nubix_last_celebration");
+    const lastCelebrated = window.localStorage.getItem("jinxfamily_last_celebration");
     if (lastCelebrated === completed.tracking_code) {
       setShowCelebration(false);
       return;
@@ -385,7 +513,11 @@ export default function UserPanelPage() {
   const TABS = [
     { id: "profile", label: "پروفایل من", icon: "👤" },
     { id: "orders", label: "سفارش‌های من", icon: "🧾", badge: ordersCount },
-    { id: "club", label: "کلوپ الماس", icon: "💎" },
+    { id: "listings", label: "آگهی‌های من", icon: "📦" },
+    { id: "wallet", label: "کیف پول من", icon: "💳" },
+    { id: "wishlist", label: "علاقه‌مندی‌ها", icon: "🩷", badge: wishlistItems.length },
+    { id: "verification", label: "احراز هویت", icon: "🛡️" },
+    { id: "club", label: "کلوپ کوین", icon: "🪙" },
     { id: "cart", label: "سبد خرید", icon: "🛒", badge: cartCount },
   ];
 
@@ -407,7 +539,7 @@ export default function UserPanelPage() {
             </div>
             <div className="account-hero__meta">
               <p className="kicker light">حساب کاربری</p>
-              <h2>{displayName || user?.name || "کاربر نوبیکس"}</h2>
+              <h2>{displayName || user?.name || "کاربر جینکس فمیلی"}</h2>
               <div className="pill-row">
                 {displayPhone && <span className="pill">{displayPhone}</span>}
                 {user?.email && <span className="pill subtle">{user.email}</span>}
@@ -422,12 +554,16 @@ export default function UserPanelPage() {
               <span className="hstat__label">سفارش‌ها</span>
               <span className="hstat__value">{ordersCount.toLocaleString("fa-IR")}</span>
             </div>
+            <Link href="/panel/user/listings" className="hstat" style={{ textDecoration: "none" }}>
+              <span className="hstat__label">آگهی‌های من 📦</span>
+              <span className="hstat__value" style={{ fontSize: "14px", color: "#00f2fe" }}>مشاهده</span>
+            </Link>
             <div className="hstat">
               <span className="hstat__label">سبد خرید</span>
               <span className="hstat__value">{cartCount.toLocaleString("fa-IR")}</span>
             </div>
             <Link href="/panel/user/referrals" className="hstat hstat--points">
-              <span className="hstat__label">الماس / امتیاز 💎</span>
+              <span className="hstat__label">کوین / امتیاز 🪙</span>
               <span className="hstat__value">{(user?.points_balance || 0).toLocaleString("fa-IR")}</span>
             </Link>
           </div>
@@ -522,7 +658,7 @@ export default function UserPanelPage() {
                     <h4>یک آواتار برای خودت انتخاب کن</h4>
                     <p className="avatar-lab__desc">
                       پروفایل کامل با نام، ایمیل و آواتار، یک‌بار
-                      <strong> ۲۰ الماس </strong>
+                      <strong> ۲۰ کوین </strong>
                       جایزه می‌گیرد.
                     </p>
                     {needsProfileCompletion && (
@@ -614,7 +750,7 @@ export default function UserPanelPage() {
                 <label className={`avatar-upload ${avatarSaving ? "busy" : ""}`}>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,.png,.jpg,.jpeg,.gif,.webp,.bmp,.heic,.heif,.svg"
                     disabled={avatarSaving}
                     onChange={(e) => handleAvatarFile(e.target.files?.[0])}
                   />
@@ -667,11 +803,121 @@ export default function UserPanelPage() {
                           <div className="price">{o.amount.toLocaleString("fa-IR")} تومان</div>
                           {o.diamonds_used > 0 && (
                             <div className="muted-xs">
-                              تخفیف الماس: {o.diamonds_used.toLocaleString("fa-IR")} 💎
+                              تخفیف کوین: {o.diamonds_used.toLocaleString("fa-IR")} 🪙
                             </div>
                           )}
+                      </div>
+                    </div>
+
+                      {/* Cute Status Timeline Widget */}
+                      <div className="order-timeline" style={{ marginTop: "16px", padding: "16px", background: "rgba(255,255,255,0.01)", borderRadius: "12px", border: "1px solid var(--line)", direction: "rtl" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", position: "relative", marginBottom: "8px" }}>
+                          
+                          {/* Line background */}
+                          <div style={{
+                            position: "absolute",
+                            top: "14px",
+                            left: "10%",
+                            right: "10%",
+                            height: "3px",
+                            background: o.status === "completed" || o.status === "processed"
+                              ? "linear-gradient(90deg, var(--primary) 0%, var(--primary) 100%)"
+                              : o.status === "pending"
+                                ? "#3f3f46"
+                                : "linear-gradient(90deg, var(--primary) 0%, #3f3f46 100%)",
+                            zIndex: 1
+                          }} />
+
+                          {/* Step 1: Paid */}
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 2, width: "30%" }}>
+                            <div style={{
+                              width: "30px",
+                              height: "30px",
+                              borderRadius: "50%",
+                              background: o.status !== "pending" && o.status !== "canceled" ? "var(--primary)" : "#27272a",
+                              color: "#fff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              border: "3px solid var(--card)"
+                            }}>
+                              {o.status !== "pending" && o.status !== "canceled" ? "✓" : "۱"}
+                            </div>
+                            <span style={{ fontSize: "12px", fontWeight: "bold", marginTop: "4px", color: o.status !== "pending" && o.status !== "canceled" ? "var(--text)" : "var(--muted)" }}>پرداخت شد 🩷</span>
+                          </div>
+
+                          {/* Step 2: Processing */}
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 2, width: "30%" }}>
+                            <div style={{
+                              width: "30px",
+                              height: "30px",
+                              borderRadius: "50%",
+                              background: ["processing", "paid", "registered", "needs_2fa", "needs_tr_region", "invalid_info", "completed", "processed"].includes(o.status) ? "var(--primary)" : "#27272a",
+                              color: "#fff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              border: "3px solid var(--card)"
+                            }}>
+                              {["completed", "processed"].includes(o.status) ? "✓" : "۲"}
+                            </div>
+                            <span style={{ fontSize: "12px", fontWeight: "bold", marginTop: "4px", color: ["processing", "paid", "registered", "needs_2fa", "needs_tr_region", "invalid_info", "completed", "processed"].includes(o.status) ? "var(--text)" : "var(--muted)" }}>
+                              {o.items && o.items.some(it => it.g4a4_variation_id) ? "ارسال به درگاه ⚡" : "در حال انجام ⚡"}
+                            </span>
+                          </div>
+
+                          {/* Step 3: Completed */}
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 2, width: "30%" }}>
+                            <div style={{
+                              width: "30px",
+                              height: "30px",
+                              borderRadius: "50%",
+                              background: o.status === "completed" || o.status === "processed" ? "var(--primary)" : "#27272a",
+                              color: "#fff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              border: "3px solid var(--card)"
+                            }}>
+                              {o.status === "completed" || o.status === "processed" ? "✓" : "۳"}
+                            </div>
+                            <span style={{ fontSize: "12px", fontWeight: "bold", marginTop: "4px", color: o.status === "completed" || o.status === "processed" ? "var(--text)" : "var(--muted)" }}>تحویل شد 🎉</span>
+                          </div>
+
+                        </div>
+
+                        {/* Extra Status Notifications / G4A4 / Gifting Messages */}
+                        <div style={{ marginTop: "12px", fontSize: "12px", textAlign: "center", color: "var(--muted)" }}>
+                          {o.items && o.items.map((it, idx) => {
+                            if (it.g4a4_variation_id) {
+                              const g4StatusMap = {
+                                "pending": "در انتظار ارسال به درگاه ریسلر",
+                                "processing": "در حال تامین توسط درگاه ریسلر ⚡",
+                                "completed": "تامین خودکار با موفقیت انجام شد ✦",
+                                "failed": "ارسال خودکار ناموفق؛ پشتیبانی بررسی می‌کند."
+                              };
+                              return (
+                                <div key={idx} style={{ marginTop: "4px", color: "var(--accent)" }}>
+                                  📦 وضعیت کوین/آیتم زنده: <strong>{g4StatusMap[it.g4a4_status] || it.g4a4_status || "در حال آماده‌سازی"}</strong>
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <div key={idx} style={{ marginTop: "4px" }}>
+                                  🎁 وضعیت آیتم: <strong>جینکسی داره برات می‌فرسته 😉</strong>
+                                </div>
+                              );
+                            }
+                          })}
                         </div>
                       </div>
+
                       {o.can_cancel && (
                         <div className="order-card__actions">
                           <button
@@ -690,12 +936,266 @@ export default function UserPanelPage() {
             </section>
           )}
 
+          {activeTab === "listings" && (
+            <section className="card section" dir="rtl">
+              <div className="section-head">
+                <div>
+                  <p className="kicker">بازارچه اکانت</p>
+                  <h3>آگهی‌های ثبت شده من 📦</h3>
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <Link href="/market" style={{ padding: "10px 18px", borderRadius: "10px", background: "rgba(0, 242, 254, 0.12)", border: "1.5px solid #00f2fe", color: "#00f2fe", textDecoration: "none", fontWeight: "900", fontSize: "13px" }}>
+                    🎮 مشاهده اکانت‌های وبسایت
+                  </Link>
+                  <Link href="/market/sell" className="btn-primary" style={{ padding: "10px 20px", borderRadius: "10px", fontSize: "13px", fontWeight: "900" }}>
+                    ثبت آگهی جدید +
+                  </Link>
+                </div>
+              </div>
+              <div style={{ background: "rgba(0, 242, 254, 0.05)", border: "1px dashed #00f2fe", borderRadius: "16px", padding: "32px", textAlign: "center", marginTop: "16px" }}>
+                <span style={{ fontSize: "40px", marginBottom: "12px", display: "block" }}>📋</span>
+                <h4 style={{ fontSize: "18px", fontWeight: "900", color: "#fff", marginBottom: "8px" }}>اینباکس و مدیریت آگهی‌های شما</h4>
+                <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "20px" }}>برای مشاهده وضعیت بررسی، تصاویر، قیمت و وضعیت انتشار آگهی‌های اکانت خود وارد بخش اختصاصی شوید.</p>
+                <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+                  <Link href="/market" style={{ display: "inline-flex", padding: "12px 24px", borderRadius: "12px", background: "rgba(0, 242, 254, 0.12)", border: "1.5px solid #00f2fe", color: "#00f2fe", fontWeight: "900", textDecoration: "none", fontSize: "14px", boxShadow: "0 0 12px rgba(0, 242, 254, 0.2)" }}>
+                    🎮 مشاهده اکانت‌های وبسایت
+                  </Link>
+                  <Link href="/panel/user/listings" className="gradient-btn" style={{ display: "inline-flex", padding: "12px 28px", borderRadius: "12px", color: "#080c1c", fontWeight: "900", textDecoration: "none", fontSize: "14px" }}>
+                    📦 اینباکس تمام آگهی‌های من ←
+                  </Link>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === "wallet" && (
+            <section className="card section" dir="rtl">
+              <div className="section-head">
+                <div>
+                  <p className="kicker">کیف پول من</p>
+                  <h3>موجودی و تراکنش‌های مالی 💳</h3>
+                </div>
+              </div>
+              
+              <div className="wallet-container" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginTop: "16px" }}>
+                
+                {/* Balance & Top up Form */}
+                <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: "16px", padding: "24px" }}>
+                  <div style={{ marginBottom: "20px" }}>
+                    <div style={{ color: "var(--muted)", fontSize: "14px" }}>موجودی فعلی حساب:</div>
+                    <div style={{ fontSize: "32px", fontWeight: "900", color: "var(--primary)", marginTop: "8px" }}>
+                      {walletBalance.toLocaleString("fa-IR")} <span style={{ fontSize: "16px" }}>تومان</span>
+                    </div>
+                  </div>
+                  
+                  <hr style={{ border: "0", borderTop: "1px solid var(--line)", margin: "20px 0" }} />
+                  
+                  <form onSubmit={handleWalletTopup} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <h4 style={{ fontSize: "16px", fontWeight: "bold" }}>⚡ افزایش موجودی با درگاه پرداخت</h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <label style={{ fontSize: "12px", color: "var(--muted)" }}>مبلغ شارژ (تومان)</label>
+                      <input
+                        type="number"
+                        placeholder="مثلا ۵۰۰۰۰"
+                        value={topupAmount}
+                        onChange={(e) => setTopupAmount(e.target.value)}
+                        style={{
+                          background: "transparent",
+                          border: "1px solid var(--line)",
+                          color: "var(--text)",
+                          padding: "12px",
+                          borderRadius: "8px",
+                          fontSize: "16px",
+                          outline: "none"
+                        }}
+                      />
+                    </div>
+                    {topupMessage && (
+                      <div style={{ color: "#ef4444", fontSize: "13px", fontWeight: "bold" }}>
+                        {topupMessage}
+                      </div>
+                    )}
+                    <button
+                      type="submit"
+                      className="btn-primary"
+                      disabled={submittingTopup}
+                      style={{ padding: "14px" }}
+                    >
+                      {submittingTopup ? "در حال انتقال..." : "پرداخت و افزایش اعتبار"}
+                    </button>
+                  </form>
+                </div>
+                
+                {/* Transactions History */}
+                <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: "16px", padding: "24px", maxHeight: "400px", overflowY: "auto" }}>
+                  <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "16px" }}>📜 تاریخچه تراکنش‌ها</h4>
+                  {walletTxns.length === 0 ? (
+                    <div style={{ color: "var(--muted)", textAlign: "center", padding: "20px" }}>
+                      هیچ تراکنشی ثبت نشده است.
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {walletTxns.map((t) => (
+                        <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "10px", border: "1px solid var(--line)" }}>
+                          <div>
+                            <div style={{ fontSize: "14px", fontWeight: "bold" }}>{t.note || t.kind_display}</div>
+                            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>{formatDate(t.created_at)}</div>
+                          </div>
+                          <div style={{ fontSize: "15px", fontWeight: "bold", color: t.amount > 0 ? "#10b981" : "#ef4444" }}>
+                            {t.amount > 0 ? "+" : ""}{t.amount.toLocaleString("fa-IR")} تومان
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+              </div>
+            </section>
+          )}
+
+          {activeTab === "wishlist" && (
+            <section className="card section" dir="rtl">
+              <div className="section-head">
+                <div>
+                  <p className="kicker">علاقه‌مندی‌ها</p>
+                  <h3>لیست علاقه‌مندی‌های من 🩷</h3>
+                </div>
+              </div>
+              
+              {wishlistItems.length === 0 ? (
+                <div className="empty-state">
+                  <span className="empty-state__icon">🩷</span>
+                  <p>لیست علاقه‌مندی‌های شما خالی است.</p>
+                  <Link href="/" className="btn-ghost">مشاهده ویترین</Link>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "20px", marginTop: "16px" }}>
+                  {wishlistItems.map((item) => (
+                    <div key={item.id} style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: "20px", padding: "16px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "260px" }}>
+                      <div>
+                        <div style={{ width: "100%", height: "140px", borderRadius: "12px", background: "rgba(255,255,255,0.02)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : (
+                            <span style={{ fontSize: "32px" }}>🎮</span>
+                          )}
+                        </div>
+                        <h4 style={{ fontSize: "14px", fontWeight: "bold", marginTop: "12px", color: "var(--text)" }}>{item.name}</h4>
+                      </div>
+                      
+                      <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+                        {item.type === "catalog" ? (
+                          <Link href={`/product/${item.slug}`} className="btn-primary" style={{ flex: "1", textAlign: "center", padding: "8px 0", fontSize: "12px" }}>
+                            مشاهده محصول
+                          </Link>
+                        ) : (
+                          <Link href="/coins" className="btn-primary" style={{ flex: "1", textAlign: "center", padding: "8px 0", fontSize: "12px" }}>
+                            خرید کوین
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => handleRemoveWishlist(item.product_id)}
+                          style={{ background: "rgba(239, 68, 68, 0.12)", color: "#ef4444", border: "none", borderRadius: "10px", width: "36px", height: "36px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {activeTab === "verification" && (
+            <section className="card section" dir="rtl">
+              <div className="section-head">
+                <div>
+                  <p className="kicker">احراز هویت</p>
+                  <h3>تایید هویت و مدارک 🛡️</h3>
+                </div>
+              </div>
+
+              {kycStatus === "verified" && (
+                <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "16px", padding: "24px", color: "#10b981", display: "flex", gap: "12px", alignItems: "center" }}>
+                  <span style={{ fontSize: "28px" }}>✓</span>
+                  <div>
+                    <h4 style={{ fontWeight: "900", margin: 0 }}>هویت شما تایید شده است.</h4>
+                    <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--muted)" }}>کد ملی ثبت شده: {kycCode}</p>
+                  </div>
+                </div>
+              )}
+
+              {kycStatus === "pending" && (
+                <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "16px", padding: "24px", color: "#f59e0b", display: "flex", gap: "12px", alignItems: "center" }}>
+                  <span style={{ fontSize: "28px" }}>⏳</span>
+                  <div>
+                    <h4 style={{ fontWeight: "900", margin: 0 }}>مدارک شما در انتظار بررسی ادمین است.</h4>
+                    <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--muted)" }}>کد ملی ارسال شده: {kycCode}</p>
+                  </div>
+                </div>
+              )}
+
+              {(kycStatus === "unverified" || kycStatus === "rejected") && (
+                <form onSubmit={handleKycSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "16px" }}>
+                  {kycStatus === "rejected" && (
+                    <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "12px", padding: "16px", color: "#ef4444" }}>
+                      <strong>مدارک قبلی شما رد شد:</strong> {kycRejectReason}
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "13px", fontWeight: "bold" }}>کد ملی ۱۰ رقمی</label>
+                    <input
+                      type="text"
+                      placeholder="مثال: ۱۲۳۴۵۶۷۸۹۰"
+                      maxLength={10}
+                      value={kycCode}
+                      onChange={(e) => setKycCode(e.target.value)}
+                      required
+                      style={{ padding: "12px", borderRadius: "10px", border: "1px solid var(--line)", background: "transparent", color: "var(--text)", maxWidth: "300px" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "13px", fontWeight: "bold" }}>تصویر کارت ملی</label>
+                    <input
+                      type="file"
+                      accept="image/*,.png,.jpg,.jpeg,.gif,.webp,.bmp,.heic,.heif,.svg"
+                      onChange={(e) => setKycFile(e.target.files[0])}
+                      required={!kycCardUrl}
+                      style={{ padding: "10px 0" }}
+                    />
+                    {kycCardUrl && (
+                      <div style={{ fontSize: "11px", color: "var(--muted)" }}>
+                        تصویر قبلاً بارگذاری شده است. در صورت تمایل می‌توانید فایل جدید انتخاب کنید.
+                      </div>
+                    )}
+                  </div>
+
+                  {kycMsg && <div style={{ fontSize: "13px", color: "var(--primary)", fontWeight: "bold" }}>{kycMsg}</div>}
+
+                  <button
+                    type="submit"
+                    className="gradient-btn"
+                    disabled={kycSubmitting}
+                    style={{ maxWidth: "200px", padding: "12px 24px", border: "none", color: "#fff", fontWeight: "900", borderRadius: "10px", cursor: "pointer" }}
+                  >
+                    {kycSubmitting ? "در حال ارسال..." : "ارسال جهت بررسی"}
+                  </button>
+                </form>
+              )}
+            </section>
+          )}
+
           {activeTab === "club" && (
             <section className="card section">
               <div className="section-head">
                 <div>
                   <p className="kicker">کلوپ مشتریان</p>
-                  <h3>تبدیل الماس و کسب پورسانت 💎</h3>
+                  <h3>تبدیل کوین و کسب پورسانت 🪙</h3>
                 </div>
               </div>
 
@@ -712,14 +1212,14 @@ export default function UserPanelPage() {
               <div className="club-grid" dir="rtl">
                 {/* Exchange */}
                 <div className="club-col">
-                  <h4 className="club-col__title"><span>💸</span> تبدیل الماس به کد تخفیف</h4>
+                  <h4 className="club-col__title"><span>💸</span> تبدیل کوین به کد تخفیف</h4>
                   <p className="club-col__desc">
-                    با تبدیل الماس‌های خود به کد تخفیف، از خریدهایتان تخفیف‌های شگفت‌انگیز بگیرید. نرخ تبدیل: هر ۳۵۰ الماس معادل ۱۱۰,۰۰۰ تومان تخفیف بدون حداقل خرید است.
+                    با تبدیل کوین‌های خود به کد تخفیف، از خریدهایتان تخفیف‌های شگفت‌انگیز بگیرید. نرخ تبدیل: هر ۳۵۰ کوین معادل ۱۱۰,۰۰۰ تومان تخفیف بدون حداقل خرید است.
                   </p>
 
                   <div className="club-stack">
                     <div className="club-field">
-                      <label>تعداد الماس برای تبدیل (حداقل ۳۵۰)</label>
+                      <label>تعداد کوین برای تبدیل (حداقل ۳۵۰)</label>
                       <div className="club-input-wrap">
                         <input
                           type="number"
@@ -729,7 +1229,7 @@ export default function UserPanelPage() {
                           onChange={(e) => setExchangeAmount(Math.max(0, Number(e.target.value) || 0))}
                           className="club-input"
                         />
-                        <span className="club-input__icon">💎</span>
+                        <span className="club-input__icon">🪙</span>
                       </div>
                     </div>
 
@@ -748,23 +1248,23 @@ export default function UserPanelPage() {
                       {exchanging
                         ? "در حال تبدیل..."
                         : (user?.points_balance || 0) < exchangeAmount
-                          ? `به ${(exchangeAmount - (user?.points_balance || 0)).toLocaleString("fa-IR")} الماس دیگر نیاز دارید`
-                          : `تبدیل ${exchangeAmount.toLocaleString("fa-IR")} الماس`}
+                          ? `به ${(exchangeAmount - (user?.points_balance || 0)).toLocaleString("fa-IR")} کوین دیگر نیاز دارید`
+                          : `تبدیل ${exchangeAmount.toLocaleString("fa-IR")} کوین`}
                     </button>
                   </div>
                 </div>
 
                 {/* Referral */}
                 <div className="club-col">
-                  <h4 className="club-col__title"><span>🤝</span> کسب پورسانت و الماس رایگان</h4>
+                  <h4 className="club-col__title"><span>🤝</span> کسب پورسانت و کوین رایگان</h4>
                   <p className="club-col__desc">
-                    لینک یا کد دعوت اختصاصی خود را برای دوستانتان بفرستید. در صورتی که با کد شما در سایت ثبت‌نام کنند و <strong>خرید انجام دهند</strong>، پورسانت به صورت الماس به حساب شما اضافه می‌شود.
+                    لینک یا کد دعوت اختصاصی خود را برای دوستانتان بفرستید. در صورتی که با کد شما در سایت ثبت‌نام کنند و <strong>خرید انجام دهند</strong>، پورسانت به صورت کوین به حساب شما اضافه می‌شود.
                   </p>
 
                   <div className="club-note">
                     <span className="club-note__title">🎁 توضیحات پورسانت:</span>
                     <ul>
-                      <li>دریافت <strong>۱۵ تا ۵۰ الماس رایگان</strong> به ازای اولین خرید موفق هر دوست دعوت‌شده.</li>
+                      <li>دریافت <strong>۱۵ تا ۵۰ کوین رایگان</strong> به ازای اولین خرید موفق هر دوست دعوت‌شده.</li>
                       <li>دریافت <strong>کد تخفیف ۱۵۰,۰۰۰ تومانی بدون حداقل خرید</strong> به محض رسیدن به ۱۰ دعوت موفق.</li>
                     </ul>
                   </div>
@@ -800,8 +1300,8 @@ export default function UserPanelPage() {
                           <div className="club-stat__label">دعوت‌های موفق</div>
                         </div>
                         <div className="club-stat">
-                          <div className="club-stat__value">{referralData.points_earned.toLocaleString("fa-IR")} 💎</div>
-                          <div className="club-stat__label">الماس‌های دریافتی</div>
+                          <div className="club-stat__value">{referralData.points_earned.toLocaleString("fa-IR")} 🪙</div>
+                          <div className="club-stat__label">کوین‌های دریافتی</div>
                         </div>
                       </div>
                       <Link href="/panel/user/referrals" className="btn-ghost btn-ghost--full">
@@ -874,7 +1374,7 @@ export default function UserPanelPage() {
             <button className="celebration-close" onClick={handleCelebrationClose} aria-label="بستن">
               ×
             </button>
-            <div className="celebration-badge">تبریک از نوبیکس</div>
+            <div className="celebration-badge">تبریک از جینکس فمیلی</div>
             <h3>مبارک! سفارش #{celebrationOrder.tracking_code} تکمیل شد</h3>
             <p>
               سفارش شما توسط تیم پشتیبانی تکمیل شد. وضعیت لحظه‌ای سفارش را با کلیک روی دکمه زیر مشاهده کنید؛ همچنین به محض فعال‌سازی در پنل، از طریق پیامک و ایمیل مطلع خواهید شد.

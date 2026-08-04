@@ -23,7 +23,7 @@ CATEGORY_HINTS = {
     "SUBSCRIPTIONS": "اشتراک سرویس‌های دیجیتال (Spotify، YouTube Premium، Netflix و...). فعال‌سازی با ایمیل یا لینک دعوت.",
 }
 
-SYSTEM_PROMPT = """تو یک کپی‌رایتر فارسی حرفه‌ای برای فروشگاه اینترنتی «نوبیکس‌شاپ» هستی.
+SYSTEM_PROMPT = """تو یک کپی‌رایتر فارسی حرفه‌ای برای فروشگاه اینترنتی «جینکس فمیلی‌شاپ» هستی.
 وظیفه: برای یک محصول خاص، محتوای صفحهٔ محصول را به‌صورت ساختاریافته و JSON خروجی بده.
 
 قوانین خروجی:
@@ -91,17 +91,19 @@ def _safe_parse_json(text: str) -> dict | None:
 def _fallback_draft(name_fa: str, category: str) -> dict:
     """When the AI fails or is disabled, return a minimal but usable draft."""
     return {
-        "description": f"{name_fa}\n\nمحصول دیجیتال نوبیکس‌شاپ با فعال‌سازی سریع و گارانتی اصالت.",
+        "description": f"{name_fa}\n\nمحصول دیجیتال جینکس فمیلی‌شاپ با فعال‌سازی سریع و گارانتی اصالت.",
         "delivery_text": "۱. ثبت سفارش و پرداخت از درگاه امن\n۲. ارسال اطلاعات اکانت\n۳. فعال‌سازی توسط تیم طی ۱۵ دقیقه تا ۸ ساعت کاری",
         "faq": [
             {"q": "چگونه محصول را دریافت می‌کنم؟", "a": "پس از پرداخت، اطلاعات فعال‌سازی از طریق پنل کاربری، پیامک و ایمیل برای شما ارسال می‌شود."},
-            {"q": "گارانتی محصول چگونه است؟", "a": "تمام محصولات نوبیکس‌شاپ دارای گارانتی اصالت و پشتیبانی کامل هستند."},
+            {"q": "گارانتی محصول چگونه است؟", "a": "تمام محصولات جینکس فمیلی‌شاپ دارای گارانتی اصالت و پشتیبانی کامل هستند."},
         ],
         "custom_fields": _fallback_custom_fields(category),
     }
 
 
 def _fallback_custom_fields(category: str) -> list:
+    if category in ("ACCOUNTS", "MARKET"):
+        return []
     if category == "GIFTCARDS":
         return [{"key": "recipient_email", "label": "ایمیل دریافت‌کننده کد", "type": "email", "required": True, "placeholder": "example@mail.com", "options": None}]
     if category in ("AI", "SUBSCRIPTIONS"):

@@ -23,7 +23,7 @@ export default function DashboardContent({ me, stats, orders, onTopup, tourMode 
         <div className="dash-hero-glow alt" aria-hidden />
         <div className="dash-hero-inner">
           <div className="dash-hero-text">
-            <div className="dash-hero-eyebrow">پنل همکاران نوبیکس</div>
+            <div className="dash-hero-eyebrow">پنل همکاران جینکس فمیلی</div>
             <h1 className="dash-hero-title">سلام {name} 👋</h1>
             <p className="dash-hero-sub">نمای کلی عملکرد، کیف پول و سطح همکاری شما در یک نگاه.</p>
           </div>

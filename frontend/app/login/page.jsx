@@ -1,8 +1,8 @@
 "use client";
-export const dynamic = "force-dynamic";
-import { Suspense, useEffect, useState } from "react";
-import Navbar from "../../components/Navbar";
+import { useEffect, useState } from "react";
+import dynamicImport from "next/dynamic";
 import BackToHomeButton from "../../components/BackToHomeButton";
+const OTPLogin = dynamicImport(() => import("../../components/OTPLogin"), { ssr: false });
 import { useRouter } from "next/navigation";
 import { adminCacheBustHref } from "../../lib/adminUrl.mjs";
 import { getAuthedLoginRedirect } from "../../lib/authRedirect.mjs";
@@ -20,7 +20,7 @@ export default function LoginPage() {
   const [showAuthedModal, setShowAuthedModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [activeTab, setActiveTab] = useState("phone"); // "phone" or "email"
+  const [activeTab, setActiveTab] = useState("password"); // "password" or "otp"
 
   const backdropStyle = {
     position: "fixed",
@@ -96,17 +96,7 @@ export default function LoginPage() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    setEmail("");
     setError("");
-  };
-
-  const handlePhoneChange = (e) => {
-    const val = e.target.value.replace(/[^0-9\s]/g, "");
-    setEmail(val);
-  };
-
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
   };
 
   const handleClose = () => {
@@ -121,7 +111,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     let finalEmail = email.trim();
-    if (isMobile && activeTab === "phone") {
+    if (isMobile) {
       finalEmail = finalEmail.replace(/\s+/g, "");
       if (/^\d{10}$/.test(finalEmail) && finalEmail.startsWith("9")) {
         finalEmail = "0" + finalEmail;
@@ -130,7 +120,7 @@ export default function LoginPage() {
     const trimmedPassword = password.trim();
     const isPhone = /^09\d{9}$/.test(finalEmail);
     if (!finalEmail || !trimmedPassword) {
-      setError(activeTab === "phone" && isMobile ? "شماره تلفن و رمز عبور را وارد کنید" : "شماره تلفن یا ایمیل و رمز عبور را وارد کنید");
+      setError(isPhone && isMobile ? "شماره تلفن و رمز عبور را وارد کنید" : "شماره تلفن یا ایمیل و رمز عبور را وارد کنید");
       return;
     }
     setLoading(true);
@@ -180,6 +170,12 @@ export default function LoginPage() {
   if (isMobile) {
     return (
       <div className="mobile-login-container">
+        {/* Decorative background blurs */}
+        <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
+          <div className="mobile-login-orb mobile-login-orb-1" aria-hidden="true" />
+          <div className="mobile-login-orb mobile-login-orb-2" aria-hidden="true" />
+        </div>
+
         {/* Close Button */}
         <button type="button" className="login-mobile-close" onClick={handleClose} aria-label="بستن">
           ✕
@@ -188,36 +184,16 @@ export default function LoginPage() {
         {/* Form Content */}
         <div className="login-mobile-content">
           <h1 className="login-mobile-title">ورود</h1>
-          <p className="login-mobile-subtitle">با شماره تلفن یا ایمیل و رمز عبور خود وارد شوید</p>
+          <p className="login-mobile-subtitle">به فروشگاه جینکس فمیلی خوش آمدید</p>
 
           {/* Navigation Tabs */}
-          <div className="login-mobile-tabs">
+          <div className="login-mobile-tabs" style={{ display: "flex", justifyContent: "center", gap: 16, marginBottom: 24, borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 12 }}>
             <button
               type="button"
               className="login-mobile-tab-item"
               style={{
-                borderBottomColor: activeTab === "phone" ? "#bf5af2" : "transparent",
-                color: activeTab === "phone" ? "var(--mobile-login-tab-active)" : "var(--mobile-login-tab-inactive)",
-                background: "none",
-                borderTop: "none",
-                borderLeft: "none",
-                borderRight: "none",
-                padding: "0 0 12px 0",
-                fontSize: "16px",
-                fontWeight: "800",
-                cursor: "pointer",
-                marginLeft: "24px"
-              }}
-              onClick={() => handleTabChange("phone")}
-            >
-              استفاده از شماره تلفن
-            </button>
-            <button
-              type="button"
-              className="login-mobile-tab-item"
-              style={{
-                borderBottomColor: activeTab === "email" ? "#bf5af2" : "transparent",
-                color: activeTab === "email" ? "var(--mobile-login-tab-active)" : "var(--mobile-login-tab-inactive)",
+                borderBottom: activeTab === "password" ? "3px solid #bf5af2" : "none",
+                color: activeTab === "password" ? "var(--mobile-login-tab-active)" : "var(--mobile-login-tab-inactive)",
                 background: "none",
                 borderTop: "none",
                 borderLeft: "none",
@@ -227,132 +203,140 @@ export default function LoginPage() {
                 fontWeight: "800",
                 cursor: "pointer"
               }}
-              onClick={() => handleTabChange("email")}
+              onClick={() => handleTabChange("password")}
             >
-              ورود با ایمیل
+              ورود با رمز عبور
+            </button>
+            <button
+              type="button"
+              className="login-mobile-tab-item"
+              style={{
+                borderBottom: activeTab === "otp" ? "3px solid #bf5af2" : "none",
+                color: activeTab === "otp" ? "var(--mobile-login-tab-active)" : "var(--mobile-login-tab-inactive)",
+                background: "none",
+                borderTop: "none",
+                borderLeft: "none",
+                borderRight: "none",
+                padding: "0 0 12px 0",
+                fontSize: "16px",
+                fontWeight: "800",
+                cursor: "pointer"
+              }}
+              onClick={() => handleTabChange("otp")}
+            >
+              ورود با کد یکبار مصرف
             </button>
           </div>
 
-          {error && <div className="login-mobile-error">{error}</div>}
+          {activeTab === "password" ? (
+            <div className="login-mobile-card" style={{ animation: "mobileCardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
+              {error && <div className="login-mobile-error">{error}</div>}
 
-          <form onSubmit={handleLogin} className="login-mobile-form">
-            <div>
-              <label className="login-mobile-field-label">
-                {activeTab === "phone" ? "شماره تلفن همراه" : "نشانی ایمیل"}
-              </label>
-              {activeTab === "phone" ? (
-                <div className="login-mobile-input-wrapper" style={{ direction: "ltr" }}>
-                  <div className="login-mobile-country">
-                    <span className="login-mobile-flag">🇮🇷</span>
-                    <span className="login-mobile-code">+98</span>
+              <form onSubmit={handleLogin} className="login-mobile-form">
+                <div className="centered-field">
+                  <label className="login-mobile-field-label">
+                    شماره تلفن همراه یا ایمیل
+                  </label>
+                  <div className="login-mobile-input-wrapper" style={{ direction: "ltr" }}>
+                    <input
+                      type="text"
+                      className="login-mobile-input login-mobile-input-ltr"
+                      placeholder="09xx xxx xxxx"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoFocus
+                    />
                   </div>
-                  <span className="login-mobile-divider" />
-                  <input
-                    type="tel"
-                    className="login-mobile-input login-mobile-input-ltr"
-                    placeholder="912 345 6789"
-                    value={email}
-                    onChange={handlePhoneChange}
-                    inputMode="numeric"
-                    autoFocus
-                  />
                 </div>
-              ) : (
-                <div className="login-mobile-input-wrapper" style={{ direction: "ltr" }}>
-                  <input
-                    type="email"
-                    className="login-mobile-input login-mobile-input-ltr"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={handleEmailChange}
-                    autoFocus
-                  />
-                </div>
-              )}
-            </div>
 
-            <div>
-              <label className="login-mobile-field-label">رمز عبور</label>
-              <div className="login-mobile-input-wrapper" style={{ direction: "ltr" }}>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  className="login-mobile-input login-mobile-input-ltr"
-                  placeholder="******"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ letterSpacing: showPassword ? "1px" : "4px" }}
-                />
+                <div>
+                  <label className="login-mobile-field-label">رمز عبور</label>
+                  <div className="login-mobile-input-wrapper" style={{ direction: "ltr" }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="login-mobile-input login-mobile-input-ltr"
+                      placeholder="******"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      style={{ letterSpacing: showPassword ? "1px" : "4px" }}
+                    />
+                    <button
+                      type="button"
+                      className="login-mobile-eye-btn"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "پنهان کردن رمز" : "نمایش رمز"}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        {showPassword ? (
+                          <>
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                          </>
+                        ) : (
+                          <>
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                          </>
+                        )}
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Checkbox and Forgot Password Link */}
+                <div className="login-mobile-checkbox-row">
+                  <label className="login-mobile-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      className="login-mobile-checkbox"
+                    />
+                    <span>مرا به خاطر بسپار</span>
+                  </label>
+                  <a href="/forgot-password" className="login-mobile-forgot-link">
+                    فراموشی رمز عبور؟
+                  </a>
+                </div>
+
+                {/* Submit Button */}
                 <button
-                  type="button"
-                  className="login-mobile-eye-btn"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "پنهان کردن رمز" : "نمایش رمز"}
+                  type="submit"
+                  className="login-mobile-submit-btn"
+                  disabled={loading}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    {showPassword ? (
-                      <>
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </>
-                    ) : (
-                      <>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </>
-                    )}
-                  </svg>
+                  {loading ? "در حال ورود..." : "ادامه"}
+                  {!loading && (
+                    <span className="login-mobile-arrow">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    </span>
+                  )}
                 </button>
+              </form>
+
+              {/* Signup Link */}
+              <div className="login-mobile-signup-row">
+                <span>آیا هنوز عضو نشده اید؟</span>
+                <a href="/signup" className="login-mobile-signup-link">
+                  ثبت نام کنید
+                </a>
               </div>
             </div>
-
-            {/* Checkbox and Forgot Password Link */}
-            <div className="login-mobile-checkbox-row">
-              <label className="login-mobile-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="login-mobile-checkbox"
-                />
-                <span>مرا به خاطر بسپار</span>
-              </label>
-              <a href="/forgot-password" className="login-mobile-forgot-link">
-                فراموشی رمز عبور؟
-              </a>
+          ) : (
+            <div className="login-mobile-card" style={{ marginTop: "10px", animation: "mobileCardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
+              <OTPLogin mode="login" />
             </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="login-mobile-submit-btn"
-              disabled={loading}
-            >
-              {loading ? "در حال ورود..." : "ادامه"}
-              {!loading && (
-                <span className="login-mobile-arrow">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                  </svg>
-                </span>
-              )}
-            </button>
-          </form>
-
-          {/* Signup Link */}
-          <div className="login-mobile-signup-row">
-            <span>آیا هنوز عضو نشده اید؟</span>
-            <a href="/signup" className="login-mobile-signup-link">
-              ثبت نام کنید
-            </a>
-          </div>
+          )}
         </div>
 
         {/* Brand/Logo Section */}
         <div className="login-mobile-logo-section">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/web_logo.webp" alt="Nubix Logo" className="login-mobile-logo-img" width="112" height="28" />
-          <span className="login-mobile-logo-text">فروشگاه نوبیکس</span>
+          <img src="/logo.webp" alt="JinxFamily Logo" className="login-mobile-logo-img" width="48" height="48" />
+          <span className="login-mobile-logo-text">فروشگاه جینکس فمیلی</span>
         </div>
 
         {/* Authed Modal */}
@@ -423,109 +407,145 @@ export default function LoginPage() {
   return (
     <div>
       <BackToHomeButton />
-      <Suspense fallback={null}>
-        <Navbar />
-      </Suspense>
       <main className="login-shell">
         <div className="login-glow login-glow-1" />
         <div className="login-glow login-glow-2" />
         <div className="container login-container">
-          <div className="login-card-wrapper">
-            <div className="card password-login-card" style={{ boxShadow: "0 20px 80px rgba(0,0,0,0.08)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <div>
-                  <div className="login-title">ورود</div>
-                  <p className="login-subtitle">با شماره تلفن یا ایمیل و رمز عبور خود وارد شوید</p>
-                </div>
-                <span style={{ background: "linear-gradient(135deg,#4f46e5,#06b6d4)", color: "white", padding: "8px 12px", borderRadius: 12, fontSize: 12 }}>دسترسی امن</span>
-              </div>
-              <form onSubmit={handleLogin} className="password-form">
-                <label className="field">
-                  <span>شماره تلفن</span>
-                  <input
-                    type="tel"
-                    dir="ltr"
-                    className="auth-input"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    inputMode="numeric"
-                    pattern="09[0-9]{9}"
-                    placeholder="مثلاً 0912xxxxxxx"
-                    style={{ fontFamily: "Vazirmatn, system-ui, sans-serif", fontWeight: 700, letterSpacing: 1 }}
-                  />
-                </label>
-                <label className="field" style={{ position: "relative" }}>
-                  <span>رمز عبور</span>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    dir="ltr"
-                    className="auth-input"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="******"
-                    style={{ fontFamily: "Vazirmatn, system-ui, sans-serif", fontWeight: 800, paddingLeft: 40 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: "absolute",
-                      left: 12,
-                      bottom: 12,
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "var(--muted)",
-                      padding: 4,
-                      display: "flex",
-                    }}
-                    tabIndex="-1"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      {showPassword ? (
-                        <>
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                          <line x1="1" y1="1" x2="23" y2="23"></line>
-                        </>
-                      ) : (
-                        <>
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </>
-                      )}
-                    </svg>
-                  </button>
-                </label>
-                <label className="remember-row">
-                  <input
-                    type="checkbox"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                  />
-                  <span>مرا به خاطر بسپار (۳۰ روز)</span>
-                </label>
-                {error && (
-                  <div className="password-error">
-                    {error}
-                  </div>
-                )}
-                <button
-                  type="submit"
-                  className="btn primary"
-                  style={{ display: "flex", justifyContent: "center", gap: 8 }}
-                  disabled={loading}
-                >
-                  {loading ? "در حال ورود..." : "ورود"}
-                </button>
-                <div className="login-links">
-                  <a href="/forgot-password">فراموشی رمز عبور / بازیابی با پیامک</a>
-                  <div>
-                    <span>حساب ندارید؟</span>{" "}
-                    <a href="/signup">ثبت‌نام</a>
-                  </div>
-                </div>
-              </form>
+          <div className="login-card-wrapper" style={{ width: "100%", maxWidth: 480 }}>
+            {/* Desktop Tabs */}
+            <div className="login-tabs-container" style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 24 }}>
+              <button
+                type="button"
+                onClick={() => handleTabChange("password")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: activeTab === "password" ? "var(--primary)" : "var(--muted)",
+                  fontWeight: 800,
+                  fontSize: 18,
+                  cursor: "pointer",
+                  borderBottom: activeTab === "password" ? "3px solid var(--primary)" : "none",
+                  paddingBottom: 8,
+                }}
+              >
+                ورود با رمز عبور
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("otp")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: activeTab === "otp" ? "var(--primary)" : "var(--muted)",
+                  fontWeight: 800,
+                  fontSize: 18,
+                  cursor: "pointer",
+                  borderBottom: activeTab === "otp" ? "3px solid var(--primary)" : "none",
+                  paddingBottom: 8,
+                }}
+              >
+                ورود با کد یکبار مصرف
+              </button>
             </div>
+
+            {activeTab === "password" ? (
+              <div className="card password-login-card" style={{ boxShadow: "0 20px 80px rgba(0,0,0,0.08)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div>
+                    <div className="login-title">ورود</div>
+                    <p className="login-subtitle">با شماره تلفن یا ایمیل و رمز عبور خود وارد شوید</p>
+                  </div>
+                  <span style={{ background: "linear-gradient(135deg,#4f46e5,#06b6d4)", color: "white", padding: "8px 12px", borderRadius: 12, fontSize: 12 }}>دسترسی امن</span>
+                </div>
+                <form onSubmit={handleLogin} className="password-form">
+                  <label className="field centered-field">
+                    <span>شماره تلفن یا ایمیل</span>
+                    <input
+                      type="text"
+                      dir="ltr"
+                      className="auth-input"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="مثلاً 0912xxxxxxx"
+                      style={{ fontFamily: "Vazirmatn, system-ui, sans-serif", fontWeight: 700, letterSpacing: 1 }}
+                      autoFocus
+                    />
+                  </label>
+                  <label className="field" style={{ position: "relative" }}>
+                    <span>رمز عبور</span>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      dir="ltr"
+                      className="auth-input"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="******"
+                      style={{ fontFamily: "Vazirmatn, system-ui, sans-serif", fontWeight: 800, paddingLeft: 40 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        left: 12,
+                        bottom: 12,
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "var(--muted)",
+                        padding: 4,
+                        display: "flex",
+                      }}
+                      tabIndex="-1"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        {showPassword ? (
+                          <>
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                          </>
+                        ) : (
+                          <>
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                          </>
+                        )}
+                      </svg>
+                    </button>
+                  </label>
+                  <label className="remember-row">
+                    <input
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                    />
+                    <span>مرا به خاطر بسپار (۳۰ روز)</span>
+                  </label>
+                  {error && (
+                    <div className="password-error">
+                      {error}
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    className="btn primary"
+                    style={{ display: "flex", justifyContent: "center", gap: 8 }}
+                    disabled={loading}
+                  >
+                    {loading ? "در حال ورود..." : "ورود"}
+                  </button>
+                  <div className="login-links">
+                    <a href="/forgot-password">فراموشی رمز عبور / بازیابی با پیامک</a>
+                    <div>
+                      <span>حساب ندارید؟</span>{" "}
+                      <a href="/signup">ثبت‌نام</a>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <OTPLogin mode="login" />
+            )}
           </div>
         </div>
       </main>
@@ -593,4 +613,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

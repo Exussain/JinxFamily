@@ -16,7 +16,7 @@ from pathlib import Path
 # Ensure project modules can be imported when running directly
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(BASE_DIR))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nubixstore.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jinxfamily.settings")
 try:
     import django
 
@@ -64,10 +64,10 @@ def main(argv: List[str]) -> int:
     parser.add_argument("--email", default="eiliyazaferani@gmail.com", help="Destination email")
     parser.add_argument("--otp", default="123456", help="OTP code to send in SMS")
     parser.add_argument("--template", default=None, help="Kavenegar template name (optional)")
-    parser.add_argument("--subject", default="Test notification from Nubix", help="Email subject")
+    parser.add_argument("--subject", default="Test notification from JinxFamily", help="Email subject")
     parser.add_argument(
         "--message",
-        default="This is a quick test email from NubixShop to confirm delivery.",
+        default="This is a quick test email from JinxFamily to confirm delivery.",
         help="Email message body",
     )
     parser.add_argument("--skip-sms", action="store_true", help="Skip sending SMS")

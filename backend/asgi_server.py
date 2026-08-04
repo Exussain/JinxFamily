@@ -8,8 +8,8 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    key_file = os.path.join(base_dir, ".certs", "nubixshop-local.key")
-    cert_file = os.path.join(base_dir, ".certs", "nubixshop-local.crt")
+    key_file = os.path.join(base_dir, ".certs", "jinxfamily-local.key")
+    cert_file = os.path.join(base_dir, ".certs", "jinxfamily-local.crt")
 
     ssl_kwargs = {}
     if sys.platform != 'win32' and os.path.exists(key_file) and os.path.exists(cert_file):
@@ -19,8 +19,8 @@ if __name__ == "__main__":
         }
 
     uvicorn.run(
-        "nubixstore.asgi:application",
-        host="0.0.0.0",
+        "jinxfamily.asgi:application",
+        host="127.0.0.1",
         port=8001,
         reload=False,  # disable auto-reload in production to avoid nonstop file-watching
         log_level="info",

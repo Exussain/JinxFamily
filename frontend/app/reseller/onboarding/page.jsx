@@ -194,7 +194,7 @@ export default function ResellerOnboardingPage() {
                 </svg>
               </div>
               <h2>درخواست شما ارسال شد</h2>
-              <p>تیم نوبیکس در اولین فرصت به درخواست شما رسیدگی می‌کند.</p>
+              <p>تیم جینکس فمیلی در اولین فرصت به درخواست شما رسیدگی می‌کند.</p>
               {queuePos !== null && (
                 <div className="bx-queue-info">
                   <span className="bx-queue-label">نوبت شما در صف بررسی:</span>

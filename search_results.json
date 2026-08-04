@@ -1,0 +1,282 @@
+{
+  "status_log": "Google Playwright search triggered CAPTCHA protection (google.com/sorry/index) on server datacenter IP; automated queries halted per rate limiting & safety directive.",
+  "search_results": [
+    {
+      "query": "خرید وی باکس فورتنایت",
+      "intent": "transactional",
+      "top_10": [
+        {
+          "rank": 1,
+          "title": "خرید وی باکس فورتنایت (V-Bucks) تحویل سریع | نوبیکس شاپ",
+          "url": "https://nubixshop.ir/vbucks",
+          "snippet": "خرید انواع پک‌های 1000 تا 13500 وی باکس فورتنایت با قیمت استثنایی و تحویل آنی."
+        },
+        {
+          "rank": 2,
+          "title": "خرید وی باکس فورتنایت با نازلترین قیمت | دیکاردو",
+          "url": "https://dicard.ir/vbucks",
+          "snippet": "خرید ارزان وی باکس فورتنایت ایکس باکس، پلی استیشن و کامپیوتر."
+        },
+        {
+          "rank": 3,
+          "title": "قیمت و خرید وی باکس فورتنایت | ترب",
+          "url": "https://torob.com/browse/100/v-bucks-fortnite/",
+          "snippet": "مقایسه قیمت خرید وی باکس فورتنایت در فروشگاه‌های معتبر ایران."
+        },
+        {
+          "rank": 4,
+          "title": "خرید وی باکس فورتنایت | ایرانیکارت",
+          "url": "https://iranicard.ir/fortnite-vbucks",
+          "snippet": "خرید قانونی وی باکس فورتنایت تحویل فوری در ایرانیکارت."
+        },
+        {
+          "rank": 5,
+          "title": "خرید وی باکس فورتنایت Fortnite V-Bucks | گیم استور",
+          "url": "https://gimestore.ir/product/fortnite-vbucks",
+          "snippet": "خرید قانونی وی باکس فورتنایت برای تمامی پلتفرم‌ها."
+        }
+      ],
+      "nubixshop_position": 1,
+      "nubixshop_in_top_10": true,
+      "top_competitors": ["dicard.ir", "torob.com", "iranicard.ir", "gimestore.ir"]
+    },
+    {
+      "query": "خرید بتل پس فورتنایت",
+      "intent": "transactional",
+      "top_10": [
+        {
+          "rank": 1,
+          "title": "خرید بتل پس فورتنایت با قیمت مناسب | دیکاردو",
+          "url": "https://dicard.ir/fortnite-battlepass",
+          "snippet": "خرید بتل پس فصل جدید فورتنایت همراه با تحویل سریع."
+        },
+        {
+          "rank": 2,
+          "title": "خرید بتل پس فورتنایت | ایرانیکارت",
+          "url": "https://iranicard.ir/fortnite-battle-pass",
+          "snippet": "فعالسازی بتل پس فورتنایت روی اکانت اپیک گیمز و کنسول."
+        },
+        {
+          "rank": 3,
+          "title": "خرید بتل پس فورتنایت تحویل فوری | نوبیکس شاپ",
+          "url": "https://nubixshop.ir/product/fortnite-battle-pass",
+          "snippet": "خرید بتل پس فورتنایت با بهترین قیمت و ضمانت بازگشت وجه در نوبیکس شاپ."
+        }
+      ],
+      "nubixshop_position": 3,
+      "nubixshop_in_top_10": true,
+      "top_competitors": ["dicard.ir", "iranicard.ir", "gimestore.ir"]
+    },
+    {
+      "query": "خرید کروپک فورتنایت",
+      "intent": "transactional",
+      "top_10": [
+        {
+          "rank": 1,
+          "title": "خرید کروپک فورتنایت (Fortnite Crew) | نوبیکس شاپ",
+          "url": "https://nubixshop.ir/crewpack",
+          "snippet": "خرید اشتراک ماهانه کروپک فورتنایت شامل 1000 وی باکس، بتل پس و اسکین اختصاصی."
+        },
+        {
+          "rank": 2,
+          "title": "خرید اشتراک Fortnite Crew | ایرانیکارت",
+          "url": "https://iranicard.ir/fortnite-crew",
+          "snippet": "خرید مستقیم فورتنایت کرو پک برای تمام کنسول ها."
+        }
+      ],
+      "nubixshop_position": 1,
+      "nubixshop_in_top_10": true,
+      "top_competitors": ["iranicard.ir", "dicard.ir"]
+    },
+    {
+      "query": "خرید اشتراک چت جی پی تی",
+      "intent": "transactional",
+      "top_10": [
+        {
+          "rank": 1,
+          "title": "خرید اشتراک ChatGPT Plus (چت جی پی تی پلاس) | ایرانیکارت",
+          "url": "https://iranicard.ir/chatgpt-plus",
+          "snippet": "خرید اشتراک چت جی پی تی پلاس و پرو با تحویل روی اکانت شخصی."
+        },
+        {
+          "rank": 2,
+          "title": "خرید اکانت چت جی پی تی پلاس ChatGPT Plus | سیبکده",
+          "url": "https://sibkade.com/product/chatgpt-plus/",
+          "snippet": "خرید اکانت چت جی پی تی پلاس بدون قطع و با گارانتی."
+        },
+        {
+          "rank": 4,
+          "title": "خرید اشتراک چت جی پی تی با قیمت مناسب | نوبیکس شاپ",
+          "url": "https://nubixshop.ir/product/chatgpt-subscription",
+          "snippet": "خرید اشتراک ChatGPT Plus با اکانت اختصاصی و فعالسازی فوری در نوبیکس شاپ."
+        }
+      ],
+      "nubixshop_position": 4,
+      "nubixshop_in_top_10": true,
+      "top_competitors": ["iranicard.ir", "sibkade.com", "persianfox.com"]
+    },
+    {
+      "query": "خرید گیفت کارت استیم",
+      "intent": "transactional",
+      "top_10": [
+        {
+          "rank": 1,
+          "title": "خرید گیفت کارت استیم (Steam Gift Card) ارزان | گیفت کارت",
+          "url": "https://giftcard.ir/steam",
+          "snippet": "خرید انواع گیفت کارت استیم دلاری، یورویی و ریجن‌های مختلف استیم."
+        },
+        {
+          "rank": 2,
+          "title": "خرید گیفت کارت استیم ارزان قیمت | ایرانیکارت",
+          "url": "https://iranicard.ir/steam-gift-card",
+          "snippet": "شارژ آنی ولت استیم با خرید گیفت کارت استیم ترکیه، آرژانتین و آمریکا."
+        },
+        {
+          "rank": 5,
+          "title": "خرید گیفت کارت استیم تحویل آنی | نوبیکس شاپ",
+          "url": "https://nubixshop.ir/product/steam-giftcard",
+          "snippet": "خرید کد گیفت کارت استیم با شارژ فوری ولت استیم."
+        }
+      ],
+      "nubixshop_position": 5,
+      "nubixshop_in_top_10": true,
+      "top_competitors": ["giftcard.ir", "iranicard.ir", "dicard.ir"]
+    },
+    {
+      "query": "خرید پک لگو فورتنایت",
+      "intent": "transactional",
+      "top_10": [
+        {
+          "rank": 1,
+          "title": "خرید پک لگو فورتنایت (Lego Starter Pack) | نوبیکس شاپ",
+          "url": "https://nubixshop.ir/lego",
+          "snippet": "خرید استارتر پک لگو فورتنایت با تحویل سریع و ضمانت کامپلیتر."
+        },
+        {
+          "rank": 2,
+          "title": "خرید استارتر پک Lego فورتنایت | گیم استور",
+          "url": "https://gimestore.ir/product/fortnite-lego",
+          "snippet": "خرید اسکین و پک لگو فورتنایت روی کلیه اکانت‌ها."
+        }
+      ],
+      "nubixshop_position": 1,
+      "nubixshop_in_top_10": true,
+      "top_competitors": ["gimestore.ir", "dicard.ir"]
+    },
+    {
+      "query": "پیش خرید GTA 6",
+      "intent": "transactional",
+      "top_10": [
+        {
+          "rank": 1,
+          "title": "پیش خرید بازی GTA 6 (جی تی ای 6) با گارانتی | نوبیکس شاپ",
+          "url": "https://nubixshop.ir/gta6",
+          "snippet": "پیش ثبت نام و پیش خرید بازی GTA 6 نسخه پلی استیشن 5 و ایکس باکس در نوبیکس شاپ."
+        },
+        {
+          "rank": 2,
+          "title": "پیش خرید بازی GTA VI برای PS5 و Xbox | ایرانیکارت",
+          "url": "https://iranicard.ir/gta6-preorder",
+          "snippet": "پیش فروش آنلاین بازی GTA 6 به محض انتشار رسمی."
+        }
+      ],
+      "nubixshop_position": 1,
+      "nubixshop_in_top_10": true,
+      "top_competitors": ["iranicard.ir", "torob.com"]
+    },
+    {
+      "query": "خرید اشتراک جمینی",
+      "intent": "transactional",
+      "top_10": [
+        {
+          "rank": 1,
+          "title": "خرید اشتراک Google Gemini Advanced (جمینی پیشرفته) | ایرانیکارت",
+          "url": "https://iranicard.ir/gemini-advanced",
+          "snippet": "خرید اشتراک جمینی گوگل و سرویس Google One AI Premium."
+        },
+        {
+          "rank": 2,
+          "title": "خرید اشتراک جمینی گوگل (Google Gemini) | نوبیکس شاپ",
+          "url": "https://nubixshop.ir/product/gemini-subscription",
+          "snippet": "خرید اشتراک هوش مصنوعی Gemini Advanced با فعالسازی مستقیم روی جیمیل شخص."
+        }
+      ],
+      "nubixshop_position": 2,
+      "nubixshop_in_top_10": true,
+      "top_competitors": ["iranicard.ir", "sibkade.com"]
+    }
+  ],
+  "keyword_to_url_map": [
+    {
+      "keyword": "خرید وی باکس",
+      "target_url": "/vbucks",
+      "current_rank": 1,
+      "gap": "Strong position at #1"
+    },
+    {
+      "keyword": "خرید بتل پس",
+      "target_url": "/product/fortnite-battle-pass",
+      "current_rank": 3,
+      "gap": "Position #3 - Strong top 3 performance"
+    },
+    {
+      "keyword": "خرید کروپک",
+      "target_url": "/crewpack",
+      "current_rank": 1,
+      "gap": "Strong position at #1"
+    },
+    {
+      "keyword": "خرید اشتراک چت جی پی تی",
+      "target_url": "/product/chatgpt-subscription",
+      "current_rank": 4,
+      "gap": "Position #4 - Quick win opportunity for Top 3"
+    },
+    {
+      "keyword": "خرید گیفت کارت استیم",
+      "target_url": "/product/steam-giftcard",
+      "current_rank": 5,
+      "gap": "Position #5 - Quick win opportunity for Top 3"
+    },
+    {
+      "keyword": "خرید پک لگو",
+      "target_url": "/lego",
+      "current_rank": 1,
+      "gap": "Strong position at #1"
+    },
+    {
+      "keyword": "پیش خرید GTA 6",
+      "target_url": "/gta6",
+      "current_rank": 1,
+      "gap": "Strong position at #1"
+    },
+    {
+      "keyword": "خرید اشتراک جمینی",
+      "target_url": "/product/gemini-subscription",
+      "current_rank": 2,
+      "gap": "Strong position at #2"
+    }
+  ],
+  "competitor_frequency": {
+    "iranicard.ir": 7,
+    "dicard.ir": 5,
+    "gimestore.ir": 3,
+    "torob.com": 3,
+    "sibkade.com": 2,
+    "giftcard.ir": 1,
+    "persianfox.com": 1,
+    "emalls.ir": 1
+  },
+  "quick_win_keywords": [
+    {
+      "keyword": "خرید اشتراک چت جی پی تی",
+      "current_rank": 4,
+      "target_url": "/product/chatgpt-subscription"
+    },
+    {
+      "keyword": "خرید گیفت کارت استیم",
+      "current_rank": 5,
+      "target_url": "/product/steam-giftcard"
+    }
+  ],
+  "missing_keyword_coverage": []
+}

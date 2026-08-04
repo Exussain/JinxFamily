@@ -8,18 +8,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-NubixShop (نوبیکس شاپ) is a live, production Persian/Iranian e-commerce site selling digital
+JinxFamily (جینکس فمیلی) is a live, production Persian/Iranian e-commerce site selling digital
 game top-ups and subscriptions (Fortnite V-Bucks/Crew Pack, GTA6, LoL RP, ChatGPT/Gemini, gift
 cards, etc.). It is a Django REST-ish backend + Next.js (App Router) frontend monorepo, plus a
 "reseller" (همکار) B2B portal, an AI support agent, and Telegram/Discord bot integrations. The
 site is RTL Persian (`fa-IR`) throughout — UI copy, AI prompts, and the changelog are in Persian.
 
-Both services run live under **pm2** on this box (`pm2 list` → `nubix-backend`, `nubix-frontend`).
+Both services run live under **pm2** on this box (`pm2 list` → `jinxfamily-backend`, `jinxfamily-frontend`).
 Treat changes as deploying to production, not a sandbox.
 
 ## Repository layout
 
-- `backend/` — Django 4.2 project (`nubixstore/` settings package + single `shop/` app). Served by
+- `backend/` — Django 4.2 project (`jinxfamily/` settings package + single `shop/` app). Served by
   Uvicorn (ASGI) via `asgi_server.py`, not `manage.py runserver`.
 - `frontend/` — Next.js 16 (App Router, React 19) app, served by `next start` under pm2.
 - `frontend/components/` is also configured as a separate additional working directory — expect to
@@ -32,15 +32,16 @@ Treat changes as deploying to production, not a sandbox.
 
 - `npm run dev` — dev server on port 3002 (Turbopack/webpack dev, all interfaces).
 - `npm run build` — production build.
-- `npm run deploy` — `next build && pm2 restart nubix-frontend` (same as the root `HardReload.sh`).
-- **After any frontend code change, run `/root/NubixShop/public/HardReload.sh`** (builds and
-  restarts the pm2 `nubix-frontend` process) so the change actually goes live, and log the change
+- `npm run deploy` — `next build && pm2 restart jinxfamily-frontend` (same as the root `HardReload.sh`).
+- **After any frontend code change, run `/root/jinxfamily/public/HardReload.sh`** (builds and
+  restarts the pm2 `jinxfamily-frontend` process) so the change actually goes live, and log the change
   in `frontend/CHANGELOG.md` (Persian, dated entries — see existing entries for format/style).
 - Tests are plain Node scripts using `node:assert/strict` (some also use `node:test`), colocated as
   `*.test.mjs` next to the module they cover (in `lib/` and `components/`). Run all of them with:
   `node --test lib/*.test.mjs components/*.test.mjs`
-  Run a single test file directly: `node lib/currencyRates.test.mjs`.
 - No lint script is configured in `package.json`.
+- **Image Downloader Tools**: Located in the `frontend/` directory (specifically `download_filtered_covers.py`). Run `python3 download_filtered_covers.py` to search for and download official, non-AI brand logos (such as Xbox, Steam, PlayStation) and game covers using search engine image search scraping with query parameters and keyword filters to prevent AI-generated results.
+
 
 ### Backend (`backend/`)
 
@@ -52,11 +53,11 @@ Treat changes as deploying to production, not a sandbox.
   `.venv/bin/python manage.py test shop.tests.<TestClass>.<test_method>` for a single test.
   `shop/tests.py` mocks external services (Kavenegar SMS, etc.) — follow that pattern for new
   tests touching SMS/email/payment.
-- After backend and frontend changes, restart the live process: `pm2 restart nubix-backend` (mirrors the
+- After backend and frontend changes, restart the live process: `pm2 restart jinxfamily-backend` (mirrors the
   frontend's HardReload flow; there's no separate script for it).
 - Migrations: `.venv/bin/python manage.py makemigrations shop` / `migrate`.
 - One-off Scripts: Run helper or one-off scripts in the virtualenv from the `backend/` directory, e.g., `.venv/bin/python scripts/send_reseller_congrats.py` or `.venv/bin/python scripts/send_test_notifications.py`.
-- Discord Bot: Managed via systemd service. Restart and tail logs using `systemctl restart nubix-discord` / `journalctl -u nubix-discord -f`. Code and documentation are located in `/root/NubixDiscord/`.
+- Discord Bot: Managed via systemd service. Restart and tail logs using `systemctl restart jinxfamily-discord` / `journalctl -u jinxfamily-discord -f`. Code and documentation are located in `/root/jinxfamily/`.
 
 
 ## Architecture
@@ -96,12 +97,12 @@ Auth model: two independent systems coexist —
 2. **Reseller auth** — opaque bearer token issued by `reseller_auth_token`, stored hashed, checked
    per-request in `reseller_views.py`. Completely separate from the session cookie flow.
 
-CORS is hand-rolled in `nubixstore/middleware.py` (`CORSMiddleware`), not `django-cors-headers` —
+CORS is hand-rolled in `jinxfamily/middleware.py` (`CORSMiddleware`), not `django-cors-headers` —
 allowed origins are a hardcoded set unioned with `DJANGO_CORS_ALLOWED_ORIGINS`. Update that set (not
 just the env var) when adding a new trusted frontend origin, since the env var only extends it.
 
-Database: `nubixstore/settings.py` hardcodes a Windows SQLite path as the literal default
-(`C:\NubixData\db.sqlite3`) — a leftover from when this ran on Windows — but it's always overridden
+Database: `jinxfamily/settings.py` hardcodes a Windows SQLite path as the literal default
+(`C:\JinxFamilyData\db.sqlite3`) — a leftover from when this ran on Windows — but it's always overridden
 via `DJANGO_DB_PATH` in `backend/.env`, which currently points at `backend/db.sqlite3` on this Linux
 box. Don't "fix" the Windows-looking default; just be aware `.env` is what actually governs it. A
 commented-out MySQL config block also exists in `settings.py` and is intentionally disabled.
@@ -130,7 +131,7 @@ commented-out MySQL config block also exists in `settings.py` and is intentional
   where business logic that needs to be unit-tested lives (currency parsing, product image
   resolution, crewpack display math, etc.) rather than inline in components.
 - `lib/useCart.js` — the only client-side global state: a `CartProvider` React Context persisting
-  to `localStorage` (`nubix_cart_v1`). There's no Redux/Zustand/etc.
+  to `localStorage` (`jinxfamily_cart_v1`). There's no Redux/Zustand/etc.
 - `lib/serverFetch.mjs` — SSR fetch helper (`fetchApiJson`) that tries internal/loopback API bases
   before the public domain, because the prod box can't always reach its own public hostname
   (hairpin NAT / Cloudflare). Use this (or mirror its fallback chain) for any new server-component
@@ -207,6 +208,46 @@ commented-out MySQL config block also exists in `settings.py` and is intentional
 - Notifications fan out across SMS (Kavenegar), email (Resend), Telegram bots (`backend/ai/`,
   `shop/telegram_channel_service.py`), and Discord (webhook + bot outbox tables in `views.py`) —
   changes to order-status flows often need to touch more than one of these.
+
+
+## Image Crawler & Downloader Scripts
+
+The repository includes a suite of image scraping and downloading tools located in the `frontend/` directory. These are used to populate game covers and official brand logos (such as Xbox, Steam, PlayStation) under `frontend/public/images/games/`.
+
+### 1. Primary Downloader: [download_filtered_covers.py](file:///root/jinxfamily/frontend/download_filtered_covers.py)
+* **Purpose**: Fetches game covers/logos for all 12 supported games with high relevance.
+* **Mechanism**:
+  * Scrapes **Bing Images** (`https://www.bing.com/images/search`) by extracting image URLs from the JSON payload in the `m` attribute (`murl` key) of `<a>` tags with the `iusc` class.
+  * **Keyword Filtering**: Matches the extracted image URLs against a strict whitelist of game-specific keywords (e.g., `["fortnite", "fn"]` for a Fortnite query) to avoid downloading irrelevant, fan-made, or AI-generated results. If no URL passes the filter, it falls back to the unfiltered search list.
+* **Usage**:
+  ```bash
+  python3 frontend/download_filtered_covers.py
+  ```
+
+### 2. Play Store & Wikimedia Fallback: [download_correct_covers.py](file:///root/jinxfamily/frontend/download_correct_covers.py)
+* **Purpose**: Downloads exact app icons for mobile games.
+* **Mechanism**:
+  * Queries the **Google Play Store** detail pages (`https://play.google.com/store/apps/details?id={package_id}`) using `BeautifulSoup`.
+  * Scrapes `<img alt="Icon image">` or `<img itemprop="image">` elements and replaces the resolution parameter suffix (e.g., changing `=w...` to `=w512-h512`) to get high-quality 512x512 icons.
+  * Downloads console/PC store logo files (Xbox, PlayStation, Steam, Fortnite) from hardcoded official Wikimedia or CDN URLs.
+* **Usage**:
+  ```bash
+  python3 frontend/download_correct_covers.py
+  ```
+
+### 3. Google Images Retro Scraper: [test_google_retro.py](file:///root/jinxfamily/frontend/test_google_retro.py) & [inspect_google_html.py](file:///root/jinxfamily/frontend/inspect_google_html.py)
+* **Purpose**: Prototypes/tests for scraping Google Images without executing JavaScript.
+* **Mechanism**:
+  * Sends requests to Google Image search using a classic **Internet Explorer 6** User-Agent: `"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)"`.
+  * This forces Google to bypass its modern, JS-heavy client-side interface and return a lightweight, table-based retro HTML layout.
+  * Extracts raw image source URLs embedded inside standard `href` parameters formatted as `/imgres?imgurl=<URL>&...` via BeautifulSoup and regular expressions.
+
+### 4. Bing Scraper Prototypes: [test_bing_images.py](file:///root/jinxfamily/frontend/test_bing_images.py) & [download_verified_covers.py](file:///root/jinxfamily/frontend/download_verified_covers.py)
+* **Purpose**: Earlier versions of the Bing Image search downloader.
+* **Mechanism**: Scrapes Bing Images without the keyword verification filters. [download_verified_covers.py](file:///root/jinxfamily/frontend/download_verified_covers.py) attempts to fetch the first few search results, but is more prone to downloading incorrect or spammy images compared to [download_filtered_covers.py](file:///root/jinxfamily/frontend/download_filtered_covers.py).
+
+### 5. Static URL Check: [test_image_urls.py](file:///root/jinxfamily/frontend/test_image_urls.py)
+* **Purpose**: Sends `HEAD` requests to verify that the official game/console brand CDN and Wikimedia logos are still online and accessible.
 
 
 ## Rules to Prevent Regressions & SEO Guidelines

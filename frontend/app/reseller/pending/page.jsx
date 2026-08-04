@@ -47,7 +47,7 @@ export default function ResellerPendingPage() {
   return (
     <div className="reseller-login">
       <div className="reseller-login-card">
-        <Image src="/web_logo.webp" alt="NubixShop" width={56} height={56} className="logo" priority />
+        <Image src="/logo.webp" alt="JinxFamily" width={56} height={56} className="logo" priority />
         <h1>در صف انتظار تایید هستید</h1>
         <p className="sub">
           {status === "rejected"

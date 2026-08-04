@@ -19,7 +19,7 @@ class KavenegarService:
     BASE_URL = "https://api.kavenegar.com/v1"
 
     # نام template باید در پنل Kavenegar تعریف شده باشد
-    DEFAULT_TEMPLATE = os.environ.get("KAVENEGAR_OTP_TEMPLATE", "nubixshop-signup")
+    DEFAULT_TEMPLATE = os.environ.get("KAVENEGAR_OTP_TEMPLATE", "jinxfamily-signup")
 
     # کدهای وضعیت Kavenegar
     STATUS_SUCCESS = 200
@@ -51,6 +51,145 @@ class KavenegarService:
                     time.sleep(2 ** attempt)
                 else:
                     raise
+
+    @classmethod
+    def _get(cls, url: str, timeout: int = 8):
+        """Make a single read-only request to Kavenegar.
+
+        Health checks intentionally do not retry.  The admin panel should get a
+        quick, honest answer when it opens instead of waiting through the SMS
+        sender's retry backoff.
+        """
+        session = requests.Session()
+        session.trust_env = False
+        return session.get(url, timeout=timeout)
+
+    @classmethod
+    def health_check(cls) -> dict:
+        """Check Kavenegar credentials without sending an SMS.
+
+        Kavenegar's account-info endpoint authenticates the API key and also
+        exposes the remaining credit.  The returned status is deliberately
+        provider-agnostic so the admin UI can distinguish a bad key from a
+        temporary network/provider failure without ever receiving the key.
+        """
+        api_key = str(cls.API_KEY or "").strip()
+        base_result = {
+            "ok": False,
+            "status": "provider_error",
+            "message": "سرویس پیامک کاوه‌نگار پاسخ معتبر نداد",
+            "provider_status": None,
+            "credit": None,
+        }
+
+        if not api_key:
+            logger.error("Kavenegar health check failed: API key is missing")
+            return {
+                **base_result,
+                "status": "missing_api_key",
+                "message": "کلید API کاوه‌نگار در تنظیمات سرور وجود ندارد",
+            }
+
+        url = f"{cls.BASE_URL}/{api_key}/account/info.json"
+        try:
+            response = cls._get(url, timeout=6)
+        except requests.exceptions.Timeout:
+            logger.error("Kavenegar health check timed out")
+            return {
+                **base_result,
+                "status": "timeout",
+                "message": "بررسی کاوه‌نگار به دلیل پایان زمان اتصال ناموفق بود",
+            }
+        except requests.exceptions.RequestException as exc:
+            # Do not log the exception string: requests may include the API
+            # key in the failed URL.
+            logger.error("Kavenegar health check request failed: %s", type(exc).__name__)
+            return {
+                **base_result,
+                "status": "unreachable",
+                "message": "ارتباط با سرویس کاوه‌نگار برقرار نشد",
+            }
+        except Exception:
+            logger.exception("Unexpected error during Kavenegar health check")
+            return {
+                **base_result,
+                "status": "unexpected_error",
+                "message": "خطای غیرمنتظره هنگام بررسی کاوه‌نگار رخ داد",
+            }
+
+        try:
+            data = response.json()
+        except (TypeError, ValueError):
+            logger.error("Kavenegar health check returned non-JSON data (HTTP %s)", response.status_code)
+            return {
+                **base_result,
+                "status": "invalid_response",
+                "message": "پاسخ کاوه‌نگار قابل پردازش نیست",
+            }
+
+        if not isinstance(data, dict):
+            logger.error("Kavenegar health check returned an unexpected JSON shape")
+            return {
+                **base_result,
+                "status": "invalid_response",
+                "message": "ساختار پاسخ کاوه‌نگار نامعتبر است",
+            }
+
+        provider_return = data.get("return") if isinstance(data.get("return"), dict) else {}
+        provider_status = provider_return.get("status")
+        try:
+            provider_status = int(provider_status) if provider_status is not None else None
+        except (TypeError, ValueError):
+            provider_status = None
+
+        entries = data.get("entries") if isinstance(data.get("entries"), dict) else {}
+        credit = entries.get("remaincredit")
+        try:
+            credit = int(credit) if credit is not None else None
+        except (TypeError, ValueError):
+            credit = None
+
+        if response.status_code == cls.STATUS_SUCCESS and provider_status == cls.STATUS_SUCCESS:
+            if credit is not None and credit <= 0:
+                logger.error("Kavenegar account has no remaining credit")
+                return {
+                    **base_result,
+                    "status": "insufficient_credit",
+                    "message": "اعتبار حساب کاوه‌نگار تمام شده است",
+                    "provider_status": provider_status,
+                    "credit": credit,
+                }
+            return {
+                "ok": True,
+                "status": "healthy",
+                "message": "اتصال و کلید API کاوه‌نگار سالم است",
+                "provider_status": provider_status,
+                "credit": credit,
+            }
+
+        status_code = provider_status or response.status_code
+        status_map = {
+            401: ("account_inactive", "حساب کاوه‌نگار غیرفعال است"),
+            403: ("invalid_api_key", "کلید API کاوه‌نگار نامعتبر است یا دسترسی آن رد شده است"),
+            416: ("ip_not_authorized", "آدرس IP سرور برای کاوه‌نگار مجاز نیست"),
+            418: ("insufficient_credit", "اعتبار حساب کاوه‌نگار کافی نیست"),
+        }
+        status, message = status_map.get(
+            status_code,
+            ("provider_error", "کاوه‌نگار یک خطای سرویس برگرداند"),
+        )
+        logger.error(
+            "Kavenegar health check failed with provider status %s (HTTP %s)",
+            provider_status,
+            response.status_code,
+        )
+        return {
+            **base_result,
+            "status": status,
+            "message": message,
+            "provider_status": provider_status or response.status_code,
+            "credit": credit,
+        }
 
     @classmethod
     def send_verification_code(
@@ -272,7 +411,7 @@ class KavenegarService:
         phone_number: str,
         customer_name: str,
         status_fa: str,
-        template_name: Optional[str] = "nubixshop-order-done",
+        template_name: Optional[str] = "jinxfamily-order-done",
         include_status_token: bool = False,
     ) -> Tuple[bool, str]:
         """
@@ -313,7 +452,7 @@ class KavenegarService:
             s = re.sub(r"[\s_\-\u200c\u200d\u200e\u200f]+", "", s)
             return s
 
-        if template == "nubixshop-alert":
+        if template == "jinxfamily-alert":
             # قالب alert به صورت "%token عزیز، سفارش شما نیاز به %token2 دارد..." است.
             # لذا token نام کامل مشتری و token2 وضعیت آن (مثلا رسیدگی) خواهد بود.
             payload = {
@@ -462,12 +601,12 @@ class KavenegarService:
         customer_name: str,
         points: int,
         balance: int,
-        template_name: Optional[str] = "nubixshop-club-points",
+        template_name: Optional[str] = "jinxfamily-club-points",
     ) -> Tuple[bool, str]:
         """
         ارسال پیامک باشگاه مشتریان بعد از خرید.
         Template پیشنهادی کاوه‌نگار:
-        token = نام، token2 = الماس دریافتی، token3 = موجودی الماس
+        token = نام، token2 = کوین دریافتی، token3 = موجودی کوین
         """
         if not phone_number:
             return False, "شماره تلفن خالی است"
@@ -476,7 +615,7 @@ class KavenegarService:
         if not ok:
             return False, normalized
 
-        template = template_name or "nubixshop-club-points"
+        template = template_name or "jinxfamily-club-points"
         if not cls.API_KEY:
             if cls._is_debug_mode():
                 logger.info(
@@ -585,7 +724,7 @@ class KavenegarService:
     ) -> Tuple[bool, str]:
         """
         ارسال پیامک استرداد وجه با مبلغ
-        قالب: nubixshop-refund
+        قالب: jinxfamily-refund
         token: مبلغ به تومان (با کاما)
         """
         if not phone_number:
@@ -603,14 +742,14 @@ class KavenegarService:
             log_notification(
                 "sms",
                 normalized,
-                template="nubixshop-refund",
+                template="jinxfamily-refund",
                 success=False,
                 message="Kavenegar API key is missing",
                 context={"status": "missing_api_key"},
             )
             return False, "Kavenegar API key is not configured"
 
-        template = "nubixshop-refund"
+        template = "jinxfamily-refund"
         url = cls._verify_lookup_url()
 
         # فرمت مبلغ با کاما
@@ -715,15 +854,15 @@ class KavenegarService:
         phone_number: str,
         customer_name: str = "",
     ) -> Tuple[bool, str]:
-        """یادآوری سبد رها‌شده از قالب nubixshop-cart-reminder.
+        """یادآوری سبد رها‌شده از قالب jinxfamily-cart-reminder.
 
         قالب در پنل کاوه‌نگار:
             %token عزیز،
-            لطفاً سفارش خود را از طریق لینک https://nubixshop.ir/checkout تکمیل فرمایید.
+            لطفاً سفارش خود را از طریق لینک https://jinxfamily.ir/checkout تکمیل فرمایید.
             با توجه به حجم بالای سفارشات، در صورت عدم تکمیل، سفارش به‌صورت
             خودکار لغو خواهد شد. سپاس از همراهی شما
 
-            نوبیکس شاپ
+            جینکس فمیلی
         token = نام کوچک مشتری (مثلاً «علی»). اگر خالی باشد، «مشتری» استفاده می‌شود.
         """
         ok, normalized = cls.validate_phone_number(phone_number)
@@ -745,7 +884,7 @@ class KavenegarService:
             log_notification(
                 "sms",
                 normalized,
-                template="nubixshop-cart-reminder",
+                template="jinxfamily-cart-reminder",
                 success=False,
                 message="Kavenegar API key is missing",
             )
@@ -758,7 +897,7 @@ class KavenegarService:
         payload = {
             "receptor": normalized,
             "token": _clean(first_name),
-            "template": "nubixshop-cart-reminder",
+            "template": "jinxfamily-cart-reminder",
             "type": "sms",
         }
 
@@ -774,7 +913,7 @@ class KavenegarService:
                     log_notification(
                         "sms",
                         normalized,
-                        template="nubixshop-cart-reminder",
+                        template="jinxfamily-cart-reminder",
                         success=True,
                         message="یادآوری سبد ارسال شد",
                         context={"response": data, "payload": payload},
@@ -784,7 +923,7 @@ class KavenegarService:
                 log_notification(
                     "sms",
                     normalized,
-                    template="nubixshop-cart-reminder",
+                    template="jinxfamily-cart-reminder",
                     success=False,
                     message=error,
                     context={"response": data, "payload": payload},
@@ -794,16 +933,16 @@ class KavenegarService:
                 log_notification(
                     "sms",
                     normalized,
-                    template="nubixshop-cart-reminder",
+                    template="jinxfamily-cart-reminder",
                     success=False,
-                    message="الگوی 'nubixshop-cart-reminder' یافت نشد",
+                    message="الگوی 'jinxfamily-cart-reminder' یافت نشد",
                     context={"status_code": response.status_code, "payload": payload},
                 )
-                return False, "الگوی 'nubixshop-cart-reminder' یافت نشد"
+                return False, "الگوی 'jinxfamily-cart-reminder' یافت نشد"
             log_notification(
                 "sms",
                 normalized,
-                template="nubixshop-cart-reminder",
+                template="jinxfamily-cart-reminder",
                 success=False,
                 message=f"خطای ناشناخته: {response.status_code}",
                 context={"status_code": response.status_code, "payload": payload},
@@ -813,7 +952,7 @@ class KavenegarService:
             log_notification(
                 "sms",
                 normalized,
-                template="nubixshop-cart-reminder",
+                template="jinxfamily-cart-reminder",
                 success=False,
                 message="Timeout اتصال به کاوه‌نگار",
                 context={"status": "timeout"},
@@ -823,7 +962,7 @@ class KavenegarService:
             log_notification(
                 "sms",
                 normalized,
-                template="nubixshop-cart-reminder",
+                template="jinxfamily-cart-reminder",
                 success=False,
                 message=str(e),
                 context={"status": "request_exception"},
@@ -833,7 +972,7 @@ class KavenegarService:
             log_notification(
                 "sms",
                 normalized,
-                template="nubixshop-cart-reminder",
+                template="jinxfamily-cart-reminder",
                 success=False,
                 message=str(e),
                 context={"status": "unexpected_error"},

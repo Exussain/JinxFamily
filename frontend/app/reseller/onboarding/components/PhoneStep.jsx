@@ -4,7 +4,7 @@ import OtpInput from "./OtpInput";
 import ReCaptcha from "../../../../components/ReCaptcha";
 
 const PHONE_RE = /^(09\d{9}|\d{10})$/;
-const SITE_KEY = "6LdlQyEtAAAAAPmc8sJ-C_FxwUc2tgTJMvju1aTN";
+const SITE_KEY = "6LfrtFstAAAAAGFN9f1bsaZ3NNBhBMgfsx4ivTyZ";
 
 function normalizePhone(raw) {
   const digits = raw.replace(/\D/g, "");
@@ -20,7 +20,7 @@ export default function PhoneStep({ phone, otp, onPhone, onOtp, onVerified }) {
   const [captchaToken, setCaptchaToken] = useState(null);
   const [captchaRequired, setCaptchaRequired] = useState(false);
   const [captchaProvider, setCaptchaProvider] = useState("recaptcha");
-  const [captchaSiteKey, setCaptchaSiteKey] = useState("6LdlQyEtAAAAAPmc8sJ-C_FxwUc2tgTJMvju1aTN");
+  const [captchaSiteKey, setCaptchaSiteKey] = useState("6LfrtFstAAAAAGFN9f1bsaZ3NNBhBMgfsx4ivTyZ");
 
   useEffect(() => {
     if (timer <= 0) return;

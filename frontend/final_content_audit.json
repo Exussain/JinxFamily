@@ -1,0 +1,423 @@
+{
+  "content_audit": [
+    {
+      "url": "https://nubixshop.ir/blog",
+      "word_count": 965,
+      "headings": [
+        "H3: راهنمای رفع محدودیت‌های موقت حساب (Remove Restriction) و بازگشایی قفل امنیت",
+        "H3: راهنمای لینک و آنلینک کردن حساب‌های بازی Xbox و PlayStation به اپیک گیمز",
+        "H3: راهنمای خاموش کردن تایید دو مرحله‌ای (2FA) در اپیک گیمز، ایکس باکس و سونی",
+        "H3: چرا برخی کارت‌های مجازی کار نمی‌کنند؟ بررسی محدودیت‌های ترکیه",
+        "H3: چه محصولاتی در نوبیکس موجود است؟ بازی‌ها، ویباکس و اشتراک‌ها",
+        "H2: مقالات و آموزش‌ها",
+        "H3: راهنمای کامل خرید وی‌باکس فورتنایت",
+        "H3: کروپک فورتنایت چیست و آیا ارزش خرید دارد؟",
+        "H3: آموزش خرید و فعال‌سازی اشتراک ChatGPT Plus",
+        "H3: اشتراک Gemini Advanced؛ دستیار هوشمند گوگل",
+        "H3: راهنمای خرید و فعال‌سازی گیفت کارت استیم",
+        "H3: پیش‌خرید GTA VI؛ هر آنچه باید بدانید",
+        "H3: خرید اشتراک اسپاتیفای پرمیوم بدون دردسر",
+        "H3: راهنمای رفع محدودیت‌های موقت حساب (Remove Restriction) و بازگشایی قفل امنیت",
+        "H3: راهنمای لینک و آنلینک کردن حساب‌های بازی Xbox و PlayStation به اپیک گیمز",
+        "H3: راهنمای خاموش کردن تایید دو مرحله‌ای (2FA) در اپیک گیمز، ایکس باکس و سونی",
+        "H3: چرا برخی کارت‌های مجازی کار نمی‌کنند؟ بررسی محدودیت‌های ترکیه",
+        "H3: چه محصولاتی در نوبیکس موجود است؟ بازی‌ها، ویباکس و اشتراک‌ها",
+        "H3: آیا می‌توانم به نوبیکس اعتماد کنم؟ نماد اعتماد الکترونیکی و دفتر رسمی",
+        "H3: روش پرداخت چگونه است؟ درگاه پرداخت رسمی زرین‌پال و شاپرک",
+        "H3: ساعات کاری پشتیبانی چیست؟ پاسخگویی تلفنی و آنلاین",
+        "H3: چگونه سفارش خود را پیگیری کنم؟ سیستم رهگیری لحظه‌ای و پیامک",
+        "H3: سفارشات چگونه تکمیل می‌شوند؟ فرآیند کاملاً خودکار و هوشمند",
+        "H3: چرا نوبیکس شاپ را انتخاب کنیم؟ خرید قانونی با پشتیبانی ۲۴ ساعته",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 52,
+      "images_missing_alt": 0,
+      "content_quality": "good",
+      "issues": [
+        "Missing H1 heading.",
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Include exactly one clear H1 tag matching page search intent.",
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/blog/guide-buy-vbucks",
+      "word_count": 296,
+      "headings": [
+        "H1: راهنمای کامل خرید وی‌باکس فورتنایت",
+        "H2: وی‌باکس چیست و به چه دردی می‌خورد؟",
+        "H2: چرا از نوبیکس شاپ بخریم؟",
+        "H2: مرحله به مرحله",
+        "H3: انتخاب بسته وی‌باکس",
+        "H3: وارد کردن اطلاعات",
+        "H3: پرداخت و دریافت",
+        "H2: خرید از نوبیکس شاپ",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 34,
+      "images_missing_alt": 0,
+      "content_quality": "thin",
+      "issues": [
+        "Thin content: only 296 words.",
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Expand main text content to at least 600+ words with rich, actionable guidance.",
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/blog/guide-crew-pack",
+      "word_count": 242,
+      "headings": [
+        "H1: کروپک فورتنایت چیست و آیا ارزش خرید دارد؟",
+        "H2: کروپک شامل چه چیزهایی است؟",
+        "H2: آیا به‌صرفه است؟",
+        "H2: خرید از نوبیکس شاپ",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 34,
+      "images_missing_alt": 0,
+      "content_quality": "thin",
+      "issues": [
+        "Thin content: only 242 words.",
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Expand main text content to at least 600+ words with rich, actionable guidance.",
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/blog/guide-buy-chatgpt-plus",
+      "word_count": 266,
+      "headings": [
+        "H1: آموزش خرید و فعال‌سازی اشتراک ChatGPT Plus",
+        "H2: مزایای اشتراک Plus",
+        "H2: چرا از نوبیکس؟",
+        "H2: مرحله به مرحله",
+        "H3: ثبت سفارش اشتراک",
+        "H3: پرداخت ریالی",
+        "H3: فعال‌سازی فوری",
+        "H2: خرید از نوبیکس شاپ",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 33,
+      "images_missing_alt": 0,
+      "content_quality": "thin",
+      "issues": [
+        "Thin content: only 266 words.",
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Expand main text content to at least 600+ words with rich, actionable guidance.",
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/blog/guide-gemini-advanced",
+      "word_count": 206,
+      "headings": [
+        "H1: اشتراک Gemini Advanced؛ دستیار هوشمند گوگل",
+        "H2: چه چیزی دریافت می‌کنید؟",
+        "H2: فعال‌سازی از ایران",
+        "H2: خرید از نوبیکس شاپ",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 33,
+      "images_missing_alt": 0,
+      "content_quality": "thin",
+      "issues": [
+        "Thin content: only 206 words.",
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Expand main text content to at least 600+ words with rich, actionable guidance.",
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/blog/guide-buy-steam-giftcard",
+      "word_count": 287,
+      "headings": [
+        "H1: راهنمای خرید و فعال‌سازی گیفت کارت استیم",
+        "H2: کدام مبلغ را بخرم؟",
+        "H2: روش استفاده",
+        "H2: مرحله به مرحله",
+        "H3: انتخاب مبلغ و منطقه",
+        "H3: دریافت کد",
+        "H3: Redeem در استیم",
+        "H2: خرید از نوبیکس شاپ",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 32,
+      "images_missing_alt": 0,
+      "content_quality": "thin",
+      "issues": [
+        "Thin content: only 287 words.",
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Expand main text content to at least 600+ words with rich, actionable guidance.",
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/blog/guide-preorder-gta6",
+      "word_count": 217,
+      "headings": [
+        "H1: پیش‌خرید GTA VI؛ هر آنچه باید بدانید",
+        "H2: نسخه‌ها و پلتفرم‌ها",
+        "H2: روش پیش‌خرید",
+        "H2: خرید از نوبیکس شاپ",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 32,
+      "images_missing_alt": 0,
+      "content_quality": "thin",
+      "issues": [
+        "Thin content: only 217 words.",
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Expand main text content to at least 600+ words with rich, actionable guidance.",
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/blog/guide-spotify-premium",
+      "word_count": 207,
+      "headings": [
+        "H1: خرید اشتراک اسپاتیفای پرمیوم بدون دردسر",
+        "H2: مزایای پرمیوم",
+        "H2: تهیه از نوبیکس",
+        "H2: خرید از نوبیکس شاپ",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 32,
+      "images_missing_alt": 0,
+      "content_quality": "thin",
+      "issues": [
+        "Thin content: only 207 words.",
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Expand main text content to at least 600+ words with rich, actionable guidance.",
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/blog/unlink-xbox-from-epic-games",
+      "word_count": 611,
+      "headings": [
+        "H1: راهنمای لینک و آنلینک کردن اکانت‌ها",
+        "H3: محصولات پرفروش",
+        "H3: پرداخت امن و قانونی",
+        "H2: راهنمای لینک و آنلینک کردن حساب‌های بازی",
+        "H2: نحوه اتصال (Link) حساب‌ها به Epic Games",
+        "H3: ورود به پرتال اتصال اکانت اپیک گیمز",
+        "H3: تب Accounts و انتخاب پلتفرم",
+        "H3: کلیک بر روی Connect",
+        "H3: ورود به اکانت کنسول و تایید نهایی",
+        "H2: نحوه قطع اتصال (Unlink) حساب‌ها از Epic Games",
+        "H3: ورود به پرتال اتصال حساب اپیک گیمز",
+        "H3: یافتن پلتفرم متصل شده",
+        "H3: کلیک بر روی Disconnect و تایید هشدارها",
+        "H3: تایید نهایی",
+        "H3: در فرآیند لینک یا آنلینک با خطا مواجه شده‌اید؟",
+        "H4: آیا این مقاله آموزشی مفید بود؟",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 45,
+      "images_missing_alt": 0,
+      "content_quality": "good",
+      "issues": [
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/guides/disable-2fa",
+      "word_count": 700,
+      "headings": [
+        "H1: راهنمای خاموش کردن تایید دو مرحله‌ای (2FA)",
+        "H3: محصولات پرفروش",
+        "H3: پرداخت امن و قانونی",
+        "H2: غیرفعال‌سازی تایید دو مرحله‌ای (2FA)",
+        "H2: غیرفعال‌سازی 2FA در Epic Games",
+        "H3: ورود به حساب Epic Games",
+        "H3: بخش Password & Security",
+        "H3: غیرفعال کردن روش‌های تایید هویت",
+        "H3: تایید تغییرات",
+        "H2: غیرفعال‌سازی 2FA در Xbox (مایکروسافت)",
+        "H3: ورود به پرتال امنیتی مایکروسافت",
+        "H3: بخش Advanced Security Options",
+        "H3: غیرفعال کردن Two-step verification",
+        "H3: حذف موقت Authenticator App",
+        "H2: غیرفعال‌سازی 2FA در PlayStation (PSN)",
+        "H3: ورود به پرتال امنیتی PSN",
+        "H3: بخش Security",
+        "H3: غیرفعال کردن 2-Step Verification",
+        "H3: تایید تغییرات با کد پیامکی",
+        "H3: در غیرفعال کردن تایید دو مرحله‌ای به کمک نیاز دارید؟",
+        "H4: آیا این مقاله آموزشی مفید بود؟",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 45,
+      "images_missing_alt": 0,
+      "content_quality": "good",
+      "issues": [
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/guides/link-unlink",
+      "word_count": 650,
+      "headings": [
+        "H1: راهنمای لینک و آنلینک کردن اکانت‌ها",
+        "H3: محصولات پرفروش",
+        "H3: پرداخت امن و قانونی",
+        "H2: راهنمای لینک و آنلینک کردن حساب‌های بازی",
+        "H2: نحوه اتصال (Link) حساب‌ها به Epic Games",
+        "H3: ورود به پرتال اتصال اکانت اپیک گیمز",
+        "H3: تب Accounts و انتخاب پلتفرم",
+        "H3: کلیک بر روی Connect",
+        "H3: ورود به اکانت کنسول و تایید نهایی",
+        "H2: نحوه قطع اتصال (Unlink) حساب‌ها از Epic Games",
+        "H3: ورود به پرتال اتصال حساب اپیک گیمز",
+        "H3: یافتن پلتفرم متصل شده",
+        "H3: کلیک بر روی Disconnect و تایید هشدارها",
+        "H3: تایید نهایی",
+        "H3: در فرآیند لینک یا آنلینک با خطا مواجه شده‌اید؟",
+        "H4: آیا این مقاله آموزشی مفید بود؟",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 45,
+      "images_missing_alt": 0,
+      "content_quality": "good",
+      "issues": [
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/guides/remove-restriction",
+      "word_count": 669,
+      "headings": [
+        "H1: راهنمای رفع محدودیت حساب (Remove Restriction)",
+        "H3: محصولات پرفروش",
+        "H3: پرداخت امن و قانونی",
+        "H2: راهنمای رفع محدودیت‌های موقت حساب",
+        "H2: رفع محدودیت Epic Games",
+        "H3: ۱. محدودیت \"New Device Login\"",
+        "H3: ۲. محدودیت قفل اکانت (Account Locked)",
+        "H2: رفع محدودیت Xbox (مایکروسافت)",
+        "H3: ۱. محدودیت فعالیت مشکوک (Unusual Activity)",
+        "H3: ۲. غیرفعال‌سازی Passkey",
+        "H2: رفع محدودیت PlayStation",
+        "H3: ۱. تایید لاگین دستگاه جدید (Sign-in Verification)",
+        "H3: ۲. بازیابی حساب قفل شده (PSN Recovery)",
+        "H4: نکته بسیار مهم برای پیشگیری",
+        "H3: محدودیت حساب همچنان برطرف نشد؟",
+        "H4: آیا این مقاله آموزشی مفید بود؟",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 46,
+      "images_missing_alt": 0,
+      "content_quality": "good",
+      "issues": [
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    },
+    {
+      "url": "https://nubixshop.ir/faq",
+      "word_count": 497,
+      "headings": [
+        "H1: سوالات متداول",
+        "H3: محصولات پرفروش",
+        "H3: پرداخت امن و قانونی",
+        "H2: چرا نوبیکس شاپ را انتخاب کنیم؟",
+        "H2: سفارشات چگونه تکمیل می‌شوند؟",
+        "H2: چگونه سفارش خود را پیگیری کنم؟",
+        "H2: ساعات کاری پشتیبانی چیست؟",
+        "H2: روش پرداخت چگونه است؟",
+        "H2: آیا می‌توانم به نوبیکس اعتماد کنم؟",
+        "H2: چه محصولاتی در نوبیکس موجود است؟",
+        "H2: چرا برخی کارت‌های مجازی کار نمی‌کنند؟",
+        "H4: دسترسی سریع",
+        "H4: خدمات مشتریان",
+        "H4: مجوزهای ما",
+        "H4: شبکه‌های اجتماعی"
+      ],
+      "internal_links_count": 53,
+      "images_missing_alt": 0,
+      "content_quality": "adequate",
+      "issues": [
+        "Missing JSON-LD structured data."
+      ],
+      "recommendations": [
+        "Add Schema.org Article / FAQPage / TechArticle JSON-LD markup."
+      ]
+    }
+  ],
+  "guide_buy_vbucks_diagnosis": "1. Thin Content: The article contains only 296 words, failing Google's quality/depth thresholds for competitive queries.\n2. Keyword Cannibalization & Intent Overlap: The primary landing page /vbucks already targets 'خرید وی‌باکس فورتنایت'. Google considers this blog article a thin variant of /vbucks and de-indexes it to avoid duplicate ranking signals.\n3. Lack of Unique Media & Depth: No step-by-step screenshots, unique pricing tables, video embeds, or troubleshooting steps.\n4. Missing Structured Data: Lacks Schema.org Article / HowTo JSON-LD markup to explicitly define article entities.\n5. Duplicate Layout Structure: Follows identical boilerplate text length and structure as 6 other authored guides.",
+  "missing_from_sitemap": [
+    "https://nubixshop.ir/blog/unlink-xbox-from-epic-games"
+  ],
+  "content_gaps": [
+    "PlayStation Network (PSN) Gift Cards & Region Switching Guide",
+    "Xbox Game Pass & Ultimate Activation / Conversion Guide for Iran",
+    "Fortnite Battle Pass & Item Gifting Eligibility & Rules Guide",
+    "Discord Nitro Subscription & Gift Link Activation Guide",
+    "AI Assistants Comparison Guide (ChatGPT Plus vs Gemini Advanced vs Claude Pro)",
+    "Steam Wallet Region Change & Currency Conversion Troubleshooting"
+  ]
+}

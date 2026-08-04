@@ -9,7 +9,7 @@ export default function AnnouncementBar() {
   const versionKey = useMemo(() => {
     const updated = data?.announcement_updated_at || data?.updated_at || "";
     const text = data?.announcement_bar?.text || "";
-    return `nubix_announcement_${updated}_${text.length}`;
+    return `jinx_announcement_${updated}_${text.length}`;
   }, [data]);
 
   useEffect(() => {

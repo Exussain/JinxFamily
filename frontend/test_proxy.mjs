@@ -8,7 +8,7 @@ async function run() {
     const res = await fetch("https://www.tgju.org/currency", {
       agent: agent,
       headers: {
-        "user-agent": "Mozilla/5.0 (compatible; NubixShop/1.0)",
+        "user-agent": "Mozilla/5.0 (compatible; JinxFamily/1.0)",
         accept: "text/html,application/xhtml+xml",
       }
     });

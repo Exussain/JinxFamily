@@ -1,15 +1,15 @@
 """
-AI-powered live-chat support for NubixShop.
+AI-powered live-chat support for JinxFamily.
 
 When a customer writes in the live chat and no human picks it up, this module
-drafts a reply in the warm Persian tone the NubixShop team uses, grounded in the
+drafts a reply in the warm Persian tone the JinxFamily team uses, grounded in the
 store's real knowledge base and the customer's own order history.
 
 Design notes
 ------------
-* The API is an OpenAI-compatible gateway at ``https://ai.nubixshop.ir/v1``.
+* The API is an OpenAI-compatible gateway at ``https://ai.jinxfamily.shop/v1``.
   The key lives in the ``AI_NUBSHOP_KEY`` environment variable (or
-  ``/root/NubixShop/.ainubshop_key`` as fallback). The model is configurable
+  ``/root/jinxfamily/.ainubshop_key`` as fallback). The model is configurable
   through the ``ai_support_model`` SiteSetting (default: ``combo``, which
   auto-routes to the best available provider).
 * Responses come back in either OpenAI (`choices[].message.content`) or native
@@ -34,8 +34,8 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # ── Configuration ───────────────────────────────────────────────────────────
-AI_BASE_URL = "https://ai.nubixshop.ir/v1"
-API_KEY_PATH = Path("/root/NubixShop/.ainubshop_key")
+AI_BASE_URL = "https://ai.jinxfamily.shop/v1"
+API_KEY_PATH = Path("/root/jinxfamily/.ainubshop_key")
 
 # Preferred model first, then graceful fallbacks (gateway-native ids).
 # The "combo" model auto-routes to the best available provider.
@@ -92,7 +92,7 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 
 ۵) رمز عبور، اطلاعات کارت بانکی، رمز دوم، و کد تأیید (OTP) رو هیچ‌وقت توی چت از کاربر نخواه. امنیت کاربر از همه‌چیز مهم‌تره.
 
-۶) اگه کاربر کد تخفیف خواست، بگو کدهای تخفیف تو کانال تلگراممون @NubixShopIR گذاشته می‌شه. کانالشون رو دنبال کنن تا از تخفیف‌ها با‌خبر بشن.
+۶) اگه کاربر کد تخفیف خواست، بگو کدهای تخفیف تو کانال تلگراممون @JinxFamilyShop گذاشته می‌شه. کانالشون رو دنبال کنن تا از تخفیف‌ها با‌خبر بشن.
 
 === لحن و شخصیت ===
 
@@ -118,7 +118,7 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 ۱) اسم محصولی که کاربر گفته رو توی اون لیست پیدا کن (حتی اگه کاربر یه‌کم اشتباه یا ناقص نوشته، نزدیک‌ترین مورد رو پیدا کن، مثلاً «کرفک» یعنی «کروپک»، «وی‌باکس» یعنی «ویباکس»).
 ۲) اگه محصول چند تا مدل/پلن داشت (مثلاً ۱ ماهه و ۳ ماهه، یا حجم‌های مختلف ویباکس)، یا قیمتِ همون مدلی که کاربر خواسته رو بگو، یا اگه مشخص نکرده، بازهٔ قیمت رو بگو (از ارزون‌ترین تا گرون‌ترین) و بپرس کدوم رو می‌خواد.
 ۳) عدد رو دقیق و خوانا بگو با واحد «تومن». مثلاً «کروپک فورتنایت یک‌ماهه ۶۴۹ هزار تومنه» یا «ویباکس از ۲۸۰۰ تا ۱٬۵۳۵٬۰۰۰ تومن داریم کدوم حجمش را می‌خواهید».
-۴) اگه محصولی که کاربر پرسیده اصلاً توی لیست نبود، نگو قیمتش رو نمی‌دونم و تمام؛ بگو الان اون مدل رو روی سایت نداریم/ندیدمش و اگه اسم دقیقش رو بگه چک می‌کنم، یا به پشتیبانی تلگرام @Nubixsupport ارجاع بده.
+۴) اگه محصولی که کاربر پرسیده اصلاً توی لیست نبود، نگو قیمتش رو نمی‌دونم و تمام؛ بگو الان اون مدل رو روی سایت نداریم/ندیدمش و اگه اسم دقیقش رو بگه چک می‌کنم، یا به پشتیبانی تلگرام @JinxFamilySupport ارجاع بده.
 
 هیچ‌وقت قیمت از خودت در نیار و عددی نگو که توی لیست نیست.
 
@@ -148,9 +148,9 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 
 کد تأیید (OTP) نیومد: چند دقیقه صبر کنه، شماره رو چک کنه، دوباره تلاش کنه.
 
-پیگیری سفارش: فقط اگه بیشتر از ۲۴ ساعت از سفارش گذشته، با کد پیگیری از پشتیبانی تلگرام @Nubixsupport پیگیری کنه. پشت‌سرهم پیام نده.
+پیگیری سفارش: فقط اگه بیشتر از ۲۴ ساعت از سفارش گذشته، با کد پیگیری از پشتیبانی تلگرام @JinxFamilySupport پیگیری کنه. پشت‌سرهم پیام نده.
 
-تنها کانال و پشتیبانی رسمی تلگرام: @Nubixsupport — غیر از این هرچی هست جعلیه.
+تنها کانال و پشتیبانی رسمی تلگرام: @JinxFamilySupport — غیر از این هرچی هست جعلیه.
 
 ساعات پشتیبانی تلفنی: شنبه تا چهارشنبه ۱۱ تا ۱۶، یکشنبه ۱۳ تا ۱۶. پشتیبانی تلگرام ۲۴ ساعته‌ست.
 
@@ -160,11 +160,11 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 
 اگه کاربر دربارهٔ وضعیت یه سفارش مشخص پرسید و اطلاعات سفارشش توی «context» (آخر همین متن) اومده، دقیق و شخصی جواب بده؛ مثلاً وضعیت و کد پیگیری و مبلغش رو بگو. اگه اطلاعاتش اونجا نبود، ازش کد پیگیری بخواه.
 
-اگه مشکل فنیِ جدیه یا باید یه آدم حسابش رو بررسی کنه، رک و مهربون بگو که موضوع رو به تیم فنی می‌سپری و کاربر می‌تونه با کد پیگیری از @Nubixsupport هم پیگیر باشه. وعدهٔ الکی نده (مثلاً «تا ۵ دقیقه دیگه حله» رو نگو اگه مطمئن نیستی).
+اگه مشکل فنیِ جدیه یا باید یه آدم حسابش رو بررسی کنه، رک و مهربون بگو که موضوع رو به تیم فنی می‌سپری و کاربر می‌تونه با کد پیگیری از @JinxFamilySupport هم پیگیر باشه. وعدهٔ الکی نده (مثلاً «تا ۵ دقیقه دیگه حله» رو نگو اگه مطمئن نیستی).
 
 === صداقت ===
 
-اگه یه چیزی رو نمی‌دونی، سرِهم نکن. صادقانه بگو مطمئن نیستی و به پشتیبانی انسانی (@Nubixsupport) ارجاع بده. اطلاعات غلط دادن بدتر از «نمی‌دونم» گفتنه.
+اگه یه چیزی رو نمی‌دونی، سرِهم نکن. صادقانه بگو مطمئن نیستی و به پشتیبانی انسانی (@JinxFamilySupport) ارجاع بده. اطلاعات غلط دادن بدتر از «نمی‌دونم» گفتنه.
 
 === خروجی ===
 
@@ -212,7 +212,7 @@ def _call_model(model: str, messages: list, max_tokens: int = 2500, temperature:
             "Content-Type": "application/json",
             # The gateway sits behind Cloudflare which 403s the default
             # python-urllib UA, so present a normal browser/client UA.
-            "User-Agent": "NubixShop-Support/1.0 (+https://nubixshop.ir)",
+            "User-Agent": "JinxFamily-Support/1.0 (+https://jinxfamily.ir)",
             "Accept": "application/json",
         },
         method="POST",
@@ -298,7 +298,7 @@ def chat_completion_single_full(model: str, messages: list, max_tokens: int = 25
         headers={
             "Authorization": f"Bearer {key}",
             "Content-Type": "application/json",
-            "User-Agent": "NubixShop-Support/1.0 (+https://nubixshop.ir)",
+            "User-Agent": "JinxFamily-Support/1.0 (+https://jinxfamily.ir)",
             "Accept": "application/json",
         },
         method="POST",
@@ -323,11 +323,11 @@ def _site_info_context() -> str:
     return """[اطلاعات فروشگاه]
 تلفن پشتیبانی: ۰۲۱-۹۱۶۹۴۷۵۹
 ساعت پشتیبانی تلفنی: شنبه تا چهارشنبه ۱۱ تا ۱۶، یکشنبه ۱۳ تا ۱۶
-پشتیبانی تلگرام (۲۴ ساعته): @Nubixsupport
-کانال تلگرام: @NubixShopIR
-کانال تخفیف‌ها: @NubixShopIR
-اینستاگرام: @NubixShop.ir
-ایمیل: support@nubixshop.ir"""
+پشتیبانی تلگرام (۲۴ ساعته): @JinxFamilySupport
+کانال تلگرام: @JinxFamilyShop
+کانال تخفیف‌ها: @JinxFamilyShop
+اینستاگرام: @JinxFamily.shop
+ایمیل: support@jinxfamily.shop"""
 
 
 import re as _re
@@ -494,7 +494,7 @@ def _quality_check(conversation_tail: str, draft: str) -> str:
     """Ask the model to critique and, if needed, improve its own answer."""
     review_messages = [
         {"role": "system", "content": (
-            "تو ویراستار کیفیت پشتیبانی نوبیکس هستی. یک پیش‌نویس پاسخ به مشتری داده می‌شود. "
+            "تو ویراستار کیفیت پشتیبانی جینکس فمیلی هستی. یک پیش‌نویس پاسخ به مشتری داده می‌شود. "
             "بررسی کن که آیا واقعاً به مشکل مشتری پاسخ می‌دهد، لحن گرم و فارسی درست دارد، اطلاعات غلط ندارد، "
             "و وعده‌ی غیرواقعی نمی‌دهد. اگر خوب است همان را عیناً برگردان؛ اگر ایراد دارد، نسخه‌ی اصلاح‌شده و بهتر را برگردان. "
             "فقط متن نهایی پاسخ فارسی را بنویس، بدون توضیح."
@@ -598,8 +598,8 @@ def maybe_autoreply(session) -> None:
 # ── Safe diagnostic tool (read-only, opt-in) ────────────────────────────────
 _SAFE_DIAGNOSTICS = {
     "site_up": ["bash", "-lc", "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8001/api/products/ || true"],
-    "frontend_up": ["bash", "-lc", "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3002/ || true"],
-    "pm2_status": ["bash", "-lc", "PM2_HOME=/root/.pm2 node /root/NubixShop/public/node_modules/pm2/bin/pm2 jlist || true"],
+    "frontend_up": ["bash", "-lc", "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3003/ || true"],
+    "pm2_status": ["bash", "-lc", "PM2_HOME=/root/.pm2 node /root/jinxfamily/public/node_modules/pm2/bin/pm2 jlist || true"],
     "disk": ["bash", "-lc", "df -h / | tail -1"],
 }
 

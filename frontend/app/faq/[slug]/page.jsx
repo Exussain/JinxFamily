@@ -19,12 +19,12 @@ export async function generateMetadata({ params }) {
       openGraph: {
         title: item.question,
         description: item.answer,
-        url: `https://nubixshop.ir/faq/${slug}`,
+        url: `https://jinxfamily.ir/faq/${slug}`,
         type: 'article',
         images: [
           {
-            url: 'https://nubixshop.ir/og-image.webp',
-            alt: 'سوالات متداول نوبیکس شاپ',
+            url: 'https://jinxfamily.ir/og-image.webp',
+            alt: 'سوالات متداول جینکس فمیلی',
           },
         ],
       },
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }) {
         card: 'summary_large_image',
         title: item.question,
         description: item.answer,
-        images: ['https://nubixshop.ir/og-image.webp'],
+        images: ['https://jinxfamily.ir/og-image.webp'],
       },
     };
   }
@@ -51,9 +51,9 @@ export default async function FaqDetailPage({ params }) {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: 'https://nubixshop.ir' },
-      { '@type': 'ListItem', position: 2, name: 'مرکز پشتیبانی', item: 'https://nubixshop.ir/faq' },
-      { '@type': 'ListItem', position: 3, name: article.question, item: `https://nubixshop.ir/faq/${slug}` },
+      { '@type': 'ListItem', position: 1, name: 'جینکس فمیلی', item: 'https://jinxfamily.ir' },
+      { '@type': 'ListItem', position: 2, name: 'مرکز پشتیبانی', item: 'https://jinxfamily.ir/faq' },
+      { '@type': 'ListItem', position: 3, name: article.question, item: `https://jinxfamily.ir/faq/${slug}` },
     ],
   };
 
@@ -307,7 +307,7 @@ export default async function FaqDetailPage({ params }) {
 
         {/* Breadcrumbs */}
         <div className="faq-breadcrumbs">
-          <Link href="/">نوبیکس شاپ</Link>
+          <Link href="/">جینکس فمیلی</Link>
           <span className="faq-breadcrumb-separator">/</span>
           <Link href="/faq">مرکز پشتیبانی</Link>
           <span className="faq-breadcrumb-separator">/</span>

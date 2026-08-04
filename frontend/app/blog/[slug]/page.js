@@ -11,7 +11,7 @@ import { getAuthoredArticle } from '../../../lib/articlesMockData.mjs';
 
 export const dynamic = 'force-dynamic';
 
-const BASE_URL = 'https://nubixshop.ir';
+const BASE_URL = 'https://jinxfamily.ir';
 
 // A few posts mirror the /guides/* pages — canonicalize them to the guide so
 // the two URLs don't compete in search.
@@ -75,7 +75,7 @@ export async function generateMetadata({ params }) {
   const authored = getAuthoredArticle(decoded);
   if (authored) {
     return {
-      title: `${authored.title} | وبلاگ نوبیکس شاپ`,
+      title: `${authored.title} | وبلاگ جینکس فمیلی`,
       description: authored.excerpt,
       alternates: { canonical: `/blog/${decoded}` },
       openGraph: {
@@ -84,7 +84,7 @@ export async function generateMetadata({ params }) {
         title: authored.title,
         description: authored.excerpt,
         locale: 'fa_IR',
-        siteName: 'نوبیکس شاپ',
+        siteName: 'جینکس فمیلی',
       },
     };
   }
@@ -106,7 +106,7 @@ export async function generateMetadata({ params }) {
           publishedTime: article.created_at,
           modifiedTime: article.updated_at || article.created_at,
           locale: 'fa_IR',
-          siteName: 'نوبیکس شاپ',
+          siteName: 'جینکس فمیلی',
           ...(cover && { images: [{ url: cover, alt: article.title }] }),
         },
         twitter: {
@@ -134,7 +134,7 @@ export default async function BlogArticlePage({ params }) {
     article = {
       ...authored,
       ...(authored.body || {}),
-      author: authored.author || 'تیم نوبیکس شاپ',
+      author: authored.author || 'تیم جینکس فمیلی',
       readingTime: authored.readingTime || '۴ دقیقه',
     };
     jsonLd = {
@@ -143,7 +143,7 @@ export default async function BlogArticlePage({ params }) {
       headline: authored.title,
       description: authored.excerpt,
       inLanguage: 'fa-IR',
-      author: { '@type': 'Organization', name: 'نوبیکس شاپ' },
+      author: { '@type': 'Organization', name: 'جینکس فمیلی' },
       publisher: { '@id': `${BASE_URL}/#organization` },
       mainEntityOfPage: `${BASE_URL}/blog/${decoded}`,
     };
@@ -156,7 +156,7 @@ export default async function BlogArticlePage({ params }) {
       slug: decoded,
       cat: 'guides',
       tag: post.category || 'راهنما',
-      author: post.author && post.author !== 'admin' ? post.author : 'تیم نوبیکس شاپ',
+      author: post.author && post.author !== 'admin' ? post.author : 'تیم جینکس فمیلی',
       date: toFaDate(post.created_at),
       readingTime: '۵ دقیقه',
       title: post.title,
@@ -175,7 +175,7 @@ export default async function BlogArticlePage({ params }) {
       datePublished: post.created_at,
       dateModified: post.updated_at || post.created_at,
       inLanguage: 'fa-IR',
-      author: { '@type': 'Organization', name: 'نوبیکس شاپ' },
+      author: { '@type': 'Organization', name: 'جینکس فمیلی' },
       publisher: { '@id': `${BASE_URL}/#organization` },
       mainEntityOfPage: `${BASE_URL}/blog/${decoded}`,
     };
@@ -185,7 +185,7 @@ export default async function BlogArticlePage({ params }) {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: BASE_URL },
+      { '@type': 'ListItem', position: 1, name: 'جینکس فمیلی', item: BASE_URL },
       { '@type': 'ListItem', position: 2, name: 'وبلاگ', item: `${BASE_URL}/blog` },
       { '@type': 'ListItem', position: 3, name: article.title, item: `${BASE_URL}/blog/${decoded}` },
     ],

@@ -8,7 +8,7 @@ const navGroups = [
     title: 'راهنما و پشتیبانی',
     items: [
       { id: 'faq', label: 'سوالات متداول', href: '/faq' },
-      { id: 'about', label: 'درباره نوبیکس', href: '/faq/about' },
+      { id: 'about', label: 'درباره جینکس فمیلی', href: '/faq/about' },
       { id: 'contact', label: 'تماس با ما', href: '/faq/contact' },
       { id: 'how-to-buy', label: 'راهنمای خرید', href: '/faq/how-to-buy' },
     ],
@@ -34,12 +34,12 @@ const trustLogos = [
   {
     href: 'https://trustseal.enamad.ir/?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2',
     src: 'https://trustseal.enamad.ir/logo.aspx?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2',
-    alt: 'نماد اعتماد الکترونیکی نوبیکس',
+    alt: 'نماد اعتماد الکترونیکی جینکس فمیلی',
     width: 45,
     height: 45,
   },
   {
-    href: 'https://www.zarinpal.com/trustPage/nubixshop.ir',
+    href: 'https://www.zarinpal.com/trustPage/jinxfamily.shop',
     src: '/icons/ZarinPal.svg',
     alt: 'درگاه پرداخت زرین‌پال',
     width: 120,
@@ -395,10 +395,10 @@ export default function FaqSectionLayout({
             <div className="faq-header-content">
               <div className="faq-logo-wrapper">
                 <Image
-                  src="/web_logo.webp"
+                  src="/logo.webp"
                   width={64}
                   height={64}
-                  alt="لوگوی نوبیکس"
+                  alt="لوگوی جینکس فمیلی"
                   priority
                   quality={95}
                   unoptimized
@@ -407,7 +407,7 @@ export default function FaqSectionLayout({
               <div className="faq-header-text">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                   <span style={{ margin: 0, fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--primary)' }}>
-                    Nubix Support Center
+                    JinxFamily Support Center
                   </span>
                   <div className="faq-status-badge">
                     <span className="faq-status-dot"></span>

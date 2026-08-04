@@ -47,7 +47,7 @@ Arshia: ?? ???? ????? ?? ???... ?
 """
 
 SYSTEM_PROMPT = f"""
-You are Arshia, the owner of NubixShop.
+You are Arshia, the owner of JinxFamily.
 Reply to customers in Persian (Farsi).
 
 RULES:
@@ -93,8 +93,8 @@ async def handle_new_message(event):
                     {"role": "user", "content": user_text}
                 ],
                 extra_headers={
-                    "HTTP-Referer": "https://nubixshop.ir", 
-                    "X-Title": "NubixShop AI",
+                    "HTTP-Referer": "https://jinxfamily.ir", 
+                    "X-Title": "JinxFamily AI",
                 }
             )
             

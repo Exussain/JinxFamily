@@ -1,0 +1,254 @@
+[
+  {
+    "name": "Iranicard",
+    "domain": "iranicard.ir",
+    "pages": [
+      {
+        "url": "https://www.iranicard.ir/",
+        "error": "Page.query_selector: Execution context was destroyed, most likely because of a navigation"
+      },
+      {
+        "url": "https://www.iranicard.ir/fortnite-vbucks/",
+        "status": 404,
+        "load_time_sec": 5.61,
+        "title": "صفحه پیدا نشد",
+        "meta_desc": "",
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no",
+        "schemas": [
+          {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebSite",
+                "@id": "https://www.iranicard.ir/#website",
+                "url": "https://www.iranicard.ir/",
+                "name": "ایرانیکارت",
+                "description": "بهترین در خرید و فروش ارز دیجیتال - پرداخت بین الملل- خرید گیفت کارت - پی پال و کارت های بین الملل",
+                "publisher": {
+                  "@id": "https://www.iranicard.ir/#organization"
+                },
+                "alternateName": "Iranicard",
+                "potentialAction": [
+                  {
+                    "@type": "SearchAction",
+                    "target": {
+                      "@type": "EntryPoint",
+                      "urlTemplate": "https://www.iranicard.ir/?s={search_term_string}"
+                    },
+                    "query-input": {
+                      "@type": "PropertyValueSpecification",
+                      "valueRequired": true,
+                      "valueName": "search_term_string"
+                    }
+                  }
+                ],
+                "inLanguage": "fa-IR"
+              },
+              {
+                "@type": "Organization",
+                "@id": "https://www.iranicard.ir/#organization",
+                "name": "ایرانیکارت",
+                "alternateName": "Iranicard",
+                "url": "https://www.iranicard.ir/",
+                "logo": {
+                  "@type": "ImageObject",
+                  "inLanguage": "fa-IR",
+                  "@id": "https://www.iranicard.ir/#/schema/logo/image/",
+                  "url": "https://www.iranicard.ir/wp-content/uploads/2025/11/IraniCard-Logo-scaled.png",
+                  "contentUrl": "https://www.iranicard.ir/wp-content/uploads/2025/11/IraniCard-Logo-scaled.png",
+                  "width": 2560,
+                  "height": 1344,
+                  "caption": "ایرانیکارت"
+                },
+                "image": {
+                  "@id": "https://www.iranicard.ir/#/schema/logo/image/"
+                },
+                "sameAs": [
+                  "https://x.com/iranicard",
+                  "https://www.instagram.com/iranicardcom",
+                  "https://www.linkedin.com/company/iranicard"
+                ]
+              }
+            ]
+          }
+        ],
+        "internal_links_count": 179,
+        "word_count": 197,
+        "has_trust_badges": false,
+        "has_author": true
+      },
+      {
+        "url": "https://www.iranicard.ir/chatgpt-plus/",
+        "status": 404,
+        "load_time_sec": 4.13,
+        "title": "صفحه پیدا نشد",
+        "meta_desc": "",
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no",
+        "schemas": [
+          {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebSite",
+                "@id": "https://www.iranicard.ir/#website",
+                "url": "https://www.iranicard.ir/",
+                "name": "ایرانیکارت",
+                "description": "بهترین در خرید و فروش ارز دیجیتال - پرداخت بین الملل- خرید گیفت کارت - پی پال و کارت های بین الملل",
+                "publisher": {
+                  "@id": "https://www.iranicard.ir/#organization"
+                },
+                "alternateName": "Iranicard",
+                "potentialAction": [
+                  {
+                    "@type": "SearchAction",
+                    "target": {
+                      "@type": "EntryPoint",
+                      "urlTemplate": "https://www.iranicard.ir/?s={search_term_string}"
+                    },
+                    "query-input": {
+                      "@type": "PropertyValueSpecification",
+                      "valueRequired": true,
+                      "valueName": "search_term_string"
+                    }
+                  }
+                ],
+                "inLanguage": "fa-IR"
+              },
+              {
+                "@type": "Organization",
+                "@id": "https://www.iranicard.ir/#organization",
+                "name": "ایرانیکارت",
+                "alternateName": "Iranicard",
+                "url": "https://www.iranicard.ir/",
+                "logo": {
+                  "@type": "ImageObject",
+                  "inLanguage": "fa-IR",
+                  "@id": "https://www.iranicard.ir/#/schema/logo/image/",
+                  "url": "https://www.iranicard.ir/wp-content/uploads/2025/11/IraniCard-Logo-scaled.png",
+                  "contentUrl": "https://www.iranicard.ir/wp-content/uploads/2025/11/IraniCard-Logo-scaled.png",
+                  "width": 2560,
+                  "height": 1344,
+                  "caption": "ایرانیکارت"
+                },
+                "image": {
+                  "@id": "https://www.iranicard.ir/#/schema/logo/image/"
+                },
+                "sameAs": [
+                  "https://x.com/iranicard",
+                  "https://www.instagram.com/iranicardcom",
+                  "https://www.linkedin.com/company/iranicard"
+                ]
+              }
+            ]
+          }
+        ],
+        "internal_links_count": 179,
+        "word_count": 197,
+        "has_trust_badges": false,
+        "has_author": true
+      },
+      {
+        "url": "https://www.iranicard.ir/about/",
+        "status": 404,
+        "load_time_sec": 5.06,
+        "title": "صفحه پیدا نشد",
+        "meta_desc": "",
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no",
+        "schemas": [
+          {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebSite",
+                "@id": "https://www.iranicard.ir/#website",
+                "url": "https://www.iranicard.ir/",
+                "name": "ایرانیکارت",
+                "description": "بهترین در خرید و فروش ارز دیجیتال - پرداخت بین الملل- خرید گیفت کارت - پی پال و کارت های بین الملل",
+                "publisher": {
+                  "@id": "https://www.iranicard.ir/#organization"
+                },
+                "alternateName": "Iranicard",
+                "potentialAction": [
+                  {
+                    "@type": "SearchAction",
+                    "target": {
+                      "@type": "EntryPoint",
+                      "urlTemplate": "https://www.iranicard.ir/?s={search_term_string}"
+                    },
+                    "query-input": {
+                      "@type": "PropertyValueSpecification",
+                      "valueRequired": true,
+                      "valueName": "search_term_string"
+                    }
+                  }
+                ],
+                "inLanguage": "fa-IR"
+              },
+              {
+                "@type": "Organization",
+                "@id": "https://www.iranicard.ir/#organization",
+                "name": "ایرانیکارت",
+                "alternateName": "Iranicard",
+                "url": "https://www.iranicard.ir/",
+                "logo": {
+                  "@type": "ImageObject",
+                  "inLanguage": "fa-IR",
+                  "@id": "https://www.iranicard.ir/#/schema/logo/image/",
+                  "url": "https://www.iranicard.ir/wp-content/uploads/2025/11/IraniCard-Logo-scaled.png",
+                  "contentUrl": "https://www.iranicard.ir/wp-content/uploads/2025/11/IraniCard-Logo-scaled.png",
+                  "width": 2560,
+                  "height": 1344,
+                  "caption": "ایرانیکارت"
+                },
+                "image": {
+                  "@id": "https://www.iranicard.ir/#/schema/logo/image/"
+                },
+                "sameAs": [
+                  "https://x.com/iranicard",
+                  "https://www.instagram.com/iranicardcom",
+                  "https://www.linkedin.com/company/iranicard"
+                ]
+              }
+            ]
+          }
+        ],
+        "internal_links_count": 179,
+        "word_count": 197,
+        "has_trust_badges": false,
+        "has_author": true
+      }
+    ]
+  },
+  {
+    "name": "Dicard",
+    "domain": "dicard.ir",
+    "pages": [
+      {
+        "url": "https://dicard.ir/",
+        "error": "Page.goto: Timeout 12000ms exceeded.\nCall log:\n  - navigating to \"https://dicard.ir/\", waiting until \"domcontentloaded\"\n"
+      },
+      {
+        "url": "https://dicard.ir/vbucks",
+        "error": "Page.goto: Timeout 12000ms exceeded.\nCall log:\n  - navigating to \"https://dicard.ir/vbucks\", waiting until \"domcontentloaded\"\n"
+      },
+      {
+        "url": "https://dicard.ir/fortnite-battlepass",
+        "error": "Page.goto: Timeout 12000ms exceeded.\nCall log:\n  - navigating to \"https://dicard.ir/fortnite-battlepass\", waiting until \"domcontentloaded\"\n"
+      }
+    ]
+  },
+  {
+    "name": "GimeStore",
+    "domain": "gimestore.ir",
+    "pages": [
+      {
+        "url": "https://gimestore.ir/",
+        "error": "Page.goto: Timeout 12000ms exceeded.\nCall log:\n  - navigating to \"https://gimestore.ir/\", waiting until \"domcontentloaded\"\n"
+      },
+      {
+        "url": "https://gimestore.ir/product/fortnite-vbucks",
+        "error": "Page.goto: Timeout 12000ms exceeded.\nCall log:\n  - navigating to \"https://gimestore.ir/product/fortnite-vbucks\", waiting until \"domcontentloaded\"\n"
+      }
+    ]
+  }
+]

@@ -4,7 +4,7 @@ import django
 
 # Set up Django environment
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nubixstore.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jinxfamily.settings')
 django.setup()
 
 from shop.models import Product, ProductVariant

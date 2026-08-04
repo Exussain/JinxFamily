@@ -1,4 +1,4 @@
-"""Create the Telegram user session used to post spin wins to @NubixShopIR.
+"""Create the Telegram user session used to post spin wins to @JinxFamilyShop.
 
 Run once, interactively, in a terminal:
 
@@ -6,7 +6,7 @@ Run once, interactively, in a terminal:
 
 Telegram sends a login code to that account; you'll be prompted to paste it
 (and your 2FA password if enabled). The account MUST be an admin of
-@NubixShopIR so it can post and delete messages there.
+@JinxFamilyShop so it can post and delete messages there.
 
 The session is saved to shop/management/commands/spin_channel_session.session
 (the path shop/spin_telegram.py reads).
@@ -48,7 +48,7 @@ async def create_session(phone, code, password, use_proxy):
         me = await client.get_me()
         print(f"Logged in as {me.first_name} (@{me.username or 'no username'})")
         print(f"Session saved to: {SESSION_PATH}")
-        print("Make sure this account is an admin of @NubixShopIR so it can post/delete.")
+        print("Make sure this account is an admin of @JinxFamilyShop so it can post/delete.")
         return True
     except Exception as e:
         print(f"Error: {e}")
@@ -60,7 +60,7 @@ async def create_session(phone, code, password, use_proxy):
 
 
 class Command(BaseCommand):
-    help = "Create the Telegram session for posting spin wins to @NubixShopIR"
+    help = "Create the Telegram session for posting spin wins to @JinxFamilyShop"
 
     def add_arguments(self, parser):
         parser.add_argument("--phone", required=True, help="Phone with country code, e.g. +989339732325")

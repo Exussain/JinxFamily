@@ -126,6 +126,7 @@ export default function AdminPricingTour({ apiBase }) {
         .apt-tooltip {
           position: fixed;
           width: 300px;
+          max-width: calc(100vw - 32px);
           background: var(--card);
           border: 1px solid var(--line);
           border-radius: 12px;

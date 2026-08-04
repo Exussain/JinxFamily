@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 # Curated chat-capable models (subset of the gateway catalog) shown when the
 # live /models probe fails. Label = friendly name, id = gateway model id.
-# This mirrors the models available at https://ai.nubixshop.ir/v1/models.
+# This mirrors the models available at https://ai.jinxfamily.shop/v1/models.
 _CURATED_MODELS = [
     {"id": "combo", "label": "Combo (auto-route)", "vendor": "combo", "cost_in": 0, "cost_out": 0, "tier": "standard"},
     # ── Budget / cheap ─────────────────────────────────────────────
@@ -148,7 +148,7 @@ def _list_models(request):
                 url,
                 headers={
                     "Authorization": f"Bearer {key}",
-                    "User-Agent": "NubixShop-Support/1.0",
+                    "User-Agent": "JinxFamily-Support/1.0",
                     "Accept": "application/json",
                 },
             )

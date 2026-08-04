@@ -102,7 +102,7 @@ export default function ProductRequestModal({ isOpen, onClose, initialProductNam
           <div style={{ textAlign: "center", padding: "16px 0" }}>
             <div style={{ fontSize: "36px", color: "#22c55e", marginBottom: "12px" }}>✓</div>
             <p style={{ fontSize: "15px", color: "var(--text)", lineHeight: "1.6" }}>
-              درخواست شما با موفقیت ثبت شد! تیم نوبیکس شاپ در اسرع وقت محصول را بررسی و برای شما تهیه می‌کند.
+              درخواست شما با موفقیت ثبت شد! تیم جینکس فمیلی در اسرع وقت محصول را بررسی و برای شما تهیه می‌کند.
             </p>
             <button
               onClick={onClose}

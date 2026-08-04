@@ -2,18 +2,18 @@ import os
 import django
 import sys
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nubixstore.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jinxfamily.settings')
 django.setup()
 
 from shop.email_service import _send_email_sync
 
-admin_email = os.environ.get("ADMIN_NOTIFICATION_EMAIL", "test@nubixshop.ir")
+admin_email = os.environ.get("ADMIN_NOTIFICATION_EMAIL", "test@jinxfamily.shop")
 print(f"Sending sync test email to: {admin_email}")
 
 try:
     success = _send_email_sync(
         [admin_email],
-        "Sync Test Email from NubixShop",
+        "Sync Test Email from JinxFamily",
         "<p>This is a sync test email.</p>",
         text="This is a sync test email."
     )

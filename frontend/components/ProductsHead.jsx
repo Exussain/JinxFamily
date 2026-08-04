@@ -7,7 +7,7 @@ export default function ProductsHead() {
   const sub = (sp.get('sub') || '').trim();
 
   let small = 'محصولات پرفروش';
-  let big = 'محصولات نوبیکس شاپ';
+  let big = 'محصولات جینکس فمیلی';
 
   if (cat) {
     small = cat;

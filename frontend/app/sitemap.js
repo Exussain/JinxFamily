@@ -1,6 +1,7 @@
 import { faqItems } from './faq/data.jsx';
+import { SITE_ORIGIN } from '../lib/site.mjs';
 
-const BASE_URL = 'https://nubixshop.ir';
+const BASE_URL = SITE_ORIGIN;
 
 // Product slugs that permanently redirect to a dedicated landing page
 // (see next.config.js redirects) — never list them in the sitemap.
@@ -84,6 +85,7 @@ const AUTHORED_GUIDE_SLUGS = [
   'guide-buy-steam-giftcard',
   'guide-preorder-gta6',
   'guide-spotify-premium',
+  'unlink-xbox-from-epic-games',
 ];
 
 export default async function sitemap() {

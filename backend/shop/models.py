@@ -11,13 +11,22 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class Product(models.Model):
     CATEGORY_CHOICES = [
         ("FORTNITE", "فورتنایت"),
+        ("INGAME", "جم و یوسی بازی‌ها"),
         ("AI", "هوش مصنوعی"),
         ("GIFTCARDS", "گیفت کارت‌ها"),
+        ("BATTLENET", "محصولات بتل نت"),
         ("GAMES", "بازی‌ها"),
         ("SUBSCRIPTIONS", "اشتراک‌ها"),
+        ("ACCOUNTS", "بازارچه اکانت‌ها"),
     ]
     name_fa = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True)
+    wordpress_id = models.PositiveBigIntegerField(
+        null=True, blank=True, unique=True, db_index=True,
+        help_text="شناسه محصول در فروشگاه وردپرس برای همگام‌سازی بدون ساخت رکورد تکراری",
+    )
+    wordpress_modified_at = models.DateTimeField(null=True, blank=True)
+    wordpress_url = models.URLField(max_length=500, blank=True, default="")
     subtitle = models.CharField(max_length=220, blank=True)
     category = models.CharField(max_length=32, choices=CATEGORY_CHOICES, default="FORTNITE")
     subcategory = models.CharField(max_length=50, blank=True, default="", help_text="زیردسته (کلید: ps, steam, xbox, ...)")
@@ -33,6 +42,8 @@ class Product(models.Model):
     requires_2fa = models.BooleanField(default=False, help_text="آیا این محصول نیاز به خاموش کردن 2FA دارد؟")
     disable_2fa_text = models.CharField(max_length=200, blank=True, default="", help_text="متن سفارشی بنر 2FA (اختیاری)")
     disable_2fa_color = models.CharField(max_length=20, default="amber", help_text="رنگ بنر 2FA: amber | blue | gray | red")
+    jinx_image = models.CharField(max_length=500, blank=True, default="", help_text="آدرس تصویر سفارشی جینکس")
+    jinx_text = models.TextField(blank=True, default="", help_text="متن دیالوگ سفارشی جینکس")
     display_order = models.PositiveIntegerField(
         default=0,
         help_text="ترتیب نمایش در ویترین/صفحه اصلی (کمتر = بالاتر)",
@@ -44,6 +55,7 @@ class Product(models.Model):
     customer_ordering_disabled = models.BooleanField(default=False, verbose_name="غیرفعال کردن سفارش مشتریان", help_text="با فعال کردن این گزینه، ثبت سفارش این محصول برای مشتریان عادی متوقف می‌شود.")
     reseller_daily_order_limit = models.IntegerField(default=-1, verbose_name="محدودیت تعداد سفارش روزانه همکاران", help_text="حداکثر تعداد سفارش مجاز همکاران در روز (-۱ برای بدون محدودیت)")
     customer_daily_order_limit = models.IntegerField(default=-1, verbose_name="محدودیت تعداد سفارش روزانه مشتریان", help_text="حداکثر تعداد سفارش مجاز مشتریان عادی در روز (-۱ برای بدون محدودیت)")
+    page_customization = models.JSONField(default=dict, blank=True, help_text="تنظیمات سفارشیسازی صفحه محصول")
 
     class Meta:
         ordering = ["display_order", "-id"]
@@ -83,13 +95,13 @@ class Product(models.Model):
                 
                 for req in requests:
                     try:
-                        subject = f"محصول {self.name_fa} در نوبیکس شاپ موجود شد!"
+                        subject = f"محصول {self.name_fa} در جینکس فمیلی موجود شد!"
                         body_html = f"""
                         <div dir="rtl" style="font-family: Tahoma, sans-serif; line-height: 1.8; text-align: right;">
                             <h3>کاربر گرامی،</h3>
-                            <p>محصول <strong>{self.name_fa}</strong> که درخواست اطلاع‌رسانی برای موجود شدن آن را ثبت کرده بودید، هم‌اکنون در نوبیکس شاپ موجود و قابل سفارش است.</p>
+                            <p>محصول <strong>{self.name_fa}</strong> که درخواست اطلاع‌رسانی برای موجود شدن آن را ثبت کرده بودید، هم‌اکنون در جینکس فمیلی موجود و قابل سفارش است.</p>
                             <p>برای مشاهده و خرید محصول، می‌توانید روی لینک زیر کلیک کنید:</p>
-                            <p><a href="https://nubixshop.ir/product/{self.slug}" style="display: inline-block; padding: 10px 20px; background-color: #7c3aed; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;">مشاهده و خرید محصول</a></p>
+                            <p><a href="https://jinxfamily.ir/product/{self.slug}" style="display: inline-block; padding: 10px 20px; background-color: #7c3aed; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;">مشاهده و خرید محصول</a></p>
                             <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;"/>
                             <p style="font-size: 11px; color: #64748b;">این یک ایمیل خودکار است، لطفاً به آن پاسخ ندهید.</p>
                         </div>
@@ -119,6 +131,7 @@ class Product(models.Model):
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    wordpress_id = models.PositiveBigIntegerField(null=True, blank=True, unique=True, db_index=True)
     title = models.CharField(max_length=120)
     group_fa = models.CharField(max_length=120, blank=True, default="", help_text="گروه واریانت (مثلاً اشتراک تک‌کاربره / گروهی)")
     price = models.PositiveIntegerField(default=0)  # IRR
@@ -181,7 +194,7 @@ class Order(models.Model):
     amount = models.PositiveIntegerField(default=0)
     wallet_used = models.PositiveIntegerField(default=0, help_text="[منسوخ] فقط برای سفارش‌های قدیمی قبل از حذف کیف پول")
     wallet_rewarded = models.BooleanField(default=False, help_text="[منسوخ] کش‌بک کیف پول حذف شده؛ این فیلد فقط تاریخی است")
-    diamonds_used = models.PositiveIntegerField(default=0, help_text="تعداد الماس مصرف‌شده برای تخفیف این سفارش")
+    diamonds_used = models.PositiveIntegerField(default=0, help_text="تعداد کوین مصرف‌شده برای تخفیف این سفارش")
     discount_code = models.CharField(max_length=50, blank=True, default="")
     discount_percent = models.PositiveSmallIntegerField(default=0)
     discount_amount = models.PositiveIntegerField(default=0)
@@ -316,7 +329,7 @@ class DiscountCode(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, null=True, blank=True)
     variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, null=True, blank=True)
     name = models.CharField(max_length=200)
     price = models.PositiveIntegerField(default=0)
@@ -325,6 +338,10 @@ class OrderItem(models.Model):
     account_type = models.CharField(max_length=32, blank=True, default="")
     account_email = models.CharField(max_length=150, blank=True, default="")
     account_password = models.CharField(max_length=150, blank=True, default="")
+    g4a4_variation = models.ForeignKey('G4A4Variation', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="واریانت G4A4")
+    g4a4_order_id = models.CharField(max_length=100, blank=True, default="", verbose_name="شناسه سفارش G4A4")
+    g4a4_status = models.CharField(max_length=50, blank=True, default="", verbose_name="وضعیت سفارش G4A4")
+    custom_fields_data = models.JSONField(default=dict, blank=True, verbose_name="اطلاعات فیلدهای دلخواه")
 
     def line_total(self):
         return self.price * self.quantity
@@ -340,7 +357,7 @@ class OrderItemAccount(models.Model):
     """
     MODE_CHOICES = [
         ("existing", "اکانت موجود مشتری"),
-        ("create_for_me", "ساخت اکانت توسط نوبیکس"),
+        ("create_for_me", "ساخت اکانت توسط جینکس فمیلی"),
     ]
     STATUS_CHOICES = [
         ("pending", "در انتظار تکمیل مشخصات"),
@@ -386,6 +403,7 @@ class UserProfile(models.Model):
         ("reseller", "Reseller"),
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    wordpress_user_id = models.PositiveBigIntegerField(null=True, blank=True, unique=True, db_index=True)
     tier = models.CharField(max_length=16, choices=TIER_CHOICES, default="user")
     wallet_balance = models.PositiveIntegerField(default=0)
     avatar = models.FileField(upload_to='avatars/', blank=True, null=True)
@@ -406,6 +424,21 @@ class UserProfile(models.Model):
     reseller_pricing_tour_seen_at = models.DateTimeField(
         null=True, blank=True, help_text="آخرین زمان مشاهده‌ی تور آموزشی قیمت‌گذاری همکاران توسط ادمین؛ null = هنوز دیده نشده"
     )
+    
+    # KYC / Identity Verification
+    national_card_image = models.ImageField(upload_to="national_cards/", null=True, blank=True)
+    national_code = models.CharField(max_length=10, blank=True, default="")
+    verification_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('unverified', 'تایید نشده'),
+            ('pending', 'در انتظار بررسی'),
+            ('verified', 'تایید شده'),
+            ('rejected', 'رد شده')
+        ],
+        default='unverified'
+    )
+    verification_reject_reason = models.TextField(blank=True, default="")
 
     def __str__(self):
         return f"Profile for {self.user.username}"
@@ -613,6 +646,7 @@ class ProductComment(models.Model):
     Model for storing product reviews and comments
     """
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
+    wordpress_comment_id = models.PositiveBigIntegerField(null=True, blank=True, unique=True, db_index=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='product_comments')
     author_name = models.CharField(max_length=100, help_text="نام نمایشی نویسنده نظر")
     rating = models.PositiveSmallIntegerField(
@@ -1160,6 +1194,113 @@ class AccountingTransaction(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.get_entry_type_display()} ({self.amount} {self.currency})"
+
+
+class G4A4Product(models.Model):
+    external_product_id = models.IntegerField(unique=True, verbose_name="شناسه محصول خارجی")
+    category = models.CharField(max_length=200, verbose_name="دسته‌بندی G4A4")
+    name = models.CharField(max_length=255, verbose_name="نام محصول")
+    game_slug = models.SlugField(max_length=200, verbose_name="اسلاگ بازی")
+    is_active = models.BooleanField(default=False, verbose_name="فعال برای نمایش در سایت")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "محصول G4A4"
+        verbose_name_plural = "محصولات G4A4"
+
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
+
+class G4A4Variation(models.Model):
+    external_variation_id = models.IntegerField(unique=True, verbose_name="شناسه واریانت خارجی")
+    product = models.ForeignKey(G4A4Product, on_delete=models.CASCADE, related_name='variations', verbose_name="محصول")
+    name = models.CharField(max_length=255, verbose_name="نام واریانت")
+    cost_irt = models.PositiveIntegerField(verbose_name="قیمت خرید از G4A4 (تومان)")
+    sell_toman = models.PositiveIntegerField(verbose_name="قیمت فروش ما (تومان)")
+    in_stock = models.BooleanField(default=True, verbose_name="موجود")
+    delivery_type = models.CharField(max_length=50, blank=True, verbose_name="نوع تحویل")
+    region = models.CharField(max_length=100, blank=True, verbose_name="ریجن")
+    required_fields = models.JSONField(default=list, blank=True, verbose_name="فیلدهای مورد نیاز")
+    attributes = models.JSONField(default=dict, blank=True, verbose_name="ویژگی‌ها")
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "واریانت G4A4"
+        verbose_name_plural = "واریانت‌های G4A4"
+
+    def __str__(self):
+        return f"{self.name} - {self.sell_toman} تومان"
+
+
+class G4A4MarkupRule(models.Model):
+    category_name = models.CharField(max_length=200, unique=True, verbose_name="نام دسته‌بندی G4A4")
+    markup_percent = models.FloatField(default=20.0, verbose_name="درصد سود (مثلاً ۱۵.۵)")
+
+    class Meta:
+        verbose_name = "قانون سود G4A4"
+        verbose_name_plural = "قوانین سود G4A4"
+
+    def __str__(self):
+        return f"{self.category_name} - {self.markup_percent}٪"
+
+
+class CustomerWalletTxn(models.Model):
+    """تراکنش‌های کیف پول مشتری عادی."""
+    KIND_CHOICES = [
+        ("topup_pending", "شارژ در انتظار پرداخت"),
+        ("topup", "شارژ کیف پول"),
+        ("order", "خرید سفارش"),
+        ("refund", "بازگشت سفارش"),
+        ("adjust", "تعدیل دستی"),
+    ]
+
+    profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="wallet_txns")
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES)
+    amount = models.IntegerField(help_text="مقدار تراکنش (تومان)؛ مثبت = افزایش، منفی = کاهش")
+    balance_after = models.PositiveIntegerField(default=0, help_text="موجودی بعد از اعمال")
+    related_order = models.ForeignKey("Order", on_delete=models.SET_NULL, null=True, blank=True)
+    related_payment = models.ForeignKey("Payment", on_delete=models.SET_NULL, null=True, blank=True)
+    note = models.CharField(max_length=240, blank=True, default="")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="customer_wallet_actions")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "تراکنش کیف پول مشتری"
+        verbose_name_plural = "تراکنش‌های کیف پول مشتری"
+
+    def __str__(self):
+        return f"{self.kind} - {self.amount} تومان"
+
+
+class WishlistItem(models.Model):
+    """لیست علاقه‌مندی‌های کاربر."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="wishlist")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, related_name="wishlisted_by")
+    g4a4_product = models.ForeignKey(G4A4Product, on_delete=models.CASCADE, null=True, blank=True, related_name="wishlisted_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "آیتم علاقه‌مندی"
+        verbose_name_plural = "لیست علاقه‌مندی‌ها"
+
+    def __str__(self):
+        p_name = self.product.name_fa if self.product else (self.g4a4_product.name if self.g4a4_product else "Unknown")
+        return f"{self.user.username} - {p_name}"
+
+
+# Import marketplace models to expose them to Django migrations
+from .marketplace_models import (
+    AccountListing,
+    ListingImage,
+    ListingFavorite,
+    AccountDeal,
+    SellerWallet,
+    SellerWalletTxn,
+    ListingReport,
+)
 
 
 

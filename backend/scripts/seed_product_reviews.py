@@ -43,7 +43,7 @@ import os, sys, django, random
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nubixstore.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jinxfamily.settings")
 django.setup()
 
 from shop.models import Product, ProductComment
@@ -111,7 +111,7 @@ TEXTS_5 = [
     "واقعا حرفه ای هستید", "خوشحالم که با شما آشنا شدم",
     "بهترین فروشگاه", "دمتم گرم", "بست تو کلاس کاری",
     "خیلی تمیز و سریع کار کردید", "پیشنهاد میکنم به همه",
-    "بهترین تجربه خریدم از نوبیکس", "حمایتتون میکنم دوستان",
+    "بهترین تجربه خریدم از جینکس فمیلی", "حمایتتون میکنم دوستان",
     "در کمترین زمان فعال شد", "پشتیبانی دقیق و خوب",
     "عالیه عالیه عالیه", "خوش قول و سریع",
     "قیمت مناسب تر از بقیه شاپ ها", "ممنون از فعال سازی تمیز",

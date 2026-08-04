@@ -7,7 +7,7 @@ Example:
     --api-key YOUR_API_KEY \\
     --receptor 09339732325 \\
     --sender 0018018949161 \\
-    --message "پیام تست نوبیکس"
+    --message "پیام تست جینکس فمیلی"
 """
 
 import argparse
@@ -40,7 +40,7 @@ def main(argv: list[str]) -> int:
         "--sender", default="0018018949161", help="Sender line configured in account"
     )
     parser.add_argument(
-        "--message", default="Test from Nubix", help="Message text to send"
+        "--message", default="Test from JinxFamily", help="Message text to send"
     )
     args = parser.parse_args(argv)
 

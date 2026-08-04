@@ -5,14 +5,14 @@ import { rules } from "../data.jsx";
 export const metadata = {
   title: "قوانین و مقررات",
   alternates: { canonical: "/faq/rules" },
-  description: "دستورالعمل‌های اصلی و قوانین رسمی ثبت سفارش و استفاده از خدمات فروشگاه نوبیکس شاپ.",
+  description: "دستورالعمل‌های اصلی و قوانین رسمی ثبت سفارش و استفاده از خدمات فروشگاه جینکس فمیلی.",
 };
 
 export default function FaqRulesPage() {
   return (
     <FaqSectionLayout
       title="قوانین و مقررات"
-      subtitle="دستورالعمل‌ها و پیش‌نیازهای ضروری برای ثبت سریع و بدون خطای سفارش در نوبیکس."
+      subtitle="دستورالعمل‌ها و پیش‌نیازهای ضروری برای ثبت سریع و بدون خطای سفارش در جینکس فمیلی."
       activeSection="rules"
     >
       <div className="rules-article-container">
@@ -206,14 +206,14 @@ export default function FaqRulesPage() {
             <span className="rules-article-banner-icon">⚖️</span>
             <div className="rules-article-meta">
               <span className="rules-article-tag">اسناد رسمی</span>
-              <h2 className="page-banner-title">قوانین و مقررات استفاده از نوبیکس شاپ</h2>
+              <h2 className="page-banner-title">قوانین و مقررات استفاده از جینکس فمیلی</h2>
             </div>
           </div>
           
           <div className="rules-article-info-bar">
             <div className="rules-info-item">
               <span>✍️</span>
-              <span>تنظیم‌کننده: امور حقوقی نوبیکس</span>
+              <span>تنظیم‌کننده: امور حقوقی جینکس فمیلی</span>
             </div>
             <div className="rules-info-item">
               <span>📅</span>
@@ -227,7 +227,7 @@ export default function FaqRulesPage() {
 
           <div className="rules-article-content">
             <p className="rules-intro">
-              به منظور حفظ حقوق متقابل خریداران و فروشگاه نوبیکس شاپ و تضمین سرعت و امنیت در تمامی فعال‌سازی‌ها، قوانین زیر تدوین شده است. ثبت هرگونه سفارش در سایت به منزله مطالعه و پذیرش کامل این قوانین خواهد بود.
+              به منظور حفظ حقوق متقابل خریداران و فروشگاه جینکس فمیلی و تضمین سرعت و امنیت در تمامی فعال‌سازی‌ها، قوانین زیر تدوین شده است. ثبت هرگونه سفارش در سایت به منزله مطالعه و پذیرش کامل این قوانین خواهد بود.
             </p>
 
             <div className="rules-grid">
@@ -245,7 +245,7 @@ export default function FaqRulesPage() {
             </div>
 
             <div className="rules-footer-note">
-              <strong>توجه ویژه:</strong> عدم رعایت هر یک از بندهای فوق، به ویژه عدم خاموش کردن تایید دو مرحله‌ای یا ورود همزمان به اکانت در حین پردازش سفارش، تعهد تحویل فوری نوبیکس شاپ را از بین برده و مسئولیت تاخیرهای ناشی از آن تماماً بر عهده خریدار خواهد بود.
+              <strong>توجه ویژه:</strong> عدم رعایت هر یک از بندهای فوق، به ویژه عدم خاموش کردن تایید دو مرحله‌ای یا ورود همزمان به اکانت در حین پردازش سفارش، تعهد تحویل فوری جینکس فمیلی را از بین برده و مسئولیت تاخیرهای ناشی از آن تماماً بر عهده خریدار خواهد بود.
             </div>
           </div>
         </div>

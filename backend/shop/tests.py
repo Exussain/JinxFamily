@@ -1,10 +1,11 @@
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.core.cache import cache
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from .kavenegar_service import KavenegarService
@@ -20,8 +21,12 @@ from .models import (
     ResellerProfile,
     ResellerWalletTxn,
     SiteSetting,
+    SpinResult,
     UserProfile,
     XboxAccount,
+    G4A4Product,
+    G4A4Variation,
+    G4A4MarkupRule,
 )
 from .reseller_views import (
     _hash_token,
@@ -36,6 +41,43 @@ from .views import (
     _get_customer_contact_info,
     _parse_tgju_currency_rates,
 )
+from .spin_views import _eligibility
+
+
+class SpinEligibilityTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="spin-user",
+            email="spin@example.com",
+            password="password123",
+        )
+
+    def _record_spin_at(self, created_at):
+        result = SpinResult.objects.create(
+            user=self.user,
+            segment_index=0,
+            segment_type="blank",
+            prize_label="پوچ",
+        )
+        SpinResult.objects.filter(pk=result.pk).update(created_at=created_at)
+
+    def test_weekly_spin_resets_at_the_start_of_saturday(self):
+        saturday_start = timezone.make_aware(datetime(2026, 7, 25, 0, 0, 0))
+        self._record_spin_at(saturday_start - timedelta(microseconds=1))
+        with patch("shop.spin_views.timezone.now", return_value=saturday_start):
+            can_spin, reason, *_ = _eligibility(self.user)
+
+        self.assertTrue(can_spin)
+        self.assertEqual(reason, "")
+
+    def test_spin_remains_locked_until_the_following_saturday(self):
+        saturday_start = timezone.make_aware(datetime(2026, 7, 25, 0, 0, 0))
+        self._record_spin_at(saturday_start + timedelta(days=1))
+        with patch("shop.spin_views.timezone.now", return_value=saturday_start + timedelta(days=5)):
+            can_spin, reason, *_ = _eligibility(self.user)
+
+        self.assertFalse(can_spin)
+        self.assertIn("شنبه", reason)
 
 
 class XboxOrderCredentialTests(TestCase):
@@ -745,6 +787,78 @@ class AdminProductManagementTests(TestCase):
 
 class KavenegarServiceTests(TestCase):
     @patch.object(KavenegarService, "API_KEY", "test-api-key")
+    @patch.object(KavenegarService, "_get")
+    def test_health_check_uses_account_info_without_sending_sms(self, mock_get):
+        mock_response = Mock(status_code=200)
+        mock_response.json.return_value = {
+            "return": {"status": 200, "message": "تایید شد"},
+            "entries": {"remaincredit": 1500000, "type": "master"},
+        }
+        mock_get.return_value = mock_response
+
+        health = KavenegarService.health_check()
+
+        self.assertTrue(health["ok"])
+        self.assertEqual(health["status"], "healthy")
+        self.assertEqual(health["credit"], 1500000)
+        mock_get.assert_called_once_with(
+            "https://api.kavenegar.com/v1/test-api-key/account/info.json",
+            timeout=6,
+        )
+
+    @patch.object(KavenegarService, "API_KEY", "bad-api-key")
+    @patch.object(KavenegarService, "_get")
+    def test_health_check_identifies_an_invalid_api_key(self, mock_get):
+        mock_response = Mock(status_code=403)
+        mock_response.json.return_value = {
+            "return": {"status": 403, "message": "حساب کاربری معتبر نمی‌باشد"},
+        }
+        mock_get.return_value = mock_response
+
+        health = KavenegarService.health_check()
+
+        self.assertFalse(health["ok"])
+        self.assertEqual(health["status"], "invalid_api_key")
+        self.assertEqual(health["provider_status"], 403)
+
+    @patch.object(KavenegarService, "_get")
+    def test_health_check_reports_a_missing_api_key_without_network_call(self, mock_get):
+        with patch.object(KavenegarService, "API_KEY", ""):
+            health = KavenegarService.health_check()
+
+        self.assertFalse(health["ok"])
+        self.assertEqual(health["status"], "missing_api_key")
+        mock_get.assert_not_called()
+
+    def test_admin_kavenegar_health_is_restricted_to_admins(self):
+        admin = User.objects.create_user(
+            username="admin-health",
+            email="admin-health@example.com",
+            password="password123",
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+
+        with patch.object(
+            KavenegarService,
+            "health_check",
+            return_value={
+                "ok": True,
+                "status": "healthy",
+                "message": "ok",
+                "provider_status": 200,
+                "credit": 1500000,
+            },
+        ):
+            response = self.client.get("/api/admin/kavenegar/health")
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()["provider"], "kavenegar")
+        self.assertTrue(response.json()["ok"])
+        self.assertIn("checked_at", response.json())
+
+    @patch.object(KavenegarService, "API_KEY", "test-api-key")
+    @patch.object(KavenegarService, "DEFAULT_TEMPLATE", "jinxfamily-signup")
     @patch.object(KavenegarService, "_post")
     def test_send_verification_code_posts_to_lookup_endpoint(self, mock_post):
         mock_response = Mock(status_code=200)
@@ -763,7 +877,7 @@ class KavenegarServiceTests(TestCase):
             data={
                 "receptor": "09120000000",
                 "token": "123456",
-                "template": "nubixshop-signup",
+                "template": "jinxfamily-signup",
                 "type": "sms",
             },
             timeout=10,
@@ -790,7 +904,7 @@ class KavenegarServiceTests(TestCase):
                 "receptor": "09120000000",
                 "token": "Ali",
                 "token2": "Reza",
-                "template": "nubixshop-order-done",
+                "template": "jinxfamily-order-done",
                 "type": "sms",
             },
             timeout=10,
@@ -819,7 +933,7 @@ class KavenegarServiceTests(TestCase):
                 "token": "Ali",
                 "token2": "75",
                 "token3": "125",
-                "template": "nubixshop-club-points",
+                "template": "jinxfamily-club-points",
                 "type": "sms",
             },
             timeout=10,
@@ -1534,7 +1648,7 @@ class ResellerStatusSmsTests(TestCase):
                 "receptor": "09129999999",
                 "token": "همکار",
                 "token2": "نمونه",
-                "template": "nubixshop-order-done",
+                "template": "jinxfamily-order-done",
                 "type": "sms",
             },
             timeout=10,
@@ -1564,14 +1678,14 @@ class ResellerStatusSmsTests(TestCase):
         self.assertEqual(res.status_code, 200)
         
         # Order status didn't change (still pending/paid etc.), but the account status changed to completed.
-        # This sends unit-level SMS using the nubixshop-order-done template.
+        # This sends unit-level SMS using the jinxfamily-order-done template.
         mock_post.assert_called_once_with(
             "https://api.kavenegar.com/v1/test-api-key/verify/lookup.json",
             data={
                 "receptor": "09129999999",
                 "token": "همکار",
                 "token2": "نمونه",
-                "template": "nubixshop-order-done",
+                "template": "jinxfamily-order-done",
                 "type": "sms",
             },
             timeout=10,
@@ -1591,14 +1705,14 @@ class ResellerStatusSmsTests(TestCase):
         )
         self.assertEqual(res.status_code, 200)
         
-        # Check that fallback SMS was sent via nubixshop-alert template with status_fa="درحالانجام"
+        # Check that fallback SMS was sent via jinxfamily-alert template with status_fa="درحالانجام"
         mock_post.assert_any_call(
             "https://api.kavenegar.com/v1/test-api-key/verify/lookup.json",
             data={
                 "receptor": "09129999999",
                 "token": "همکارنمونه",
                 "token2": "درحالانجام",
-                "template": "nubixshop-alert",
+                "template": "jinxfamily-alert",
                 "type": "sms",
             },
             timeout=10,
@@ -1847,3 +1961,632 @@ class DiscountValidationGuardrailTests(TestCase):
         self.assertIn("هشدار سیستم", order.note)
         self.discount.refresh_from_db()
         self.assertEqual(self.discount.used_count, 1)
+
+
+class G4A4Tests(TestCase):
+    def setUp(self):
+        self.category_name = "Supercell Games"
+        self.rule = G4A4MarkupRule.objects.create(
+            category_name=self.category_name,
+            markup_percent=15.0
+        )
+
+    def test_g4a4_to_toman_conversion(self):
+        from shop.g4a4_service import _g4a4_to_toman
+        self.assertEqual(_g4a4_to_toman(125000), 125000)
+        self.assertEqual(_g4a4_to_toman("95000.5"), 95000)
+        self.assertEqual(_g4a4_to_toman("abc"), 0)
+
+    def test_markup_price_calculation(self):
+        from shop.g4a4_service import calculate_sell_price
+        # Default markup is 20%
+        # 100000 * 1.20 = 120000 (rounds to nearest thousand)
+        self.assertEqual(calculate_sell_price(100000, "Unknown Category"), 120000)
+        
+        # Category markup is 15%
+        # 100000 * 1.15 = 115000
+        self.assertEqual(calculate_sell_price(100000, self.category_name), 115000)
+
+    def test_sync_g4a4_management_command(self):
+        from unittest.mock import patch
+        from django.core.management import call_command
+        
+        mock_categories = [
+            {"id": 4, "name": self.category_name}
+        ]
+        mock_products = [
+            {"id": 12, "name": "Clash of Clans Gem Pack"}
+        ]
+        mock_product_detail = {
+            "id": 12,
+            "name": "Clash of Clans Gem Pack",
+            "variations": [
+                {
+                    "id": 99,
+                    "name": "500 Gems",
+                    "price": 50000,
+                    "in_stock": True,
+                    "delivery_type": "instant",
+                    "region": "global",
+                    "required_fields": ["player_tag"],
+                    "attributes": {}
+                }
+            ]
+        }
+
+        with patch("shop.g4a4_service.get_categories", return_value=mock_categories), \
+             patch("shop.g4a4_service.get_products", return_value=mock_products), \
+             patch("shop.g4a4_service.get_product", return_value=mock_product_detail):
+            
+            call_command("sync_g4a4", "--full")
+            
+            # Check G4A4Product created
+            prod = G4A4Product.objects.get(external_product_id=12)
+            self.assertEqual(prod.name, "Clash of Clans Gem Pack")
+            self.assertEqual(prod.category, self.category_name)
+            
+            # Check G4A4Variation created
+            var = G4A4Variation.objects.get(external_variation_id=99)
+            self.assertEqual(var.name, "500 Gems")
+            self.assertEqual(var.cost_irt, 50000)
+            self.assertEqual(var.sell_toman, 58000)  # 50000 + 15% = 57500 -> rounded to nearest 1000 = 58000
+            self.assertTrue(var.in_stock)
+            self.assertEqual(var.required_fields, ["player_tag"])
+
+    def test_g4a4_automatic_fulfillment_on_payment_success(self):
+        from unittest.mock import patch
+        from shop.models import Order, OrderItem, Payment
+        
+        user = User.objects.create_user(username="test_g4a4_user", password="password")
+        g4a4_prod = G4A4Product.objects.create(
+            external_product_id=55,
+            category=self.category_name,
+            name="V-Bucks 1000",
+            game_slug="fortnite",
+            is_active=True
+        )
+        g4a4_var = G4A4Variation.objects.create(
+            external_variation_id=123,
+            product=g4a4_prod,
+            name="1000 V-Bucks",
+            cost_irt=40000,
+            sell_toman=46000,
+            in_stock=True
+        )
+        
+        order = Order.objects.create(
+            user=user,
+            phone="09123456789",
+            amount=46000,
+            status="pending",
+            is_test_order=True
+        )
+        
+        item = OrderItem.objects.create(
+            order=order,
+            product=None,
+            name="1000 V-Bucks",
+            price=46000,
+            quantity=1,
+            g4a4_variation=g4a4_var,
+            custom_fields_data={"player_tag": "XYZ"}
+        )
+        
+        payment = Payment.objects.create(
+            order=order,
+            authority="A0000000000000000000000000012345",
+            amount=46000,
+            status="pending"
+        )
+
+        with patch("shop.zarinpal_service.ZarinPalService.verify_payment", return_value=(True, {"ref_id": 9999})), \
+             patch("shop.g4a4_service.add_order", return_value={"order_id": 85739}) as mock_add_order:
+            
+            response = self.client.get(
+                f"/api/payment/verify/{order.tracking_code}",
+                {"Authority": "A0000000000000000000000000012345", "Status": "OK"}
+            )
+            
+            # Should redirect to payment success
+            self.assertEqual(response.status_code, 302)
+            
+            # Reload order and item
+            order.refresh_from_db()
+            item.refresh_from_db()
+            
+            self.assertEqual(order.status, "paid")
+            self.assertEqual(item.g4a4_order_id, "85739")
+            self.assertEqual(item.g4a4_status, "processing")
+            
+            # Check add_order mock invocation
+            mock_add_order.assert_called_once()
+            args, kwargs = mock_add_order.call_args
+            self.assertEqual(kwargs["variation_id"], 123)
+            self.assertEqual(kwargs["quantity"], 1)
+            self.assertEqual(kwargs["data"], {"player_tag": "XYZ"})
+            self.assertTrue(kwargs["test_mode"])
+
+    def test_coins_api_endpoints(self):
+        # Create active and inactive G4A4 products/variations
+        g4a4_prod_active = G4A4Product.objects.create(
+            external_product_id=101,
+            category="Apex Coins",
+            name="Apex Legends Coins",
+            game_slug="apex",
+            is_active=True
+        )
+        G4A4Variation.objects.create(
+            external_variation_id=201,
+            product=g4a4_prod_active,
+            name="1000 Coins",
+            cost_irt=90000,
+            sell_toman=100000,
+            in_stock=True
+        )
+        
+        g4a4_prod_inactive = G4A4Product.objects.create(
+            external_product_id=102,
+            category="Valorant Points",
+            name="Valorant Points Pack",
+            game_slug="valorant",
+            is_active=False
+        )
+        G4A4Variation.objects.create(
+            external_variation_id=202,
+            product=g4a4_prod_inactive,
+            name="1000 VP",
+            cost_irt=80000,
+            sell_toman=90000,
+            in_stock=True
+        )
+        
+        # Test GET /api/coins/games
+        response_games = self.client.get("/api/coins/games")
+        self.assertEqual(response_games.status_code, 200)
+        games_list = response_games.json()
+        
+        # Only active product categories should be present
+        slugs = [g["slug"] for g in games_list]
+        self.assertIn("apex", slugs)
+        self.assertNotIn("valorant", slugs)
+        
+        # Test GET /api/coins/<game_slug>
+        response_detail = self.client.get("/api/coins/apex")
+        self.assertEqual(response_detail.status_code, 200)
+        detail_list = response_detail.json()
+        
+        self.assertEqual(len(detail_list), 1)
+        self.assertEqual(detail_list[0]["game_slug"], "apex")
+        self.assertEqual(len(detail_list[0]["variations"]), 1)
+        self.assertEqual(detail_list[0]["variations"][0]["external_variation_id"], 201)
+        self.assertEqual(detail_list[0]["variations"][0]["sell_toman"], 100000)
+
+    def test_customer_wallet_and_wishlist_apis(self):
+        from shop.models import UserProfile, WishlistItem, CustomerWalletTxn, Product
+        from unittest.mock import patch
+        
+        user = User.objects.create_user(username="test_wallet_user", password="password")
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.wallet_balance = 15000
+        profile.save()
+        
+        self.client.force_login(user)
+        
+        # 1. Test GET /api/me/wallet
+        response = self.client.get("/api/me/wallet")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["balance"], 15000)
+        self.assertEqual(len(response.json()["transactions"]), 0)
+        
+        # 2. Test POST /api/me/wallet/topup
+        with patch("shop.zarinpal_service.ZarinPalService.create_payment_request", return_value=(True, {"authority": "AUTH123", "redirect_url": "https://zarinpal.com/pay/AUTH123"})):
+            response_topup = self.client.post(
+                "/api/me/wallet/topup",
+                data=json.dumps({"amount": 50000}),
+                content_type="application/json"
+            )
+            self.assertEqual(response_topup.status_code, 200)
+            self.assertTrue(response_topup.json()["success"])
+            self.assertEqual(response_topup.json()["redirect_url"], "https://zarinpal.com/pay/AUTH123")
+            
+        # 3. Test Wishlist toggle & list
+        catalog_prod = Product.objects.create(
+            name_fa="کارت ویپ جی تی ای",
+            slug="gta6-vip-card",
+            price=200000,
+            active=True
+        )
+        
+        # Toggle add
+        response_toggle = self.client.post(
+            "/api/me/wishlist/toggle",
+            data=json.dumps({"product_id": catalog_prod.id}),
+            content_type="application/json"
+        )
+        self.assertEqual(response_toggle.status_code, 200)
+        self.assertEqual(response_toggle.json()["status"], "added")
+        
+        # Get list
+        response_list = self.client.get("/api/me/wishlist")
+        self.assertEqual(response_list.status_code, 200)
+        self.assertEqual(len(response_list.json()), 1)
+        self.assertEqual(response_list.json()[0]["slug"], "gta6-vip-card")
+        
+        # Toggle remove
+        response_toggle_remove = self.client.post(
+            "/api/me/wishlist/toggle",
+            data=json.dumps({"product_id": catalog_prod.id}),
+            content_type="application/json"
+        )
+        self.assertEqual(response_toggle_remove.status_code, 200)
+        self.assertEqual(response_toggle_remove.json()["status"], "removed")
+        
+        response_list_empty = self.client.get("/api/me/wishlist")
+        self.assertEqual(response_list_empty.status_code, 200)
+        self.assertEqual(len(response_list_empty.json()), 0)
+
+    def test_marketplace_flows(self):
+        from shop.marketplace_models import AccountListing, AccountDeal, SellerWallet
+        from unittest.mock import patch
+        
+        seller = User.objects.create_user(username="test_seller", password="password")
+        buyer = User.objects.create_user(username="test_buyer", password="password")
+        
+        # 1. Create a listing
+        self.client.force_login(seller)
+        response_create = self.client.post(
+            "/api/market/listings/create",
+            data=json.dumps({
+                "title": "اکانت فورتنایت سیزن ۱",
+                "game": "fortnite",
+                "description": "فوق العاده تمیز",
+                "price": 100000,
+                "platform": "pc"
+            }),
+            content_type="application/json"
+        )
+        self.assertEqual(response_create.status_code, 200)
+        self.assertTrue("id" in response_create.json())
+        listing_id = response_create.json()["id"]
+        
+        # Publish listing using admin view
+        admin_user = User.objects.create_superuser(username="admin_user", email="a@a.com", password="password")
+        self.client.force_login(admin_user)
+        response_approve = self.client.post(f"/api/admin/market/listings/{listing_id}/approve")
+        self.assertEqual(response_approve.status_code, 200)
+        
+        # 2. Get listings list
+        response_list = self.client.get("/api/market/listings")
+        self.assertEqual(response_list.status_code, 200)
+        self.assertEqual(len(response_list.json()["results"]), 1)
+        self.assertEqual(response_list.json()["results"][0]["id"], listing_id)
+        
+        # 3. Get listing detail
+        response_detail = self.client.get(f"/api/market/listings/{listing_id}")
+        self.assertEqual(response_detail.status_code, 200)
+        self.assertEqual(response_detail.json()["title"], "اکانت فورتنایت سیزن ۱")
+        
+        # 4. Initiate deal (buyer buys listing)
+        self.client.force_login(buyer)
+        with patch("shop.zarinpal_service.ZarinPalService.create_payment_request", return_value=(True, {"authority": "AUTH123", "redirect_url": "https://zarinpal.com/pay/AUTH123"})):
+            response_deal = self.client.post(
+                "/api/market/deals",
+                data=json.dumps({"listing_id": listing_id}),
+                content_type="application/json"
+            )
+            self.assertEqual(response_deal.status_code, 200)
+            self.assertTrue(response_deal.json()["success"])
+            
+        deal = AccountDeal.objects.filter(buyer=buyer).first()
+        self.assertIsNotNone(deal)
+        
+        # 5. Seller uploads credentials
+        self.client.force_login(seller)
+        response_creds = self.client.post(
+            f"/api/market/deals/{deal.id}/credentials",
+            data=json.dumps({"credentials": "user:pass123"}),
+            content_type="application/json"
+        )
+        self.assertEqual(response_creds.status_code, 200)
+        
+        # 6. Buyer confirms deal (releasing funds to seller)
+        self.client.force_login(buyer)
+        response_confirm = self.client.post(f"/api/market/deals/{deal.id}/confirm")
+        self.assertEqual(response_confirm.status_code, 200)
+        
+        # 7. Check seller wallet balance
+        self.client.force_login(seller)
+        response_dashboard = self.client.get("/api/market/seller/dashboard")
+        self.assertEqual(response_dashboard.status_code, 200)
+        # Net amount should be 95000 (100000 - 5000 commission)
+        self.assertEqual(response_dashboard.json()["balance"], 95000)
+
+    def test_identity_verification_flow(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        
+        user = User.objects.create_user(username="kyc_user", password="password")
+        self.client.force_login(user)
+        
+        # 1. Get verification status (initially unverified)
+        response_get = self.client.get("/api/me/verify-identity")
+        self.assertEqual(response_get.status_code, 200)
+        self.assertEqual(response_get.json()["verification_status"], "unverified")
+        
+        # 2. Upload verification details
+        fake_card = SimpleUploadedFile("card.jpg", b"fakebinaryimagecontent", content_type="image/jpeg")
+        response_post = self.client.post(
+            "/api/me/verify-identity",
+            data={
+                "national_code": "1234567890",
+                "national_card_image": fake_card
+            }
+        )
+        self.assertEqual(response_post.status_code, 200)
+        self.assertEqual(response_post.json()["status"], "pending")
+        
+        # 3. Check admin verification list
+        admin_user = User.objects.create_superuser(username="kyc_admin", password="password")
+        self.client.force_login(admin_user)
+        response_list = self.client.get("/api/admin/users/verifications?status=pending")
+        self.assertEqual(response_list.status_code, 200)
+        self.assertEqual(len(response_list.json()["results"]), 1)
+        profile_id = response_list.json()["results"][0]["profile_id"]
+        
+        # 4. Admin approve verification
+        response_approve = self.client.post(f"/api/admin/users/verifications/{profile_id}/approve")
+        self.assertEqual(response_approve.status_code, 200)
+        
+        # 5. User checks status again
+        self.client.force_login(user)
+        response_check = self.client.get("/api/me/verify-identity")
+        self.assertEqual(response_check.status_code, 200)
+        self.assertEqual(response_check.json()["verification_status"], "verified")
+
+
+class MarketplacePrivacyTests(TestCase):
+    def test_public_listing_detail_never_returns_credentials_or_contact_details(self):
+        from shop.marketplace_models import AccountListing
+
+        seller = User.objects.create_user(username="market_seller", password="password")
+        listing = AccountListing.objects.create(
+            seller=seller,
+            game="fortnite",
+            title="Test account",
+            description=(
+                "• **لول اکانت**: 200\n"
+                "• **ایمیل اکانت**: seller@example.com\n"
+                "• **رمز ورود**: secret-password"
+            ),
+            price=100000,
+            status="published",
+            attributes={
+                "لول اکانت": "200",
+                "ایمیل اکانت": "seller@example.com",
+                "رمز ورود": "secret-password",
+            },
+        )
+
+        response = self.client.get(f"/api/market/listings/{listing.id}")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["attributes"], {"لول اکانت": "200"})
+        self.assertIn("لول اکانت", payload["description"])
+        self.assertNotIn("seller@example.com", payload["description"])
+        self.assertNotIn("secret-password", payload["description"])
+
+
+class RequiredProductFieldsTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="09124445566", email="required-fields@example.com", password="password123"
+        )
+        self.product = Product.objects.create(
+            name_fa="محصول با اطلاعات اجباری",
+            slug="required-fields-product",
+            price=120000,
+            active=True,
+            custom_fields=[
+                {"key": "account_email", "label": "ایمیل اکانت", "type": "email", "required": True},
+                {"key": "account_password", "label": "رمز اکانت", "type": "password", "required": True},
+            ],
+        )
+        supplier_product = G4A4Product.objects.create(
+            external_product_id=9901,
+            category="Tests",
+            name="Supplier product",
+            game_slug="test-game",
+            is_active=True,
+        )
+        self.supplier_variation = G4A4Variation.objects.create(
+            external_variation_id=9902,
+            product=supplier_product,
+            name="Supplier variation",
+            cost_irt=100000,
+            sell_toman=120000,
+            in_stock=True,
+            required_fields=["player_tag"],
+        )
+
+    def test_cart_validation_returns_schema_and_missing_keys_without_values(self):
+        response = self.client.post(
+            "/api/cart/validate",
+            data=json.dumps({"items": [{
+                "product_id": self.product.id,
+                "quantity": 1,
+                "custom_fields": {"account_password": "secret-value"},
+            }]}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        item = response.json()["items"][0]
+        self.assertFalse(item["complete"])
+        self.assertEqual(item["missing_field_keys"], ["account_email"])
+        self.assertEqual(item["required_fields"][0]["key"], "account_email")
+        self.assertNotIn("secret-value", response.content.decode())
+
+    def test_g4a4_missing_fields_block_order_without_creating_order(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            "/api/orders",
+            data=json.dumps({"items": [{
+                "product_id": "g4a4_9901",
+                "g4a4_variation_id": self.supplier_variation.external_variation_id,
+                "quantity": 1,
+                "custom_fields": {},
+            }]}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        body = response.json()
+        self.assertEqual(body["code"], "required_product_fields")
+        self.assertEqual(body["items"][0]["index"], 0)
+        self.assertEqual(body["items"][0]["missing_field_keys"], ["player_tag"])
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_complete_custom_fields_create_order(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            "/api/orders",
+            data=json.dumps({
+                "items": [{
+                    "product_id": self.product.id,
+                    "slug": self.product.slug,
+                    "quantity": 1,
+                    "custom_fields": {
+                        "account_email": "player@example.com",
+                        "account_password": "not-returned-password",
+                    },
+                }],
+                "contact": {"email": "required-fields@example.com", "telegram": "@requiredfields"},
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        item = Order.objects.get(tracking_code=response.json()["tracking_code"]).items.get()
+        self.assertEqual(item.custom_fields_data["account_email"], "player@example.com")
+
+
+class PublicPerformanceApiTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.product = Product.objects.create(
+            name_fa="محصول تست ویترین",
+            slug="performance-card-product",
+            subtitle="متن کوتاه",
+            category="FORTNITE",
+            price=125000,
+            original_price=150000,
+            active=True,
+        )
+        self.variant = ProductVariant.objects.create(
+            product=self.product,
+            title="نسخه ویژه",
+            price=110000,
+            original_price=140000,
+        )
+
+    def test_compact_product_response_is_limited_and_omits_variants(self):
+        response = self.client.get("/api/products?view=card&limit=1")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("stale-while-revalidate=300", response["Cache-Control"])
+        cards = response.json()["results"]
+        self.assertEqual(len(cards), 1)
+        self.assertEqual(cards[0]["id"], self.product.id)
+        self.assertTrue(cards[0]["has_variants"])
+        self.assertNotIn("variants", cards[0])
+        self.assertNotIn("description", cards[0])
+        self.assertEqual(cards[0]["price"], 110000)
+
+    def test_search_is_never_cached(self):
+        response = self.client.get("/api/products?view=card&search=performance")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Cache-Control"], "no-store")
+
+    def test_anonymous_card_response_is_cached_for_sixty_seconds(self):
+        first = self.client.get("/api/products?view=card&limit=1").json()
+        self.variant.price = 90000
+        self.variant.save(update_fields=["price"])
+        second = self.client.get("/api/products?view=card&limit=1").json()
+        self.assertEqual(first, second)
+
+    def test_invalid_card_limit_is_rejected(self):
+        response = self.client.get("/api/products?view=card&limit=500")
+        self.assertEqual(response.status_code, 400)
+
+    def test_cart_validation_reconciles_price_changes(self):
+        response = self.client.post(
+            "/api/cart/validate",
+            data=json.dumps({"items": [{
+                "product_id": self.product.id,
+                "variant_id": self.variant.id,
+                "quantity": 2,
+                "price": 99000,
+            }]}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertTrue(body["valid"])
+        self.assertEqual(body["total"], 220000)
+        self.assertEqual(body["changed_count"], 1)
+        self.assertEqual(body["items"][0]["unit_price"], 110000)
+
+    def test_cart_validation_reports_unavailable_and_wrong_variants(self):
+        self.product.customer_ordering_disabled = True
+        self.product.save(update_fields=["customer_ordering_disabled"])
+        unavailable = self.client.post(
+            "/api/cart/validate",
+            data=json.dumps({"items": [{
+                "product_id": self.product.id,
+                "variant_id": self.variant.id,
+                "quantity": 1,
+            }]}),
+            content_type="application/json",
+        )
+        self.assertFalse(unavailable.json()["valid"])
+        self.assertEqual(unavailable.json()["items"][0]["reason"], "ordering_disabled")
+
+        wrong_variant = self.client.post(
+            "/api/cart/validate",
+            data=json.dumps({"items": [{
+                "product_id": self.product.id,
+                "variant_id": self.variant.id + 999,
+                "quantity": 1,
+            }]}),
+            content_type="application/json",
+        )
+        self.assertEqual(wrong_variant.json()["items"][0]["reason"], "variant_unavailable")
+
+    def test_malformed_cart_is_rejected(self):
+        response = self.client.post(
+            "/api/cart/validate",
+            data=json.dumps({"items": [{"product_id": self.product.id, "quantity": 0}]}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    @override_settings(PERFORMANCE_VITALS_RATE_LIMIT=2)
+    def test_vitals_are_anonymous_validated_and_rate_limited(self):
+        payload = {"name": "LCP", "value": 2120.5, "route": "/products", "rating": "good"}
+        first = self.client.post(
+            "/api/performance/vitals", data=json.dumps(payload), content_type="application/json"
+        )
+        second = self.client.post(
+            "/api/performance/vitals", data=json.dumps(payload), content_type="application/json"
+        )
+        limited = self.client.post(
+            "/api/performance/vitals", data=json.dumps(payload), content_type="application/json"
+        )
+        self.assertEqual(first.status_code, 202)
+        self.assertEqual(second.status_code, 202)
+        self.assertEqual(limited.status_code, 429)
+        self.assertNotIn("ip", first.json())
+
+        cache.clear()
+        invalid = self.client.post(
+            "/api/performance/vitals",
+            data=json.dumps({"name": "EMAIL", "value": 1}),
+            content_type="application/json",
+        )
+        self.assertEqual(invalid.status_code, 400)

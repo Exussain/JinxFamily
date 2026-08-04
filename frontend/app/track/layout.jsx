@@ -1,3 +1,5 @@
+import '../globals.css';
+
 export const metadata = {
   robots: { index: false, follow: false },
 };

@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import ReCaptcha from "./ReCaptcha";
+import dynamic from "next/dynamic";
+
+const ReCaptcha = dynamic(() => import("./ReCaptcha"), { ssr: false });
 import { adminCacheBustHref } from "../lib/adminUrl.mjs";
 import { PRESET_AVATARS, compressImageFile, renderPresetAvatarBlob } from "../lib/avatarImage.mjs";
 
-export default function OTPLogin({ mode = "login" }) {
+export default function OTPLogin({ mode = "login", onSuccess = null }) {
   const router = useRouter();
   const [step, setStep] = useState(1); // 1 = phone input, 2 = OTP input, 3 = profile/info (signup/reset)
   const isSignupFlow = mode === "signup";
@@ -172,7 +174,7 @@ export default function OTPLogin({ mode = "login" }) {
   // suspicious (responds with `captcha_required`). Normal users never see it.
   const [captchaRequired, setCaptchaRequired] = useState(false);
   const [captchaProvider, setCaptchaProvider] = useState("recaptcha");
-  const [captchaSiteKey, setCaptchaSiteKey] = useState("6LdlQyEtAAAAAPmc8sJ-C_FxwUc2tgTJMvju1aTN");
+  const [captchaSiteKey, setCaptchaSiteKey] = useState("6LfrtFstAAAAAGFN9f1bsaZ3NNBhBMgfsx4ivTyZ");
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
@@ -467,7 +469,7 @@ export default function OTPLogin({ mode = "login" }) {
               first_name: normalizedFirstName,
               last_name: normalizedLastName,
               intent: mode,
-              ref: (typeof window !== "undefined" && window.localStorage.getItem("nubix_ref")) || undefined,
+              ref: (typeof window !== "undefined" && window.localStorage.getItem("jinxfamily_ref")) || undefined,
               ...passwordPayload,
             };
 
@@ -495,10 +497,14 @@ export default function OTPLogin({ mode = "login" }) {
 
       // Successful login/signup/reset - show success animation
       setSuccess(true);
-      if (isSignupFlow) {
+      if (isSignupFlow || isNewUser) {
         uploadChosenAvatar();
       }
       setTimeout(() => {
+        if (typeof onSuccess === "function") {
+          onSuccess(data.user || data);
+          return;
+        }
         const returnTo = typeof window !== "undefined" ? sessionStorage.getItem("return_to_checkout") : null;
         if (returnTo) {
           sessionStorage.removeItem("return_to_checkout");
@@ -778,7 +784,7 @@ export default function OTPLogin({ mode = "login" }) {
 
         {step === 1 && (
           <div style={{ animation: "slideIn 0.3s ease" }}>
-            <div className="field">
+            <div className="field centered-field">
               <label>شماره موبایل</label>
               <input
                 type="tel"
@@ -835,7 +841,8 @@ export default function OTPLogin({ mode = "login" }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 8
+                gap: 8,
+                width: "100%"
               }}
               disabled={loading}
               onClick={sendOTP}
@@ -1252,6 +1259,138 @@ export default function OTPLogin({ mode = "login" }) {
                     ایمیل برای ارسال اطلاعات سفارش استفاده می‌شود
                   </small>
                 </div>
+
+                <div className="field" style={{ marginTop: 12 }}>
+                  <label>آواتار (اختیاری)</label>
+                  {/* direction:ltr keeps the strip predictable: [◀ قبلی][بعدی ▶] با پیش‌نمایش دو طرف */}
+                  <div className="avatar-picker" style={{ direction: "ltr" }}>
+                    {/* آواتار بعدی — پیکان به چپ */}
+                    <button
+                      type="button"
+                      onClick={() => cyclePresetAvatar(1)}
+                      aria-label="آواتار بعدی"
+                      className="avatar-picker-arrow"
+                      disabled={avatarAnimating}
+                    >
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+
+                    {/* Stage: three circles (prev / selected / next) layered so the selected one can slide in/out */}
+                    <div className="avatar-picker-stage">
+                      {/* پیش‌نمایش کوچک آواتار بعدی */}
+                      <button
+                        type="button"
+                        onClick={() => cyclePresetAvatar(1)}
+                        aria-label="آواتار بعدی"
+                        className="avatar-picker-preview avatar-picker-preview-prev"
+                        disabled={avatarAnimating}
+                      >
+                        {renderPresetCircle((avatarPresetIdx + 1) % PRESET_AVATARS.length, 44)}
+                      </button>
+
+                      {/* آواتار انتخاب‌شده (بزرگ) */}
+                      <div
+                        key={`${avatarMode}-${avatarMode === "upload" ? "upload" : avatarPresetIdx}-${slideDirection ?? "rest"}`}
+                        className={[
+                          "avatar-picker-selected",
+                          `avatar-slide-${slideDirection ?? "rest"}`,
+                        ].join(" ")}
+                      >
+                        {avatarMode === "upload" && avatarPreviewUrl ? (
+                          <img
+                            src={avatarPreviewUrl}
+                            alt="آواتار انتخابی"
+                            className="avatar-picker-uploaded"
+                          />
+                        ) : (
+                          <div
+                            className="avatar-picker-selected-inner"
+                            style={{
+                              background: `linear-gradient(135deg, ${PRESET_AVATARS[avatarPresetIdx].gradient[0]}, ${PRESET_AVATARS[avatarPresetIdx].gradient[1]})`,
+                            }}
+                          >
+                            {PRESET_AVATARS[avatarPresetIdx].src ? (
+                              <img
+                                src={PRESET_AVATARS[avatarPresetIdx].src}
+                                alt={PRESET_AVATARS[avatarPresetIdx].label || "آواتار آماده"}
+                                className="avatar-picker-img"
+                              />
+                            ) : (
+                              <span className="avatar-picker-emoji">
+                                {PRESET_AVATARS[avatarPresetIdx].emoji}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* پیش‌نمایش کوچک آواتار قبلی */}
+                      <button
+                        type="button"
+                        onClick={() => cyclePresetAvatar(-1)}
+                        aria-label="آواتار قبلی"
+                        className="avatar-picker-preview avatar-picker-preview-next"
+                        disabled={avatarAnimating}
+                      >
+                        {renderPresetCircle((avatarPresetIdx + PRESET_AVATARS.length - 1) % PRESET_AVATARS.length, 44)}
+                      </button>
+                    </div>
+
+                    {/* آواتار قبلی — پیکان به راست */}
+                    <button
+                      type="button"
+                      onClick={() => cyclePresetAvatar(-1)}
+                      aria-label="آواتار قبلی"
+                      className="avatar-picker-arrow"
+                      disabled={avatarAnimating}
+                    >
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                  </div>
+
+                  {/* Dots indicator */}
+                  {avatarMode === "preset" && (
+                    <div className="avatar-picker-dots" role="tablist" aria-label="انتخاب آواتار">
+                      {PRESET_AVATARS.map((p, i) => (
+                        <button
+                          key={p.id || i}
+                          type="button"
+                          role="tab"
+                          aria-selected={i === avatarPresetIdx}
+                          aria-label={p.label || `آواتار ${i + 1}`}
+                          className={`avatar-picker-dot${i === avatarPresetIdx ? " active" : ""}`}
+                          onClick={() => {
+                            if (avatarAnimating || i === avatarPresetIdx) return;
+                            const delta = i - avatarPresetIdx;
+                            cyclePresetAvatar(delta);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="avatar-picker-upload-row">
+                    <input
+                      ref={avatarFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarFileChange}
+                      style={{ display: "none" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => avatarFileInputRef.current?.click()}
+                      className="avatar-picker-upload-btn"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      {avatarMode === "upload" ? "تغییر عکس آپلودی" : "آپلود عکس دلخواه"}
+                    </button>
+                  </div>
+                </div>
               </>
             )}
 
@@ -1361,11 +1500,11 @@ export default function OTPLogin({ mode = "login" }) {
               <label>آواتار (اختیاری)</label>
               {/* direction:ltr keeps the strip predictable: [◀ قبلی][بعدی ▶] با پیش‌نمایش دو طرف */}
               <div className="avatar-picker" style={{ direction: "ltr" }}>
-                {/* آواتار قبلی — پیکان به چپ */}
+                {/* آواتار بعدی — پیکان به چپ */}
                 <button
                   type="button"
-                  onClick={() => cyclePresetAvatar(-1)}
-                  aria-label="آواتار قبلی"
+                  onClick={() => cyclePresetAvatar(1)}
+                  aria-label="آواتار بعدی"
                   className="avatar-picker-arrow"
                   disabled={avatarAnimating}
                 >
@@ -1375,15 +1514,15 @@ export default function OTPLogin({ mode = "login" }) {
                 {/* Stage: three circles (prev / selected / next) layered so the
                     selected one can slide in/out without a layout shift. */}
                 <div className="avatar-picker-stage">
-                  {/* پیش‌نمایش کوچک آواتار قبلی (کم‌رنگ) — clicks also cycle */}
+                  {/* پیش‌نمایش کوچک آواتار بعدی (کم‌رنگ) */}
                   <button
                     type="button"
-                    onClick={() => cyclePresetAvatar(-1)}
-                    aria-label="آواتار قبلی"
+                    onClick={() => cyclePresetAvatar(1)}
+                    aria-label="آواتار بعدی"
                     className="avatar-picker-preview avatar-picker-preview-prev"
                     disabled={avatarAnimating}
                   >
-                    {renderPresetCircle((avatarPresetIdx + PRESET_AVATARS.length - 1) % PRESET_AVATARS.length, 44)}
+                    {renderPresetCircle((avatarPresetIdx + 1) % PRESET_AVATARS.length, 44)}
                   </button>
 
                   {/* آواتار انتخاب‌شده (بزرگ) — slides in from the side opposite
@@ -1426,23 +1565,23 @@ export default function OTPLogin({ mode = "login" }) {
                     )}
                   </div>
 
-                  {/* پیش‌نمایش کوچک آواتار بعدی (کم‌رنگ) */}
+                  {/* پیش‌نمایش کوچک آواتار قبلی (کم‌رنگ) */}
                   <button
                     type="button"
-                    onClick={() => cyclePresetAvatar(1)}
-                    aria-label="آواتار بعدی"
+                    onClick={() => cyclePresetAvatar(-1)}
+                    aria-label="آواتار قبلی"
                     className="avatar-picker-preview avatar-picker-preview-next"
                     disabled={avatarAnimating}
                   >
-                    {renderPresetCircle((avatarPresetIdx + 1) % PRESET_AVATARS.length, 44)}
+                    {renderPresetCircle((avatarPresetIdx + PRESET_AVATARS.length - 1) % PRESET_AVATARS.length, 44)}
                   </button>
                 </div>
 
-                {/* آواتار بعدی — پیکان به راست */}
+                {/* آواتار قبلی — پیکان به راست */}
                 <button
                   type="button"
-                  onClick={() => cyclePresetAvatar(1)}
-                  aria-label="آواتار بعدی"
+                  onClick={() => cyclePresetAvatar(-1)}
+                  aria-label="آواتار قبلی"
                   className="avatar-picker-arrow"
                   disabled={avatarAnimating}
                 >

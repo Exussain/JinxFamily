@@ -1,17 +1,18 @@
-const SITE_NAME = 'نوبیکس شاپ';
-const SITE_TITLE = 'نوبیکس شاپ | خرید وی‌باکس، کروپک فورتنایت، اشتراک ChatGPT و گیفت کارت';
+const SITE_NAME = 'جینکس فمیلی';
+const SITE_TITLE = 'جینکس فمیلی | JinxFamily | بازار خرید و فروش اکانت و محصولات گیمینگ';
 const SITE_DESCRIPTION =
-  'خرید و فعال‌سازی قانونی محصولات دیجیتال: اشتراک ChatGPT و Gemini، کروپک و وی باکس فورتنایت، گیفت کارت و اشتراک‌های آنلاین — تحویل سریع، پرداخت امن و پشتیبانی ۲۴/۷';
+  'جینکس فمیلی (JinxFamily) - بازار معتبر و امن خرید و فروش اکانت‌های بازی، وی‌باکس و کروپک فورتنایت، کوین‌های بازی و اشتراک‌های قانونی با تحویل سریع و پشتیبانی تخصصی';
 
 export const metadata = {
-  metadataBase: new URL('https://nubixshop.ir'),
+  metadataBase: new URL(SITE_ORIGIN),
   title: {
     default: SITE_TITLE,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
   keywords: [
-    'نوبیکس شاپ', 'فعال‌سازی محصولات آنلاین', 'خرید اشتراک قانونی',
+    'جینکس فمیلی', 'JinxFamily', 'خرید اکانت فورتنایت', 'فروش اکانت فورتنایت', 'بازار اکانت بازی', 'معامله امن اکانت',
+    'فعال‌سازی محصولات آنلاین', 'خرید اشتراک قانونی',
     'اشتراک ChatGPT', 'خرید چت جی‌پی‌تی', 'اشتراک جیمینی', 'Gemini', 'هوش مصنوعی',
     'وی‌باکس', 'وی باکس', 'V-Bucks', 'کروپک', 'بتل پس', 'استارتر پک', 'Fortnite', 'فورتنایت',
     'گیفت کارت', 'گیفت کارت پلی‌استیشن', 'گیفت کارت استیم', 'اشتراک اسپاتیفای'
@@ -22,7 +23,7 @@ export const metadata = {
   openGraph: {
     type: 'website',
     locale: 'fa_IR',
-    url: 'https://nubixshop.ir',
+    url: SITE_ORIGIN,
     siteName: SITE_NAME,
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
@@ -52,18 +53,18 @@ export const metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#7c3aed' },
-    { media: '(prefers-color-scheme: dark)', color: '#a78bfa' },
+    { media: '(prefers-color-scheme: light)', color: '#00bcd4' },
+    { media: '(prefers-color-scheme: dark)', color: '#00f0ff' },
   ],
 };
 
 import './globals.css';
-import { CartProvider } from "../lib/useCart";
-import { ThemeProvider } from "../components/ThemeProvider";
-import AnnouncementBar from "../components/AnnouncementBar";
 import Footer from "../components/Footer";
-import DeferredWidgets from "../components/DeferredWidgets";
+import DeferredTelemetry from "../components/DeferredTelemetry";
 import AppShell from "../components/AppShell";
+import { ThemeProvider } from "../components/ThemeProvider";
+import { CartProvider } from "../lib/useCart";
+import { SITE_ORIGIN } from "../lib/site.mjs";
 
 const themeInitScript = `
 (() => {
@@ -72,12 +73,33 @@ const themeInitScript = `
     if (stored === 'dark' || stored === 'light') {
       document.documentElement.dataset.theme = stored;
     } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.dataset.theme = prefersDark ? 'dark' : 'light';
+      document.documentElement.dataset.theme = 'dark';
     }
   } catch (e) {
-    document.documentElement.dataset.theme = 'light';
+    document.documentElement.dataset.theme = 'dark';
   }
+  try {
+    const ref = (new URLSearchParams(location.search).get('ref') || '').trim().toUpperCase();
+    if (/^[A-Z0-9-]{3,16}$/.test(ref)) {
+      localStorage.setItem('jinxfamily_ref', ref);
+      document.cookie = 'jinxfamily_ref=' + ref + '; path=/; max-age=31536000; SameSite=Lax';
+    }
+  } catch (e) {}
+
+  // Auto reload page on chunk load error after production build updates
+  window.addEventListener('error', (e) => {
+    try {
+      const target = e && e.target;
+      const isChunkError = (e && e.message && e.message.includes('Loading chunk')) ||
+                           (target && target.tagName === 'SCRIPT' && target.src && target.src.includes('/_next/static/chunks/'));
+      if (isChunkError) {
+        if (!sessionStorage.getItem('chunk_reload_triggered')) {
+          sessionStorage.setItem('chunk_reload_triggered', '1');
+          window.location.reload();
+        }
+      }
+    } catch (err) {}
+  }, true);
 })();
 `;
 
@@ -87,32 +109,31 @@ const siteJsonLd = {
   '@graph': [
     {
       '@type': 'OnlineStore',
-      '@id': 'https://nubixshop.ir/#organization',
+      '@id': `${SITE_ORIGIN}/#organization`,
       name: SITE_NAME,
-      alternateName: ['NubixShop', 'نوبیکس'],
-      url: 'https://nubixshop.ir',
-      logo: 'https://nubixshop.ir/web_logo.webp',
+      alternateName: ['JinxFamily', 'جینکس فمیلی'],
+      url: SITE_ORIGIN,
+      logo: `${SITE_ORIGIN}/logo.webp`,
       sameAs: [
-        'https://t.me/NubixShopIR',
-        'https://instagram.com/NubixShop.ir',
+        'https://t.me/JinxFamily'
       ],
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer support',
-        url: 'https://nubixshop.ir/faq/contact',
+        url: `${SITE_ORIGIN}/faq/contact`,
         availableLanguage: 'fa',
       },
     },
     {
       '@type': 'WebSite',
-      '@id': 'https://nubixshop.ir/#website',
+      '@id': `${SITE_ORIGIN}/#website`,
       name: SITE_NAME,
-      url: 'https://nubixshop.ir',
+      url: SITE_ORIGIN,
       inLanguage: 'fa-IR',
-      publisher: { '@id': 'https://nubixshop.ir/#organization' },
+      publisher: { '@id': `${SITE_ORIGIN}/#organization` },
       potentialAction: {
         '@type': 'SearchAction',
-        target: 'https://nubixshop.ir/?q={search_term_string}',
+        target: `${SITE_ORIGIN}/?q={search_term_string}`,
         'query-input': 'required name=search_term_string',
       },
     },
@@ -121,25 +142,25 @@ const siteJsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fa" dir="rtl" data-theme="light" suppressHydrationWarning>
+    <html lang="fa" dir="ltr" data-theme="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body>
+      <body dir="rtl">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
         />
-        {/* Preload the most-used Persian font weights (self-hosted) so text paints fast */}
-        <link rel="preload" href="/fonts/vazirmatn/vazirmatn-arabic-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/vazirmatn/vazirmatn-arabic-700.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        {/* Preload Kalameh (کلمه) — self-hosted Persian font, critical weights */}
+        <link rel="preload" href="/fonts/kalameh/KalamehWeb-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <ThemeProvider>
           <CartProvider>
-            <div className="snow-overlay" aria-hidden="true" />
-            <div className="snow-overlay snow-overlay-secondary" aria-hidden="true" />
-            <div className="site-shell">
-              <AppShell>{children}</AppShell>
-            </div>
+            <AppShell footer={<Footer />}>
+              <div className="site-shell">
+                {children}
+              </div>
+            </AppShell>
+            <DeferredTelemetry />
           </CartProvider>
         </ThemeProvider>
       </body>

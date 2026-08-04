@@ -2,20 +2,19 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-const ThemeContext = createContext({ theme: "light", toggleTheme: () => {}, setTheme: () => {} });
+const ThemeContext = createContext({ theme: "dark", toggleTheme: () => {}, setTheme: () => {} });
 const FORCE_DARK = false;
 const THEME_STORAGE_KEY = "theme";
 
 const getInitialTheme = () => {
   if (FORCE_DARK) return "dark";
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "dark";
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === "dark" || stored === "light") return stored;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    return prefersDark ? "dark" : "light";
+    return "dark";
   } catch {
-    return "light";
+    return "dark";
   }
 };
 
@@ -27,7 +26,7 @@ const applyDocumentTheme = (nextTheme) => {
 };
 
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState("light");
+  const [theme, setThemeState] = useState("dark");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

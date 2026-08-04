@@ -110,6 +110,11 @@ export default function ArticleView({ article }) {
               {(article.sections || []).map((sec, i) => (
                 <section key={i}>
                   <h2>{sec.heading}</h2>
+                  {sec.image && (
+                    <div className={styles.sectionImage}>
+                      <img src={sec.image} alt={sec.heading} className={styles.secImg} />
+                    </div>
+                  )}
                   {sec.paragraphs.map((p, j) => (
                     <p key={j}>{p}</p>
                   ))}
@@ -139,8 +144,8 @@ export default function ArticleView({ article }) {
             </section>
           )}
 
-          <aside className={styles.ctaAside} aria-label="خرید از نوبیکس شاپ">
-            <h2 className={styles.ctaHead}>خرید از نوبیکس شاپ</h2>
+          <aside className={styles.ctaAside} aria-label="خرید از جینکس فمیلی">
+            <h2 className={styles.ctaHead}>خرید از جینکس فمیلی</h2>
             <p className={styles.ctaLead}>
               برای خرید قانونی و تحویل سریع محصولات دیجیتال، این صفحه‌ها را ببینید:
             </p>

@@ -1,8 +1,8 @@
-"""Post spin wins to the @NubixShopIR channel and auto-delete after 60s.
+"""Post spin wins to the @JinxFamilyShop channel and auto-delete after 60s.
 
 Uses a dedicated Telethon user session (create it once with
 `python manage.py create_spin_session`). The logged-in account must be an
-admin of @NubixShopIR. Everything is best-effort and runs in a background
+admin of @JinxFamilyShop. Everything is best-effort and runs in a background
 thread so it never blocks or breaks the spin response. If the session file
 doesn't exist yet, posting is silently skipped.
 """
@@ -22,8 +22,8 @@ SESSION_DIR = Path(settings.BASE_DIR) / "shop" / "management" / "commands"
 SESSION_PATH = SESSION_DIR / "spin_channel_session.session"
 TELEGRAM_PROXY = ("socks5", "127.0.0.1", 10808)
 
-CHANNEL = os.environ.get("SPIN_CHANNEL", "NubixShopIR")
-SPIN_LINK = os.environ.get("SPIN_LINK_URL", "https://nubixshop.ir/spin")
+CHANNEL = os.environ.get("SPIN_CHANNEL", "JinxFamilyShop")
+SPIN_LINK = os.environ.get("SPIN_LINK_URL", "https://jinxfamily.ir/spin")
 DELETE_AFTER_SECONDS = 60
 
 
@@ -66,7 +66,7 @@ def post_win_to_channel(public_name: str, prize_label: str) -> None:
     if not SESSION_PATH.exists():
         return  # session not configured yet — skip quietly
     text = (
-        f"🎉 {public_name} همین الان از گردونه‌ی شانس نوبیکس برنده شد: «{prize_label}»!\n\n"
+        f"🎉 {public_name} همین الان از گردونه‌ی شانس جینکس فمیلی برنده شد: «{prize_label}»!\n\n"
         f"نوبت توئه! وارد شو و گردونه رو بچرخون 🎡\n{SPIN_LINK}"
     )
     threading.Thread(target=_run, args=(text,), daemon=True).start()

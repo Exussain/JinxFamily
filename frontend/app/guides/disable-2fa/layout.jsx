@@ -1,6 +1,8 @@
+import '../../globals.css';
+
 export const metadata = {
   title: 'آموزش غیرفعال کردن تایید دو مرحله‌ای اپیک گیمز',
-  description: 'راهنمای گام‌به‌گام غیرفعال کردن 2FA اکانت Epic Games برای فعال‌سازی محصولات فورتنایت در نوبیکس شاپ.',
+  description: 'راهنمای گام‌به‌گام غیرفعال کردن 2FA اکانت Epic Games برای فعال‌سازی محصولات فورتنایت در جینکس فمیلی.',
   alternates: { canonical: '/guides/disable-2fa' },
 };
 
@@ -8,9 +10,9 @@ const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: 'https://nubixshop.ir' },
-    { '@type': 'ListItem', position: 2, name: 'مرکز پشتیبانی', item: 'https://nubixshop.ir/faq' },
-    { '@type': 'ListItem', position: 3, name: 'آموزش غیرفعال کردن تایید دو مرحله‌ای', item: 'https://nubixshop.ir/guides/disable-2fa' },
+    { '@type': 'ListItem', position: 1, name: 'جینکس فمیلی', item: 'https://jinxfamily.ir' },
+    { '@type': 'ListItem', position: 2, name: 'مرکز پشتیبانی', item: 'https://jinxfamily.ir/faq' },
+    { '@type': 'ListItem', position: 3, name: 'آموزش غیرفعال کردن تایید دو مرحله‌ای', item: 'https://jinxfamily.ir/guides/disable-2fa' },
   ],
 };
 
@@ -25,4 +27,3 @@ export default function GuideLayout({ children }) {
     </>
   );
 }
-

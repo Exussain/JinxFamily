@@ -1,3 +1,5 @@
+import { SITE_ORIGIN } from '../lib/site.mjs';
+
 export default function robots() {
   return {
     rules: [
@@ -17,6 +19,11 @@ export default function robots() {
           '/admin-cache-bust',
           '/nxd9k2m',
           '/api/',
+          '/fonts/',
+          '/?q=',
+          '/?cat=',
+          '/*?q=',
+          '/*?cat=',
           // Private reseller portal pages — the /reseller landing and
           // /reseller/apply stay crawlable.
           '/reseller/dashboard',
@@ -32,6 +39,6 @@ export default function robots() {
         ],
       },
     ],
-    sitemap: 'https://nubixshop.ir/sitemap.xml',
+    sitemap: `${SITE_ORIGIN}/sitemap.xml`,
   };
 }

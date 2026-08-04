@@ -40,15 +40,15 @@ export default function TelegramContact() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Image
             src="/icons/social/telegram.svg"
-            alt="تلگرام نوبیکس"
+            alt="تلگرام جینکس فمیلی"
             width={40}
             height={40}
           />
           <div style={{ display: "grid", gap: 4 }}>
-            <span style={{ fontWeight: 900, fontSize: 15 }}>کانال رسمی نوبیکس</span>
+            <span style={{ fontWeight: 900, fontSize: 15 }}>کانال رسمی جینکس فمیلی</span>
             <span style={{ fontSize: 13, color: "var(--muted)" }}>کد تخفیف، خبرهای روز و پشتیبانی سریع</span>
             <a
-              href="https://t.me/NubixShopIR"
+              href="https://t.me/JinxFamily"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -60,7 +60,7 @@ export default function TelegramContact() {
                 gap: 6,
               }}
             >
-              <span>@NubixShopIR</span>
+              <span>@JinxFamily</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m9 18 6-6-6-6" />
               </svg>
@@ -69,7 +69,7 @@ export default function TelegramContact() {
         </div>
         <a
           className="btn primary"
-          href="https://t.me/NubixShopIR"
+          href="https://t.me/JinxFamily"
           target="_blank"
           rel="noopener noreferrer"
           style={{ padding: "10px 16px", fontWeight: 900, zIndex: 1 }}
@@ -103,12 +103,12 @@ export default function TelegramContact() {
           <span style={{ color: "var(--primary)" }}>
             پشتیبانی تلفنی:&nbsp;
             <a
-              href="tel:+982191694759"
+              href="tel:+989009194245"
               onClick={() => alert(phoneNotice)}
               dir="ltr"
               style={{ color: "inherit", textDecoration: "underline" }}
             >
-              +98 21 9169 4759
+              09009194245
             </a>
           </span>
         </div>

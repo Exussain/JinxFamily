@@ -1,6 +1,7 @@
 import { fetchApiJson } from '../../../lib/serverFetch.mjs';
+import { SITE_ORIGIN } from '../../../lib/site.mjs';
 
-const BASE_URL = 'https://nubixshop.ir';
+const BASE_URL = SITE_ORIGIN;
 const CANONICALIZED_BLOG_SLUGS = new Set([
   'remove-restriction',
   'link-unlink',
@@ -46,7 +47,7 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>وبلاگ نوبیکس شاپ</title>
+    <title>وبلاگ جینکس فمیلی</title>
     <link>${BASE_URL}/blog</link>
     <description>مقالات و آموزش‌های خرید وی باکس، کروپک فورتنایت، اشتراک ChatGPT و دنیای گیم</description>
     <language>fa-ir</language>

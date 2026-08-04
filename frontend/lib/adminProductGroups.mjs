@@ -18,6 +18,12 @@ const PRODUCT_GROUPS = [
     categories: ["SUBSCRIPTIONS"],
   },
   {
+    key: "accounts",
+    label: "Marketplace Accounts",
+    faLabel: "بازارچه اکانت‌ها",
+    categories: ["ACCOUNTS"],
+  },
+  {
     key: "other-games",
     label: "Other Games",
     faLabel: "بازی‌ها و گیفت‌کارت‌ها",

@@ -52,7 +52,7 @@ const FALLBACK_TESTIMONIALS = [
     username: "برسام زینی",
     product: "کروپک فورتنایت",
     productSlug: "fortnite-crew-pack",
-    review: "عالی و سریع ممنون از نوبیکس شاپ❤️🔥",
+    review: "عالی و سریع ممنون از جینکس فمیلی❤️🔥",
     rating: 5,
     isVerified: true,
   },
@@ -72,7 +72,7 @@ const FALLBACK_TESTIMONIALS = [
     username: "علیرضا",
     product: "پیشخرید GTA VI (Grand Theft Auto VI)",
     productSlug: "gta6",
-    review: "مرسی از نوبیکس، امیدوارم هر چه سریعتر به دستم برسه",
+    review: "مرسی از جینکس فمیلی، امیدوارم هر چه سریعتر به دستم برسه",
     rating: 5,
     isVerified: true,
   }
@@ -129,7 +129,7 @@ export default function CounterStat({ to = 0, label = "سفارش‌های مو�
         <div className="stat-avatar-circle">
           <img 
             src="/customer-service-people-3d-avatar-free-png.webp" 
-            alt="پشتیبانی نوبیکس شاپ" 
+            alt="پشتیبانی جینکس فمیلی" 
             className="stat-avatar-image" 
           />
         </div>

@@ -1,20 +1,21 @@
 "use client";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import PasswordInput from '../../components/PasswordInput';
-import Navbar from "../../components/Navbar";
 import PlatformSelector from "../../components/PlatformSelector";
 import SmartImage from "../../components/SmartImage";
 import { useCart } from "../../lib/useCart";
-import TelegramContact from "../../components/TelegramContact";
 import { getPlatformOption } from "../../lib/platforms";
+import { credentialCustomFields } from "../../lib/productCredentials";
 import { getProductDescriptionData } from "../../lib/productDescriptions";
 import EnamadBadge from "../../components/EnamadBadge";
 import ZarinpalBadge from "../../components/ZarinpalBadge";
 import { resolveProductImage } from "../../lib/productImageHelpers";
 import { adminCacheBustHref } from "../../lib/adminUrl.mjs";
-import RelatedProducts from "../../components/RelatedProducts";
-import ReviewSection from "../../components/ReviewSection";
+const TelegramContact = dynamic(() => import("../../components/TelegramContact"), { ssr: false });
+const RelatedProducts = dynamic(() => import("../../components/RelatedProducts"), { ssr: false });
+const ReviewSection = dynamic(() => import("../../components/ReviewSection"), { ssr: false });
 
 const vbucksOptions = [
   {
@@ -59,6 +60,8 @@ const vbucksOptions = [
 ];
 
 export default function VBucksClient({ initialProductData, initialProducts = [], initialStats = null }) {
+  const [showDeferredSections, setShowDeferredSections] = useState(false);
+  const deferredRef = useRef(null);
   const router = useRouter();
   const { addItem } = useCart();
   
@@ -97,6 +100,17 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
   const [activeTab, setActiveTab] = useState("description");
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
+  useEffect(() => {
+    const node = deferredRef.current;
+    if (!node || showDeferredSections) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => entry.isIntersecting && setShowDeferredSections(true),
+      { rootMargin: '700px 0px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [showDeferredSections]);
   const productImage = useMemo(
     () => resolveProductImage(productData || { slug: "v-bucks" }),
     [productData]
@@ -115,10 +129,45 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
     [options, selectedVariantId]
   );
 
+  const decodeHtmlEntities = (str) => {
+    if (!str) return "";
+    return str
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&#x27;/g, "'")
+      .replace(/&amp;/g, "&")
+      .replace(/&nbsp;/g, "\u00A0");
+  };
+
+  const formatDescriptionToHtml = (description) => {
+    if (!description) return "";
+
+    const decoded = decodeHtmlEntities(description);
+
+    // If it contains HTML tags, render it as-is
+    if (/<[a-zA-Z]/g.test(decoded)) {
+      return decoded;
+    }
+
+    // Otherwise format plain text (bold markdown and bullet lists)
+    const lines = decoded.split("\n");
+    const formattedLines = lines.map((line) => {
+      let formatted = line;
+      formatted = formatted.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      const isBullet = line.trim().startsWith("•");
+      const marginBottom = isBullet ? "8px" : "6px";
+      return `<div style="margin-bottom: ${marginBottom};">${formatted}</div>`;
+    });
+
+    return formattedLines.join("");
+  };
+
   const descriptionData = getProductDescriptionData("v-bucks");
   const productDescription = descriptionData.description || "";
   const conversionDescription = descriptionData.conversion || "";
-  const descriptionLines = productDescription.split("\n").filter((line) => line.trim().length > 0);
+  const hasDescription = !!(productDescription.trim().length > 0);
   const conversionLines = conversionDescription.split("\n").filter((line) => line.trim().length > 0);
 
   const renderTextWithBold = (text, keyPrefix) => {
@@ -164,6 +213,11 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
       account_email: accountEmail.trim(),
       account_type: accountType,
       account_password: accountPassword,
+      custom_fields: credentialCustomFields(productData?.custom_fields, {
+        platform: accountType,
+        email: accountEmail.trim(),
+        password: accountPassword,
+      }),
     });
 
     if (typeof window !== "undefined") {
@@ -173,11 +227,14 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
 
   return (
     <div>
-      <Suspense fallback={null}>
-        <Navbar />
-      </Suspense>
       <main className="container" style={{ padding: "24px 0 40px" }}>
         <section className="card section product-hero">
+          {/* Breadcrumb Bar */}
+          <div className="breadcrumb-bar">
+            <a href="/">Home</a>
+            <span className="breadcrumb-separator">/</span>
+            <a href="/category/fortnite">فورتنایت</a>
+          </div>
           <div className="image-stack">
             {/* Main Image */}
             <div
@@ -396,7 +453,7 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
                     <div className="option-amount">{option.name_fa}</div>
                     <div className="option-subtitle">{option.subtitle}</div>
                     <div className="option-price-row">
-                      {option.original_price && (
+                      {option.original_price > 0 && (
                         <span className="option-price-old">
                           {option.original_price.toLocaleString("fa-IR")}
                         </span>
@@ -424,115 +481,46 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
 
             {/* Product Highlights */}
             <div className="product-highlights">
-              <div className="highlight-item">
-                <svg className="highlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="highlight-item delivery">
+                <svg className="highlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"/>
-                  <path d="m9 12 2 2 4-4"/>
+                  <polyline points="12 6 12 12 16 14" />
                 </svg>
                 <div className="highlight-text">
-                  <div className="highlight-title">تحویل طی</div>
+                  <div className="highlight-title">تحویل سریع</div>
                   <div className="highlight-desc">
                     {accountType === 'xbox' ? "۳۰ دقیقه الی ۴۸ ساعت" : "۱۵ دقیقه تا ۸ ساعت کاری"}
                   </div>
                 </div>
               </div>
-              <div className="highlight-item">
-                <svg className="highlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="highlight-item guarantee">
+                <svg className="highlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
                 <div className="highlight-text">
                   <div className="highlight-title">ضمانت اصالت</div>
-                  <div className="highlight-desc">۱۰۰٪ اورجینال</div>
+                  <div className="highlight-desc">۱۰۰٪ اورجینال و قانونی</div>
                 </div>
               </div>
-              <div className="highlight-item">
-                <svg className="highlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <div className="highlight-item support">
+                <svg className="highlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
                 </svg>
                 <div className="highlight-text">
                   <div className="highlight-title">پشتیبانی ۲۴/۷</div>
-                  <div className="highlight-desc">همیشه در دسترس</div>
+                  <div className="highlight-desc">همیشه در دسترس شما</div>
                 </div>
               </div>
             </div>
 
-            {/* Tabs for Description and Delivery */}
-            <div className="product-tabs">
-              <div className="tab-buttons">
-                <button
-                  className={`tab-btn ${activeTab === 'description' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('description')}
-                >
-                  توضیحات
-                </button>
-                <button
-                  className={`tab-btn ${activeTab === 'delivery' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('delivery')}
-                >
-                  نحوه تحویل
-                </button>
-              </div>
-
-              <div className="tab-content">
-                {activeTab === 'description' && descriptionLines.length > 0 && (
-                  <div className="description-box">
-                    {descriptionLines.map((line, i) => {
-                      if (line.trim().startsWith('•')) {
-                        return <div key={i} style={{ marginBottom: '8px' }}>{renderTextWithBold(line, `d-bullet-${i}`)}</div>;
-                      }
-                      return <div key={i} style={{ marginBottom: '6px' }}>{renderTextWithBold(line, `d-line-${i}`)}</div>;
-                    })}
-                  </div>
-                )}
-
-                {activeTab === 'delivery' && (
-                  <div className="delivery-info">
-                    {conversionLines.length > 0 && (
-                      <div className="conversion-box">
-                        {conversionLines.map((line, i) => {
-                          if (line.trim().startsWith('•')) {
-                            return <div key={i} style={{ marginBottom: '8px' }}>{renderTextWithBold(line, `c-bullet-${i}`)}</div>;
-                          }
-                          return <div key={i} style={{ marginBottom: '6px' }}>{renderTextWithBold(line, `c-line-${i}`)}</div>;
-                        })}
-                      </div>
-                    )}
-                    <div className="delivery-step">
-                      <div className="step-number">۱</div>
-                      <div>
-                        <div className="step-title">وارد کردن اطلاعات حساب</div>
-                        <div className="step-desc">پلتفرم، ایمیل و رمز حساب خود را وارد کنید</div>
-                      </div>
-                    </div>
-                    <div className="delivery-step">
-                      <div className="step-number">۲</div>
-                      <div>
-                        <div className="step-title">پرداخت امن</div>
-                        <div className="step-desc">از طریق درگاه امن بانکی پرداخت کنید</div>
-                      </div>
-                    </div>
-                    <div className="delivery-step">
-                      <div className="step-number">۳</div>
-                      <div>
-                        <div className="step-title">فعال‌سازی قانونی</div>
-                        <div className="step-desc">
-                          {accountType === 'xbox'
-                            ? "تیم ما طی ۳۰ دقیقه الی ۴۸ ساعت V-Bucks را به اکانت شما اضافه می‌کند"
-                            : "با کارت‌های فروشگاه خرید انجام و نتیجه به شما اعلام می‌شود"}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="delivery-step">
-                      <div className="step-number">۴</div>
-                      <div>
-                        <div className="step-title">تحویل و پشتیبانی</div>
-                        <div className="step-desc">در صورت نیاز، تا تکمیل سفارش همراهتان هستیم</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+             {hasDescription && (
+              <div 
+                className="description-box" 
+                style={{ marginTop: 16 }}
+                dangerouslySetInnerHTML={{ __html: formatDescriptionToHtml(productDescription) }}
+              />
+            )}
 
             {/* Guides Card - RIGHT col: shown at >1280px when left col has more space */}
             <div className="guides-card guides-card-right">
@@ -614,15 +602,18 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
           </div>
         </section>
 
-        <TelegramContact />
-        <RelatedProducts currentProduct={productData} products={products} />
-
-        {/* Reviews Section */}
-        <ReviewSection
-          slug="v-bucks"
-          initialStats={initialStats}
-          productTitle="وی‌باکس فورتنایت (V-Bucks)"
-        />
+        <div ref={deferredRef} aria-hidden="true" style={{ height: 1 }} />
+        {showDeferredSections && (
+          <>
+            <TelegramContact />
+            <RelatedProducts currentProduct={productData} products={products} />
+            <ReviewSection
+              slug="v-bucks"
+              initialStats={initialStats}
+              productTitle="وی‌باکس فورتنایت (V-Bucks)"
+            />
+          </>
+        )}
       </main>
 
       <style jsx>{`
@@ -631,6 +622,50 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
           grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
           gap: 24px;
           align-items: flex-start;
+        }
+
+        /* Breadcrumb Bar */
+        .breadcrumb-bar {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 18px;
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          background: var(--card);
+          font-size: 13px;
+          font-weight: 700;
+          width: 100%;
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+        :root[data-theme="dark"] .breadcrumb-bar {
+          border-color: #373169;
+          background: var(--card);
+        }
+        .breadcrumb-bar a {
+          color: var(--muted);
+          text-decoration: none;
+          transition: color 0.2s ease;
+        }
+        .breadcrumb-bar a:hover {
+          color: var(--primary);
+        }
+        .breadcrumb-separator {
+          color: var(--muted);
+          font-weight: 400;
+        }
+        .breadcrumb-bar span {
+          color: var(--text);
+        }
+        @media (max-width: 960px) {
+          .breadcrumb-bar {
+            order: -1;
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            margin-bottom: 8px;
+          }
         }
         .admin-fab {
           position: fixed;
@@ -783,41 +818,101 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 12px;
-          padding: 16px;
-          background: linear-gradient(135deg, rgba(0,213,255,0.08), rgba(108,92,231,0.05));
-          border: 1px solid rgba(255,255,255,0.15);
-          border-radius: 14px;
+          padding: 0;
+          background: transparent;
+          border: none;
+          border-radius: 0;
         }
         .highlight-item {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 8px;
+          gap: 12px;
+          padding: 14px 16px;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: all 0.2s ease;
+        }
+        .highlight-item:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
         .highlight-icon {
-          width: 36px;
-          height: 36px;
-          padding: 7px;
-          background: linear-gradient(135deg, #0f2250, #1e3a8a);
+          width: 38px;
+          height: 38px;
+          padding: 8px;
           border-radius: 10px;
-          color: #60a5fa;
           flex-shrink: 0;
+          transition: transform 0.2s ease;
+        }
+        .highlight-item:hover .highlight-icon {
+          transform: scale(1.08);
         }
         .highlight-text {
           flex: 1;
           min-width: 0;
         }
         .highlight-title {
-          font-weight: 800;
-          font-size: 13px;
-          color: var(--text);
+          font-weight: 900;
+          font-size: 13.5px;
           white-space: nowrap;
         }
         .highlight-desc {
           font-size: 11px;
           color: var(--muted);
-          margin-top: 2px;
-          line-height: 1.3;
+          margin-top: 3px;
+          line-height: 1.35;
+          font-weight: 500;
+        }
+
+        /* Delivery/Speed: Yellow/Amber theme */
+        .highlight-item.delivery {
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%);
+          border-color: rgba(245, 158, 11, 0.18);
+        }
+        .highlight-item.delivery .highlight-icon {
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.08) 100%);
+          color: #f59e0b;
+          border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+        .highlight-item.delivery .highlight-title {
+          color: #b45309;
+        }
+        :root[data-theme="dark"] .highlight-item.delivery .highlight-title {
+          color: #f59e0b;
+        }
+
+        /* Guarantee/Legitimacy: Emerald Green theme */
+        .highlight-item.guarantee {
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%);
+          border-color: rgba(16, 185, 129, 0.18);
+        }
+        .highlight-item.guarantee .highlight-icon {
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.08) 100%);
+          color: #10b981;
+          border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .highlight-item.guarantee .highlight-title {
+          color: #047857;
+        }
+        :root[data-theme="dark"] .highlight-item.guarantee .highlight-title {
+          color: #10b981;
+        }
+
+        /* Support: Purple/Indigo theme */
+        .highlight-item.support {
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.02) 100%);
+          border-color: rgba(139, 92, 246, 0.18);
+        }
+        .highlight-item.support .highlight-icon {
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.08) 100%);
+          color: #a78bfa;
+          border: 1px solid rgba(139, 92, 246, 0.25);
+        }
+        .highlight-item.support .highlight-title {
+          color: #6d28d9;
+        }
+        :root[data-theme="dark"] .highlight-item.support .highlight-title {
+          color: #a78bfa;
         }
 
         /* Tabs */
@@ -870,6 +965,7 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
         .description-box {
           font-size: 14px;
           line-height: 1.9;
+          white-space: pre-wrap;
         }
 
         /* Features Grid */

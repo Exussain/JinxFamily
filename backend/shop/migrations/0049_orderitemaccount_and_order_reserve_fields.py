@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('index', models.PositiveSmallIntegerField(default=1, help_text='شماره واحد (۱..N)')),
-                ('mode', models.CharField(choices=[('existing', 'اکانت موجود مشتری'), ('create_for_me', 'ساخت اکانت توسط نوبیکس')], default='existing', max_length=16)),
+                ('mode', models.CharField(choices=[('existing', 'اکانت موجود مشتری'), ('create_for_me', 'ساخت اکانت توسط جینکس فمیلی')], default='existing', max_length=16)),
                 ('account_type', models.CharField(blank=True, default='', help_text='epic | xbox', max_length=32)),
                 ('account_email', models.CharField(blank=True, default='', max_length=150)),
                 ('account_password', models.CharField(blank=True, default='', max_length=150)),

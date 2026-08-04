@@ -33,7 +33,9 @@ export default function SmartImage({ src, alt, base, fit = "cover", eager = fals
       alt={alt}
       fill
       sizes="(max-width: 640px) 100vw, 33vw"
-      quality={95}
+      // Next only permits configured image quality values in production. 75 is
+      // its default supported value and avoids broken optimized PNG/JPEG URLs.
+      quality={75}
       unoptimized={preserveOriginal}
       priority={eager}
       style={{ objectFit: fit }}

@@ -6,14 +6,14 @@ import { purchaseSteps } from "../data.jsx";
 export const metadata = {
   title: "راهنمای خرید",
   alternates: { canonical: "/faq/how-to-buy" },
-  description: "راهنمای گام به گام و تصویری ثبت سفارش، پرداخت امن و تحویل محصولات در نوبیکس شاپ.",
+  description: "راهنمای گام به گام و تصویری ثبت سفارش، پرداخت امن و تحویل محصولات در جینکس فمیلی.",
 };
 
 export default function FaqHowToBuyPage() {
   return (
     <FaqSectionLayout
       title="راهنمای خرید"
-      subtitle="مراحل گام به گام ثبت سفارش، پرداخت امن بانکی و فعال‌سازی سریع محصولات در نوبیکس."
+      subtitle="مراحل گام به گام ثبت سفارش، پرداخت امن بانکی و فعال‌سازی سریع محصولات در جینکس فمیلی."
       activeSection="how-to-buy"
     >
       <div className="how-article-container">
@@ -264,6 +264,37 @@ export default function FaqHowToBuyPage() {
               font-size: 16px;
             }
           }
+          @media (max-width: 480px) {
+            .how-article-banner {
+              height: 120px;
+              padding: 20px 16px;
+            }
+            .how-article-banner .page-banner-title {
+              font-size: 18px;
+            }
+            .how-article-info-bar {
+              padding: 10px 16px;
+              font-size: 12px;
+            }
+            .how-article-content {
+              padding: 20px 16px;
+            }
+            .how-step-card {
+              padding: 14px;
+              gap: 12px;
+              border-radius: 16px;
+            }
+            .how-important-note {
+              padding: 16px 12px;
+              font-size: 13.5px;
+            }
+            .how-cta-btn {
+              padding: 12px 20px;
+              font-size: 14px;
+              width: 100%;
+              justify-content: center;
+            }
+          }
         `}</style>
 
         <div className="how-article-box">
@@ -271,14 +302,14 @@ export default function FaqHowToBuyPage() {
             <span className="how-article-banner-icon">🛒</span>
             <div className="how-article-meta">
               <span className="how-article-tag">راهنمای خریداران</span>
-              <h2 className="page-banner-title">راهنمای گام به گام خرید از نوبیکس شاپ</h2>
+              <h2 className="page-banner-title">راهنمای گام به گام خرید از جینکس فمیلی</h2>
             </div>
           </div>
           
           <div className="how-article-info-bar">
             <div className="how-info-item">
               <span>✍️</span>
-              <span>تنظیم‌کننده: دپارتمان فروش نوبیکس</span>
+              <span>تنظیم‌کننده: دپارتمان فروش جینکس فمیلی</span>
             </div>
             <div className="how-info-item">
               <span>📅</span>
@@ -292,7 +323,7 @@ export default function FaqHowToBuyPage() {
 
           <div className="how-article-content">
             <p className="how-intro">
-              خرید از نوبیکس شاپ را تا حد ممکن ساده نگه داشته‌ایم؛ بدون ثبت‌نام‌های طولانی و مراحل خسته‌کننده. تنها با شماره تماس وارد می‌شوید، سفارش خود را ثبت می‌کنید و پرداخت را از طریق درگاه امن زرین‌پال انجام می‌دهید. از آن لحظه به بعد، پشتیبانی نوبیکس تا تحویل کامل سفارش در کنار شماست. کل مسیر خرید در سه گام زیر خلاصه می‌شود.
+              خرید از جینکس فمیلی را تا حد ممکن ساده نگه داشته‌ایم؛ بدون ثبت‌نام‌های طولانی و مراحل خسته‌کننده. تنها با شماره تماس وارد می‌شوید، سفارش خود را ثبت می‌کنید و پرداخت را از طریق درگاه امن زرین‌پال انجام می‌دهید. از آن لحظه به بعد، پشتیبانی جینکس فمیلی تا تحویل کامل سفارش در کنار شماست. کل مسیر خرید در سه گام زیر خلاصه می‌شود.
             </p>
 
             <div className="how-steps-timeline">
@@ -314,12 +345,12 @@ export default function FaqHowToBuyPage() {
             </div>
 
             <div className="how-important-note">
-              <strong>نکته مهم امنیتی:</strong> خرید در نوبیکس شاپ فقط از طریق وب‌سایت رسمی <strong style={{color: '#10b981'}}>Nubixshop.ir</strong> صورت پذیرفته و کلیه فاکتورها به صورت رسمی ثبت می‌شوند. پرداخت کارت‌به‌کارت فاقد اعتبار قانونی بوده و مورد تایید نوبیکس شاپ نمی‌باشد.
+              <strong>نکته مهم امنیتی:</strong> خرید در جینکس فمیلی فقط از طریق وب‌سایت رسمی <strong style={{color: '#10b981'}}>JinxFamily.shop</strong> صورت پذیرفته و کلیه فاکتورها به صورت رسمی ثبت می‌شوند. پرداخت کارت‌به‌کارت فاقد اعتبار قانونی بوده و مورد تایید جینکس فمیلی نمی‌باشد.
             </div>
 
             <div className="how-cta-section">
               <Link href="/" className="how-cta-btn">
-                <span>شروع خرید محصولات از نوبیکس</span>
+                <span>شروع خرید محصولات از جینکس فمیلی</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="19" y1="12" x2="5" y2="12"></line>
                   <polyline points="12 19 5 12 12 5"></polyline>

@@ -1,12 +1,25 @@
 "use client";
 export const dynamic = 'force-dynamic';
-import { useEffect, useMemo, useRef, useState, Suspense } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../../lib/useCart";
 import { groupAdminProducts } from "../../../lib/adminProductGroups.mjs";
 import Navbar from "../../../components/Navbar";
 import AdminLiveChatWidget from "../../../components/AdminLiveChatWidget";
 import ResellerTabContent from "../../../components/ResellerTabContent";
+import { getJinxProductDialogue, getJinxProductImage } from "../../../components/ProductJinxGuide";
+
+const REJECTION_PRESETS = [
+  { code: "blurry_images", title: "📷 کیفیت پایین یا ناخوانا بودن تصاویر", note: "لطفاً اسکرین‌شات‌های واضح‌تر و باکیفیت‌تر از اکانت ارائه دهید." },
+  { code: "missing_proof", title: "🔒 عدم اثبات مالکیت اکانت", note: "تصویری که مشخصات دقیق و مالکیت اکانت را اثبات کند ضمیمه نشده است." },
+  { code: "external_contact", title: "⚠️ درج آیدی تلگرام/شماره (ممنوعیت ارتباط خارجی)", note: "طبق قوانین، درج آیدی تلگرام، شماره تلفن یا لینک خارجی در توضیحات ممنوع است." },
+  { code: "invalid_price", title: "💰 قیمت‌گذاری غیرمعقول یا اشتباه", note: "قیمت وارد شده نامتعارف است. لطفاً قیمت صحیح اکانت را وارد نمایید." },
+  { code: "prohibited_content", title: "🚫 محتوای نامناسب یا مغایر قوانین", note: "ثبت این دسته از اکانت‌ها/محتوا طبق قوانین سایت مجاز نمی‌باشد." },
+  { code: "custom", title: "📝 سایر علت‌ها (توضیح اختصاصی)", note: "" },
+];
+
+const KAVENEGAR_HEALTH_FAILURE_MESSAGE = "اعتبار رایگان کاوه‌نگار شما به پایان رسیده است.";
 
 function AccountDetailsRow({ account_email, account_password, account_type, copyToClipboard, copiedField }) {
   const [showPass, setShowPass] = useState(false);
@@ -103,7 +116,7 @@ function AccountUnitRow({ acc, onStatusChange, copyToClipboard, copiedField }) {
           </span>
           {acc.mode === "create_for_me" ? (
             <span style={{ background: "rgba(52, 211, 153, 0.12)", color: "#34d399", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-              ➕ ساخت اکانت نوبیکس
+              ➕ ساخت اکانت جینکس فمیلی
             </span>
           ) : (
             <span style={{ background: "rgba(99, 102, 241, 0.12)", color: "#818cf8", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
@@ -170,7 +183,7 @@ function AccountUnitRow({ acc, onStatusChange, copyToClipboard, copiedField }) {
         <div style={{ marginTop: 10, padding: 8, background: "rgba(16, 185, 129, 0.04)", borderRadius: 8, border: "1px solid rgba(16, 185, 129, 0.08)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#34d399", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
             <span>🎮</span>
-            <span>اطلاعات ایکس‌باکس (توسط نوبیکس ساخته می‌شود):</span>
+            <span>اطلاعات ایکس‌باکس (توسط جینکس فمیلی ساخته می‌شود):</span>
           </div>
 
           {!acc.xbox_email && !acc.xbox_password ? (
@@ -1082,6 +1095,8 @@ function XboxArchiveCards({
   );
 }
 
+
+
 export default function AdminPanelPage() {
   const router = useRouter();
   const { items, total } = useCart();
@@ -1120,10 +1135,24 @@ export default function AdminPanelPage() {
     customer_ordering_disabled: false,
     reseller_daily_order_limit: 0,
     customer_daily_order_limit: 0,
+    jinx_image: "",
+    jinx_text: "",
+    page_customization: {
+      theme: "default",
+      purchase_btn_text: "",
+      banner_text: "",
+      banner_color: "blue",
+      hide_faq: false,
+      hide_reviews: false,
+      hide_jinx_guide: false,
+      hide_related: false,
+    },
   };
   const [newProduct, setNewProduct] = useState(emptyProductForm);
   const [newProductCoverFile, setNewProductCoverFile] = useState(null);
   const [productCoverFiles, setProductCoverFiles] = useState({});
+  const [activeEditProduct, setActiveEditProduct] = useState(null);
+  const [activeEditTab, setActiveEditTab] = useState("general");
   const [notifications, setNotifications] = useState([]);
   
   // Announcements states
@@ -1133,6 +1162,39 @@ export default function AdminPanelPage() {
   const [announcementSubmitting, setAnnouncementSubmitting] = useState(false);
   const [announcementError, setAnnouncementError] = useState("");
   const [announcementSuccess, setAnnouncementSuccess] = useState("");
+  const [marketListings, setMarketListings] = useState([]);
+  const [marketDeals, setMarketDeals] = useState([]);
+  const [marketLoading, setMarketLoading] = useState(false);
+  const [marketSubTab, setMarketSubTab] = useState("listings");
+  const [listingSearchQuery, setListingSearchQuery] = useState("");
+  const [listingStatusFilter, setListingStatusFilter] = useState("all");
+  const [activeListingModal, setActiveListingModal] = useState(null);
+  const [editListingTitle, setEditListingTitle] = useState("");
+  const [editListingGame, setEditListingGame] = useState("fortnite");
+  const [editListingPrice, setEditListingPrice] = useState("");
+  const [editListingPlatform, setEditListingPlatform] = useState("");
+  const [editListingRegion, setEditListingRegion] = useState("");
+  const [editListingStatus, setEditListingStatus] = useState("published");
+  const [editListingDesc, setEditListingDesc] = useState("");
+  const [editListingRejectReason, setEditListingRejectReason] = useState("");
+  const [editListingIsFeatured, setEditListingIsFeatured] = useState(false);
+  const [editListingImages, setEditListingImages] = useState([]);
+  const [editListingAttributes, setEditListingAttributes] = useState({});
+  const [imageUploading, setImageUploading] = useState(false);
+  const [listingSaving, setListingSaving] = useState(false);
+  const [dealSearchQuery, setDealSearchQuery] = useState("");
+  const [dealStatusFilter, setDealStatusFilter] = useState("all");
+  const [activeDealModal, setActiveDealModal] = useState(null);
+  const [editingDealCreds, setEditingDealCreds] = useState("");
+  const [editingDealStatus, setEditingDealStatus] = useState("");
+  const [dealSaving, setDealSaving] = useState(false);
+  const [copiedCreds, setCopiedCreds] = useState(false);
+  const [rejectionModal, setRejectionModal] = useState({
+    open: false,
+    item: null,
+    presetCode: "blurry_images",
+    note: "لطفاً اسکرین‌شات‌های واضح‌تر و باکیفیت‌تر از اکانت ارائه دهید.",
+  });
   const [xboxAccounts, setXboxAccounts] = useState([]);
   const [abandonedCarts, setAbandonedCarts] = useState([]);
   const [abandonedLoading, setAbandonedLoading] = useState(false);
@@ -1178,6 +1240,9 @@ export default function AdminPanelPage() {
   const [resellerOrderFilter, setResellerOrderFilter] = useState("active");
   const [resellerAdjustAmount, setResellerAdjustAmount] = useState({});
   const [report, setReport] = useState(null);
+  const [kavenegarHealth, setKavenegarHealth] = useState(null);
+  const [kavenegarHealthDismissed, setKavenegarHealthDismissed] = useState(false);
+  const kavenegarHealthRequestRef = useRef(null);
   const [notificationTotalCount, setNotificationTotalCount] = useState(0);
   const [productRequests, setProductRequests] = useState([]);
 
@@ -1456,11 +1521,61 @@ export default function AdminPanelPage() {
 لطفاً اطلاعات صحیح ورود یا راه ارتباطی (تلفن/تلگرام) را ارسال کنید تا سفارش بدون تاخیر انجام شود.
 
 با تشکر
-تیم نوبیکس`
+تیم جینکس فمیلی`
     },
   };
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const checkKavenegarHealth = useCallback(async () => {
+    if (kavenegarHealthRequestRef.current) {
+      return kavenegarHealthRequestRef.current;
+    }
+
+    setKavenegarHealth({
+      ok: null,
+      status: "checking",
+      message: "در حال بررسی اتصال امن به کاوه‌نگار...",
+    });
+
+    const request = (async () => {
+      try {
+        const res = await fetch(`${apiBase}/api/admin/kavenegar/health`, {
+          cache: "no-store",
+          credentials: "include",
+        });
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || !data || typeof data.ok !== "boolean") {
+          setKavenegarHealth({
+            ok: false,
+            status: "health_endpoint_error",
+            message: res.status === 401
+              ? "نشست ادمین منقضی شده است؛ لطفاً دوباره وارد شوید"
+              : "نتیجه بررسی سلامت کاوه‌نگار از سرور دریافت نشد",
+            checked_at: new Date().toISOString(),
+          });
+          return;
+        }
+
+        setKavenegarHealth(data);
+      } catch (error) {
+        setKavenegarHealth({
+          ok: false,
+          status: "unreachable",
+          message: "بررسی سلامت کاوه‌نگار انجام نشد؛ اتصال سرور را بررسی کنید",
+          checked_at: new Date().toISOString(),
+        });
+      } finally {
+        if (kavenegarHealthRequestRef.current === request) {
+          kavenegarHealthRequestRef.current = null;
+        }
+      }
+    })();
+
+    kavenegarHealthRequestRef.current = request;
+    return request;
+  }, [apiBase]);
+
   const resolveAdminImageUrl = (url) => {
     if (typeof url !== "string" || !url.startsWith("/media/")) return url;
     return apiBase ? `${apiBase.replace(/\/+$/, "")}${url}` : url;
@@ -1471,6 +1586,7 @@ export default function AdminPanelPage() {
     { value: "SUBSCRIPTIONS", label: "Subscriptions / اشتراک‌ها" },
     { value: "GAMES", label: "Games / بازی‌ها" },
     { value: "GIFTCARDS", label: "Giftcards / گیفت‌کارت‌ها" },
+    { value: "ACCOUNTS", label: "Marketplace Accounts / بازارچه اکانت‌ها" },
   ];
   const adminPhones = ["09339732325", "09123101634"];
   useEffect(() => {
@@ -1478,6 +1594,11 @@ export default function AdminPanelPage() {
     const t = setTimeout(() => setReport(null), 8000);
     return () => clearTimeout(t);
   }, [report]);
+
+  useEffect(() => {
+    if (!user?.is_admin) return;
+    checkKavenegarHealth();
+  }, [user?.is_admin, checkKavenegarHealth]);
 
   const loadOrders = async (useLoader = true, isPoll = false) => {
     if (isPoll) {
@@ -1553,6 +1674,9 @@ export default function AdminPanelPage() {
         return;
       }
       setUser(normalizedUser);
+      // Start the provider check immediately after admin authentication so
+      // the urgent banner does not depend on a later render/effect cycle.
+      checkKavenegarHealth();
 
       const orderTypeParam = orderTypeFilter && orderTypeFilter !== "all" ? `&type=${orderTypeFilter}` : "";
       const [ordersRes, prevRes, refundedRes, canceledRes, usersRes, discountsRes, productsRes, settingsRes, xboxRes, resellersRes, tiersRes, subcatRes, reqsRes] = await Promise.all([
@@ -2046,6 +2170,246 @@ export default function AdminPanelPage() {
     }
   };
 
+  const loadMarketData = async () => {
+    setMarketLoading(true);
+    try {
+      const [listingsRes, dealsRes] = await Promise.all([
+        fetch(`${apiBase}/api/admin/market/listings`, { credentials: "include" }),
+        fetch(`${apiBase}/api/admin/market/deals`, { credentials: "include" })
+      ]);
+      if (listingsRes.ok) {
+        const data = await listingsRes.json();
+        setMarketListings(data.results || []);
+      }
+      if (dealsRes.ok) {
+        const data = await dealsRes.json();
+        setMarketDeals((data.results || []).filter((d) => d.status !== "initiated" && d.status !== "pending" && d.status !== "payment_pending"));
+      }
+    } catch (err) {
+      console.error("Error loading market data:", err);
+    } finally {
+      setMarketLoading(false);
+    }
+  };
+
+  const handleApproveListing = async (id) => {
+    try {
+      const res = await fetch(`${apiBase}/api/admin/market/listings/${id}/approve`, {
+        method: "POST",
+        credentials: "include"
+      });
+      if (res.ok) {
+        alert("آگهی با موفقیت تایید و منتشر شد.");
+        loadMarketData();
+      } else {
+        const data = await res.json();
+        alert(data.message || "خطا در تایید آگهی");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("خطا در ارتباط با سرور");
+    }
+  };
+
+  const handleRejectListing = async (id, reason) => {
+    try {
+      const res = await fetch(`${apiBase}/api/admin/market/listings/${id}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+        credentials: "include"
+      });
+      if (res.ok) {
+        alert("آگهی رد صلاحیت شد.");
+        loadMarketData();
+      } else {
+        const data = await res.json();
+        alert(data.message || "خطا در رد آگهی");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("خطا در ارتباط با سرور");
+    }
+  };
+
+  const handleDeleteListing = async (id) => {
+    if (!confirm(`آیا از حذف آگهی #${id} اطمینان دارید؟ این عمل غیرقابل بازگشت است.`)) return;
+    try {
+      const res = await fetch(`${apiBase}/api/admin/market/listings/${id}/delete`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (typeof setReport === "function") setReport({ title: "حذف آگهی", emailStatus: data.message, smsStatus: "", kind: "success" });
+        alert(data.message || "آگهی با موفقیت حذف شد.");
+        loadMarketData();
+      } else {
+        alert(data.message || "خطا در حذف آگهی");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("خطا در ارتباط با سرور");
+    }
+  };
+
+  const openListingEditModal = (item) => {
+    setActiveListingModal(item);
+    setEditListingTitle(item.title || "");
+    setEditListingGame(item.game || "fortnite");
+    setEditListingPrice(item.price || "");
+    setEditListingPlatform(item.platform || "");
+    setEditListingRegion(item.region || "");
+    setEditListingStatus(item.status || "published");
+    setEditListingDesc(item.description || "");
+    setEditListingRejectReason(item.reject_reason || "");
+    setEditListingIsFeatured(!!item.is_featured);
+    setEditListingImages(item.images || []);
+    setEditListingAttributes(item.attributes || {});
+  };
+
+  const handleUploadListingImage = async (listingId, file) => {
+    if (!file) return;
+    setImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch(`${apiBase}/api/admin/market/listings/${listingId}/images`, {
+        method: "POST",
+        credentials: "include",
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEditListingImages(prev => [...prev, { id: data.id, url: data.url, order: prev.length }]);
+        loadMarketData();
+      } else {
+        alert(data.message || "خطا در آپلود تصویر");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("خطا در ارتباط با سرور هنگام آپلود تصویر");
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleDeleteListingImage = async (imageId) => {
+    if (!confirm("آیا از حذف این تصویر اطمینان دارید؟")) return;
+    try {
+      const res = await fetch(`${apiBase}/api/admin/market/images/${imageId}/delete`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEditListingImages(prev => prev.filter(img => img.id !== imageId));
+        loadMarketData();
+      } else {
+        alert(data.message || "خطا در حذف تصویر");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("خطا در ارتباط با سرور هنگام حذف تصویر");
+    }
+  };
+
+  const handleUpdateListing = async (listingId) => {
+    setListingSaving(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/market/listings/${listingId}/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: editListingTitle,
+          game: editListingGame,
+          price: editListingPrice,
+          platform: editListingPlatform,
+          region: editListingRegion,
+          status: editListingStatus,
+          description: editListingDesc,
+          reject_reason: editListingRejectReason,
+          is_featured: editListingIsFeatured,
+          attributes: editListingAttributes
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof setReport === "function") setReport({ title: "ویرایش آگهی", emailStatus: data.message, smsStatus: "", kind: "success" });
+        loadMarketData();
+        setActiveListingModal(null);
+      } else {
+        alert(data.message || "خطا در ویرایش آگهی");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("خطا در ارتباط با سرور");
+    } finally {
+      setListingSaving(false);
+    }
+  };
+
+  const openDealModal = (deal) => {
+    setActiveDealModal(deal);
+    setEditingDealCreds(deal.credentials || "");
+    setEditingDealStatus(deal.status || "paid");
+    setCopiedCreds(false);
+  };
+
+  const handleUpdateDeal = async (dealId, status, credentials) => {
+    setDealSaving(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/market/deals/${dealId}/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status, credentials })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof setReport === "function") setReport({ title: "بروزرسانی معامله", emailStatus: data.message, smsStatus: "", kind: "success" });
+        loadMarketData();
+        setActiveDealModal(null);
+      } else {
+        alert(data.detail || data.message || "خطا در بروزرسانی معامله");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("خطا در ارتباط با سرور");
+    } finally {
+      setDealSaving(false);
+    }
+  };
+
+  const handleDeleteDeal = async (dealId) => {
+    if (!confirm(`آیا از حذف معامله #${dealId} اطمینان دارید؟ این عمل غیرقابل بازگشت است.`)) return;
+    try {
+      const res = await fetch(`${apiBase}/api/admin/market/deals/${dealId}/delete`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof setReport === "function") setReport({ title: "حذف معامله", emailStatus: data.message, smsStatus: "", kind: "success" });
+        loadMarketData();
+        if (activeDealModal?.id === dealId) setActiveDealModal(null);
+      } else {
+        alert(data.detail || data.message || "خطا در حذف معامله");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("خطا در حذف معامله");
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "marketplace") {
+      loadMarketData();
+    }
+  }, [activeTab]);
+
   useEffect(() => {
     if (activeTab === "announcements") {
       loadAnnouncements();
@@ -2223,11 +2587,6 @@ export default function AdminPanelPage() {
     return chunks.join("-").trim();
   };
 
-  const extractCardLast8 = (pan) => {
-    const digits = (pan || "").toString().replace(/[^0-9]/g, "");
-    if (!digits) return "";
-    return digits.slice(-8);
-  };
 
   const copyToClipboard = async (text, key) => {
     if (!text) return;
@@ -2521,11 +2880,18 @@ export default function AdminPanelPage() {
     }
   };
 
+  const isTestOrder = (o) => {
+    if (!o) return false;
+    if (o.is_test || o.is_test_order) return true;
+    const phone = (o.phone || o.user_email || "").toString().trim().replace(/[\s-]/g, "");
+    return ["09924002533", "09202440480"].some((p) => phone.includes(p));
+  };
+
   const stats = {
     totalOrders: orders.length + (orderCounts.completed ?? previousOrders.length) + (orderCounts.refunded ?? refundedOrders.length),
     completedOrders: orderCounts.completed ?? previousOrders.length,
     pendingOrders: orders.filter(o => ['pending', 'paid', 'processing', 'registered'].includes(o.status)).length,
-    totalRevenue: previousOrders.reduce((sum, o) => sum + getGrossAmount(o), 0),
+    totalRevenue: previousOrders.filter(o => !isTestOrder(o)).reduce((sum, o) => sum + getGrossAmount(o), 0),
     totalUsers: users.length,
     activeUsers: users.filter(u => u.orders_count > 0).length,
   };
@@ -2533,6 +2899,7 @@ export default function AdminPanelPage() {
   const liraRateNumber = Math.round(liveLiraRate / 10) || 0;
 
   const orderCostInToman = (order) => {
+    if (isTestOrder(order)) return 0;
     const items = order?.items || [];
     const totalLira = items.reduce((sum, it) => {
       const baseLira = Number(it.price_lira) || (() => {
@@ -2545,12 +2912,13 @@ export default function AdminPanelPage() {
   };
 
   const orderProfit = (order) => {
+    if (isTestOrder(order)) return 0;
     const amount = Number(order?.amount || 0);
     const cost = orderCostInToman(order);
     return amount - cost;
   };
 
-  const totalProfit = previousOrders.reduce((sum, o) => sum + orderProfit(o), 0);
+  const totalProfit = previousOrders.filter(o => !isTestOrder(o)).reduce((sum, o) => sum + orderProfit(o), 0);
   const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tehran" });
   const isToday = (iso) => {
     try {
@@ -2560,7 +2928,7 @@ export default function AdminPanelPage() {
     }
   };
   // Use completed_at instead of created_at for today's profit
-  const todayProfit = previousOrders.reduce((sum, o) => (isToday(o.completed_at || o.created_at) ? sum + orderProfit(o) : sum), 0);
+  const todayProfit = previousOrders.filter(o => !isTestOrder(o)).reduce((sum, o) => (isToday(o.completed_at || o.created_at) ? sum + orderProfit(o) : sum), 0);
 
   const financeCards = [
     { title: "درآمد کل", value: stats.totalRevenue },
@@ -2826,27 +3194,6 @@ export default function AdminPanelPage() {
     return null;
   };
 
-  const cardLast8Counts = useMemo(() => {
-    try {
-      const counts = {};
-      const pool = [
-        ...(Array.isArray(orders) ? orders : []),
-        ...(Array.isArray(previousOrders) ? previousOrders : []),
-        ...(Array.isArray(refundedOrders) ? refundedOrders : []),
-        ...(Array.isArray(canceledOrders) ? canceledOrders : []),
-      ];
-      pool.forEach((o) => {
-        const last8 = extractCardLast8(o?.payment_card_pan);
-        if (last8 && last8.length === 8) {
-          counts[last8] = (counts[last8] || 0) + 1;
-        }
-      });
-      return counts;
-    } catch (err) {
-      console.error("cardLast8Counts error", err);
-      return {};
-    }
-  }, [orders, previousOrders, refundedOrders, canceledOrders]);
 
   const xboxArchiveOrders = useMemo(() => {
     const merged = new Map();
@@ -2895,63 +3242,46 @@ export default function AdminPanelPage() {
     if (!card) return null;
 
     const formattedCard = formatCardPan(card);
-    const cardLast8 = extractCardLast8(card);
-    const repeatCount = cardLast8 ? (cardLast8Counts?.[cardLast8] || 0) : 0;
-    const showAiFlag = repeatCount > 2;
 
     return (
-      <>
-        <div className="payment-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "nowrap" }}>
-          <div className="payment-row-main" style={{ display: "flex", alignItems: "center", gap: "8px", flexGrow: 1, minWidth: 0 }}>
-            <span className="payment-row-label" style={{ whiteSpace: "nowrap" }}>کارت پرداخت:</span>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", direction: "ltr", minWidth: 0 }}>
-              <span className="payment-card-text" style={{ direction: "ltr", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                <span className="payment-card-icon">💳</span>
-                <span className="payment-card-number" style={{ direction: "ltr", unicodeBidi: "bidi-override", letterSpacing: "0.08em", wordSpacing: "0.2em", fontFamily: "monospace" }}>
-                  {formattedCard}
-                </span>
+      <div className="payment-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "nowrap" }}>
+        <div className="payment-row-main" style={{ display: "flex", alignItems: "center", gap: "8px", flexGrow: 1, minWidth: 0 }}>
+          <span className="payment-row-label" style={{ whiteSpace: "nowrap" }}>کارت پرداخت:</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", direction: "ltr", minWidth: 0 }}>
+            <span className="payment-card-text" style={{ direction: "ltr", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <span className="payment-card-icon">💳</span>
+              <span className="payment-card-number" style={{ direction: "ltr", unicodeBidi: "bidi-override", letterSpacing: "0.08em", wordSpacing: "0.2em", fontFamily: "monospace" }}>
+                {formattedCard}
               </span>
-              <button
-                type="button"
-                className="payment-copy-btn"
-                onClick={() => copyToClipboard(card, `${o.id}-card`)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--line)",
-                  background: "var(--bg)",
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  color: copiedField === `${o.id}-card` ? "#10b981" : "var(--text)",
-                  borderColor: copiedField === `${o.id}-card` ? "#10b981" : "var(--line)",
-                  transition: "all 0.15s ease",
-                  flexShrink: 0,
-                  height: "28px"
-                }}
-              >
-                <span className="payment-copy-icon">{copiedField === `${o.id}-card` ? "✅" : "📋"}</span>
-                <span>{copiedField === `${o.id}-card` ? "کپی شد" : "کپی"}</span>
-              </button>
-            </div>
+            </span>
+            <button
+              type="button"
+              className="payment-copy-btn"
+              onClick={() => copyToClipboard(card, `${o.id}-card`)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                borderRadius: "8px",
+                border: "1px solid var(--line)",
+                background: "var(--bg)",
+                padding: "4px 8px",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                color: copiedField === `${o.id}-card` ? "#10b981" : "var(--text)",
+                borderColor: copiedField === `${o.id}-card` ? "#10b981" : "var(--line)",
+                transition: "all 0.15s ease",
+                flexShrink: 0,
+                height: "28px"
+              }}
+            >
+              <span className="payment-copy-icon">{copiedField === `${o.id}-card` ? "✅" : "📋"}</span>
+              <span>{copiedField === `${o.id}-card` ? "کپی شد" : "کپی"}</span>
+            </button>
           </div>
         </div>
-        {showAiFlag && (
-          <div className="ai-flag">
-            <div className="ai-flag-icon">🤖</div>
-            <div className="ai-flag-text">
-              <div className="ai-flag-title">Nubix AI</div>
-              <div className="ai-flag-desc">
-                این کارت با هشت رقم آخر مشابه در {repeatCount.toLocaleString("fa-IR")} پرداخت استفاده شده؛
-                احتمال حساب واسطه/دلالی.
-              </div>
-            </div>
-          </div>
-        )}
-      </>
+      </div>
     );
   };
 
@@ -3312,11 +3642,12 @@ export default function AdminPanelPage() {
   const FIELD_PRESETS = [
     { label: "فیلد خام", fields: [] },
     {
-      label: "Fortnite (نوع حساب/ایمیل/رمز)",
+      label: "Fortnite (روش ورود/ایمیل/رمز/توضیحات)",
       fields: [
-        { key: "account_type", label: "نوع حساب", type: "select", required: true, placeholder: "انتخاب کنید", options: ["Epic Games", "PSN", "Xbox"] },
+        { key: "account_type", label: "روش ورود به اکانت", type: "select", required: true, placeholder: "انتخاب کنید...", options: ["اپیک گیمز (Epic Games)", "سونی پلی‌استیشن (PSN)", "ایکس‌باکس (Xbox)", "نینتندو (Nintendo)"] },
         { key: "account_email", label: "ایمیل اکانت", type: "email", required: true, placeholder: "example@mail.com" },
         { key: "account_password", label: "رمز عبور", type: "password", required: true, placeholder: "••••••••" },
+        { key: "extra_notes", label: "توضیحات اضافه (اختیاری)", type: "textarea", required: false, placeholder: "در صورتی که توضیح و نکته خاصی دارید یا سوال امنیتی اکانت را می دانید وارد کنید..." },
       ],
     },
     {
@@ -3326,10 +3657,11 @@ export default function AdminPanelPage() {
       ],
     },
     {
-      label: "ایمیل + رمز",
+      label: "ایمیل + رمز + توضیحات",
       fields: [
         { key: "account_email", label: "ایمیل اکانت", type: "email", required: true, placeholder: "example@mail.com" },
         { key: "account_password", label: "رمز عبور", type: "password", required: true, placeholder: "••••••••" },
+        { key: "extra_notes", label: "توضیحات اضافه (اختیاری)", type: "textarea", required: false, placeholder: "در صورتی که توضیح و نکته خاصی دارید یا سوال امنیتی اکانت را می دانید وارد کنید..." },
       ],
     },
     {
@@ -3487,6 +3819,9 @@ export default function AdminPanelPage() {
       requires_2fa: !!product.requires_2fa,
       disable_2fa_text: (product.disable_2fa_text || "").trim(),
       disable_2fa_color: product.disable_2fa_color || "amber",
+      jinx_image: (product.jinx_image || "").trim(),
+      jinx_text: (product.jinx_text || "").trim(),
+      page_customization: product.page_customization || {},
       ordering_disabled: !!product.ordering_disabled,
       daily_order_limit: product.daily_order_limit !== undefined ? Number(product.daily_order_limit) : -1,
       reseller_ordering_disabled: !!product.reseller_ordering_disabled,
@@ -3936,6 +4271,8 @@ export default function AdminPanelPage() {
   // Effective source used by the modal: prefer vitrineOrder (so reordering
   // persists mid-modal), fall back to the live products list.
   const vitrineSource = vitrineOrder.length > 0 ? vitrineOrder : products;
+  const kavenegarHealthProblem = kavenegarHealth && kavenegarHealth.ok === false && kavenegarHealth.status !== "checking";
+  const kavenegarHealthTitle = "هشدار فوری: اعتبار رایگان کاوه‌نگار تمام شده است";
 
   return (
     <>
@@ -3950,7 +4287,7 @@ export default function AdminPanelPage() {
             <div className="admin-header-lead">
               <span className="admin-logo-badge">N</span>
               <div>
-                <h1 className="admin-title">پنل مدیریت نوبیکس</h1>
+                <h1 className="admin-title">پنل مدیریت جینکس فمیلی</h1>
                 <p className="admin-subtitle">
                   <span className="admin-status-dot" />
                   مدیریت سفارشات، کاربران و آمار فروشگاه
@@ -3962,6 +4299,52 @@ export default function AdminPanelPage() {
               <a href="/vbucks" className="btn primary-btn">محصولات</a>
             </div>
           </div>
+
+          {kavenegarHealth?.status === "checking" && (
+            <div className="kavenegar-health-banner kavenegar-health-checking" role="status">
+              <span className="kavenegar-health-icon">⏳</span>
+              <div>
+                <strong>در حال بررسی سلامت سرویس پیامک کاوه‌نگار...</strong>
+                <p>این بررسی فقط اطلاعات حساب را می‌خواند و هیچ پیامکی ارسال نمی‌کند.</p>
+              </div>
+            </div>
+          )}
+
+          {kavenegarHealthProblem && !kavenegarHealthDismissed && (
+            <div className="kavenegar-health-modal-backdrop" role="presentation">
+              <section className="kavenegar-health-modal" role="alertdialog" aria-modal="true" aria-live="assertive">
+                <button
+                  type="button"
+                  className="kavenegar-health-modal-close"
+                  onClick={() => setKavenegarHealthDismissed(true)}
+                  aria-label="بستن هشدار"
+                >
+                  ✕
+                </button>
+                <span className="kavenegar-health-modal-icon">🚨</span>
+                <strong>{kavenegarHealthTitle}</strong>
+                <p>{KAVENEGAR_HEALTH_FAILURE_MESSAGE}</p>
+                <small>ارسال پیامک تا زمان رفع مشکل سرویس انجام نمی‌شود.</small>
+                <div className="kavenegar-health-modal-actions">
+                  <button
+                    type="button"
+                    className="kavenegar-health-retry"
+                    onClick={checkKavenegarHealth}
+                    disabled={kavenegarHealth?.status === "checking"}
+                  >
+                    🔄 بررسی مجدد
+                  </button>
+                  <button
+                    type="button"
+                    className="kavenegar-health-continue"
+                    onClick={() => setKavenegarHealthDismissed(true)}
+                  >
+                    ادامه ورود به پنل
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
 
           {/* Finance bar */}
           <div className="finance-bar">
@@ -4074,6 +4457,11 @@ export default function AdminPanelPage() {
               <span className="tab-ic">📦</span>
               <span className="tab-text">محصولات</span>
               <span className="tab-count">{products.length}</span>
+            </button>
+            <button className={`tab ${activeTab === "marketplace" ? "active" : ""}`} onClick={() => setActiveTab("marketplace")}>
+              <span className="tab-ic">🔑</span>
+              <span className="tab-text">بازارچه اکانت</span>
+              <span className="tab-count">{(marketListings.length + marketDeals.length).toLocaleString("fa-IR")}</span>
             </button>
             <button className={`tab ${activeTab === "users" ? "active" : ""}`} onClick={() => setActiveTab("users")}>
               <span className="tab-ic">👥</span>
@@ -4210,9 +4598,6 @@ export default function AdminPanelPage() {
             <div className="order-filters">
               <button className={`pill-btn ${orderFilter === "active" ? "active" : ""}`} onClick={() => setOrderFilter("active")}>
                 در حال پردازش ({visibleActiveNonPendingOrders.length})
-              </button>
-              <button className={`pill-btn ${orderFilter === "pending" ? "active" : ""}`} onClick={() => setOrderFilter("pending")}>
-                در انتظار پرداخت ({visiblePendingPayOrders.length})
               </button>
               <button className={`pill-btn ${orderFilter === "twofa" ? "active" : ""}`} onClick={() => setOrderFilter("twofa")}>
                 حساب‌های 2FA ({visibleTwoFactorOrders.length})
@@ -6826,6 +7211,138 @@ export default function AdminPanelPage() {
                           </label>
                         </div>
                       </div>
+
+                      {/* ── Advanced Product Page Customization Section (New Product) ── */}
+                      <div className="content-subsection" style={{ marginTop: 16 }}>
+                        <div className="subsection-header"><span>🎨 سفارشی‌سازی پیشرفته صفحه محصول</span></div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                          <label className="product-content-field">
+                            <span>پوسته صفحه (Theme)</span>
+                            <select
+                              value={(newProduct.page_customization || {}).theme || "default"}
+                              onChange={(e) => handleNewProductChange("page_customization", { ...(newProduct.page_customization || {}), theme: e.target.value })}
+                            >
+                              <option value="default">پیش‌فرض (Candy / Dark)</option>
+                              <option value="light-powder">پودری روشن (Light Powder)</option>
+                              <option value="candy-neon">نئون شکلاتی (Candy Neon)</option>
+                              <option value="cyan-magic">جادوی سایان (Cyan Magic)</option>
+                              <option value="emerald-forest">جنگل زمرد (Emerald Forest)</option>
+                            </select>
+                          </label>
+                          <label className="product-content-field">
+                            <span>متن دکمه خرید</span>
+                            <input
+                              type="text"
+                              value={(newProduct.page_customization || {}).purchase_btn_text || ""}
+                              onChange={(e) => handleNewProductChange("page_customization", { ...(newProduct.page_customization || {}), purchase_btn_text: e.target.value })}
+                              placeholder="افزودن به سبد خرید"
+                            />
+                          </label>
+                          <label className="product-content-field">
+                            <span>متن بنر بالایی صفحه</span>
+                            <input
+                              type="text"
+                              value={(newProduct.page_customization || {}).banner_text || ""}
+                              onChange={(e) => handleNewProductChange("page_customization", { ...(newProduct.page_customization || {}), banner_text: e.target.value })}
+                              placeholder="متن دلخواه بنر..."
+                            />
+                          </label>
+                          <label className="product-content-field">
+                            <span>رنگ بنر</span>
+                            <select
+                              value={(newProduct.page_customization || {}).banner_color || "blue"}
+                              onChange={(e) => handleNewProductChange("page_customization", { ...(newProduct.page_customization || {}), banner_color: e.target.value })}
+                            >
+                              <option value="blue">آبی (Blue)</option>
+                              <option value="amber">کهربایی (Amber)</option>
+                              <option value="red">قرمز (Red)</option>
+                              <option value="gray">خاکستری (Gray)</option>
+                            </select>
+                          </label>
+                        </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "16px" }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={!!(newProduct.page_customization || {}).hide_faq}
+                              onChange={(e) => handleNewProductChange("page_customization", { ...(newProduct.page_customization || {}), hide_faq: e.target.checked })}
+                            />
+                            <span>پنهان کردن سوالات متداول (FAQ)</span>
+                          </label>
+                          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={!!(newProduct.page_customization || {}).hide_reviews}
+                              onChange={(e) => handleNewProductChange("page_customization", { ...(newProduct.page_customization || {}), hide_reviews: e.target.checked })}
+                            />
+                            <span>پنهان کردن نظرات</span>
+                          </label>
+                          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={!!(newProduct.page_customization || {}).hide_jinx_guide}
+                              onChange={(e) => handleNewProductChange("page_customization", { ...(newProduct.page_customization || {}), hide_jinx_guide: e.target.checked })}
+                            />
+                            <span>پنهان کردن راهنمای جینکس</span>
+                          </label>
+                          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={!!(newProduct.page_customization || {}).hide_related}
+                              onChange={(e) => handleNewProductChange("page_customization", { ...(newProduct.page_customization || {}), hide_related: e.target.checked })}
+                            />
+                            <span>پنهان کردن محصولات مرتبط</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* ── Jinx Mascot Section (New Product) ── */}
+                      <div className="content-subsection" style={{ marginTop: 16 }}>
+                        <div className="subsection-header"><span>💜 تنظیمات و دیالوگ اختصاصی Miss Jinx</span></div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
+                          <label className="product-content-field" style={{ marginBottom: 0 }}>
+                            <span>متن دیالوگ سفارشی</span>
+                            <textarea
+                              rows={2}
+                              value={newProduct.jinx_text || ""}
+                              onChange={(e) => handleNewProductChange("jinx_text", e.target.value)}
+                              placeholder="دیالوگ اختصاصی جینکس..."
+                            />
+                          </label>
+                          <label className="product-content-field" style={{ marginBottom: 0 }}>
+                            <span>تصویر اختصاصی جینکس</span>
+                            <div className="mascot-thumbnails-row" style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                              {[
+                                { url: "/images/jinx-sitting.png", label: "جینکس ۱" },
+                                { url: "/images/jinx-sitting-2.png", label: "جینکس ۲" },
+                                { url: "/images/jinx-sitting-3.png", label: "جینکس ۳" }
+                              ].map((thumb) => {
+                                const isActive = newProduct.jinx_image === thumb.url || (!newProduct.jinx_image && thumb.url === "/images/jinx-sitting.png");
+                                return (
+                                  <button
+                                    key={thumb.url}
+                                    type="button"
+                                    className={`mascot-thumb-btn ${isActive ? 'active' : ''}`}
+                                    onClick={() => handleNewProductChange("jinx_image", thumb.url)}
+                                    style={{ padding: 4, border: isActive ? "2px solid #667eea" : "1px solid var(--line)", borderRadius: 6, background: "var(--card)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={thumb.url} alt={thumb.label} style={{ width: 40, height: 40, objectFit: "contain" }} />
+                                    <span style={{ fontSize: 10 }}>{thumb.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <input
+                              type="text"
+                              dir="ltr"
+                              value={newProduct.jinx_image || ""}
+                              onChange={(e) => handleNewProductChange("jinx_image", e.target.value)}
+                              placeholder="لینک تصویر دلخواه..."
+                            />
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -6850,9 +7367,9 @@ export default function AdminPanelPage() {
                   </div>
                   {visibleProducts.length === 0 && <div className="empty-state">در این دسته محصولی یافت نشد.</div>}
                   {visibleProducts.length > 0 && (
-                  <div className="products-grid">
+                  <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
                     {visibleProducts.map((p) => (
-                      <div key={p.id} className={`product-card ${!p.active ? 'inactive' : ''}`}>
+                      <div key={p.id} className={`product-card ${!p.active ? 'inactive' : ''}`} style={{ display: "flex", flexDirection: "column", height: "100%", justifyContent: "space-between" }}>
                         <div className="product-card-header">
                           {p.image_url && (
                             <div className="product-image">
@@ -6861,9 +7378,9 @@ export default function AdminPanelPage() {
                             </div>
                           )}
                           <div className="product-info">
-                            <h4 className="product-title">{p.name_fa}</h4>
-                            <span className="product-slug">{p.slug}</span>
-                            <span className={`category-badge ${p.category?.toLowerCase().replace(/\s+/g, '-')}`}>
+                            <h4 className="product-title" style={{ fontSize: "14px", fontWeight: "bold", margin: 0 }}>{p.name_fa}</h4>
+                            <span className="product-slug" style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>{p.slug}</span>
+                            <span className={`category-badge ${p.category?.toLowerCase().replace(/\s+/g, '-')}`} style={{ marginTop: "4px", display: "inline-block" }}>
                               {p.category}
                             </span>
                           </div>
@@ -6880,455 +7397,865 @@ export default function AdminPanelPage() {
                           </div>
                         </div>
 
-                        <div className="product-card-body">
-                          <div className="product-edit-grid">
-                            <label className="product-edit-field">
-                              <span>عنوان</span>
-                              <input
-                                type="text"
-                                value={p.name_fa || ""}
-                                onChange={(e) => handleProductChange(p.id, "name_fa", e.target.value)}
-                              />
-                            </label>
-                            <label className="product-edit-field">
-                              <span>دسته</span>
-                              <select
-                                value={p.category || "FORTNITE"}
-                                onChange={(e) => handleProductChange(p.id, "category", e.target.value)}
-                              >
-                                {productCategories.map((cat) => (
-                                  <option key={cat.value} value={cat.value}>{cat.label}</option>
-                                ))}
-                              </select>
-                            </label>
-                            <label className="product-edit-field">
-                              <span>زیردسته</span>
-                              <select
-                                value={p.subcategory || ""}
-                                onChange={(e) => handleProductChange(p.id, "subcategory", e.target.value)}
-                              >
-                                <option value="">بدون زیردسته</option>
-                                {subcategories.filter((sc) => sc.category === (p.category || "FORTNITE")).map((sc) => (
-                                  <option key={sc.id} value={sc.key}>{sc.label}</option>
-                                ))}
-                              </select>
-                            </label>
-                            <label className="product-edit-field product-edit-field-wide">
-                              <span>کاور</span>
-                              <div className="cover-upload-row">
-                                <input
-                                  type="text"
-                                  dir="ltr"
-                                  value={p.image_url || ""}
-                                  onChange={(e) => handleProductChange(p.id, "image_url", e.target.value)}
-                                  placeholder="/products/product.webp"
-                                />
-                                <label className={`cover-upload-btn ${productUploading === p.id ? "uploading" : ""}`}>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    disabled={productSaving === p.id || productUploading === p.id}
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0] || null;
-                                      e.target.value = "";
-                                      setProductCoverFiles((prev) => ({ ...prev, [p.id]: file }));
-                                    }}
-                                  />
-                                  {productUploading === p.id
-                                    ? "در حال آپلود..."
-                                    : productCoverFiles[p.id]
-                                      ? "انتخاب شد"
-                                      : "آپلود"}
-                                </label>
-                              </div>
-                            </label>
-                            <label className="product-edit-field product-edit-field-wide">
-                              <span>زیرعنوان</span>
-                              <input
-                                type="text"
-                                value={p.subtitle || ""}
-                                onChange={(e) => handleProductChange(p.id, "subtitle", e.target.value)}
-                              />
-                            </label>
+                        <div className="product-card-body-simple" style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)" }}>
+                          <div style={{ fontSize: 13, fontWeight: "bold" }}>
+                            <span style={{ color: "var(--muted)" }}>قیمت: </span>
+                            <span style={{ color: "var(--primary)" }}>{p.price?.toLocaleString("fa-IR")} تومان</span>
                           </div>
-                          <div className="price-section">
-                            <div className="price-group">
-                              <label>قیمت فعلی</label>
-                              <div className="price-input-wrapper">
-                                <input
-                                  type="number"
-                                  value={p.price}
-                                  min={0}
-                                  onChange={(e) => handleProductChange(p.id, "price", Number(e.target.value || 0))}
-                                />
-                                <span className="currency">تومان</span>
-                              </div>
-                            </div>
-                            <div className="price-group">
-                              <label>قیمت اصلی</label>
-                              <div className="price-input-wrapper">
-                                <input
-                                  type="number"
-                                  value={p.original_price || 0}
-                                  min={0}
-                                  onChange={(e) => handleProductChange(p.id, "original_price", Number(e.target.value || 0))}
-                                />
-                                <span className="currency">تومان</span>
-                              </div>
-                            </div>
-                            <div className="price-group lira">
-                              <label>قیمت لیر</label>
-                              <div className="price-input-wrapper">
-                                <input
-                                  type="number"
-                                  value={p.price_lira || 0}
-                                  min={0}
-                                  onChange={(e) => handleProductChange(p.id, "price_lira", Number(e.target.value || 0))}
-                                />
-                                <span className="currency">TL</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* ── Product Content Section (existing product) ── */}
-                          <details className="product-content-section">
-                            <summary className="product-content-toggle">
-                              <span>📝 محتوای صفحه محصول</span>
-                              <button
-                                type="button"
-                                className="ai-fill-btn"
-                                disabled={productAiLoading[p.id]}
-                                onClick={(e) => { e.preventDefault(); aiFillProduct(p.id); }}
-                                title="پر کردن خودکار با هوش مصنوعی"
-                              >
-                                {productAiLoading[p.id] ? "⏳ در حال تولید..." : "🤖 پر کردن خودکار با AI"}
-                              </button>
-                            </summary>
-                            <div className="product-content-body">
-                              <label className="product-content-field">
-                                <span>توضیحات</span>
-                                <textarea
-                                  rows={6}
-                                  value={p.description || ""}
-                                  onChange={(e) => handleProductChange(p.id, "description", e.target.value)}
-                                  placeholder="توضیحات کامل محصول..."
-                                />
-                              </label>
-                              <label className="product-content-field">
-                                <span>نحوه تحویل</span>
-                                <textarea
-                                  rows={4}
-                                  value={p.delivery_text || ""}
-                                  onChange={(e) => handleProductChange(p.id, "delivery_text", e.target.value)}
-                                  placeholder="هر خط = یک مرحله..."
-                                />
-                              </label>
-
-                              {/* FAQ */}
-                              <div className="content-subsection">
-                                <div className="subsection-header">
-                                  <span>سوالات متداول</span>
-                                  <button type="button" className="add-item-btn" onClick={() => addFaqItem(p.id)}>+ افزودن سوال</button>
-                                </div>
-                                {(p.faq || []).map((item, idx) => (
-                                  <div key={idx} className="content-item">
-                                    <div className="content-item-inputs">
-                                      <input
-                                        type="text"
-                                        value={item.q || ""}
-                                        onChange={(e) => updateFaqItem(p.id, idx, "q", e.target.value)}
-                                        placeholder="سوال"
-                                      />
-                                      <textarea
-                                        rows={2}
-                                        value={item.a || ""}
-                                        onChange={(e) => updateFaqItem(p.id, idx, "a", e.target.value)}
-                                        placeholder="پاسخ"
-                                      />
-                                    </div>
-                                    <button type="button" className="item-remove-btn" onClick={() => removeFaqItem(p.id, idx)}>✕</button>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Custom Fields */}
-                              <div className="content-subsection">
-                                <div className="subsection-header">
-                                  <span>فیلدهای اطلاعات مشتری</span>
-                                  <div style={{ display: "flex", gap: 8 }}>
-                                    <select
-                                      className="preset-select"
-                                      defaultValue=""
-                                      onChange={(e) => { if (e.target.value !== "") applyFieldPreset(p.id, Number(e.target.value)); e.target.value = ""; }}
-                                    >
-                                      <option value="">پیش‌فرض: {FIELD_PRESETS[0].label}</option>
-                                      {FIELD_PRESETS.map((p2, i) => (
-                                        <option key={i} value={i}>{p2.label}</option>
-                                      ))}
-                                    </select>
-                                    <button type="button" className="add-item-btn" onClick={() => addCustomField(p.id)}>+ افزودن فیلد</button>
-                                  </div>
-                                </div>
-                                {(p.custom_fields || []).map((cf, idx) => (
-                                  <div key={idx} className="content-item custom-field-item">
-                                    <div className="custom-field-inputs">
-                                      <input
-                                        type="text"
-                                        value={cf.label || ""}
-                                        onChange={(e) => updateCustomField(p.id, idx, "label", e.target.value)}
-                                        placeholder="برچسب (مثلاً آيدي تلگرام)"
-                                      />
-                                      <input
-                                        type="text"
-                                        value={cf.key || ""}
-                                        onChange={(e) => updateCustomField(p.id, idx, "key", e.target.value)}
-                                        placeholder="کلید (انگلیسی)"
-                                        style={{ fontFamily: "monospace", fontSize: 12 }}
-                                      />
-                                      <select value={cf.type || "text"} onChange={(e) => updateCustomField(p.id, idx, "type", e.target.value)}>
-                                        {CFIELD_TYPES.map((t) => (
-                                          <option key={t.value} value={t.value}>{t.label}</option>
-                                        ))}
-                                      </select>
-                                      <input
-                                        type="text"
-                                        value={cf.placeholder || ""}
-                                        onChange={(e) => updateCustomField(p.id, idx, "placeholder", e.target.value)}
-                                        placeholder="placeholder"
-                                        style={{ minWidth: 100 }}
-                                      />
-                                      <label className="checkbox-label">
-                                        <input
-                                          type="checkbox"
-                                          checked={!!cf.required}
-                                          onChange={(e) => updateCustomField(p.id, idx, "required", e.target.checked)}
-                                        />
-                                        <span>اجباری</span>
-                                      </label>
-                                      {cf.type === "select" && (
-                                        <input
-                                          type="text"
-                                          value={(cf.options || []).join("، ")}
-                                          onChange={(e) => updateCustomField(p.id, idx, "options", e.target.value.split(/[،,]/).map((s) => s.trim()).filter(Boolean))}
-                                          placeholder="گزینه‌ها (با کاما جدا کنید)"
-                                          style={{ minWidth: 200 }}
-                                        />
-                                      )}
-                                    </div>
-                                    <button type="button" className="item-remove-btn" onClick={() => removeCustomField(p.id, idx)}>✕</button>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* 2FA */}
-                              <div className="content-subsection">
-                                <div className="subsection-header"><span>هشدار غیرفعال‌سازی 2FA</span></div>
-                                <label className="checkbox-label" style={{ marginBottom: 8 }}>
-                                  <input
-                                    type="checkbox"
-                                    checked={!!p.requires_2fa}
-                                    onChange={(e) => handleProductChange(p.id, "requires_2fa", e.target.checked)}
-                                  />
-                                  <span>نمایش هشدار خاموش کردن 2FA در صفحه محصول</span>
-                                </label>
-                                {p.requires_2fa && (
-                                  <div style={{ display: "grid", gap: 10, marginTop: 6 }}>
-                                    <label className="product-content-field" style={{ marginBottom: 0 }}>
-                                      <span>متن سفارشی (اختیاری)</span>
-                                      <input
-                                        type="text"
-                                        value={p.disable_2fa_text || ""}
-                                        onChange={(e) => handleProductChange(p.id, "disable_2fa_text", e.target.value)}
-                                        placeholder="متن پیش‌فرض: 2FA را قبل از خرید خاموش کنید"
-                                      />
-                                    </label>
-                                    <div>
-                                      <span style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 6 }}>رنگ بنر</span>
-                                      <div style={{ display: "flex", gap: 10 }}>
-                                        {["amber", "blue", "gray", "red"].map((c) => (
-                                          <label key={c} className="color-radio" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
-                                            <input
-                                              type="radio"
-                                              name={`dis-2fa-color-${p.id}`}
-                                              value={c}
-                                              checked={(p.disable_2fa_color || "amber") === c}
-                                              onChange={(e) => handleProductChange(p.id, "disable_2fa_color", e.target.value)}
-                                            />
-                                            <span style={{
-                                              display: "inline-block",
-                                              width: 14, height: 14, borderRadius: 4,
-                                              background: c === "amber" ? "#f59e0b" : c === "blue" ? "#3b82f6" : c === "gray" ? "#6b7280" : "#ef4444",
-                                            }} />
-                                            {c === "amber" ? "کهربایی" : c === "blue" ? "آبی" : c === "gray" ? "طوسی" : "قرمز"}
-                                          </label>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Limits & Disabled */}
-                              <div className="content-subsection" style={{ marginTop: 16 }}>
-                                <div className="subsection-header"><span>محدودیت و غیرفعال‌سازی سفارش</span></div>
-                                
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10, marginBottom: 8 }}>
-                                  <label className="checkbox-label" style={{ marginBottom: 0 }}>
-                                    <input
-                                      type="checkbox"
-                                      checked={!!p.ordering_disabled}
-                                      onChange={(e) => handleProductChange(p.id, "ordering_disabled", e.target.checked)}
-                                    />
-                                    <span style={{ color: "var(--red)", fontSize: 11 }}>غیرفعال کردن کامل سفارش (عمومی)</span>
-                                  </label>
-                                </div>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-                                  <label className="checkbox-label" style={{ marginBottom: 0 }}>
-                                    <input
-                                      type="checkbox"
-                                      checked={!!p.reseller_ordering_disabled}
-                                      onChange={(e) => handleProductChange(p.id, "reseller_ordering_disabled", e.target.checked)}
-                                    />
-                                    <span style={{ color: "#f59e0b", fontSize: 11 }}>غیرفعال کردن فقط برای همکاران</span>
-                                  </label>
-                                  <label className="checkbox-label" style={{ marginBottom: 0 }}>
-                                    <input
-                                      type="checkbox"
-                                      checked={!!p.customer_ordering_disabled}
-                                      onChange={(e) => handleProductChange(p.id, "customer_ordering_disabled", e.target.checked)}
-                                    />
-                                    <span style={{ color: "#818cf8", fontSize: 11 }}>غیرفعال کردن فقط برای مشتریان</span>
-                                  </label>
-                                </div>
-
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 6 }}>
-                                  <label className="product-content-field" style={{ marginBottom: 0 }}>
-                                    <span>محدودیت روزانه کل (۰ = بدون محدودیت)</span>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      value={p.daily_order_limit ?? 0}
-                                      onChange={(e) => handleProductChange(p.id, "daily_order_limit", parseInt(e.target.value) || 0)}
-                                    />
-                                  </label>
-                                  <label className="product-content-field" style={{ marginBottom: 0 }}>
-                                    <span>محدودیت روزانه همکاران</span>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      value={p.reseller_daily_order_limit ?? 0}
-                                      onChange={(e) => handleProductChange(p.id, "reseller_daily_order_limit", parseInt(e.target.value) || 0)}
-                                    />
-                                  </label>
-                                  <label className="product-content-field" style={{ marginBottom: 0 }}>
-                                    <span>محدودیت روزانه مشتریان</span>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      value={p.customer_daily_order_limit ?? 0}
-                                      onChange={(e) => handleProductChange(p.id, "customer_daily_order_limit", parseInt(e.target.value) || 0)}
-                                    />
-                                  </label>
-                                </div>
-                              </div>
-                            </div>
-                          </details>
-
-                          <div className="variants-section">
-                            <div className="variants-header">
-                              <span className="variants-label">واریانت‌ها / پلن‌ها</span>
-                              <span className="variants-count">{(p.variants || []).length}</span>
-                            </div>
-                            <div className="variants-list">
-                              {(p.variants || []).map((v) => (
-                                <div key={v.id} className="variant-item">
-                                  <div className="variant-inputs">
-                                    <div className="variant-input-group">
-                                      <input
-                                        type="text"
-                                        value={v.title || ""}
-                                        onChange={(e) => handleProductChange(p.id, "title", e.target.value, v.id)}
-                                        placeholder="عنوان (مثلاً یک ماهه)"
-                                      />
-                                    </div>
-                                    <div className="variant-input-group">
-                                      <input
-                                        type="text"
-                                        value={v.group_fa || ""}
-                                        onChange={(e) => handleProductChange(p.id, "group_fa", e.target.value, v.id)}
-                                        placeholder="گروه (مثلاً اشتراک تک‌کاربره)"
-                                      />
-                                    </div>
-                                    <div className="variant-input-group">
-                                      <input
-                                        type="number"
-                                        value={v.price}
-                                        min={0}
-                                        onChange={(e) => handleProductChange(p.id, "price", Number(e.target.value || 0), v.id)}
-                                        placeholder="قیمت فعلی"
-                                      />
-                                    </div>
-                                    <div className="variant-input-group">
-                                      <input
-                                        type="number"
-                                        value={v.original_price || 0}
-                                        min={0}
-                                        onChange={(e) => handleProductChange(p.id, "original_price", Number(e.target.value || 0), v.id)}
-                                        placeholder="قیمت اصلی"
-                                      />
-                                    </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    className="variant-remove-btn"
-                                    title="حذف واریانت"
-                                    onClick={() => removeVariantRow(p.id, v.id)}
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                            <button
-                              type="button"
-                              className="variant-add-btn"
-                              onClick={() => addVariantRow(p.id)}
-                            >
-                              + افزودن واریانت
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="product-card-footer">
                           <button
-                            className={`save-btn ${productSaving === p.id ? 'saving' : ''}`}
-                            disabled={productSaving === p.id || productUploading === p.id || productDeleting === p.id}
-                            onClick={() => saveProduct(p)}
+                            type="button"
+                            className="edit-product-btn-main"
+                            onClick={() => {
+                              setActiveEditProduct(p);
+                              setActiveEditTab("general");
+                            }}
+                            style={{
+                              padding: "6px 12px",
+                              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "6px",
+                              fontSize: 12,
+                              fontWeight: "bold",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                              boxShadow: "0 2px 6px rgba(102, 126, 234, 0.3)"
+                            }}
                           >
-                            {productSaving === p.id || productUploading === p.id ? (
-                              <>
-                                <span className="spinner"></span>
-                                {productUploading === p.id ? "در حال آپلود کاور..." : "در حال ذخیره..."}
-                              </>
-                            ) : (
-                              "ذخیره تغییرات"
-                            )}
-                          </button>
-                          <button
-                            className="delete-product-btn"
-                            disabled={productDeleting === p.id || productSaving === p.id}
-                            onClick={() => deleteProduct(p)}
-                          >
-                            {productDeleting === p.id ? "در حال حذف..." : "🗑 حذف محصول"}
+                            ✏️ ویرایش محصول
                           </button>
                         </div>
                       </div>
                     ))}
+
+                    
                   </div>
+
                   )}
                   </>
                 )}
               </div>
+            </div>
+          )}
+
+          {!loading && activeTab === "marketplace" && (
+            <div className="marketplace-content" dir="rtl" style={{ textAlign: "right" }}>
+              {/* Subtabs for Marketplace */}
+              <div className="reseller-subtabs-container" style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid var(--line)", paddingBottom: "10px" }}>
+                <button
+                  type="button"
+                  className={`reseller-tab-btn ${marketSubTab === "listings" ? "active" : ""}`}
+                  onClick={() => setMarketSubTab("listings")}
+                  style={{
+                    background: marketSubTab === "listings" ? "var(--primary)" : "transparent",
+                    color: marketSubTab === "listings" ? "#fff" : "var(--muted)",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    fontSize: "13px",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  📝 آگهی‌های ثبت‌شده ({marketListings.length})
+                </button>
+                <button
+                  type="button"
+                  className={`reseller-tab-btn ${marketSubTab === "deals" ? "active" : ""}`}
+                  onClick={() => setMarketSubTab("deals")}
+                  style={{
+                    background: marketSubTab === "deals" ? "var(--primary)" : "transparent",
+                    color: marketSubTab === "deals" ? "#fff" : "var(--muted)",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    fontSize: "13px",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  🤝 معاملات بازارچه ({marketDeals.length})
+                </button>
+              </div>
+
+              {marketLoading ? (
+                <div className="loading-state" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0" }}>
+                  <div className="spinner"></div>
+                  <p style={{ color: "var(--muted)", marginTop: "10px" }}>در حال بارگذاری اطلاعات بازارچه...</p>
+                </div>
+              ) : (
+                <>
+                  {marketSubTab === "listings" && (() => {
+                    const filteredListings = marketListings.filter(item => {
+                      if (listingStatusFilter !== 'all' && item.status !== listingStatusFilter) return false;
+                      if (listingSearchQuery.trim()) {
+                        const q = listingSearchQuery.trim().toLowerCase();
+                        const matchId = String(item.id).includes(q);
+                        const matchTitle = (item.title || "").toLowerCase().includes(q);
+                        const matchGame = (item.game_display || item.game || "").toLowerCase().includes(q);
+                        const matchSeller = (item.seller || "").toLowerCase().includes(q);
+                        if (!matchId && !matchTitle && !matchGame && !matchSeller) return false;
+                      }
+                      return true;
+                    });
+
+                    const totalCount = marketListings.length;
+                    const pendingCount = marketListings.filter(i => i.status === 'pending_review').length;
+                    const publishedCount = marketListings.filter(i => i.status === 'published').length;
+                    const soldCount = marketListings.filter(i => i.status === 'sold').length;
+
+                    return (
+                      <div className="section-card" style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: "16px", padding: "20px" }}>
+                        <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "900", color: "#fff" }}>مدیریت آگهی‌های فروش اکانت</h3>
+                            <span style={{ fontSize: "12px", background: "rgba(99, 102, 241, 0.15)", color: "#818cf8", padding: "3px 10px", borderRadius: "12px", fontWeight: "bold" }}>
+                              {filteredListings.length} آگهی
+                            </span>
+                          </div>
+                          <button type="button" className="btn primary-btn-sm" onClick={loadMarketData} style={{ background: "var(--primary)", color: "#fff", border: "none", padding: "6px 14px", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>🔄 بروزرسانی</button>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+                          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "14px 16px" }}>
+                            <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>کل آگهی‌ها</div>
+                            <div style={{ fontSize: "18px", fontWeight: "900", color: "#fff" }}>{totalCount.toLocaleString("fa-IR")}</div>
+                          </div>
+                          <div style={{ background: pendingCount > 0 ? "rgba(245, 158, 11, 0.1)" : "rgba(255,255,255,0.03)", border: pendingCount > 0 ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "14px 16px" }}>
+                            <div style={{ fontSize: "11px", color: pendingCount > 0 ? "#fcd34d" : "var(--muted)", marginBottom: "4px" }}>در انتظار بررسی ادمین</div>
+                            <div style={{ fontSize: "18px", fontWeight: "900", color: pendingCount > 0 ? "#f59e0b" : "#fff" }}>{pendingCount.toLocaleString("fa-IR")} آگهی</div>
+                          </div>
+                          <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.2)", borderRadius: "12px", padding: "14px 16px" }}>
+                            <div style={{ fontSize: "11px", color: "#6ee7b7", marginBottom: "4px" }}>منتشر شده</div>
+                            <div style={{ fontSize: "18px", fontWeight: "900", color: "#10b981" }}>{publishedCount.toLocaleString("fa-IR")} آگهی</div>
+                          </div>
+                          <div style={{ background: "rgba(99, 102, 241, 0.08)", border: "1px solid rgba(99, 102, 241, 0.2)", borderRadius: "12px", padding: "14px 16px" }}>
+                            <div style={{ fontSize: "11px", color: "#a5b4fc", marginBottom: "4px" }}>فروخته شده</div>
+                            <div style={{ fontSize: "18px", fontWeight: "900", color: "#818cf8" }}>{soldCount.toLocaleString("fa-IR")} آگهی</div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "16px", alignItems: "center" }}>
+                          <div style={{ flex: 1, minWidth: "220px" }}>
+                            <input
+                              type="search"
+                              placeholder="جست‌وجو با شناسه #، عنوان آگهی، بازی، فروشنده..."
+                              value={listingSearchQuery}
+                              onChange={(e) => setListingSearchQuery(e.target.value)}
+                              className="search-input-premium"
+                              style={{ width: "100%", padding: "8px 12px", fontSize: "13px" }}
+                            />
+                          </div>
+                          <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
+                            {[
+                              { id: "all", label: "همه" },
+                              { id: "pending_review", label: "در انتظار بررسی ⏳" },
+                              { id: "published", label: "منتشر شده" },
+                              { id: "reserved", label: "رزرو شده (در حال خرید)" },
+                              { id: "sold", label: "فروخته شده" },
+                              { id: "rejected", label: "رد شده" },
+                            ].map(f => (
+                              <button
+                                key={f.id}
+                                type="button"
+                                onClick={() => setListingStatusFilter(f.id)}
+                                style={{
+                                  background: listingStatusFilter === f.id ? "var(--primary)" : "rgba(255,255,255,0.04)",
+                                  color: listingStatusFilter === f.id ? "#fff" : "var(--muted)",
+                                  border: "1px solid " + (listingStatusFilter === f.id ? "var(--primary)" : "rgba(255,255,255,0.08)"),
+                                  padding: "6px 12px",
+                                  borderRadius: "8px",
+                                  fontSize: "12px",
+                                  fontWeight: listingStatusFilter === f.id ? "700" : "500",
+                                  cursor: "pointer",
+                                  whiteSpace: "nowrap"
+                                }}
+                              >
+                                {f.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {filteredListings.length === 0 ? (
+                          <div className="empty-state" style={{ textAlign: "center", color: "var(--muted)", padding: "40px" }}>آگهی یافت نشد.</div>
+                        ) : (
+                          <div className="table-container-premium" style={{ overflowX: "auto" }}>
+                            <table className="table-premium" style={{ width: "100%", borderCollapse: "collapse", color: "#fff" }}>
+                              <thead>
+                                <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", textAlign: "right" }}>
+                                  <th style={{ padding: "12px" }}>شناسه</th>
+                                  <th style={{ padding: "12px" }}>عنوان آگهی</th>
+                                  <th style={{ padding: "12px" }}>بازی</th>
+                                  <th style={{ padding: "12px" }}>قیمت (تومان)</th>
+                                  <th style={{ padding: "12px" }}>فروشنده</th>
+                                  <th style={{ padding: "12px" }}>وضعیت آگهی</th>
+                                  <th style={{ padding: "12px" }}>تاریخ ثبت</th>
+                                  <th style={{ padding: "12px" }}>عملیات</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {filteredListings.map((item) => {
+                                  const statusPillColor = 
+                                    item.status === 'published' ? { bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981' } :
+                                    item.status === 'pending_review' ? { bg: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' } :
+                                    item.status === 'rejected' ? { bg: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' } :
+                                    item.status === 'sold' ? { bg: 'rgba(16, 185, 129, 0.25)', color: '#10b981' } :
+                                    item.status === 'reserved' ? { bg: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' } :
+                                    { bg: 'var(--hover)', color: 'var(--muted)' };
+                                  return (
+                                    <tr key={item.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                                      <td style={{ padding: "12px", fontWeight: "bold" }}>#{item.id}</td>
+                                      <td style={{ padding: "12px" }}>
+                                        <a href={`/market/listing/${item.id}`} target="_blank" rel="noreferrer" style={{ color: "var(--primary)", textDecoration: "underline" }}>
+                                          {item.title}
+                                        </a>
+                                      </td>
+                                      <td style={{ padding: "12px" }}>
+                                        <span className="badge" style={{ background: "rgba(99, 102, 241, 0.1)", color: "#818cf8", padding: "3px 8px", borderRadius: "6px", fontSize: "11px" }}>
+                                          {item.game_display}
+                                        </span>
+                                      </td>
+                                      <td style={{ padding: "12px", fontFamily: "monospace", fontWeight: "bold" }}>
+                                        {item.price.toLocaleString("fa-IR")}
+                                      </td>
+                                      <td style={{ padding: "12px" }}>{item.seller}</td>
+                                      <td style={{ padding: "12px" }}>
+                                        <span style={{
+                                          display: 'inline-block',
+                                          padding: '4px 10px',
+                                          borderRadius: '8px',
+                                          fontSize: '11px',
+                                          fontWeight: '700',
+                                          background: statusPillColor.bg,
+                                          color: statusPillColor.color
+                                        }}>
+                                          {item.status_display || item.status}
+                                        </span>
+                                      </td>
+                                      <td style={{ padding: "12px", fontSize: "11px", color: "var(--muted)" }}>
+                                        {new Date(item.created_at).toLocaleDateString("fa-IR")}
+                                      </td>
+                                      <td style={{ padding: "12px" }}>
+                                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                                          {item.status === 'pending_review' && (
+                                            <>
+                                              <button
+                                                type="button"
+                                                className="btn success-btn-sm"
+                                                onClick={() => handleApproveListing(item.id)}
+                                                style={{ background: "#10b981", color: "#fff", padding: "4px 8px", fontSize: "11px", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
+                                              >
+                                                تایید و انتشار
+                                              </button>
+                                              <button
+                                                type="button"
+                                                className="btn danger-btn-sm"
+                                                onClick={() => {
+                                                  const reason = prompt("علت رد آگهی چیست؟");
+                                                  if (reason !== null) {
+                                                    handleRejectListing(item.id, reason);
+                                                  }
+                                                }}
+                                                style={{ background: "#ef4444", color: "#fff", padding: "4px 8px", fontSize: "11px", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
+                                              >
+                                                رد آگهی
+                                              </button>
+                                            </>
+                                          )}
+                                          {item.status === 'rejected' && item.reject_reason && (
+                                            <span style={{ fontSize: "11px", color: "#ef4444" }}>
+                                              علت رد: {item.reject_reason}
+                                            </span>
+                                          )}
+                                          <button
+                                            type="button"
+                                            onClick={() => openListingEditModal(item)}
+                                            title="ویرایش آگهی"
+                                            style={{ background: "rgba(99, 102, 241, 0.15)", color: "#818cf8", border: "1px solid rgba(99, 102, 241, 0.3)", padding: "4px 8px", borderRadius: "6px", fontSize: "11px", cursor: "pointer", fontWeight: "bold" }}
+                                          >
+                                            ✏️ ویرایش
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteListing(item.id)}
+                                            title="حذف آگهی"
+                                            style={{ background: "rgba(239, 68, 68, 0.15)", color: "#ef4444", border: "1px solid rgba(239, 68, 68, 0.3)", padding: "4px 8px", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}
+                                          >
+                                            🗑️
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {activeListingModal && typeof window !== "undefined" && createPortal(
+                          <div 
+                            onClick={(e) => { if (e.target === e.currentTarget) setActiveListingModal(null); }}
+                            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999999, padding: "20px" }}
+                          >
+                            <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "20px", padding: "24px", maxWidth: "680px", width: "100%", maxHeight: "90vh", overflowY: "auto", color: "#fff", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "12px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                  <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "900", color: "#fff" }}>
+                                    ✏️ ویرایش پیشرفته آگهی #{activeListingModal.id}
+                                  </h3>
+                                  <span style={{ fontSize: "11px", background: "rgba(99, 102, 241, 0.2)", color: "#818cf8", padding: "3px 8px", borderRadius: "8px", fontWeight: "bold" }}>
+                                    فروشنده: {activeListingModal.seller}
+                                  </span>
+                                </div>
+                                <button type="button" onClick={() => setActiveListingModal(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#fff", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", fontSize: "16px", fontWeight: "bold" }}>✕</button>
+                              </div>
+
+                              {/* Image Gallery Manager */}
+                              <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: "14px", padding: "16px", marginBottom: "16px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                                  <div style={{ fontSize: "13px", fontWeight: "bold", color: "#60a5fa", display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <span>🖼️</span>
+                                    <span>مدیریت تصاویر آگهی ({editListingImages.length} تصویر)</span>
+                                  </div>
+                                  <label style={{ background: "var(--primary)", color: "#fff", padding: "5px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: "bold", cursor: imageUploading ? "not-allowed" : "pointer", opacity: imageUploading ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                    <span>{imageUploading ? "در حال آپلود..." : "➕ افزودن تصویر جدید"}</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      disabled={imageUploading}
+                                      style={{ display: "none" }}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadListingImage(activeListingModal.id, file);
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+
+                                {editListingImages.length === 0 ? (
+                                  <div style={{ fontSize: "12px", color: "var(--muted)", textAlign: "center", padding: "16px", border: "1px dashed rgba(255, 255, 255, 0.1)", borderRadius: "10px" }}>
+                                    تصویری برای این آگهی ثبت نشده است. برای افزودن کلیک کنید.
+                                  </div>
+                                ) : (
+                                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "10px" }}>
+                                    {editListingImages.map((img, idx) => (
+                                      <div key={img.id || idx} style={{ position: "relative", width: "100%", height: "90px", borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(255, 255, 255, 0.1)", background: "#000" }}>
+                                        <img src={img.url} alt="listing thumbnail" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteListingImage(img.id)}
+                                          title="حذف تصویر"
+                                          style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(239, 68, 68, 0.85)", color: "#fff", border: "none", width: "22px", height: "22px", borderRadius: "50%", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                        >
+                                          ✕
+                                        </button>
+                                        {idx === 0 && (
+                                          <span style={{ position: "absolute", bottom: "4px", right: "4px", background: "rgba(16, 185, 129, 0.9)", color: "#fff", fontSize: "9px", padding: "1px 5px", borderRadius: "4px", fontWeight: "bold" }}>
+                                            اصلی
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Main Fields Grid */}
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+                                <div>
+                                  <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "4px" }}>عنوان آگهی:</label>
+                                  <input
+                                    type="text"
+                                    value={editListingTitle}
+                                    onChange={(e) => setEditListingTitle(e.target.value)}
+                                    className="search-input-premium"
+                                    style={{ width: "100%", padding: "8px 10px", fontSize: "12px" }}
+                                  />
+                                </div>
+                                <div>
+                                  <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "4px" }}>بازی / دسته‌بندی:</label>
+                                  <select
+                                    value={editListingGame}
+                                    onChange={(e) => setEditListingGame(e.target.value)}
+                                    className="search-input-premium"
+                                    style={{ width: "100%", padding: "8px 10px", fontSize: "12px", background: "#1f2937", color: "#fff" }}
+                                  >
+                                    <option value="fortnite">Fortnite (فورتنایت)</option>
+                                    <option value="cod-mobile">Call of Duty Mobile</option>
+                                    <option value="wild-rift">LoL Wild Rift</option>
+                                    <option value="clash-royale">Clash Royale</option>
+                                    <option value="pubg">PUBG Mobile</option>
+                                    <option value="coc">Clash of Clans</option>
+                                    <option value="valorant">Valorant</option>
+                                    <option value="steam">Steam Account</option>
+                                    <option value="ps">PlayStation Account</option>
+                                    <option value="xbox">Xbox Account</option>
+                                    <option value="other">سایر بازی‌ها</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+                                <div>
+                                  <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "4px" }}>قیمت (تومان):</label>
+                                  <input
+                                    type="number"
+                                    value={editListingPrice}
+                                    onChange={(e) => setEditListingPrice(e.target.value)}
+                                    className="search-input-premium"
+                                    style={{ width: "100%", padding: "8px 10px", fontSize: "12px" }}
+                                  />
+                                </div>
+                                <div>
+                                  <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "4px" }}>پلتفرم (Platform):</label>
+                                  <input
+                                    type="text"
+                                    placeholder="PC, PSN, Xbox, Mobile..."
+                                    value={editListingPlatform}
+                                    onChange={(e) => setEditListingPlatform(e.target.value)}
+                                    className="search-input-premium"
+                                    style={{ width: "100%", padding: "8px 10px", fontSize: "12px" }}
+                                  />
+                                </div>
+                                <div>
+                                  <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "4px" }}>ریجن (Region):</label>
+                                  <input
+                                    type="text"
+                                    placeholder="اروپا، ترکیه، آمریکا، گلوبال..."
+                                    value={editListingRegion}
+                                    onChange={(e) => setEditListingRegion(e.target.value)}
+                                    className="search-input-premium"
+                                    style={{ width: "100%", padding: "8px 10px", fontSize: "12px" }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div style={{ marginBottom: "14px" }}>
+                                <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "4px" }}>وضعیت آگهی:</label>
+                                <select
+                                  value={editListingStatus}
+                                  onChange={(e) => setEditListingStatus(e.target.value)}
+                                  className="search-input-premium"
+                                  style={{ width: "100%", padding: "8px 10px", fontSize: "12px", background: "#1f2937", color: "#fff" }}
+                                >
+                                  <option value="pending_review">در انتظار بررسی ادمین ⏳</option>
+                                  <option value="published">منتشر شده ✅</option>
+                                  <option value="reserved">رزرو شده (در حال خرید)</option>
+                                  <option value="sold">فروخته شده 🤝</option>
+                                  <option value="rejected">رد شده ❌</option>
+                                  <option value="expired">منقضی شده</option>
+                                </select>
+                              </div>
+
+                              {/* Attributes Section */}
+                              <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: "12px", padding: "14px", marginBottom: "14px" }}>
+                                <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "8px", color: "#a5b4fc" }}>
+                                  🎮 ویژگی‌های اختصاصی اکانت (Attributes JSON)
+                                </div>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                                  {Object.entries(editListingAttributes || {}).map(([key, val]) => (
+                                    <div key={key} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                                      <span style={{ fontSize: "11px", color: "var(--muted)", width: "80px", overflow: "hidden", textOverflow: "ellipsis" }}>{key}:</span>
+                                      <input
+                                        type="text"
+                                        value={val || ""}
+                                        onChange={(e) => setEditListingAttributes(prev => ({ ...prev, [key]: e.target.value }))}
+                                        className="search-input-premium"
+                                        style={{ flex: 1, padding: "4px 8px", fontSize: "11px" }}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div style={{ marginBottom: "14px" }}>
+                                <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "4px" }}>توضیحات و مشخصات آگهی:</label>
+                                <textarea
+                                  value={editListingDesc}
+                                  onChange={(e) => setEditListingDesc(e.target.value)}
+                                  rows={4}
+                                  className="search-input-premium"
+                                  style={{ width: "100%", padding: "10px", fontSize: "12px" }}
+                                />
+                              </div>
+
+                              {editListingStatus === "rejected" && (
+                                <div style={{ marginBottom: "14px" }}>
+                                  <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "4px", color: "#ef4444" }}>علت رد آگهی:</label>
+                                  <input
+                                    type="text"
+                                    value={editListingRejectReason}
+                                    onChange={(e) => setEditListingRejectReason(e.target.value)}
+                                    className="search-input-premium"
+                                    style={{ width: "100%", padding: "8px 10px", fontSize: "12px", border: "1px solid rgba(239,68,68,0.4)" }}
+                                  />
+                                </div>
+                              )}
+
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+                                <input
+                                  type="checkbox"
+                                  id="is_featured_chk"
+                                  checked={editListingIsFeatured}
+                                  onChange={(e) => setEditListingIsFeatured(e.target.checked)}
+                                />
+                                <label htmlFor="is_featured_chk" style={{ fontSize: "12px", cursor: "pointer" }}>👑 آگهی ویژه / نردبان شده باشد</label>
+                              </div>
+
+                              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteListing(activeListingModal.id)}
+                                  style={{ background: "#ef4444", color: "#fff", border: "none", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}
+                                >
+                                  🗑️ حذف آگهی
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveListingModal(null)}
+                                  style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px" }}
+                                >
+                                  انصراف
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={listingSaving}
+                                  onClick={() => handleUpdateListing(activeListingModal.id)}
+                                  style={{ background: "var(--primary)", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}
+                                >
+                                  {listingSaving ? "در حال ذخیره..." : "💾 ذخیره تغییرات"}
+                                </button>
+                              </div>
+                            </div>
+                          </div>,
+                          document.body
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {marketSubTab === "deals" && (() => {
+                    const validDeals = marketDeals.filter(d => d.status !== 'initiated' && d.status !== 'pending' && d.status !== 'payment_pending');
+                    const filteredDeals = validDeals.filter(d => {
+                      if (dealStatusFilter !== 'all' && d.status !== dealStatusFilter) return false;
+                      if (dealSearchQuery.trim()) {
+                        const q = dealSearchQuery.trim().toLowerCase();
+                        const matchId = String(d.id).includes(q);
+                        const matchTitle = (d.listing_title || "").toLowerCase().includes(q);
+                        const matchBuyer = (d.buyer || "").toLowerCase().includes(q);
+                        const matchSeller = (d.seller || "").toLowerCase().includes(q);
+                        const matchCreds = (d.credentials || "").toLowerCase().includes(q);
+                        if (!matchId && !matchTitle && !matchBuyer && !matchSeller && !matchCreds) return false;
+                      }
+                      return true;
+                    });
+
+                    const totalDealsCount = validDeals.length;
+                    const inEscrowVolume = validDeals.filter(d => d.status === 'paid' || d.status === 'credentials_sent' || d.status === 'buyer_confirmed').reduce((sum, d) => sum + (d.amount || 0), 0);
+                    const disputedCount = validDeals.filter(d => d.status === 'disputed').length;
+
+                    return (
+                      <div className="section-card" style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: "16px", padding: "20px" }}>
+                        <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "900", color: "#fff" }}>مدیریت معاملات و جزئیات پرداخت</h3>
+                            <span style={{ fontSize: "12px", background: "rgba(99, 102, 241, 0.15)", color: "#818cf8", padding: "3px 10px", borderRadius: "12px", fontWeight: "bold" }}>
+                              {filteredDeals.length} معامله
+                            </span>
+                          </div>
+                          <button type="button" className="btn primary-btn-sm" onClick={loadMarketData} style={{ background: "var(--primary)", color: "#fff", border: "none", padding: "6px 14px", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>🔄 بروزرسانی</button>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+                          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "14px 16px" }}>
+                            <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>تعداد کل معاملات فعال</div>
+                            <div style={{ fontSize: "18px", fontWeight: "900", color: "#fff" }}>{totalDealsCount.toLocaleString("fa-IR")}</div>
+                          </div>
+                          <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "12px", padding: "14px 16px" }}>
+                            <div style={{ fontSize: "11px", color: "#93c5fd", marginBottom: "4px" }}>مبلغ امانت نزد سایت (Escrow)</div>
+                            <div style={{ fontSize: "18px", fontWeight: "900", color: "#60a5fa", fontFamily: "monospace" }}>{inEscrowVolume.toLocaleString("fa-IR")} تومان</div>
+                          </div>
+                          <div style={{ background: disputedCount > 0 ? "rgba(239, 68, 68, 0.1)" : "rgba(255,255,255,0.03)", border: disputedCount > 0 ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "14px 16px" }}>
+                            <div style={{ fontSize: "11px", color: disputedCount > 0 ? "#fca5a5" : "var(--muted)", marginBottom: "4px" }}>معاملات دارای اختلاف</div>
+                            <div style={{ fontSize: "18px", fontWeight: "900", color: disputedCount > 0 ? "#ef4444" : "#fff" }}>{disputedCount.toLocaleString("fa-IR")} معامله</div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "16px", alignItems: "center" }}>
+                          <div style={{ flex: 1, minWidth: "220px" }}>
+                            <input
+                              type="search"
+                              placeholder="جست‌وجو با شناسه #، عنوان آگهی، خریدار، فروشنده..."
+                              value={dealSearchQuery}
+                              onChange={(e) => setDealSearchQuery(e.target.value)}
+                              className="search-input-premium"
+                              style={{ width: "100%", padding: "8px 12px", fontSize: "13px" }}
+                            />
+                          </div>
+                          <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
+                            {[
+                              { id: "all", label: "همه" },
+                              { id: "paid", label: "پرداخت شده (امانت)" },
+                              { id: "credentials_sent", label: "مشخصات ارسال شده" },
+                              { id: "buyer_confirmed", label: "تایید خریدار" },
+                              { id: "released", label: "تسویه شده" },
+                              { id: "disputed", label: "دارای اختلاف ⚠️" },
+                              { id: "refunded", label: "برگشت وجه" },
+                            ].map(f => (
+                              <button
+                                key={f.id}
+                                type="button"
+                                onClick={() => setDealStatusFilter(f.id)}
+                                style={{
+                                  background: dealStatusFilter === f.id ? "var(--primary)" : "rgba(255,255,255,0.04)",
+                                  color: dealStatusFilter === f.id ? "#fff" : "var(--muted)",
+                                  border: "1px solid " + (dealStatusFilter === f.id ? "var(--primary)" : "rgba(255,255,255,0.08)"),
+                                  padding: "6px 12px",
+                                  borderRadius: "8px",
+                                  fontSize: "12px",
+                                  fontWeight: dealStatusFilter === f.id ? "700" : "500",
+                                  cursor: "pointer",
+                                  whiteSpace: "nowrap"
+                                }}
+                              >
+                                {f.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {filteredDeals.length === 0 ? (
+                          <div className="empty-state" style={{ textAlign: "center", color: "var(--muted)", padding: "40px" }}>معامله‌ای یافت نشد.</div>
+                        ) : (
+                          <div className="table-container-premium" style={{ overflowX: "auto" }}>
+                            <table className="table-premium" style={{ width: "100%", borderCollapse: "collapse", color: "#fff" }}>
+                              <thead>
+                                <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", textAlign: "right" }}>
+                                  <th style={{ padding: "12px" }}>شناسه</th>
+                                  <th style={{ padding: "12px" }}>آگهی</th>
+                                  <th style={{ padding: "12px" }}>خریدار</th>
+                                  <th style={{ padding: "12px" }}>فروشنده</th>
+                                  <th style={{ padding: "12px" }}>مبلغ (تومان)</th>
+                                  <th style={{ padding: "12px" }}>کارمزد سایت</th>
+                                  <th style={{ padding: "12px" }}>وضعیت معامله</th>
+                                  <th style={{ padding: "12px" }}>اطلاعات اکانت ارسالی</th>
+                                  <th style={{ padding: "12px" }}>تاریخ</th>
+                                  <th style={{ padding: "12px" }}>عملیات ادمین</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {filteredDeals.map((deal) => {
+                                  const statusPillColor = 
+                                    deal.status === 'released' ? { bg: 'rgba(16, 185, 129, 0.2)', color: '#10b981', label: 'تسویه شده' } :
+                                    deal.status === 'buyer_confirmed' ? { bg: 'rgba(20, 184, 166, 0.2)', color: '#14b8a6', label: 'تایید خریدار' } :
+                                    deal.status === 'credentials_sent' ? { bg: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', label: 'مشخصات ارسال شده' } :
+                                    deal.status === 'paid' ? { bg: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', label: 'پرداخت شده (امانت)' } :
+                                    deal.status === 'disputed' ? { bg: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', label: '⚠️ دارای اختلاف' } :
+                                    deal.status === 'refunded' ? { bg: 'rgba(107, 114, 128, 0.25)', color: '#6b7280', label: 'برگشت وجه' } :
+                                    { bg: 'var(--hover)', color: 'var(--muted)', label: deal.status_display || deal.status };
+
+                                  return (
+                                    <tr key={deal.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                                      <td style={{ padding: "12px", fontWeight: "bold" }}>#{deal.id}</td>
+                                      <td style={{ padding: "12px" }}>
+                                        <a href={`/market/listing/${deal.listing_id}`} target="_blank" rel="noreferrer" style={{ color: "var(--primary)", textDecoration: "underline" }}>
+                                          {deal.listing_title}
+                                        </a>
+                                      </td>
+                                      <td style={{ padding: "12px" }}>{deal.buyer}</td>
+                                      <td style={{ padding: "12px" }}>{deal.seller}</td>
+                                      <td style={{ padding: "12px", fontFamily: "monospace", fontWeight: "bold" }}>
+                                        {deal.amount.toLocaleString("fa-IR")}
+                                      </td>
+                                      <td style={{ padding: "12px", fontFamily: "monospace", color: "var(--muted)" }}>
+                                        {deal.commission.toLocaleString("fa-IR")}
+                                      </td>
+                                      <td style={{ padding: "12px" }}>
+                                        <span style={{
+                                          display: 'inline-block',
+                                          padding: '4px 10px',
+                                          borderRadius: '8px',
+                                          fontSize: '11px',
+                                          fontWeight: '700',
+                                          background: statusPillColor.bg,
+                                          color: statusPillColor.color
+                                        }}>
+                                          {statusPillColor.label}
+                                        </span>
+                                      </td>
+                                      <td style={{ padding: "12px", maxWidth: "200px" }}>
+                                        {deal.credentials ? (
+                                          <div 
+                                            onClick={() => openDealModal(deal)}
+                                            title="کلیک برای مشاهده کامل و کپی"
+                                            style={{ background: "rgba(255,255,255,0.03)", cursor: "pointer", padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.05)", direction: "ltr", textAlign: "left", fontSize: "11px", overflowX: "auto", whiteSpace: "pre-wrap" }}
+                                          >
+                                            {deal.credentials}
+                                          </div>
+                                        ) : (
+                                          <span style={{ fontSize: "11px", color: "var(--muted)", fontStyle: "italic" }}>ارسال نشده</span>
+                                        )}
+                                      </td>
+                                      <td style={{ padding: "12px", fontSize: "11px", color: "var(--muted)" }}>
+                                        {new Date(deal.created_at).toLocaleDateString("fa-IR")}
+                                      </td>
+                                      <td style={{ padding: "12px" }}>
+                                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                                          <button
+                                            type="button"
+                                            onClick={() => openDealModal(deal)}
+                                            title="مشاهده / ویرایش اکانت و وضعیت"
+                                            style={{ background: "rgba(99, 102, 241, 0.15)", color: "#818cf8", border: "1px solid rgba(99, 102, 241, 0.3)", padding: "4px 8px", borderRadius: "6px", fontSize: "11px", cursor: "pointer", fontWeight: "bold" }}
+                                          >
+                                            👁️ مدیریت
+                                          </button>
+                                          <select
+                                            value={deal.status}
+                                            onChange={(e) => handleUpdateDeal(deal.id, e.target.value, deal.credentials)}
+                                            style={{ background: "#1f2937", color: "#fff", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "3px 6px", fontSize: "11px" }}
+                                          >
+                                            <option value="paid">پرداخت شده (امانت)</option>
+                                            <option value="credentials_sent">مشخصات ارسال شده</option>
+                                            <option value="buyer_confirmed">تایید خریدار</option>
+                                            <option value="released">تسویه شده با فروشنده</option>
+                                            <option value="disputed">دارای اختلاف ⚠️</option>
+                                            <option value="refunded">برگشت وجه به خریدار</option>
+                                            <option value="cancelled">لغو شده</option>
+                                          </select>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteDeal(deal.id)}
+                                            title="حذف معامله"
+                                            style={{ background: "rgba(239, 68, 68, 0.15)", color: "#ef4444", border: "1px solid rgba(239, 68, 68, 0.3)", padding: "4px 8px", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}
+                                          >
+                                            🗑️
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {activeDealModal && typeof window !== "undefined" && createPortal(
+                          <div 
+                            onClick={(e) => { if (e.target === e.currentTarget) setActiveDealModal(null); }}
+                            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999999, padding: "20px" }}
+                          >
+                            <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "20px", padding: "24px", maxWidth: "560px", width: "100%", color: "#fff", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "12px" }}>
+                                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "800" }}>
+                                  مدیریت معامله #{activeDealModal.id} - {activeDealModal.listing_title}
+                                </h3>
+                                <button type="button" onClick={() => setActiveDealModal(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#fff", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", fontSize: "16px", fontWeight: "bold" }}>✕</button>
+                              </div>
+
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "16px", fontSize: "12px" }}>
+                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "8px 12px", borderRadius: "8px" }}>
+                                  <span style={{ color: "var(--muted)" }}>خریدار: </span>
+                                  <strong>{activeDealModal.buyer}</strong>
+                                </div>
+                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "8px 12px", borderRadius: "8px" }}>
+                                  <span style={{ color: "var(--muted)" }}>فروشنده: </span>
+                                  <strong>{activeDealModal.seller}</strong>
+                                </div>
+                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "8px 12px", borderRadius: "8px" }}>
+                                  <span style={{ color: "var(--muted)" }}>مبلغ معامله: </span>
+                                  <strong style={{ fontFamily: "monospace" }}>{activeDealModal.amount.toLocaleString("fa-IR")} تومان</strong>
+                                </div>
+                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "8px 12px", borderRadius: "8px" }}>
+                                  <span style={{ color: "var(--muted)" }}>کارمزد سایت: </span>
+                                  <strong style={{ fontFamily: "monospace" }}>{activeDealModal.commission.toLocaleString("fa-IR")} تومان</strong>
+                                </div>
+                              </div>
+
+                              <div style={{ marginBottom: "16px" }}>
+                                <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "6px" }}>وضعیت معامله:</label>
+                                <select
+                                  value={editingDealStatus}
+                                  onChange={(e) => setEditingDealStatus(e.target.value)}
+                                  className="search-input-premium"
+                                  style={{ width: "100%", padding: "8px 12px", fontSize: "13px", background: "#1f2937", color: "#fff" }}
+                                >
+                                  <option value="paid">پرداخت شده (امانت نزد سایت)</option>
+                                  <option value="credentials_sent">مشخصات ارسال شده توسط فروشنده</option>
+                                  <option value="buyer_confirmed">تایید نهایی خریدار</option>
+                                  <option value="released">تسویه شده با فروشنده</option>
+                                  <option value="disputed">⚠️ دارای اختلاف</option>
+                                  <option value="refunded">برگشت وجه به خریدار</option>
+                                  <option value="cancelled">لغو شده</option>
+                                </select>
+                              </div>
+
+                              <div style={{ marginBottom: "20px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                                  <label style={{ fontSize: "12px", fontWeight: "bold" }}>اطلاعات اکانت ارسالی (ایمیل/رمز/مشخصات):</label>
+                                  {editingDealCreds && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(editingDealCreds);
+                                        setCopiedCreds(true);
+                                        setTimeout(() => setCopiedCreds(false), 2000);
+                                      }}
+                                      style={{ background: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "none", padding: "2px 8px", borderRadius: "4px", fontSize: "11px", cursor: "pointer", fontWeight: "bold" }}
+                                    >
+                                      {copiedCreds ? "✅ کپی شد" : "📋 کپی مشخصات"}
+                                    </button>
+                                  )}
+                                </div>
+                                <textarea
+                                  value={editingDealCreds}
+                                  onChange={(e) => setEditingDealCreds(e.target.value)}
+                                  placeholder="ایمیل، رمز عبور یا سایر مشخصات تحویلی اکانت را وارد یا ویرایش کنید..."
+                                  rows={4}
+                                  className="search-input-premium"
+                                  style={{ width: "100%", padding: "10px", fontSize: "12px", fontFamily: "monospace", direction: "ltr", textAlign: "left" }}
+                                />
+                              </div>
+
+                              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteDeal(activeDealModal.id)}
+                                  style={{ background: "#ef4444", color: "#fff", border: "none", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}
+                                >
+                                  🗑️ حذف معامله
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveDealModal(null)}
+                                  style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px" }}
+                                >
+                                  انصراف
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={dealSaving}
+                                  onClick={() => handleUpdateDeal(activeDealModal.id, editingDealStatus, editingDealCreds)}
+                                  style={{ background: "var(--primary)", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}
+                                >
+                                  {dealSaving ? "در حال ذخیره..." : "💾 ذخیره تغییرات"}
+                                </button>
+                              </div>
+                            </div>
+                          </div>,
+                          document.body
+                        )}
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
             </div>
           )}
 
@@ -7593,11 +8520,12 @@ export default function AdminPanelPage() {
                   const totalLira = accountingData.orders.reduce((s, o) => s + (o.total_lira || 0), 0);
 
                   const getOrderCost = (o) => {
-                    if (o.status === 'refunded' || o.status === 'canceled') return 0;
+                    if (isTestOrder(o) || o.status === 'refunded' || o.status === 'canceled') return 0;
                     if (o.total_cost_toman > 0) return o.total_cost_toman;
                     return (o.total_lira || 0) * liraRateNumber;
                   };
                   const getOrderProfit = (o) => {
+                    if (isTestOrder(o)) return 0;
                     if (o.status === 'refunded') {
                       return (o.amount || 0) - (o.refund_amount || 0);
                     }
@@ -8866,6 +9794,90 @@ export default function AdminPanelPage() {
           </div>
         )}
 
+        {rejectionModal.open && rejectionModal.item && (
+          <div className="modal-overlay" onClick={() => setRejectionModal((prev) => ({ ...prev, open: false }))}>
+            <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "520px", width: "90%", padding: "24px", background: "var(--card, #1a1a24)", borderRadius: "16px", border: "1px solid var(--line, #2a2a38)", color: "var(--text, #fff)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "bold", color: "#ef4444", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>❌</span>
+                  <span>رد آگهی اکانت</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setRejectionModal((prev) => ({ ...prev, open: false }))}
+                  style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "20px", cursor: "pointer" }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "16px", lineHeight: "1.5" }}>
+                آگهی: <strong style={{ color: "var(--text)" }}>{rejectionModal.item.title}</strong> (فروشنده: {rejectionModal.item.seller})
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+                <label style={{ fontSize: "13px", fontWeight: "bold" }}>علت پیش‌فرض رد آگهی:</label>
+                <select
+                  value={rejectionModal.presetCode}
+                  onChange={(e) => {
+                    const code = e.target.value;
+                    const selectedPreset = REJECTION_PRESETS.find((p) => p.code === code);
+                    setRejectionModal((prev) => ({
+                      ...prev,
+                      presetCode: code,
+                      note: selectedPreset ? selectedPreset.note : prev.note,
+                    }));
+                  }}
+                  style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", background: "rgba(255,255,255,0.05)", color: "var(--text)" }}
+                >
+                  {REJECTION_PRESETS.map((p) => (
+                    <option key={p.code} value={p.code} style={{ background: "#1a1a24" }}>
+                      {p.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+                <label style={{ fontSize: "13px", fontWeight: "bold" }}>توضیح کامل / پیام برای فروشنده:</label>
+                <textarea
+                  rows={4}
+                  value={rejectionModal.note}
+                  onChange={(e) => setRejectionModal((prev) => ({ ...prev, note: e.target.value }))}
+                  placeholder="علت رد آگهی جهت اطلاع کاربر وارد شود..."
+                  style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", background: "rgba(255,255,255,0.05)", color: "var(--text)", resize: "vertical", fontFamily: "inherit" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setRejectionModal((prev) => ({ ...prev, open: false }))}
+                  style={{ padding: "8px 16px", borderRadius: "8px" }}
+                >
+                  انصراف
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => {
+                    const preset = REJECTION_PRESETS.find((p) => p.code === rejectionModal.presetCode);
+                    const title = preset && preset.code !== "custom" ? preset.title : "";
+                    const fullReason = title ? `${title} — ${rejectionModal.note}` : rejectionModal.note;
+                    
+                    handleRejectListing(rejectionModal.item.id, fullReason);
+                    setRejectionModal((prev) => ({ ...prev, open: false }));
+                  }}
+                  style={{ padding: "8px 16px", borderRadius: "8px", background: "#ef4444", color: "#fff", fontWeight: "bold", border: "none", cursor: "pointer" }}
+                >
+                  تایید و ثبت رد آگهی ❌
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {viewNotification.open && (
           <div className="modal-overlay" onClick={() => setViewNotification({ open: false, record: null, channel: "" })}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -9028,6 +10040,228 @@ export default function AdminPanelPage() {
             box-shadow: 0 18px 44px -22px rgba(15, 26, 60, 0.45);
             position: relative;
             overflow: hidden;
+          }
+
+          .kavenegar-health-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(5px);
+          }
+
+          .kavenegar-health-modal {
+            position: relative;
+            width: min(500px, 100%);
+            display: grid;
+            justify-items: center;
+            gap: 12px;
+            padding: 30px 24px 24px;
+            border: 2px solid rgba(220, 38, 38, 0.82);
+            border-radius: 20px;
+            direction: rtl;
+            text-align: center;
+            color: #991b1b;
+            background: linear-gradient(145deg, #fff1f2, #ffffff);
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45), 0 0 0 5px rgba(239, 68, 68, 0.14);
+          }
+
+          :global(:root[data-theme="dark"]) .kavenegar-health-modal {
+            color: #fecaca;
+            background: linear-gradient(145deg, #450a0a, #1f2937);
+            border-color: rgba(248, 113, 113, 0.86);
+          }
+
+          .kavenegar-health-modal-icon {
+            font-size: 44px;
+            line-height: 1;
+            filter: drop-shadow(0 4px 8px rgba(185, 28, 28, 0.32));
+          }
+
+          .kavenegar-health-modal strong {
+            font-size: 18px;
+            font-weight: 950;
+          }
+
+          .kavenegar-health-modal p {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.8;
+          }
+
+          .kavenegar-health-modal small {
+            color: inherit;
+            font-size: 12px;
+            opacity: 0.8;
+          }
+
+          .kavenegar-health-modal-close {
+            position: absolute;
+            top: 10px;
+            inset-inline-start: 12px;
+            width: 30px;
+            height: 30px;
+            border: 1px solid currentColor;
+            border-radius: 9px;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 900;
+          }
+
+          .kavenegar-health-modal-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 4px;
+          }
+
+          .kavenegar-health-modal-actions .kavenegar-health-retry,
+          .kavenegar-health-continue {
+            min-height: 40px;
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+          }
+
+          .kavenegar-health-modal-actions .kavenegar-health-retry {
+            background: #dc2626;
+            color: #fff;
+            border-color: #dc2626;
+          }
+
+          .kavenegar-health-continue {
+            border: 1px solid currentColor;
+            background: transparent;
+            color: inherit;
+          }
+
+          @media (max-width: 650px) {
+            .kavenegar-health-modal-actions {
+              flex-direction: column;
+            }
+
+            .kavenegar-health-modal-actions .kavenegar-health-retry,
+            .kavenegar-health-continue {
+              width: 100%;
+            }
+          }
+
+          .kavenegar-health-banner {
+            position: sticky;
+            top: 12px;
+            z-index: 80;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin: -8px 0 20px;
+            padding: 15px 18px;
+            border-radius: 16px;
+            direction: rtl;
+            box-shadow: 0 14px 30px -18px rgba(15, 23, 42, 0.6);
+          }
+
+          .kavenegar-health-error {
+            color: #991b1b;
+            background: linear-gradient(135deg, rgba(254, 226, 226, 0.98), rgba(254, 242, 242, 0.98));
+            border: 2px solid rgba(220, 38, 38, 0.72);
+            box-shadow: 0 16px 32px -18px rgba(185, 28, 28, 0.72), 0 0 0 4px rgba(239, 68, 68, 0.08);
+          }
+
+          :global(:root[data-theme="dark"]) .kavenegar-health-error {
+            color: #fecaca;
+            background: linear-gradient(135deg, rgba(127, 29, 29, 0.58), rgba(69, 10, 10, 0.72));
+            border-color: rgba(248, 113, 113, 0.78);
+          }
+
+          .kavenegar-health-checking {
+            color: #92400e;
+            background: linear-gradient(135deg, rgba(254, 243, 199, 0.98), rgba(255, 251, 235, 0.98));
+            border: 1px solid rgba(245, 158, 11, 0.68);
+          }
+
+          :global(:root[data-theme="dark"]) .kavenegar-health-checking {
+            color: #fde68a;
+            background: linear-gradient(135deg, rgba(120, 53, 15, 0.58), rgba(69, 26, 3, 0.72));
+            border-color: rgba(251, 191, 36, 0.7);
+          }
+
+          .kavenegar-health-content,
+          .kavenegar-health-banner > div {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            min-width: 0;
+          }
+
+          .kavenegar-health-icon {
+            flex: 0 0 auto;
+            font-size: 24px;
+            line-height: 1.1;
+          }
+
+          .kavenegar-health-banner strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 900;
+          }
+
+          .kavenegar-health-banner p {
+            margin: 5px 0 0;
+            font-size: 12.5px;
+            font-weight: 700;
+            line-height: 1.7;
+          }
+
+          .kavenegar-health-banner small {
+            display: block;
+            margin-top: 5px;
+            font-size: 11px;
+            opacity: 0.78;
+          }
+
+          .kavenegar-health-retry {
+            flex: 0 0 auto;
+            padding: 9px 13px;
+            border: 1px solid currentColor;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.18);
+            color: inherit;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+          }
+
+          .kavenegar-health-retry:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.38);
+          }
+
+          .kavenegar-health-retry:disabled {
+            cursor: wait;
+            opacity: 0.6;
+          }
+
+          @media (max-width: 650px) {
+            .kavenegar-health-banner {
+              align-items: stretch;
+              flex-direction: column;
+              top: 8px;
+            }
+
+            .kavenegar-health-retry {
+              width: 100%;
+            }
           }
 
           .admin-header::before {
@@ -10181,41 +11415,6 @@ export default function AdminPanelPage() {
             font-size: 13px;
           }
 
-          .ai-flag {
-            margin-top: 8px;
-            padding: 12px 14px;
-            background: linear-gradient(120deg, rgba(234, 179, 8, 0.15), rgba(251, 191, 36, 0.10));
-            border: 1px solid rgba(234, 179, 8, 0.35);
-            border-radius: 12px;
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 10px;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(234, 179, 8, 0.12);
-          }
-
-          .ai-flag-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.65);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-          }
-
-          .ai-flag-title {
-            font-weight: 800;
-            font-size: 14px;
-            color: var(--text);
-          }
-
-          .ai-flag-desc {
-            font-size: 12px;
-            color: var(--text);
-            line-height: 1.5;
-          }
 
           .copy-btn {
             border: 1px solid var(--line);
@@ -11105,6 +12304,11 @@ export default function AdminPanelPage() {
           .category-badge.giftcards {
             background: linear-gradient(135deg, #ec489920, #db2777);
             color: #ec4899;
+          }
+
+          .category-badge.accounts {
+            background: linear-gradient(135deg, #a855f720, #7e22ce);
+            color: #a855f7;
           }
 
           /* Status Toggle */
@@ -13448,7 +14652,7 @@ export default function AdminPanelPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>مشاهده مقالات وبلاگ و راهنماها</h3>
-                  <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "var(--muted)" }}>نمایش کلیه مقالات آموزشی و سوالات متداول ثبت شده در پایگاه داده وبلاگ نوبیکس</p>
+                  <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "var(--muted)" }}>نمایش کلیه مقالات آموزشی و سوالات متداول ثبت شده در پایگاه داده وبلاگ جینکس فمیلی</p>
                 </div>
                 <button 
                   className="btn secondary small" 
@@ -13784,6 +14988,683 @@ export default function AdminPanelPage() {
           }
         `}</style>
 
+        {/* Product Edit Modal Window */}
+                    {activeEditProduct && (() => {
+                      const p = products.find((prod) => prod.id === activeEditProduct.id) || activeEditProduct;
+                      return (
+                        <div 
+                          className="modal-overlay" 
+                          onClick={() => setActiveEditProduct(null)}
+                          style={{
+                            position: "fixed",
+                            inset: 0,
+                            backgroundColor: "rgba(0, 0, 0, 0.75)",
+                            backdropFilter: "blur(4px)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 99999
+                          }}
+                        >
+                          <div 
+                            className="modal editor-modal" 
+                            onClick={(e) => e.stopPropagation()} 
+                            style={{ 
+                              direction: "rtl", 
+                              width: "min(950px, 95%)", 
+                              height: "90vh", 
+                              display: "flex", 
+                              flexDirection: "column",
+                              background: "var(--bg)", // Added a background so it's not transparent
+                              borderRadius: "12px",
+                              boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+                              overflow: "hidden"
+                            }}
+                          >
+                            <div className="modal-header" style={{ padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--card)", borderBottom: "1px solid var(--line)" }}>
+                              <div>
+                                <h3 className="modal-title" style={{ margin: 0 }}>✏️ ویرایش محصول: {p.name_fa}</h3>
+                                <span style={{ fontSize: 12, color: "var(--muted)" }}>اسلاگ: {p.slug} | شناسه: {p.id}</span>
+                              </div>
+                              <button className="modal-close" onClick={() => setActiveEditProduct(null)} style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: 20, cursor: "pointer" }}>✕</button>
+                            </div>
+
+                            {/* Tab Navigation */}
+                            <div className="editor-tabs" style={{ display: "flex", gap: "8px", background: "var(--bg)", borderBottom: "1px solid var(--line)", padding: "4px 16px", flexWrap: "wrap" }}>
+                              {[
+                                { key: "general", label: "📋 اطلاعات عمومی" },
+                                { key: "content", label: "📝 محتوای صفحه" },
+                                { key: "customization", label: "🎨 ظاهر و تم" },
+                                { key: "fields", label: "👤 فیلدهای ورودی" },
+                                { key: "advanced", label: "⚙️ پیشرفته & واریانت" }
+                              ].map((t) => (
+                                <button
+                                  key={t.key}
+                                  type="button"
+                                  onClick={() => setActiveEditTab(t.key)}
+                                  style={{
+                                    padding: "10px 16px",
+                                    background: activeEditTab === t.key ? "rgba(102, 126, 234, 0.15)" : "transparent",
+                                    border: "none",
+                                    borderBottom: activeEditTab === t.key ? "3px solid #667eea" : "3px solid transparent",
+                                    color: activeEditTab === t.key ? "#667eea" : "var(--muted)",
+                                    fontWeight: "bold",
+                                    fontSize: 13,
+                                    cursor: "pointer",
+                                    transition: "all 0.2s"
+                                  }}
+                                >
+                                  {t.label}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Tab Content */}
+                            <div className="modal-body" style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                              
+                              {activeEditTab === "general" && (
+                                <div className="product-edit-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                                  <label className="product-edit-field">
+                                    <span>✏️ عنوان محصول</span>
+                                    <input
+                                      type="text"
+                                      value={p.name_fa || ""}
+                                      onChange={(e) => handleProductChange(p.id, "name_fa", e.target.value)}
+                                    />
+                                  </label>
+                                  <label className="product-edit-field">
+                                    <span>✏️ دسته</span>
+                                    <select
+                                      value={p.category || "FORTNITE"}
+                                      onChange={(e) => handleProductChange(p.id, "category", e.target.value)}
+                                    >
+                                      {productCategories.map((cat) => (
+                                        <option key={cat.value} value={cat.value}>{cat.label}</option>
+                                      ))}
+                                    </select>
+                                  </label>
+                                  <label className="product-edit-field">
+                                    <span>✏️ زیردسته</span>
+                                    <select
+                                      value={p.subcategory || ""}
+                                      onChange={(e) => handleProductChange(p.id, "subcategory", e.target.value)}
+                                    >
+                                      <option value="">بدون زیردسته</option>
+                                      {subcategories.filter((sc) => sc.category === (p.category || "FORTNITE")).map((sc) => (
+                                        <option key={sc.id} value={sc.key}>{sc.label}</option>
+                                      ))}
+                                    </select>
+                                  </label>
+                                  <label className="product-edit-field">
+                                    <span>✏️ کاور (آدرس تصویر)</span>
+                                    <div className="cover-upload-row" style={{ display: "flex", gap: "8px" }}>
+                                      <input
+                                        type="text"
+                                        dir="ltr"
+                                        value={p.image_url || ""}
+                                        onChange={(e) => handleProductChange(p.id, "image_url", e.target.value)}
+                                        style={{ flex: 1 }}
+                                      />
+                                      <label className={`cover-upload-btn ${productUploading === p.id ? "uploading" : ""}`} style={{ padding: "8px 12px", border: "1px solid var(--line)", borderRadius: 6, cursor: "pointer", whiteSpace: "nowrap" }}>
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          disabled={productSaving === p.id || productUploading === p.id}
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0] || null;
+                                            e.target.value = "";
+                                            setProductCoverFiles((prev) => ({ ...prev, [p.id]: file }));
+                                          }}
+                                          style={{ display: "none" }}
+                                        />
+                                        {productUploading === p.id ? "در حال آپلود..." : "آپلود فایل"}
+                                      </label>
+                                    </div>
+                                  </label>
+                                  <label className="product-edit-field" style={{ gridColumn: "span 2" }}>
+                                    <span>✏️ زیرعنوان</span>
+                                    <input
+                                      type="text"
+                                      value={p.subtitle || ""}
+                                      onChange={(e) => handleProductChange(p.id, "subtitle", e.target.value)}
+                                    />
+                                  </label>
+                                  
+                                  <div className="price-section" style={{ gridColumn: "span 2", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", background: "rgba(255,255,255,0.02)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
+                                    <div className="price-group">
+                                      <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: "bold" }}>✏️ قیمت فعلی</label>
+                                      <div className="price-input-wrapper" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                        <input
+                                          type="number"
+                                          value={p.price || 0}
+                                          min={0}
+                                          onChange={(e) => handleProductChange(p.id, "price", Number(e.target.value || 0))}
+                                          style={{ width: "100%", padding: "6px 8px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
+                                        />
+                                        <span className="currency" style={{ fontSize: 12 }}>تومان</span>
+                                      </div>
+                                    </div>
+                                    <div className="price-group">
+                                      <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: "bold" }}>✏️ قیمت اصلی</label>
+                                      <div className="price-input-wrapper" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                        <input
+                                          type="number"
+                                          value={p.original_price || 0}
+                                          min={0}
+                                          onChange={(e) => handleProductChange(p.id, "original_price", Number(e.target.value || 0))}
+                                          style={{ width: "100%", padding: "6px 8px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
+                                        />
+                                        <span className="currency" style={{ fontSize: 12 }}>تومان</span>
+                                      </div>
+                                    </div>
+                                    <div className="price-group lira">
+                                      <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: "bold" }}>✏️ قیمت لیر</label>
+                                      <div className="price-input-wrapper" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                        <input
+                                          type="number"
+                                          value={p.price_lira || 0}
+                                          min={0}
+                                          onChange={(e) => handleProductChange(p.id, "price_lira", Number(e.target.value || 0))}
+                                          style={{ width: "100%", padding: "6px 8px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
+                                        />
+                                        <span className="currency" style={{ fontSize: 12 }}>TL</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {activeEditTab === "content" && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                  <label className="product-content-field">
+                                    <span>✏️ توضیحات</span>
+                                    <textarea
+                                      rows={6}
+                                      value={p.description || ""}
+                                      onChange={(e) => handleProductChange(p.id, "description", e.target.value)}
+                                      placeholder="توضیحات کامل محصول..."
+                                    />
+                                  </label>
+                                  <label className="product-content-field">
+                                    <span>✏️ نحوه تحویل</span>
+                                    <textarea
+                                      rows={4}
+                                      value={p.delivery_text || ""}
+                                      onChange={(e) => handleProductChange(p.id, "delivery_text", e.target.value)}
+                                      placeholder="هر خط = یک مرحله..."
+                                    />
+                                  </label>
+
+                                  {/* FAQ */}
+                                  <div className="content-subsection">
+                                    <div className="subsection-header">
+                                      <span>✏️ سوالات متداول</span>
+                                      <button type="button" className="add-item-btn" onClick={() => addFaqItem(p.id)}>+ افزودن سوال</button>
+                                    </div>
+                                    {(p.faq || []).map((item, idx) => (
+                                      <div key={idx} className="content-item" style={{ display: "flex", gap: 8, marginBottom: 8, background: "rgba(255,255,255,0.01)", padding: 10, borderRadius: 6, border: "1px solid var(--line)" }}>
+                                        <div className="content-item-inputs" style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                                          <input
+                                            type="text"
+                                            value={item.q || ""}
+                                            onChange={(e) => updateFaqItem(p.id, idx, "q", e.target.value)}
+                                            placeholder="سوال"
+                                          />
+                                          <textarea
+                                            rows={2}
+                                            value={item.a || ""}
+                                            onChange={(e) => updateFaqItem(p.id, idx, "a", e.target.value)}
+                                            placeholder="پاسخ"
+                                          />
+                                        </div>
+                                        <button type="button" className="item-remove-btn" onClick={() => removeFaqItem(p.id, idx)}>✕</button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {activeEditTab === "customization" && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                  {/* ── Advanced Product Page Customization Section ── */}
+                                  <div className="mascot-section-card" style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: 8, padding: 16 }}>
+                                    <div className="mascot-section-header" style={{ marginBottom: 12 }}>
+                                      <span style={{ fontWeight: "bold" }}>✏️ 🎨 سفارشی‌سازی پیشرفته صفحه محصول</span>
+                                    </div>
+                                    <div className="mascot-section-body">
+                                      <div className="mascot-inputs-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                                        <div className="product-edit-field">
+                                          <span>✏️ پوسته صفحه (Theme)</span>
+                                          <select
+                                            value={(p.page_customization || {}).theme || "default"}
+                                            onChange={(e) => handleProductChange(p.id, "page_customization", { ...(p.page_customization || {}), theme: e.target.value })}
+                                          >
+                                            <option value="default">پیش‌فرض (Candy / Dark)</option>
+                                            <option value="light-powder">پودری روشن (Light Powder)</option>
+                                            <option value="candy-neon">نئون شکلاتی (Candy Neon)</option>
+                                            <option value="cyan-magic">جادوی سایان (Cyan Magic)</option>
+                                            <option value="emerald-forest">جنگل زمرد (Emerald Forest)</option>
+                                          </select>
+                                        </div>
+                                        <div className="product-edit-field">
+                                          <span>✏️ متن دکمه خرید</span>
+                                          <input
+                                            type="text"
+                                            value={(p.page_customization || {}).purchase_btn_text || ""}
+                                            onChange={(e) => handleProductChange(p.id, "page_customization", { ...(p.page_customization || {}), purchase_btn_text: e.target.value })}
+                                            placeholder="افزودن به سبد خرید"
+                                          />
+                                        </div>
+                                        <div className="product-edit-field">
+                                          <span>✏️ متن بنر بالایی صفحه</span>
+                                          <input
+                                            type="text"
+                                            value={(p.page_customization || {}).banner_text || ""}
+                                            onChange={(e) => handleProductChange(p.id, "page_customization", { ...(p.page_customization || {}), banner_text: e.target.value })}
+                                            placeholder="متن دلخواه بنر..."
+                                          />
+                                        </div>
+                                        <div className="product-edit-field">
+                                          <span>✏️ رنگ بنر</span>
+                                          <select
+                                            value={(p.page_customization || {}).banner_color || "blue"}
+                                            onChange={(e) => handleProductChange(p.id, "page_customization", { ...(p.page_customization || {}), banner_color: e.target.value })}
+                                          >
+                                            <option value="blue">آبی (Blue)</option>
+                                            <option value="amber">کهربایی (Amber)</option>
+                                            <option value="red">قرمز (Red)</option>
+                                            <option value="gray">خاکستری (Gray)</option>
+                                          </select>
+                                        </div>
+                                      </div>
+
+                                      <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "20px", borderTop: "1px dashed var(--line)", paddingTop: 16 }}>
+                                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                                          <input
+                                            type="checkbox"
+                                            checked={!!(p.page_customization || {}).hide_faq}
+                                            onChange={(e) => handleProductChange(p.id, "page_customization", { ...(p.page_customization || {}), hide_faq: e.target.checked })}
+                                          />
+                                          <span>✏️ پنهان کردن سوالات متداول (FAQ)</span>
+                                        </label>
+                                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                                          <input
+                                            type="checkbox"
+                                            checked={!!(p.page_customization || {}).hide_reviews}
+                                            onChange={(e) => handleProductChange(p.id, "page_customization", { ...(p.page_customization || {}), hide_reviews: e.target.checked })}
+                                          />
+                                          <span>✏️ پنهان کردن نظرات</span>
+                                        </label>
+                                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                                          <input
+                                            type="checkbox"
+                                            checked={!!(p.page_customization || {}).hide_jinx_guide}
+                                            onChange={(e) => handleProductChange(p.id, "page_customization", { ...(p.page_customization || {}), hide_jinx_guide: e.target.checked })}
+                                          />
+                                          <span>✏️ پنهان کردن راهنمای جینکس</span>
+                                        </label>
+                                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                                          <input
+                                            type="checkbox"
+                                            checked={!!(p.page_customization || {}).hide_related}
+                                            onChange={(e) => handleProductChange(p.id, "page_customization", { ...(p.page_customization || {}), hide_related: e.target.checked })}
+                                          />
+                                          <span>✏️ پنهان کردن محصولات مرتبط</span>
+                                        </label>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {activeEditTab === "fields" && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                  {/* Custom Fields */}
+                                  <div className="content-subsection">
+                                    <div className="subsection-header" style={{ marginBottom: 16 }}>
+                                      <span>✏️ فیلدهای اطلاعات مشتری</span>
+                                      <div style={{ display: "flex", gap: 8 }}>
+                                        <select
+                                          className="preset-select"
+                                          defaultValue=""
+                                          onChange={(e) => { if (e.target.value !== "") applyFieldPreset(p.id, Number(e.target.value)); e.target.value = ""; }}
+                                        >
+                                          <option value="">پیش‌فرض: {FIELD_PRESETS[0].label}</option>
+                                          {FIELD_PRESETS.map((p2, i) => (
+                                            <option key={i} value={i}>{p2.label}</option>
+                                          ))}
+                                        </select>
+                                        <button type="button" className="add-item-btn" onClick={() => addCustomField(p.id)}>+ افزودن فیلد</button>
+                                      </div>
+                                    </div>
+                                    {(p.custom_fields || []).map((cf, idx) => (
+                                      <div key={idx} className="content-item custom-field-item" style={{ display: "flex", gap: 10, marginBottom: 12, padding: 12, border: "1px solid var(--line)", borderRadius: 8, background: "rgba(255,255,255,0.01)" }}>
+                                        <div className="custom-field-inputs" style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                            <span style={{ fontSize: 10, color: "var(--muted)", fontWeight: "bold" }}>✏️ برچسب فیلد</span>
+                                            <input
+                                              type="text"
+                                              value={cf.label || ""}
+                                              onChange={(e) => updateCustomField(p.id, idx, "label", e.target.value)}
+                                              placeholder="برچسب (مثلاً آيدي تلگرام)"
+                                            />
+                                          </div>
+                                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                            <span style={{ fontSize: 10, color: "var(--muted)", fontWeight: "bold" }}>✏️ کلید انگلیسی</span>
+                                            <input
+                                              type="text"
+                                              value={cf.key || ""}
+                                              onChange={(e) => updateCustomField(p.id, idx, "key", e.target.value)}
+                                              placeholder="کلید (انگلیسی)"
+                                              style={{ fontFamily: "monospace", fontSize: 12 }}
+                                            />
+                                          </div>
+                                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                            <span style={{ fontSize: 10, color: "var(--muted)", fontWeight: "bold" }}>✏️ نوع ورودی</span>
+                                            <select value={cf.type || "text"} onChange={(e) => updateCustomField(p.id, idx, "type", e.target.value)}>
+                                              {CFIELD_TYPES.map((t) => (
+                                                <option key={t.value} value={t.value}>{t.label}</option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                            <span style={{ fontSize: 10, color: "var(--muted)", fontWeight: "bold" }}>✏️ متن پیش‌فرض</span>
+                                            <input
+                                              type="text"
+                                              value={cf.placeholder || ""}
+                                              onChange={(e) => updateCustomField(p.id, idx, "placeholder", e.target.value)}
+                                              placeholder="placeholder"
+                                              style={{ minWidth: 100 }}
+                                            />
+                                          </div>
+                                          <label className="checkbox-label" style={{ gridColumn: "span 2", marginTop: 8 }}>
+                                            <input
+                                              type="checkbox"
+                                              checked={!!cf.required}
+                                              onChange={(e) => updateCustomField(p.id, idx, "required", e.target.checked)}
+                                            />
+                                            <span>✏️ اجباری</span>
+                                          </label>
+                                          {cf.type === "select" && (
+                                            <div style={{ display: "flex", flexDirection: "column", gap: 2, gridColumn: "span 2" }}>
+                                              <span style={{ fontSize: 10, color: "var(--muted)", fontWeight: "bold" }}>✏️ گزینه‌ها (با کاما جدا کنید)</span>
+                                              <input
+                                                type="text"
+                                                value={(cf.options || []).join("، ")}
+                                                onChange={(e) => updateCustomField(p.id, idx, "options", e.target.value.split(/[،,]/).map((s) => s.trim()).filter(Boolean))}
+                                                placeholder="گزینه‌ها (با کاما جدا کنید)"
+                                                style={{ width: "100%" }}
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
+                                        <button type="button" className="item-remove-btn" onClick={() => removeCustomField(p.id, idx)} style={{ marginTop: 16 }}>✕</button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {activeEditTab === "advanced" && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                  
+                                  {/* ── Jinx Mascot Section ── */}
+                                  <div className="mascot-section-card" style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: 8, padding: 16 }}>
+                                    <div className="mascot-section-header" style={{ marginBottom: 12 }}>
+                                      <span style={{ fontWeight: "bold" }}>✏️ 💜 تنظیمات و دیالوگ اختصاصی Miss Jinx</span>
+                                    </div>
+                                    <div className="mascot-section-body" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                                      <div className="mascot-preview-box" style={{ gridColumn: "span 2", display: "flex", gap: 16, background: "rgba(255,255,255,0.02)", padding: 12, borderRadius: 8, border: "1px solid var(--line)", alignItems: "center" }}>
+                                        <div className="mascot-preview-bubble" style={{ flex: 1 }}>
+                                          <span style={{ fontSize: 10, color: "#667eea", fontWeight: "bold", display: "block" }}>⚡ JINX SYSTEM LIVE PREVIEW</span>
+                                          <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--text)" }}>{getJinxProductDialogue(p)}</p>
+                                        </div>
+                                        <div style={{ width: 60, height: 60, flexShrink: 0 }}>
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img src={getJinxProductImage(p)} alt="Jinx" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                                        </div>
+                                      </div>
+
+                                      <div className="product-edit-field" style={{ gridColumn: "span 2" }}>
+                                        <span>✏️ متن دیالوگ سفارشی</span>
+                                        <textarea
+                                          rows={2}
+                                          value={p.jinx_text || ""}
+                                          onChange={(e) => handleProductChange(p.id, "jinx_text", e.target.value)}
+                                          placeholder="دیالوگ اختصاصی جینکس..."
+                                        />
+                                      </div>
+                                      <div className="product-edit-field" style={{ gridColumn: "span 2" }}>
+                                        <span>✏️ تصویر اختصاصی جینکس</span>
+                                        <div className="mascot-thumbnails-row" style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                                          {[
+                                            { url: "/images/jinx-sitting.png", label: "جینکس ۱" },
+                                            { url: "/images/jinx-sitting-2.png", label: "جینکس ۲" },
+                                            { url: "/images/jinx-sitting-3.png", label: "جینکس ۳" }
+                                          ].map((thumb) => {
+                                            const isActive = p.jinx_image === thumb.url || (!p.jinx_image && getJinxProductImage(p) === thumb.url);
+                                            return (
+                                              <button
+                                                key={thumb.url}
+                                                type="button"
+                                                className={`mascot-thumb-btn ${isActive ? 'active' : ''}`}
+                                                onClick={() => handleProductChange(p.id, "jinx_image", thumb.url)}
+                                                style={{ padding: 4, border: isActive ? "2px solid #667eea" : "1px solid var(--line)", borderRadius: 6, background: "var(--card)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}
+                                              >
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={thumb.url} alt={thumb.label} style={{ width: 40, height: 40, objectFit: "contain" }} />
+                                                <span style={{ fontSize: 10 }}>{thumb.label}</span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                        <input
+                                          type="text"
+                                          dir="ltr"
+                                          value={p.jinx_image || ""}
+                                          onChange={(e) => handleProductChange(p.id, "jinx_image", e.target.value)}
+                                          placeholder="لینک تصویر دلخواه..."
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* 2FA warning */}
+                                  <div className="content-subsection" style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: 8, padding: 16 }}>
+                                    <div className="subsection-header"><span>✏️ هشدار غیرفعال‌سازی 2FA</span></div>
+                                    <label className="checkbox-label" style={{ marginBottom: 12 }}>
+                                      <input
+                                        type="checkbox"
+                                        checked={!!p.requires_2fa}
+                                        onChange={(e) => handleProductChange(p.id, "requires_2fa", e.target.checked)}
+                                      />
+                                      <span>✏️ نمایش هشدار خاموش کردن 2FA در صفحه محصول</span>
+                                    </label>
+                                    {p.requires_2fa && (
+                                      <div style={{ display: "grid", gap: 10, marginTop: 6 }}>
+                                        <label className="product-content-field" style={{ marginBottom: 0 }}>
+                                          <span>✏️ متن سفارشی (اختیاری)</span>
+                                          <input
+                                            type="text"
+                                            value={p.disable_2fa_text || ""}
+                                            onChange={(e) => handleProductChange(p.id, "disable_2fa_text", e.target.value)}
+                                            placeholder="متن پیش‌فرض: 2FA را قبل از خرید خاموش کنید"
+                                          />
+                                        </label>
+                                        <div>
+                                          <span style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>✏️ رنگ بنر</span>
+                                          <div style={{ display: "flex", gap: 10 }}>
+                                            {["amber", "blue", "gray", "red"].map((c) => (
+                                              <label key={c} className="color-radio" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                                                <input
+                                                  type="radio"
+                                                  name={`dis-2fa-color-${p.id}`}
+                                                  value={c}
+                                                  checked={(p.disable_2fa_color || "amber") === c}
+                                                  onChange={(e) => handleProductChange(p.id, "disable_2fa_color", e.target.value)}
+                                                />
+                                                <span style={{
+                                                  display: "inline-block",
+                                                  width: 14, height: 14, borderRadius: 4,
+                                                  background: c === "amber" ? "#f59e0b" : c === "blue" ? "#3b82f6" : c === "gray" ? "#6b7280" : "#ef4444",
+                                                }} />
+                                                {c === "amber" ? "کهربایی" : c === "blue" ? "آبی" : c === "gray" ? "طوسی" : "قرمز"}
+                                              </label>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Limits & Disabled */}
+                                  <div className="content-subsection" style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: 8, padding: 16 }}>
+                                    <div className="subsection-header"><span>✏️ محدودیت و غیرفعال‌سازی سفارش</span></div>
+                                    
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10, marginBottom: 8 }}>
+                                      <label className="checkbox-label" style={{ marginBottom: 0 }}>
+                                        <input
+                                          type="checkbox"
+                                          checked={!!p.ordering_disabled}
+                                          onChange={(e) => handleProductChange(p.id, "ordering_disabled", e.target.checked)}
+                                        />
+                                        <span style={{ color: "var(--red)", fontSize: 11 }}>✏️ غیرفعال کردن کامل سفارش (عمومی)</span>
+                                      </label>
+                                    </div>
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                                      <label className="checkbox-label" style={{ marginBottom: 0 }}>
+                                        <input
+                                          type="checkbox"
+                                          checked={!!p.reseller_ordering_disabled}
+                                          onChange={(e) => handleProductChange(p.id, "reseller_ordering_disabled", e.target.checked)}
+                                        />
+                                        <span style={{ color: "#f59e0b", fontSize: 11 }}>✏️ غیرفعال کردن فقط برای همکاران</span>
+                                      </label>
+                                      <label className="checkbox-label" style={{ marginBottom: 0 }}>
+                                        <input
+                                          type="checkbox"
+                                          checked={!!p.customer_ordering_disabled}
+                                          onChange={(e) => handleProductChange(p.id, "customer_ordering_disabled", e.target.checked)}
+                                        />
+                                        <span style={{ color: "#818cf8", fontSize: 11 }}>✏️ غیرفعال کردن فقط برای مشتریان</span>
+                                      </label>
+                                    </div>
+
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 6 }}>
+                                      <label className="product-content-field" style={{ marginBottom: 0 }}>
+                                        <span>✏️ محدودیت کل</span>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          value={p.daily_order_limit ?? 0}
+                                          onChange={(e) => handleProductChange(p.id, "daily_order_limit", parseInt(e.target.value) || 0)}
+                                        />
+                                      </label>
+                                      <label className="product-content-field" style={{ marginBottom: 0 }}>
+                                        <span>✏️ محدودیت همکار</span>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          value={p.reseller_daily_order_limit ?? 0}
+                                          onChange={(e) => handleProductChange(p.id, "reseller_daily_order_limit", parseInt(e.target.value) || 0)}
+                                        />
+                                      </label>
+                                      <label className="product-content-field" style={{ marginBottom: 0 }}>
+                                        <span>✏️ محدودیت مشتری</span>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          value={p.customer_daily_order_limit ?? 0}
+                                          onChange={(e) => handleProductChange(p.id, "customer_daily_order_limit", parseInt(e.target.value) || 0)}
+                                        />
+                                      </label>
+                                    </div>
+                                  </div>
+
+                                  {/* Limits & Disabled */}
+                                  <div className="content-subsection" style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: 8, padding: 16 }}>
+                                    <div className="subsection-header" style={{ marginBottom: 12 }}>
+                                      <span style={{ fontWeight: "bold" }}>✏️ واریانت‌های محصول</span>
+                                      <button type="button" className="add-item-btn" onClick={() => addVariantRow(p.id)}>+ افزودن واریانت</button>
+                                    </div>
+                                    <div className="variants-list" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                      {(p.variants || []).map((v, vidx) => (
+                                        <div key={v.id} className="variant-item" style={{ display: "flex", gap: 8, alignItems: "center", background: "rgba(255,255,255,0.02)", padding: 8, borderRadius: 6, border: "1px solid var(--line)" }}>
+                                          <input
+                                            type="text"
+                                            value={v.title || ""}
+                                            onChange={(e) => handleProductChange(p.id, "title", e.target.value, v.id)}
+                                            placeholder="نام واریانت"
+                                            style={{ flex: 1, minWidth: 100, padding: 6, fontSize: 12, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
+                                          />
+                                          <input
+                                            type="text"
+                                            value={v.group_fa || ""}
+                                            onChange={(e) => handleProductChange(p.id, "group_fa", e.target.value, v.id)}
+                                            placeholder="گروه"
+                                            style={{ width: 100, padding: 6, fontSize: 12, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
+                                          />
+                                          <input
+                                            type="number"
+                                            value={v.price || 0}
+                                            onChange={(e) => handleProductChange(p.id, "price", Number(e.target.value || 0), v.id)}
+                                            placeholder="قیمت"
+                                            style={{ width: 100, padding: 6, fontSize: 12, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
+                                          />
+                                          <input
+                                            type="number"
+                                            value={v.original_price || 0}
+                                            onChange={(e) => handleProductChange(p.id, "original_price", Number(e.target.value || 0), v.id)}
+                                            placeholder="اصلی"
+                                            style={{ width: 100, padding: 6, fontSize: 12, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
+                                          />
+                                          <button type="button" className="item-remove-btn" onClick={() => removeVariantRow(p.id, v.id)}>✕</button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                            </div>
+
+                            <div className="modal-footer" style={{ padding: "16px 24px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 12 }}>
+                              <button
+                                className="delete-product-btn"
+                                disabled={productDeleting === p.id || productSaving === p.id}
+                                onClick={async () => {
+                                  if (confirm("آیا از حذف این محصول مطمئن هستید؟")) {
+                                    await deleteProduct(p);
+                                    setActiveEditProduct(null);
+                                  }
+                                }}
+                              >
+                                {productDeleting === p.id ? "در حال حذف..." : "🗑 حذف محصول"}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn secondary"
+                                onClick={() => setActiveEditProduct(null)}
+                                style={{ padding: "10px 20px", border: "1px solid var(--line)", borderRadius: 8, cursor: "pointer", background: "transparent", color: "var(--text)", fontWeight: "bold" }}
+                              >
+                                انصراف
+                              </button>
+                              <button
+                                className={`save-btn ${productSaving === p.id ? 'saving' : ''}`}
+                                disabled={productSaving === p.id || productUploading === p.id}
+                                onClick={async () => {
+                                  await saveProduct(p);
+                                  setActiveEditProduct(null);
+                                }}
+                                style={{ padding: "10px 24px", minWidth: 140 }}
+                              >
+                                {productSaving === p.id ? "در حال ذخیره..." : "💾 ذخیره تغییرات"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
         <AdminLiveChatWidget />
       </div>
     </>

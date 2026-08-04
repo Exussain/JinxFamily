@@ -274,7 +274,7 @@ export default function ResellerLayoutClient({ children }) {
       {showSidebar && (
         <header className="reseller-topbar">
           <Link href="/reseller/dashboard" className="brand">
-            <span>NubixShop</span>
+            <span>JinxFamily</span>
             <span className="badge-vip">همکاران</span>
           </Link>
           <div className="user-info">

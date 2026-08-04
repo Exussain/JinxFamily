@@ -25,7 +25,7 @@ from telethon.sessions.sqlite import SQLiteSession
 from urllib.parse import urlparse
 
 # --- 0. DJANGO SETUP (برای دسترسی به دیتابیس) ---
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nubixstore.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jinxfamily.settings')
 sys.path.insert(0, '/var/www/public/backend')
 import django
 django.setup()
@@ -660,7 +660,7 @@ def local_policy_reply(text: str) -> str | None:
 
     # سوال مبهم درباره تعداد ویباکس (ارجاع به «این ... ویب میده؟») بدون نام/لینک محصول
     if ("این" in t_norm) and re.search(r"(?i)(ویباکس|ویب|vbuck|v-buck|vbucks)", t_norm) and re.search(r"(?<!\d)(\d{2,4})(?!\d)", t_norm):
-        return "برای اعلام دقیق تعداد ویباکس، لطفاً نام دقیق محصول یا لینک همان صفحه محصول در nubixshop.ir را ارسال کنید."
+        return "برای اعلام دقیق تعداد ویباکس، لطفاً نام دقیق محصول یا لینک همان صفحه محصول در jinxfamily.shop را ارسال کنید."
 
     # پیام‌های صرفاً ۶ رقمی معمولاً کد تایید دو مرحله‌ای هستند، نه کد پیگیری
     if re.fullmatch(r"\d{6}", t_norm) and not any(k in t_norm for k in ("کد", "پیگیری", "سفارش", "order", "tracking")):
@@ -715,7 +715,7 @@ def local_policy_reply(text: str) -> str | None:
     ):
         return (
             "عزیز اگر قصد تغییر به فوری دارین، می‌تونین برید داخل سایت درخواست برگشت به کیف پول بدین. "
-            "توی پنل کاربری‌تون https://nubixshop.ir/checkout لیست سفارشات > برگشت به کیف پول رو بزنید "
+            "توی پنل کاربری‌تون https://jinxfamily.shop/checkout لیست سفارشات > برگشت به کیف پول رو بزنید "
             "بعد مجدد گزینه فوری رو خریداری کنید."
         )
 
@@ -752,7 +752,7 @@ def enforce_store_policies(
     ):
         return (
             "عزیز اگر قصد تغییر به فوری دارین، می‌تونین برید داخل سایت درخواست برگشت به کیف پول بدین. "
-            "توی پنل کاربری‌تون https://nubixshop.ir/checkout لیست سفارشات > برگشت به کیف پول رو بزنید "
+            "توی پنل کاربری‌تون https://jinxfamily.shop/checkout لیست سفارشات > برگشت به کیف پول رو بزنید "
             "بعد مجدد گزینه فوری رو خریداری کنید."
         )
 
@@ -1081,11 +1081,11 @@ class BusySQLiteSession(SQLiteSession):
 
 # OpenRouter / AI Config
 OPENROUTER_API_KEY = "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"
-MODEL_NAME = "google/gemini-3-flash-preview"  # main chat model for Nubix bot
+MODEL_NAME = "google/gemini-3-flash-preview"  # main chat model for JinxFamily bot
 MODEL_ROUTER = "xiaomi/mimo-v2-flash:free"
 MODEL_GENERATOR = "google/gemini-3-flash-preview"
-APP_NAME = "Nubix Shop AI"
-SITE_URL = "https://nubixshop.ir"
+APP_NAME = "JinxFamily AI"
+SITE_URL = "https://jinxfamily.shop"
 MAX_IMAGE_DIMENSION = 1024
 
 
@@ -1095,7 +1095,7 @@ LOG_DIR = "logs"
 ERROR_LOG_FILE = os.path.join(LOG_DIR, "my_userbot_errors.log")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-logger = logging.getLogger("nubix_bot")
+logger = logging.getLogger("jinxfamily_bot")
 logger.setLevel(logging.INFO)
 if not logger.handlers:
     file_handler = RotatingFileHandler(
@@ -1208,7 +1208,7 @@ EMOJI_REGEX = re.compile(
     "\uFE0F"                 # variation selector-16
     "]+"
 )
-NUBIX_DOMAIN_REGEX = re.compile(r"(?i)(?:https?://)?(?:www\.)?nubixshop\s*(?:\.|\s)\s*ir")
+JINXFAMILY_DOMAIN_REGEX = re.compile(r"(?i)(?:https?://)?(?:www\.)?jinxfamily\s*(?:\.|\s)\s*ir")
 REFUSAL_KEYWORDS = (
     "متاسفانه نمی توانم کمک کنم",
     "متأسفانه نمی توانم کمک کنم",
@@ -1395,8 +1395,8 @@ def normalize_style(text: str) -> str:
     if "\n(یادداشت:" in text:
         text = text.split("\n(یادداشت:")[0].rstrip()
     # rename old persona name to brand
-    text = text.replace("عرشیا", "نوبیکس شاپ")
-    text = text.replace("Arshia", "نوبیکس شاپ")
+    text = text.replace("عرشیا", "جینکس فمیلی")
+    text = text.replace("Arshia", "جینکس فمیلی")
     text = re.sub(r"[ ]{2,}", " ", text).strip()
     return text
 
@@ -1411,14 +1411,14 @@ def strip_emojis(text: str) -> str:
         return text
     return EMOJI_REGEX.sub("", text)
 
-def normalize_nubix_links(text: str) -> str:
+def normalize_jinxfamily_links(text: str) -> str:
     if not text:
         return text
-    return NUBIX_DOMAIN_REGEX.sub(SITE_URL, text)
+    return JINXFAMILY_DOMAIN_REGEX.sub(SITE_URL, text)
 
 def sanitize_reply(text: str) -> str:
     cleaned = strip_emojis(text)
-    cleaned = normalize_nubix_links(cleaned)
+    cleaned = normalize_jinxfamily_links(cleaned)
     cleaned = re.sub(r"[ ]{2,}", " ", cleaned).strip()
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
     return cleaned
@@ -2345,7 +2345,7 @@ async def bot_respond(ev, text: str, **kwargs):
     return msg
 
 SYSTEM_PROMPT = """
-شما پشتیبان ارشد نوبیکس شاپ هستید
+شما پشتیبان ارشد جینکس فمیلی هستید
 مخاطب شما گیمرها و مشتریان جوان هستند
 شخصیت شما صبور کاربلد و محترم است
 
@@ -2364,14 +2364,14 @@ SYSTEM_PROMPT = """
 اگر کاربر ناراحت بود کوتاه و آرام جواب بدهید
 
 قوانین قرمز
-هرگز نگویید هوش مصنوعی هستید اگر پرسیدند بگویید دستیار نوبیکس هستید
+هرگز نگویید هوش مصنوعی هستید اگر پرسیدند بگویید دستیار جینکس فمیلی هستید
 در مسائل مالی دقیق باشید و چیزی حدسی نگویید
 اگر کاربر عصبانی بود گارد نگیرید بگویید حق دارد ناراحت باشد و بررسی می‌کنید
 
 اطلاعات فروشگاه
-ثبت سفارش فقط از طریق وب‌سایت رسمی انجام می‌شود https://nubixshop.ir
+ثبت سفارش فقط از طریق وب‌سایت رسمی انجام می‌شود https://jinxfamily.shop
 پرداخت فقط آنلاین و از طریق درگاه وب‌سایت است و کارت‌به‌کارت نداریم
-پشتیبانی تلگرام فروشگاه فقط این آیدی است @Nubixsupport
+پشتیبانی تلگرام فروشگاه فقط این آیدی است @JinxFamilySupport
 شماره تماس پشتیبانی فنی 02191694759
 اگر درباره تماس تلفنی پرسیدند بگو در خصوص سفارشات خاص که نیاز به پشتیبانی تلفنی دارند اصلا نگران نباشید، به نوبت تماس‌ها انجام می‌شود
 سفارشات عادی معمولاً بین ۲ تا ۷۲ ساعت انجام می‌شوند
@@ -2404,7 +2404,7 @@ SYSTEM_PROMPT = """
 """
 
 # --- 4. TELEGRAM & BOT LOGIC ---
-print(f"🚀 Initializing Nubix AI (Nubix Shop Persona)...")
+print(f"🚀 Initializing JinxFamily AI (JinxFamily Persona)...")
 
 session = BusySQLiteSession(SESSION_NAME, timeout=SESSION_DB_BUSY_TIMEOUT)
 
@@ -3382,7 +3382,7 @@ async def handle_new_message(event):
 
 
 if __name__ == '__main__':
-    print("✅ Nubix Bot is Online & Ready.")
+    print("✅ JinxFamily Bot is Online & Ready.")
     print(f"📂 Memory loaded: {len(user_histories)} chats.")
     print(f"⏱️ Message batching: {DEBOUNCE_SECONDS}s debounce")
     client.start()

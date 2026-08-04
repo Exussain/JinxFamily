@@ -1,6 +1,10 @@
 import { normalizeSlug } from '../../../lib/productSlug.mjs';
 
-const BASE_URL = 'https://nubixshop.ir';
+import { SITE_ORIGIN } from '../../../lib/site.mjs';
+import Navbar from '../../../components/Navbar';
+import './product.css';
+
+const BASE_URL = SITE_ORIGIN;
 
 async function fetchApi(path) {
   const bases = [
@@ -11,7 +15,7 @@ async function fetchApi(path) {
 
   for (const base of bases) {
     try {
-      const res = await fetch(`${base.replace(/\/+$/, '')}${path}`, { cache: 'no-store' });
+      const res = await fetch(`${base.replace(/\/+$/, '')}${path}`, { next: { revalidate: 60 } });
       if (res.ok) return await res.json();
     } catch {
       continue;
@@ -52,7 +56,7 @@ function brandFor(slug, product) {
   if (s.includes('پلی-استیشن') || s.includes('playstation') || s.includes('psn')) return 'PlayStation';
   if (s.includes('اپل') || s.includes('apple')) return 'Apple';
   if (cat === 'fortnite' || s.includes('fortnite') || s.includes('v-bucks')) return 'Epic Games';
-  return 'نوبیکس شاپ';
+  return 'جینکس فمیلی';
 }
 
 // Truncate on code points, never inside a surrogate pair — descriptions are
@@ -64,13 +68,32 @@ function truncateChars(str, max) {
   return chars.slice(0, max).join('') + '…';
 }
 
-function buildDescription(product) {
-  const plain = (product?.description || '')
-    .replace(/\s+/g, ' ')
+const decodeHtmlEntities = (str) => {
+  if (!str) return "";
+  return str
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&nbsp;/g, " ");
+};
+
+const stripHtml = (str) => {
+  if (!str) return "";
+  const decoded = decodeHtmlEntities(str);
+  return decoded
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
-  if (plain.length > 40) return truncateChars(plain, 157);
-  const parts = [product?.name_fa, product?.subtitle].filter(Boolean).join(' — ');
-  return `خرید ${parts} با فعال‌سازی قانونی، تحویل سریع و پشتیبانی ۲۴/۷ در نوبیکس شاپ`;
+};
+
+function buildDescription(product) {
+  const stripped = stripHtml(product?.description || '');
+  if (stripped.length > 40) return truncateChars(stripped, 157);
+  const parts = [stripHtml(product?.name_fa), stripHtml(product?.subtitle)].filter(Boolean).join(' — ');
+  return `خرید ${parts} با فعال‌سازی قانونی، تحویل سریع و پشتیبانی ۲۴/۷ در جینکس فمیلی`;
 }
 
 // Digital codes/top-ups: delivered instantly, non-returnable. Google Merchant
@@ -100,11 +123,13 @@ export async function generateMetadata({ params }) {
     return { title: 'محصول', robots: { index: false } };
   }
 
-  const title = product.subtitle
-    ? `${product.name_fa} | ${product.subtitle}`
-    : product.name_fa;
+  const cleanName = stripHtml(product.name_fa);
+  const cleanSubtitle = stripHtml(product.subtitle);
+  const title = cleanSubtitle
+    ? `${cleanName} | ${cleanSubtitle}`
+    : cleanName;
   const description = buildDescription(product);
-  const image = absolutize(product.image_url) || `${BASE_URL}/web_logo.webp`;
+  const image = absolutize(product.image_url) || `${BASE_URL}/logo.webp`;
   const canonicalPath = `/product/${encodeURIComponent(slug)}`;
 
   return {
@@ -116,9 +141,9 @@ export async function generateMetadata({ params }) {
       url: `${BASE_URL}${canonicalPath}`,
       title,
       description,
-      images: [{ url: image, alt: product.name_fa }],
+      images: [{ url: image, alt: cleanName }],
       locale: 'fa_IR',
-      siteName: 'نوبیکس شاپ',
+      siteName: 'جینکس فمیلی',
     },
     twitter: { card: 'summary_large_image', title, description, images: [image] },
   };
@@ -183,9 +208,9 @@ export default async function ProductLayout({ children, params }) {
     scripts.push({
       '@context': 'https://schema.org',
       '@type': 'Product',
-      name: product.name_fa,
+      name: stripHtml(product.name_fa),
       description: buildDescription(product),
-      image: absolutize(product.image_url) || `${BASE_URL}/web_logo.webp`,
+      image: absolutize(product.image_url) || `${BASE_URL}/logo.webp`,
       url: productUrl,
       brand: { '@type': 'Brand', name: brandFor(slug, product) },
       ...(offers && { offers }),
@@ -201,7 +226,7 @@ export default async function ProductLayout({ children, params }) {
       ...(comments.length && {
         review: comments.slice(0, 5).map((c) => ({
           '@type': 'Review',
-          author: { '@type': 'Person', name: c.author_name || 'کاربر نوبیکس' },
+          author: { '@type': 'Person', name: c.author_name || 'کاربر جینکس فمیلی' },
           reviewRating: {
             '@type': 'Rating',
             ratingValue: c.rating,
@@ -218,8 +243,8 @@ export default async function ProductLayout({ children, params }) {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'نوبیکس شاپ', item: BASE_URL },
-        { '@type': 'ListItem', position: 2, name: product.name_fa, item: productUrl },
+        { '@type': 'ListItem', position: 1, name: 'جینکس فمیلی', item: BASE_URL },
+        { '@type': 'ListItem', position: 2, name: stripHtml(product.name_fa), item: productUrl },
       ],
     });
 
@@ -250,6 +275,7 @@ export default async function ProductLayout({ children, params }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
         />
       ))}
+      <Navbar />
       {children}
     </>
   );

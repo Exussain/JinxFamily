@@ -141,7 +141,7 @@ def _lira_rate() -> int:
             "https://www.tgju.org/currency",
             timeout=6,
             headers={
-                "User-Agent": "Mozilla/5.0 (compatible; NubixShopReseller/1.0)",
+                "User-Agent": "Mozilla/5.0 (compatible; JinxFamilyReseller/1.0)",
                 "Accept": "text/html,application/xhtml+xml",
             },
         )
@@ -507,7 +507,7 @@ def reseller_signup(request):
                     continue
                 user = User(
                     username=username,
-                    email=f"{seller_code.lower().replace('-', '')}@reseller.nubixshop.ir",
+                    email=f"{seller_code.lower().replace('-', '')}@reseller.jinxfamily.shop",
                 )
                 user.set_unusable_password()
                 user.save()
@@ -1569,7 +1569,7 @@ def _reservation_diff(order: Order) -> dict:
         return {"applicable": False, "locked_rate": locked, "current_rate": locked}
     fluct = _lira_fluctuation(locked, current)
     item = order.items.first()
-    if not item:
+    if not item or not item.product:
         return {"applicable": False}
     qty = item.quantity
     profile = _get_reseller_profile(order.user)
@@ -1938,7 +1938,7 @@ def _reseller_order_callback_url(request) -> str:
     base = getattr(
         __import__("django.conf", fromlist=["settings"]).settings,
         "FRONTEND_URL",
-        "https://nubixshop.ir",
+        "https://jinxfamily.ir",
     )
     host = request.META.get("HTTP_HOST", "")
     if "vip-reseller" in host:
@@ -2232,7 +2232,7 @@ def _reseller_topup_callback_url(request) -> str:
     base = getattr(
         __import__("django.conf", fromlist=["settings"]).settings,
         "FRONTEND_URL",
-        "https://nubixshop.ir",
+        "https://jinxfamily.ir",
     )
     # اگر درخواست از ساب‌دامین همکار آمده، از همون استفاده کن
     host = request.META.get("HTTP_HOST", "")
@@ -2622,7 +2622,7 @@ def admin_reseller_create(request):
                     continue
                 user = User(
                     username=username,
-                    email=f"{seller_code.lower().replace('-', '')}@reseller.nubixshop.ir",
+                    email=f"{seller_code.lower().replace('-', '')}@reseller.jinxfamily.shop",
                 )
                 user.set_unusable_password()
                 user.save()

@@ -6,25 +6,25 @@ export const metadata = {
   title: "سوالات متداول",
   alternates: { canonical: "/faq" },
   description:
-    "پاسخ به سوالات شما درباره نحوه خرید، تحویل، پیگیری سفارشات و پرداخت در نوبیکس شاپ. راهنمای جامع و کامل مشتریان.",
+    "پاسخ به سوالات شما درباره نحوه خرید، تحویل، پیگیری سفارشات و پرداخت در جینکس فمیلی. راهنمای جامع و کامل مشتریان.",
   openGraph: {
-    title: "سوالات متداول | نوبیکس شاپ",
-    description: "پاسخ به سوالات شما درباره نحوه خرید، تحویل، پیگیری سفارشات و پرداخت در نوبیکس شاپ.",
+    title: "سوالات متداول | جینکس فمیلی",
+    description: "پاسخ به سوالات شما درباره نحوه خرید، تحویل، پیگیری سفارشات و پرداخت در جینکس فمیلی.",
     type: "website",
     locale: "fa_IR",
-    url: "https://nubixshop.ir/faq",
+    url: "https://jinxfamily.ir/faq",
     images: [
       {
-        url: "https://nubixshop.ir/og-image.webp",
-        alt: "سوالات متداول نوبیکس شاپ",
+        url: "https://jinxfamily.ir/og-image.webp",
+        alt: "سوالات متداول جینکس فمیلی",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "سوالات متداول | نوبیکس شاپ",
-    description: "پاسخ به سوالات شما درباره نحوه خرید، تحویل، پیگیری سفارشات و پرداخت در نوبیکس شاپ.",
-    images: ["https://nubixshop.ir/og-image.webp"],
+    title: "سوالات متداول | جینکس فمیلی",
+    description: "پاسخ به سوالات شما درباره نحوه خرید، تحویل، پیگیری سفارشات و پرداخت در جینکس فمیلی.",
+    images: ["https://jinxfamily.ir/og-image.webp"],
   },
 };
 
@@ -42,7 +42,7 @@ export default function FaqHomePage() {
   return (
     <FaqSectionLayout
       title="سوالات متداول"
-      subtitle="پاسخ جامع به پرتکرارترین پرسش‌های کاربران نوبیکس شاپ؛ شفافیت در خرید و پشتیبانی."
+      subtitle="پاسخ جامع به پرتکرارترین پرسش‌های کاربران جینکس فمیلی؛ شفافیت در خرید و پشتیبانی."
       activeSection="faq"
     >
       <script

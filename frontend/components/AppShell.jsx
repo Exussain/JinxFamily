@@ -1,13 +1,15 @@
 "use client";
 import { usePathname } from "next/navigation";
 import AnnouncementBar from "./AnnouncementBar";
-import Footer from "./Footer";
-import DeferredWidgets from "./DeferredWidgets";
-import FloatingCart from "./FloatingCart";
-import SpinWheelModal from "./SpinWheelModal";
-import ReferralCapture from "./ReferralCapture";
+import dynamic from "next/dynamic";
 
-const MINIMAL_PREFIXES = ["/reseller"];
+const FloatingCart = dynamic(() => import("./FloatingCart"), { ssr: false });
+const DeferredWidgets = dynamic(() => import("./DeferredWidgets"), { ssr: false });
+const ReferralCapture = dynamic(() => import("./ReferralCapture"), { ssr: false });
+const WebVitalsReporter = dynamic(() => import("./WebVitalsReporter"), { ssr: false });
+const ClientEffects = dynamic(() => import("./ClientEffects"), { ssr: false });
+
+const MINIMAL_PREFIXES = ["/reseller", "/panel"];
 
 // /blog is the magazine: it renders its own <Navbar> + a magazine header is
 // explicitly NOT used. The global announcement bar and the live-chat widget
@@ -20,7 +22,7 @@ function isUnder(pathname, prefixes) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
-export default function AppShell({ children }) {
+export default function AppShell({ children, footer }) {
   const pathname = usePathname() || "";
   if (pathname === "/nxd9k2m" || pathname.startsWith("/nxd9k2m/")) {
     return <>{children}</>;
@@ -31,12 +33,13 @@ export default function AppShell({ children }) {
   const quiet = isUnder(pathname, QUIET_PREFIXES);
   return (
     <>
+      <WebVitalsReporter />
+      <ClientEffects />
       <ReferralCapture />
       {!quiet && <AnnouncementBar />}
       {children}
-      <Footer />
+      {footer}
       <FloatingCart />
-      <SpinWheelModal />
       {!quiet && <DeferredWidgets />}
     </>
   );

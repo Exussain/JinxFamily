@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 One-off script to send congratulations SMS to resellers with 2+ orders.
-Template: nubixshop-reseller-congrats
+Template: jinxfamily-reseller-congrats
 Token: reseller's seller code
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 # Setup Django settings
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(BASE_DIR))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nubixstore.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jinxfamily.settings")
 
 import django
 django.setup()
@@ -40,7 +40,7 @@ def send_congrats_messages():
             
     print(f"Found {len(eligible_resellers)} resellers with 2+ orders.")
     
-    template = "nubixshop-reseller-congrats"
+    template = "jinxfamily-reseller-congrats"
     
     for profile, order_count in eligible_resellers:
         phone = profile.contact_phone

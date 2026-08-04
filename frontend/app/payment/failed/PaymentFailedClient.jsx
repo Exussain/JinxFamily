@@ -33,7 +33,7 @@ export default function PaymentFailedClient() {
     <main className="container">
       <div className="navbar">
         <div className="container nav-inner">
-          <a className="brand" href="/">نوبیکس</a>
+          <a className="brand" href="/">جینکس فمیلی</a>
         </div>
       </div>
       <div className="card section" style={{ marginTop: 16, textAlign: 'center' }}>

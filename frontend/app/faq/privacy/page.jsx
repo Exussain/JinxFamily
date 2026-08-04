@@ -5,14 +5,14 @@ import { privacyItems } from "../data.jsx";
 export const metadata = {
   title: "حریم خصوصی",
   alternates: { canonical: "/faq/privacy" },
-  description: "سیاست‌های حفظ حریم خصوصی، حفاظت از داده‌های کاربران و پردازش امن سفارشات در نوبیکس شاپ.",
+  description: "سیاست‌های حفظ حریم خصوصی، حفاظت از داده‌های کاربران و پردازش امن سفارشات در جینکس فمیلی.",
 };
 
 export default function FaqPrivacyPage() {
   return (
     <FaqSectionLayout
       title="حریم خصوصی"
-      subtitle="سیاست‌های اصولی نوبیکس شاپ در نحوه نگهداری، رمزنگاری و حفاظت از اطلاعات کاربران."
+      subtitle="سیاست‌های اصولی جینکس فمیلی در نحوه نگهداری، رمزنگاری و حفاظت از اطلاعات کاربران."
       activeSection="privacy"
     >
       <div className="privacy-article-container">
@@ -206,14 +206,14 @@ export default function FaqPrivacyPage() {
             <span className="privacy-article-banner-icon">🔒</span>
             <div className="privacy-article-meta">
               <span className="privacy-article-tag">امنیت داده‌ها</span>
-              <h2 className="page-banner-title">سیاست‌های حفاظت و حریم خصوصی نوبیکس</h2>
+              <h2 className="page-banner-title">سیاست‌های حفاظت و حریم خصوصی جینکس فمیلی</h2>
             </div>
           </div>
           
           <div className="privacy-article-info-bar">
             <div className="privacy-info-item">
               <span>✍️</span>
-              <span>تنظیم‌کننده: واحد فناوری نوبیکس</span>
+              <span>تنظیم‌کننده: واحد فناوری جینکس فمیلی</span>
             </div>
             <div className="privacy-info-item">
               <span>📅</span>
@@ -227,7 +227,7 @@ export default function FaqPrivacyPage() {
 
           <div className="privacy-article-content">
             <p className="privacy-intro">
-              حفاظت از اطلاعات شخصی و اکانت‌های بازی کاربران، بزرگترین دغدغه و تعهد اخلاقی و فنی نوبیکس شاپ است. ما با به‌کارگیری پروتکل‌های امنیتی روز دنیا، امنیت و محرمانگی داده‌های شما را تضمین می‌کنیم. در زیر جزئیات سیاست‌های حریم خصوصی نوبیکس را مطالعه فرمایید.
+              حفاظت از اطلاعات شخصی و اکانت‌های بازی کاربران، بزرگترین دغدغه و تعهد اخلاقی و فنی جینکس فمیلی است. ما با به‌کارگیری پروتکل‌های امنیتی روز دنیا، امنیت و محرمانگی داده‌های شما را تضمین می‌کنیم. در زیر جزئیات سیاست‌های حریم خصوصی جینکس فمیلی را مطالعه فرمایید.
             </p>
 
             <div className="privacy-list">
@@ -245,7 +245,7 @@ export default function FaqPrivacyPage() {
             </div>
 
             <div className="privacy-footer-note">
-              نوبیکس شاپ به عنوان یک مرجع قانونی و دارای نماد اعتماد الکترونیکی فعال، همواره خود را ملزم به رعایت چارچوب‌های قانون تجارت الکترونیک جمهوری اسلامی ایران دانسته و بالاترین سطوح امنیتی را برای اطلاعات کاربران فراهم می‌آورد.
+              جینکس فمیلی به عنوان یک مرجع قانونی و دارای نماد اعتماد الکترونیکی فعال، همواره خود را ملزم به رعایت چارچوب‌های قانون تجارت الکترونیک جمهوری اسلامی ایران دانسته و بالاترین سطوح امنیتی را برای اطلاعات کاربران فراهم می‌آورد.
             </div>
           </div>
         </div>

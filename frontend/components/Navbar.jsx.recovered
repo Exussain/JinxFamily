@@ -1,0 +1,1954 @@
+export default function Navbar() {
+    const [q, setQ] = useState('');
+    const [user, setUser] = useState(null);
+    const [showCartPreview, setShowCartPreview] = useState(false);
+    const [searchResults, setSearchResults] = useState([]);
+    const [showSearchResults, setShowSearchResults] = useState(false);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [cartBounce, setCartBounce] = useState(false);
+    const { ids, toggleWishlist } = useWishlist();
+    const [showWishlistPreview, setShowWishlistPreview] = useState(false);
+    const [wishlistItems, setWishlistItems] = useState([]);
+    const pathname = usePathname();
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showAuthMenu, setShowAuthMenu] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [showPromo, setShowPromo] = useState(false);
+    const [mobileQ, setMobileQ] = useState('');
+    const [mobileSearchResults, setMobileSearchResults] = useState([]);
+    const [mobileSearchLoading, setMobileSearchLoading] = useState(false);
+    const [showSearchMobileOverlay, setShowSearchMobileOverlay] = useState(false);
+    const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+    // Accordion states for mobile sub-navbar
+    const [mobileMarketExpanded, setMobileMarketExpanded] = useState(false);
+    const [mobileProductsExpanded, setMobileProductsExpanded] = useState(false);
+    const [mobileEpicExpanded, setMobileEpicExpanded] = useState(false);
+    const [mobileMobileGamesExpanded, setMobileMobileGamesExpanded] = useState(false);
+    // Notification center states
+    const [showNotifMenu, setShowNotifMenu] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    // Desktop layout states & refs
+    const [showDesktopSearch, setShowDesktopSearch] = useState(false);
+    const [showDesktopUserMenu, setShowDesktopUserMenu] = useState(false);
+    const desktopUserMenuRef = useRef(null);
+    const desktopSearchRef = useRef(null);
+    const desktopInputRef = useRef(null);
+    // Close menus on route change
+    useEffect(()=>{
+        setShowAuthMenu(false);
+        setShowUserMenu(false);
+        setShowMobileMenu(false);
+        setShowSearchMobileOverlay(false);
+        setShowNotifMenu(false);
+        setShowDesktopUserMenu(false);
+        setShowDesktopSearch(false);
+    }, [
+        pathname
+    ]);
+    useEffect(()=>{
+        if (!showMobileMenu) return undefined;
+        const previousOverflow = document.body.style.overflow;
+        const closeOnEscape = (event)=>{
+            if (event.key === 'Escape') setShowMobileMenu(false);
+        };
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', closeOnEscape);
+        return ()=>{
+            document.body.style.overflow = previousOverflow;
+            document.removeEventListener('keydown', closeOnEscape);
+        };
+    }, [
+        showMobileMenu
+    ]);
+    const desktopCartRef = useRef(null);
+    const mobileCartRef = useRef(null);
+    const desktopWishlistRef = useRef(null);
+    const hasLoadedUserRef = useRef(false);
+    const userMenuRef = useRef(null);
+    const authMenuRef = useRef(null);
+    const searchListRef = useRef(null);
+    const router = useRouter();
+    const params = useSearchParams();
+    const apiBase = '';
+    const { items, total, addItem, setQty, removeItem } = useCart();
+    const fetchNotifications = async ()=>{
+        try {
+            const res = await fetch(`${apiBase}/api/me/notifications`, {
+                credentials: "include"
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const list = data.notifications || [];
+                setNotifications(list);
+                setUnreadCount(list.filter((n)=>!n.is_read).length);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+    const markAsRead = async (id)=>{
+        try {
+            const res = await fetch(`${apiBase}/api/me/notifications/read`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    notification_id: id
+                })
+            });
+            if (res.ok) {
+                setNotifications((prev)=>prev.map((n)=>n.id === id ? {
+                            ...n,
+                            is_read: true
+                        } : n));
+                setUnreadCount((c)=>Math.max(0, c - 1));
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+    const markAllAsRead = async ()=>{
+        try {
+            const res = await fetch(`${apiBase}/api/me/notifications/read`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    all: true
+                })
+            });
+            if (res.ok) {
+                setNotifications((prev)=>prev.map((n)=>({
+                            ...n,
+                            is_read: true
+                        })));
+                setUnreadCount(0);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+    useEffect(()=>{
+        setQ(params?.get('q') || '');
+    }, [
+        params
+    ]);
+    useEffect(()=>{
+        const loadMe = async ()=>{
+            try {
+                const res = await fetch(`${apiBase}/api/auth/me`, {
+                    cache: 'no-store',
+                    credentials: 'include'
+                });
+                if (!res.ok) {
+                    setUser(null);
+                    return;
+                }
+                const data = await res.json();
+                const meData = data.user || data;
+                setUser(meData);
+                if (meData) {
+                    // Fetch notifications initially
+                    try {
+                        const resNotif = await fetch(`${apiBase}/api/me/notifications`, {
+                            credentials: "include"
+                        });
+                        if (resNotif.ok) {
+                            const dNotif = await resNotif.json();
+                            const list = dNotif.notifications || [];
+                            setNotifications(list);
+                            setUnreadCount(list.filter((n)=>!n.is_read).length);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            } catch  {
+                setUser(null);
+            }
+        };
+        if (!hasLoadedUserRef.current) {
+            hasLoadedUserRef.current = true;
+            loadMe();
+        }
+    }, [
+        apiBase
+    ]);
+    // Fetch wishlist items for either logged-in user or guest (resolved via API)
+    useEffect(()=>{
+        const fetchWishlist = async ()=>{
+            if (user) {
+                try {
+                    const res = await fetch(`${apiBase}/api/me/wishlist`, {
+                        credentials: "include"
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setWishlistItems(data || []);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            } else {
+                if (ids && ids.length > 0) {
+                    try {
+                        const res = await fetch(`${apiBase}/api/products`, {
+                            cache: "no-store"
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            const allProducts = data.results || [];
+                            const resolved = ids.map((id)=>{
+                                const prod = allProducts.find((p)=>String(p.id) === String(id)) || placeholderFeatured.find((p)=>String(p.id) === String(id));
+                                if (prod) {
+                                    return {
+                                        product_id: prod.id,
+                                        name: prod.name_fa,
+                                        slug: prod.slug,
+                                        price: Number(prod.price) || Number(prod.min_price) || 0,
+                                        image: prod.image_url || prod.image
+                                    };
+                                }
+                                return null;
+                            }).filter(Boolean);
+                            setWishlistItems(resolved);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                } else {
+                    setWishlistItems([]);
+                }
+            }
+        };
+        fetchWishlist();
+    }, [
+        ids,
+        user,
+        apiBase
+    ]);
+    // Live search preview for mobile bottom nav
+    useEffect(()=>{
+        const term = mobileQ.trim();
+        if (!term) {
+            setMobileSearchResults([]);
+            return;
+        }
+        let active = true;
+        setMobileSearchLoading(true);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(async ()=>{
+            const lowered = term.toLowerCase();
+            const staticMatches = placeholderFeatured.filter((p)=>{
+                const name = (p.name_fa || '').toLowerCase();
+                const subtitle = (p.subtitle || '').toLowerCase();
+                const catTitle = (p.category_title || '').toLowerCase();
+                return name.includes(lowered) || subtitle.includes(lowered) || catTitle.includes(lowered);
+            });
+            try {
+                const res = await fetch(`${apiBase}/api/products?search=${encodeURIComponent(term)}`, {
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                let apiMatches = [];
+                if (res.ok) {
+                    const data = await res.json();
+                    apiMatches = data?.results || data || [];
+                }
+                if (!active) return;
+                const activeSlugSet = new Set(apiMatches.map((product)=>(product?.slug || "").trim()).filter(Boolean));
+                const filteredStaticMatches = activeSlugSet.size ? staticMatches.filter((item)=>activeSlugSet.has((item.slug || "").trim())) : staticMatches;
+                const merged = dedupeProducts([
+                    ...apiMatches,
+                    ...filteredStaticMatches
+                ]);
+                const finalResults = merged.length ? merged : staticMatches;
+                setMobileSearchResults(finalResults.slice(0, 5));
+            } catch  {
+                if (!active) return;
+                setMobileSearchResults(staticMatches.slice(0, 5));
+            } finally{
+                if (active) setMobileSearchLoading(false);
+            }
+        }, 150);
+        return ()=>{
+            active = false;
+            controller.abort();
+            clearTimeout(timeoutId);
+        };
+    }, [
+        mobileQ,
+        apiBase
+    ]);
+    const doSearch = ()=>{
+        const term = q.trim();
+        if (!term) return;
+        router.push(`/?q=${encodeURIComponent(term)}#popular`);
+        setShowSearchResults(false);
+    };
+    const scrollSearchList = (direction)=>{
+        if (searchListRef.current) {
+            const scrollAmount = direction === 'up' ? -220 : 220;
+            searchListRef.current.scrollBy({
+                top: scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    };
+    // Live search preview
+    useEffect(()=>{
+        const term = q.trim();
+        if (!term) {
+            setSearchResults([]);
+            setShowSearchResults(false);
+            return;
+        }
+        let active = true;
+        setSearchLoading(true);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(async ()=>{
+            const lowered = term.toLowerCase();
+            const staticMatches = placeholderFeatured.filter((p)=>{
+                const name = (p.name_fa || '').toLowerCase();
+                const subtitle = (p.subtitle || '').toLowerCase();
+                const catTitle = (p.category_title || '').toLowerCase();
+                return name.includes(lowered) || subtitle.includes(lowered) || catTitle.includes(lowered);
+            });
+            try {
+                const res = await fetch(`${apiBase}/api/products?search=${encodeURIComponent(term)}`, {
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                let apiMatches = [];
+                if (res.ok) {
+                    const data = await res.json();
+                    apiMatches = data?.results || data || [];
+                }
+                if (!active) return;
+                const activeSlugSet = new Set(apiMatches.map((product)=>(product?.slug || "").trim()).filter(Boolean));
+                const filteredStaticMatches = activeSlugSet.size ? staticMatches.filter((item)=>activeSlugSet.has((item.slug || "").trim())) : staticMatches;
+                const merged = dedupeProducts([
+                    ...apiMatches,
+                    ...filteredStaticMatches
+                ]);
+                const finalResults = merged.length ? merged : staticMatches;
+                const sliced = finalResults.slice(0, 20);
+                setSearchResults(sliced);
+                setShowSearchResults(sliced.length > 0);
+            } catch  {
+                if (!active) return;
+                if (staticMatches.length > 0) {
+                    const sliced = staticMatches.slice(0, 20);
+                    setSearchResults(sliced);
+                    setShowSearchResults(true);
+                } else {
+                    setSearchResults([]);
+                    setShowSearchResults(false);
+                }
+            } finally{
+                if (active) setSearchLoading(false);
+            }
+        }, 250);
+        return ()=>{
+            active = false;
+            clearTimeout(timeoutId);
+            controller.abort();
+        };
+    }, [
+        q,
+        apiBase
+    ]);
+    const handleProductClick = (slug)=>{
+        if (!slug) return;
+        setShowSearchResults(false);
+        router.push(productHref(slug));
+    };
+    // Auto-open cart when any component dispatches "cart:add" event
+    useEffect(()=>{
+        const handleCartAdd = ()=>{
+            setShowCartPreview(true);
+            // Trigger bounce animation
+            setCartBounce(true);
+            setTimeout(()=>setCartBounce(false), 600);
+        };
+        if ("object" !== 'undefined') {
+            window.addEventListener('cart:add', handleCartAdd);
+        }
+        return ()=>{
+            if ("object" !== 'undefined') {
+                window.removeEventListener('cart:add', handleCartAdd);
+            }
+        };
+    }, []);
+    // Close cart preview when clicking outside
+    useEffect(()=>{
+        if (!showCartPreview) return;
+        const handleClickOutside = (event)=>{
+            const clickedOutsideDesktop = !desktopCartRef.current || !desktopCartRef.current.contains(event.target);
+            const clickedOutsideMobile = !mobileCartRef.current || !mobileCartRef.current.contains(event.target);
+            if (clickedOutsideDesktop && clickedOutsideMobile) {
+                setShowCartPreview(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return ()=>{
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [
+        showCartPreview
+    ]);
+    // Close wishlist preview when clicking outside
+    useEffect(()=>{
+        if (!showWishlistPreview) return;
+        const handleClickOutside = (event)=>{
+            if (desktopWishlistRef.current && !desktopWishlistRef.current.contains(event.target)) {
+                setShowWishlistPreview(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return ()=>{
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [
+        showWishlistPreview
+    ]);
+    // Close user menu when clicking outside
+    useEffect(()=>{
+        if (!showUserMenu) return;
+        const handleClickOutside = (event)=>{
+            if (!userMenuRef.current) return;
+            if (!userMenuRef.current.contains(event.target)) {
+                setShowUserMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return ()=>{
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [
+        showUserMenu
+    ]);
+    // Close auth (guest) menu when clicking outside
+    useEffect(()=>{
+        if (!showAuthMenu) return;
+        const handleClickOutside = (event)=>{
+            if (!authMenuRef.current) return;
+            if (!authMenuRef.current.contains(event.target)) {
+                setShowAuthMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return ()=>{
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [
+        showAuthMenu
+    ]);
+    // Close desktop user menu when clicking outside
+    useEffect(()=>{
+        if (!showDesktopUserMenu) return;
+        const handleClickOutside = (event)=>{
+            if (desktopUserMenuRef.current && !desktopUserMenuRef.current.contains(event.target)) {
+                setShowDesktopUserMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return ()=>{
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [
+        showDesktopUserMenu
+    ]);
+    // Close desktop search overlay when clicking outside
+    useEffect(()=>{
+        if (!showDesktopSearch) return;
+        const handleClickOutside = (event)=>{
+            if (desktopSearchRef.current && !desktopSearchRef.current.contains(event.target)) {
+                setShowDesktopSearch(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return ()=>{
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [
+        showDesktopSearch
+    ]);
+    // Focus search input when desktop search is opened
+    useEffect(()=>{
+        if (showDesktopSearch && desktopInputRef.current) {
+            desktopInputRef.current.focus();
+        }
+    }, [
+        showDesktopSearch
+    ]);
+    // Telegram promo modal disabled - now shown only on invalid discount code in checkout
+    // useEffect(() => {
+    //   if (typeof window === 'undefined') return;
+    //   const seen = localStorage.getItem('jinxfamily_promo_seen');
+    //   if (!seen) {
+    //     setShowPromo(true);
+    //     localStorage.setItem('jinxfamily_promo_seen', '1');
+    //   }
+    // }, []);
+    const totalItemsCount = items.reduce((sum, item)=>sum + (item.quantity || 0), 0);
+    const userInitial = user?.name ? (user.name[0] || '').toUpperCase() : '';
+    const [todayFa, setTodayFa] = useState('');
+    useEffect(()=>{
+        const formatToday = ()=>new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                timeZone: 'Asia/Tehran'
+            }).format(new Date());
+        setTodayFa(formatToday());
+    }, []);
+    return /*#__PURE__*/ _jsxs(_Fragment, {
+        children: [
+            /*#__PURE__*/ _jsxs("header", {
+                className: "site-header",
+                children: [
+                    /*#__PURE__*/ _jsx("nav", {
+                        className: "navbar fortnite-nav",
+                        children: /*#__PURE__*/ _jsxs("div", {
+                            className: "container nav-inner",
+                            children: [
+                                /*#__PURE__*/ _jsx(Link, {
+                                    className: "brand-logo-desktop",
+                                    href: "/",
+                                    "aria-label": "جینکس فمیلی",
+                                    children: /*#__PURE__*/ _jsxs("div", {
+                                        className: "logo-glow-wrapper",
+                                        children: [
+                                            /*#__PURE__*/ _jsx("img", {
+                                                src: "/logo.webp",
+                                                alt: "JinxFamily Logo",
+                                                className: "nav-logo-desktop-img",
+                                                width: "60",
+                                                height: "60",
+                                                loading: "eager"
+                                            }),
+                                            /*#__PURE__*/ _jsx("span", {
+                                                className: "logo-circle-badge",
+                                                children: "JinxFamily"
+                                            })
+                                        ]
+                                    })
+                                }),
+                                /*#__PURE__*/ _jsx("div", {
+                                    className: "nav-middle-desktop",
+                                    ref: desktopSearchRef,
+                                    children: showDesktopSearch ? /*#__PURE__*/ _jsxs("div", {
+                                        className: "desktop-search-inline",
+                                        children: [
+                                            /*#__PURE__*/ _jsx("svg", {
+                                                className: "search-icon",
+                                                width: "18",
+                                                height: "18",
+                                                viewBox: "0 0 24 24",
+                                                children: /*#__PURE__*/ _jsx("path", {
+                                                    fill: "currentColor",
+                                                    d: "M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5m-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"
+                                                })
+                                            }),
+                                            /*#__PURE__*/ _jsx("input", {
+                                                ref: desktopInputRef,
+                                                placeholder: "دنبال چی میگردی؟ جستجو در محصولات…",
+                                                value: q,
+                                                onChange: (e)=>setQ(e.target.value),
+                                                onKeyDown: (e)=>e.key === 'Enter' && doSearch()
+                                            }),
+                                            q && /*#__PURE__*/ _jsx("button", {
+                                                type: "button",
+                                                className: "search-clear-btn",
+                                                onClick: ()=>{
+                                                    setQ('');
+                                                    setSearchResults([]);
+                                                    setShowSearchResults(false);
+                                                },
+                                                "aria-label": "پاک کردن",
+                                                children: "\xd7"
+                                            }),
+                                            /*#__PURE__*/ _jsx("button", {
+                                                type: "button",
+                                                className: "search-close-btn",
+                                                onClick: ()=>{
+                                                    setShowDesktopSearch(false);
+                                                    setQ('');
+                                                    setSearchResults([]);
+                                                    setShowSearchResults(false);
+                                                },
+                                                children: "✕"
+                                            }),
+                                            showSearchResults && searchResults.length > 0 && /*#__PURE__*/ _jsx("div", {
+                                                className: "desktop-search-dropdown",
+                                                children: /*#__PURE__*/ _jsx("div", {
+                                                    className: "search-preview-list-new",
+                                                    ref: searchListRef,
+                                                    children: searchResults.map((p)=>{
+                                                        const price = Number(p.price) > 0 ? Number(p.price) : Number(p.min_price) > 0 ? Number(p.min_price) : 0;
+                                                        const hasPrice = price > 0;
+                                                        const { imageBase, imageSrc } = resolveProductImage(p);
+                                                        return /*#__PURE__*/ _jsxs("button", {
+                                                            type: "button",
+                                                            className: "search-preview-item-new",
+                                                            disabled: !hasPrice,
+                                                            onClick: ()=>{
+                                                                if (hasPrice) {
+                                                                    setShowDesktopSearch(false);
+                                                                    handleProductClick(p.slug);
+                                                                }
+                                                            },
+                                                            children: [
+                                                                /*#__PURE__*/ _jsx("div", {
+                                                                    className: "search-preview-image-new",
+                                                                    children: /*#__PURE__*/ _jsx(SmartImage, {
+                                                                        src: imageSrc,
+                                                                        base: imageBase,
+                                                                        alt: p.name_fa,
+                                                                        fit: "contain"
+                                                                    })
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs("div", {
+                                                                    className: "search-preview-info-new",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("div", {
+                                                                            className: "search-preview-name-new",
+                                                                            children: p.name_fa
+                                                                        }),
+                                                                        hasPrice ? /*#__PURE__*/ _jsxs("div", {
+                                                                            className: "search-preview-price-new",
+                                                                            children: [
+                                                                                price.toLocaleString('fa-IR'),
+                                                                                " تومان"
+                                                                            ]
+                                                                        }) : /*#__PURE__*/ _jsx("div", {
+                                                                            className: "search-preview-price-new muted",
+                                                                            children: "ناموجود"
+                                                                        })
+                                                                    ]
+                                                                })
+                                                            ]
+                                                        }, p.id);
+                                                    })
+                                                })
+                                            })
+                                        ]
+                                    }) : /*#__PURE__*/ _jsxs("div", {
+                                        className: "desktop-menu-links",
+                                        children: [
+                                            /*#__PURE__*/ _jsxs("div", {
+                                                className: "nav-dropdown-wrapper",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxs(Link, {
+                                                        href: "/market",
+                                                        className: "menu-pill-btn purple-pink-gradient",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxs("svg", {
+                                                                width: "18",
+                                                                height: "18",
+                                                                viewBox: "0 0 24 24",
+                                                                fill: "none",
+                                                                stroke: "currentColor",
+                                                                strokeWidth: "2.5",
+                                                                strokeLinecap: "round",
+                                                                strokeLinejoin: "round",
+                                                                className: "pill-icon-left",
+                                                                children: [
+                                                                    /*#__PURE__*/ _jsx("rect", {
+                                                                        x: "3",
+                                                                        y: "3",
+                                                                        width: "7",
+                                                                        height: "7"
+                                                                    }),
+                                                                    /*#__PURE__*/ _jsx("rect", {
+                                                                        x: "14",
+                                                                        y: "3",
+                                                                        width: "7",
+                                                                        height: "7"
+                                                                    }),
+                                                                    /*#__PURE__*/ _jsx("rect", {
+                                                                        x: "14",
+                                                                        y: "14",
+                                                                        width: "7",
+                                                                        height: "7"
+                                                                    }),
+                                                                    /*#__PURE__*/ _jsx("rect", {
+                                                                        x: "3",
+                                                                        y: "14",
+                                                                        width: "7",
+                                                                        height: "7"
+                                                                    })
+                                                                ]
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("span", {
+                                                                children: "داشبورد اکانت ها"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("svg", {
+                                                                width: "12",
+                                                                height: "12",
+                                                                viewBox: "0 0 24 24",
+                                                                fill: "none",
+                                                                stroke: "currentColor",
+                                                                strokeWidth: "3",
+                                                                className: "pill-icon-right",
+                                                                children: /*#__PURE__*/ _jsx("polyline", {
+                                                                    points: "6 9 12 15 18 9"
+                                                                })
+                                                            })
+                                                        ]
+                                                    }),
+                                                    /*#__PURE__*/ _jsx("div", {
+                                                        className: "desktop-market-dropdown",
+                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                            className: "desktop-market-dropdown-list",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=fortnite",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/fortnite.webp",
+                                                                            alt: "Fortnite",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "خرید اکانت فورتنایت"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=wild-rift",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/wild-rift.webp",
+                                                                            alt: "Wild Rift",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "خرید اکانت وایلدریفت"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=coc",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/coc.webp",
+                                                                            alt: "Clash of Clans",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "خرید اکانت کلش آف کلنز"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=brawl",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/brawl.webp",
+                                                                            alt: "Brawl Stars",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "خرید اکانت براول استارز"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=clash-royale",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/clash-royale.webp",
+                                                                            alt: "Clash Royale",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "خرید اکانت کلش رویال"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=pubg",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/pubg.webp",
+                                                                            alt: "PUBG Mobile",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "خرید اکانت پابجی موبایل"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=free-fire",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/free-fire.webp",
+                                                                            alt: "Free Fire",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "خرید اکانت فری فایر"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=steam",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/steam.webp",
+                                                                            alt: "Steam",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "اکانت استیم"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=ps",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/psn.webp",
+                                                                            alt: "PlayStation",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "اکانت پلی استیشن"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=xbox",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/xbox.webp",
+                                                                            alt: "Xbox",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "اکانت ایکس باکس"
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs(Link, {
+                                                                    href: "/market?game=cod-mobile",
+                                                                    className: "desktop-market-dropdown-item",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                            src: "/images/games/cod-mobile.webp",
+                                                                            alt: "Call of Duty Mobile",
+                                                                            className: "desktop-market-dropdown-icon"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "خرید اکانت کالاف دیوتی موبایل"
+                                                                        })
+                                                                    ]
+                                                                })
+                                                            ]
+                                                        })
+                                                    })
+                                                ]
+                                            }),
+                                            /*#__PURE__*/ _jsxs("div", {
+                                                className: "nav-dropdown-wrapper",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxs(Link, {
+                                                        href: "/products",
+                                                        className: "menu-pill-btn purple-pink-gradient",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxs("svg", {
+                                                                width: "18",
+                                                                height: "18",
+                                                                viewBox: "0 0 24 24",
+                                                                fill: "none",
+                                                                stroke: "currentColor",
+                                                                strokeWidth: "2.5",
+                                                                strokeLinecap: "round",
+                                                                strokeLinejoin: "round",
+                                                                className: "pill-icon-left",
+                                                                children: [
+                                                                    /*#__PURE__*/ _jsx("rect", {
+                                                                        x: "3",
+                                                                        y: "3",
+                                                                        width: "7",
+                                                                        height: "7"
+                                                                    }),
+                                                                    /*#__PURE__*/ _jsx("rect", {
+                                                                        x: "14",
+                                                                        y: "3",
+                                                                        width: "7",
+                                                                        height: "7"
+                                                                    }),
+                                                                    /*#__PURE__*/ _jsx("rect", {
+                                                                        x: "14",
+                                                                        y: "14",
+                                                                        width: "7",
+                                                                        height: "7"
+                                                                    }),
+                                                                    /*#__PURE__*/ _jsx("rect", {
+                                                                        x: "3",
+                                                                        y: "14",
+                                                                        width: "7",
+                                                                        height: "7"
+                                                                    })
+                                                                ]
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("span", {
+                                                                children: "دسته محصولات"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("svg", {
+                                                                width: "12",
+                                                                height: "12",
+                                                                viewBox: "0 0 24 24",
+                                                                fill: "none",
+                                                                stroke: "currentColor",
+                                                                strokeWidth: "3",
+                                                                className: "pill-icon-right",
+                                                                children: /*#__PURE__*/ _jsx("polyline", {
+                                                                    points: "6 9 12 15 18 9"
+                                                                })
+                                                            })
+                                                        ]
+                                                    }),
+                                                    /*#__PURE__*/ _jsx("div", {
+                                                        className: "desktop-products-dropdown",
+                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                            className: "desktop-products-dropdown-list",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxs("div", {
+                                                                    className: "desktop-products-dropdown-item-wrapper",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsxs(Link, {
+                                                                            href: "/category/fortnite",
+                                                                            className: "desktop-products-dropdown-item",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsxs("div", {
+                                                                                    className: "desktop-products-dropdown-item-content",
+                                                                                    children: [
+                                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                                            src: "/icons/epic.svg",
+                                                                                            alt: "Epic Games",
+                                                                                            className: "desktop-products-dropdown-icon"
+                                                                                        }),
+                                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                                            children: "اپیک گیمز"
+                                                                                        })
+                                                                                    ]
+                                                                                }),
+                                                                                /*#__PURE__*/ _jsx("svg", {
+                                                                                    width: "12",
+                                                                                    height: "12",
+                                                                                    viewBox: "0 0 24 24",
+                                                                                    fill: "none",
+                                                                                    stroke: "currentColor",
+                                                                                    strokeWidth: "3",
+                                                                                    className: "desktop-products-submenu-chevron",
+                                                                                    children: /*#__PURE__*/ _jsx("polyline", {
+                                                                                        points: "15 18 9 12 15 6"
+                                                                                    })
+                                                                                })
+                                                                            ]
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("div", {
+                                                                            className: "desktop-products-submenu",
+                                                                            children: /*#__PURE__*/ _jsxs("div", {
+                                                                                className: "desktop-products-submenu-list",
+                                                                                children: [
+                                                                                    /*#__PURE__*/ _jsx(Link, {
+                                                                                        href: "/market?game=fortnite",
+                                                                                        className: "desktop-products-dropdown-item",
+                                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                                            className: "desktop-products-dropdown-item-content",
+                                                                                            children: [
+                                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                                    src: "/images/games/fortnite.webp",
+                                                                                                    alt: "Fortnite Accounts",
+                                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                                }),
+                                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                                    children: "خرید اکانت فورتنایت"
+                                                                                                })
+                                                                                            ]
+                                                                                        })
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsx(Link, {
+                                                                                        href: "/category/fortnite",
+                                                                                        className: "desktop-products-dropdown-item",
+                                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                                            className: "desktop-products-dropdown-item-content",
+                                                                                            children: [
+                                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                                    src: "/categories/category_fortnite.webp",
+                                                                                                    alt: "Fortnite Products",
+                                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                                }),
+                                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                                    children: "محصولات فورتنایت"
+                                                                                                })
+                                                                                            ]
+                                                                                        })
+                                                                                    })
+                                                                                ]
+                                                                            })
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs("div", {
+                                                                    className: "desktop-products-dropdown-item-wrapper",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsxs(Link, {
+                                                                            href: "/category/games",
+                                                                            className: "desktop-products-dropdown-item",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsxs("div", {
+                                                                                    className: "desktop-products-dropdown-item-content",
+                                                                                    children: [
+                                                                                        /*#__PURE__*/ _jsx("img", {
+                                                                                            src: "/images/diamond_logo.webp",
+                                                                                            alt: "Mobile Game Items",
+                                                                                            className: "desktop-products-dropdown-icon"
+                                                                                        }),
+                                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                                            children: "آیتم بازی‌های موبایل"
+                                                                                        })
+                                                                                    ]
+                                                                                }),
+                                                                                /*#__PURE__*/ _jsx("svg", {
+                                                                                    width: "12",
+                                                                                    height: "12",
+                                                                                    viewBox: "0 0 24 24",
+                                                                                    fill: "none",
+                                                                                    stroke: "currentColor",
+                                                                                    strokeWidth: "3",
+                                                                                    className: "desktop-products-submenu-chevron",
+                                                                                    children: /*#__PURE__*/ _jsx("polyline", {
+                                                                                        points: "15 18 9 12 15 6"
+                                                                                    })
+                                                                                })
+                                                                            ]
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsx("div", {
+                                                                            className: "desktop-products-submenu",
+                                                                            children: /*#__PURE__*/ _jsxs("div", {
+                                                                                className: "desktop-products-submenu-list",
+                                                                                children: [
+                                                                                    /*#__PURE__*/ _jsx(Link, {
+                                                                                        href: "/product/mobile-legends-diamonds",
+                                                                                        className: "desktop-products-dropdown-item",
+                                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                                            className: "desktop-products-dropdown-item-content",
+                                                                                            children: [
+                                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                                    src: "/images/games/ml.webp",
+                                                                                                    alt: "Mobile Legends",
+                                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                                }),
+                                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                                    children: "الماس موبایل لجندز"
+                                                                                                })
+                                                                                            ]
+                                                                                        })
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsx(Link, {
+                                                                                        href: "/product/uc-pubg-mobile",
+                                                                                        className: "desktop-products-dropdown-item",
+                                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                                            className: "desktop-products-dropdown-item-content",
+                                                                                            children: [
+                                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                                    src: "/images/games/pubg.webp",
+                                                                                                    alt: "PUBG Mobile",
+                                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                                }),
+                                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                                    children: "یوسی پابجی موبایل"
+                                                                                                })
+                                                                                            ]
+                                                                                        })
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsx(Link, {
+                                                                                        href: "/product/%d8%b3%db%8c-%d9%be%db%8c-%da%a9%d8%a7%d9%84%d8%a7%d9%81-%d9%85%d9%88%d8%a8%d8%a7%db%8c%d9%84",
+                                                                                        className: "desktop-products-dropdown-item",
+                                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                                            className: "desktop-products-dropdown-item-content",
+                                                                                            children: [
+                                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                                    src: "/images/games/cod-mobile.webp",
+                                                                                                    alt: "Call of Duty Mobile",
+                                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                                }),
+                                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                                    children: "سی پی کالاف موبایل"
+                                                                                                })
+                                                                                            ]
+                                                                                        })
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsx(Link, {
+                                                                                        href: "/product/clash-royale-gems",
+                                                                                        className: "desktop-products-dropdown-item",
+                                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                                            className: "desktop-products-dropdown-item-content",
+                                                                                            children: [
+                                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                                    src: "/images/games/clash-royale.webp",
+                                                                                                    alt: "Clash Royale",
+                                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                                }),
+                                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                                    children: "خرید جم کلش رویال"
+                                                                                                })
+                                                                                            ]
+                                                                                        })
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsx(Link, {
+                                                                                        href: "/product/clash-of-clans-gems",
+                                                                                        className: "desktop-products-dropdown-item",
+                                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                                            className: "desktop-products-dropdown-item-content",
+                                                                                            children: [
+                                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                                    src: "/images/games/coc.webp",
+                                                                                                    alt: "Clash of Clans",
+                                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                                }),
+                                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                                    children: "خرید جم کلش اف کلنز"
+                                                                                                })
+                                                                                            ]
+                                                                                        })
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsx(Link, {
+                                                                                        href: "/product/brawl-stars-gems",
+                                                                                        className: "desktop-products-dropdown-item",
+                                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                                            className: "desktop-products-dropdown-item-content",
+                                                                                            children: [
+                                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                                    src: "/images/games/brawl.webp",
+                                                                                                    alt: "Brawl Stars",
+                                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                                }),
+                                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                                    children: "خرید جم براول استارز"
+                                                                                                })
+                                                                                            ]
+                                                                                        })
+                                                                                    })
+                                                                                ]
+                                                                            })
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsx("div", {
+                                                                    className: "desktop-products-dropdown-item-wrapper",
+                                                                    children: /*#__PURE__*/ _jsx(Link, {
+                                                                        href: "/product/steam-giftcard",
+                                                                        className: "desktop-products-dropdown-item",
+                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                            className: "desktop-products-dropdown-item-content",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                    src: "/images/games/steam.webp",
+                                                                                    alt: "Steam",
+                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                }),
+                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                    children: "استیم"
+                                                                                })
+                                                                            ]
+                                                                        })
+                                                                    })
+                                                                }),
+                                                                /*#__PURE__*/ _jsx("div", {
+                                                                    className: "desktop-products-dropdown-item-wrapper",
+                                                                    children: /*#__PURE__*/ _jsx(Link, {
+                                                                        href: "/market?game=wild-rift",
+                                                                        className: "desktop-products-dropdown-item",
+                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                            className: "desktop-products-dropdown-item-content",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                    src: "/images/games/wild-rift.webp",
+                                                                                    alt: "Riot Games",
+                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                }),
+                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                    children: "رایوت گیمز"
+                                                                                })
+                                                                            ]
+                                                                        })
+                                                                    })
+                                                                }),
+                                                                /*#__PURE__*/ _jsx("div", {
+                                                                    className: "desktop-products-dropdown-item-wrapper",
+                                                                    children: /*#__PURE__*/ _jsx(Link, {
+                                                                        href: "/product/playstation-giftcard",
+                                                                        className: "desktop-products-dropdown-item",
+                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                            className: "desktop-products-dropdown-item-content",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                    src: "/images/games/psn.webp",
+                                                                                    alt: "PlayStation",
+                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                }),
+                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                    children: "پلی استیشن"
+                                                                                })
+                                                                            ]
+                                                                        })
+                                                                    })
+                                                                }),
+                                                                /*#__PURE__*/ _jsx("div", {
+                                                                    className: "desktop-products-dropdown-item-wrapper",
+                                                                    children: /*#__PURE__*/ _jsx(Link, {
+                                                                        href: "/product/xbox-giftcard",
+                                                                        className: "desktop-products-dropdown-item",
+                                                                        children: /*#__PURE__*/ _jsxs("div", {
+                                                                            className: "desktop-products-dropdown-item-content",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsx("img", {
+                                                                                    src: "/images/games/xbox.webp",
+                                                                                    alt: "Xbox",
+                                                                                    className: "desktop-products-dropdown-icon"
+                                                                                }),
+                                                                                /*#__PURE__*/ _jsx("span", {
+                                                                                    children: "ایکس باکس"
+                                                                                })
+                                                                            ]
+                                                                        })
+                                                                    })
+                                                                })
+                                                            ]
+                                                        })
+                                                    })
+                                                ]
+                                            }),
+                                            /*#__PURE__*/ _jsxs(Link, {
+                                                href: "/market/sell",
+                                                className: "menu-text-link",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxs("svg", {
+                                                        width: "20",
+                                                        height: "20",
+                                                        viewBox: "0 0 24 24",
+                                                        fill: "none",
+                                                        stroke: "currentColor",
+                                                        strokeWidth: "2",
+                                                        strokeLinecap: "round",
+                                                        strokeLinejoin: "round",
+                                                        className: "link-icon",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsx("rect", {
+                                                                x: "2",
+                                                                y: "3",
+                                                                width: "20",
+                                                                height: "14",
+                                                                rx: "2",
+                                                                ry: "2"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("line", {
+                                                                x1: "8",
+                                                                y1: "21",
+                                                                x2: "16",
+                                                                y2: "21"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("line", {
+                                                                x1: "12",
+                                                                y1: "17",
+                                                                x2: "12",
+                                                                y2: "21"
+                                                            })
+                                                        ]
+                                                    }),
+                                                    /*#__PURE__*/ _jsx("span", {
+                                                        children: "ثبت رایگان آگهی اکانت"
+                                                    })
+                                                ]
+                                            }),
+                                            /*#__PURE__*/ _jsxs(Link, {
+                                                href: "/",
+                                                className: "menu-text-link",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxs("svg", {
+                                                        width: "20",
+                                                        height: "20",
+                                                        viewBox: "0 0 24 24",
+                                                        fill: "none",
+                                                        stroke: "currentColor",
+                                                        strokeWidth: "2",
+                                                        strokeLinecap: "round",
+                                                        strokeLinejoin: "round",
+                                                        className: "link-icon",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsx("path", {
+                                                                d: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("polyline", {
+                                                                points: "9 22 9 12 15 12 15 22"
+                                                            })
+                                                        ]
+                                                    }),
+                                                    /*#__PURE__*/ _jsx("span", {
+                                                        children: "صفحه اصلی"
+                                                    })
+                                                ]
+                                            }),
+                                            /*#__PURE__*/ _jsxs(Link, {
+                                                href: "/blog",
+                                                className: "menu-text-link",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxs("svg", {
+                                                        width: "20",
+                                                        height: "20",
+                                                        viewBox: "0 0 24 24",
+                                                        fill: "none",
+                                                        stroke: "currentColor",
+                                                        strokeWidth: "2",
+                                                        strokeLinecap: "round",
+                                                        strokeLinejoin: "round",
+                                                        className: "link-icon",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsx("path", {
+                                                                d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("path", {
+                                                                d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                                                            })
+                                                        ]
+                                                    }),
+                                                    /*#__PURE__*/ _jsx("span", {
+                                                        children: "مقالات و آموزش"
+                                                    })
+                                                ]
+                                            })
+                                        ]
+                                    })
+                                }),
+                                /*#__PURE__*/ _jsxs("div", {
+                                    className: "nav-actions-desktop",
+                                    children: [
+                                        /*#__PURE__*/ _jsxs("div", {
+                                            className: "nav-action-item",
+                                            ref: desktopUserMenuRef,
+                                            children: [
+                                                /*#__PURE__*/ _jsx("button", {
+                                                    type: "button",
+                                                    className: "action-icon-btn user-icon",
+                                                    onClick: ()=>{
+                                                        if (user) {
+                                                            router.push(user.is_admin ? "/panel/admin" : "/panel/user");
+                                                        } else {
+                                                            router.push("/login");
+                                                        }
+                                                    },
+                                                    "aria-label": "حساب کاربری",
+                                                    children: /*#__PURE__*/ _jsxs("svg", {
+                                                        width: "24",
+                                                        height: "24",
+                                                        viewBox: "0 0 24 24",
+                                                        fill: "none",
+                                                        stroke: "currentColor",
+                                                        strokeWidth: "2.5",
+                                                        strokeLinecap: "round",
+                                                        strokeLinejoin: "round",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsx("path", {
+                                                                d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("circle", {
+                                                                cx: "12",
+                                                                cy: "7",
+                                                                r: "4"
+                                                            })
+                                                        ]
+                                                    })
+                                                }),
+                                                showDesktopUserMenu && /*#__PURE__*/ _jsx("div", {
+                                                    className: "desktop-user-dropdown",
+                                                    dir: "rtl",
+                                                    children: user ? /*#__PURE__*/ _jsxs(_Fragment, {
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxs("div", {
+                                                                className: "dropdown-user-header",
+                                                                children: [
+                                                                    /*#__PURE__*/ _jsx("span", {
+                                                                        className: "dropdown-user-name",
+                                                                        children: user.name || 'کاربر جینکس فمیلی'
+                                                                    }),
+                                                                    /*#__PURE__*/ _jsx("span", {
+                                                                        className: "dropdown-user-phone",
+                                                                        children: user.phone
+                                                                    })
+                                                                ]
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("hr", {
+                                                                className: "dropdown-divider"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx(Link, {
+                                                                href: user.is_admin ? "/panel/admin" : "/panel/user",
+                                                                className: "dropdown-link-btn",
+                                                                onClick: ()=>setShowDesktopUserMenu(false),
+                                                                children: "داشبورد کاربری"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx("button", {
+                                                                type: "button",
+                                                                className: "dropdown-logout-btn",
+                                                                onClick: async ()=>{
+                                                                    try {
+                                                                        await fetch(`${apiBase}/api/auth/logout`, {
+                                                                            method: "POST",
+                                                                            credentials: "include"
+                                                                        });
+                                                                    } catch  {}
+                                                                    window.location.href = "/";
+                                                                },
+                                                                children: "خروج از حساب"
+                                                            })
+                                                        ]
+                                                    }) : /*#__PURE__*/ _jsxs(_Fragment, {
+                                                        children: [
+                                                            /*#__PURE__*/ _jsx(Link, {
+                                                                href: "/login",
+                                                                className: "dropdown-link-btn",
+                                                                onClick: ()=>setShowDesktopUserMenu(false),
+                                                                children: "ورود به حساب کاربری"
+                                                            }),
+                                                            /*#__PURE__*/ _jsx(Link, {
+                                                                href: "/signup",
+                                                                className: "dropdown-link-btn signup",
+                                                                onClick: ()=>setShowDesktopUserMenu(false),
+                                                                children: "ثبت‌نام در سایت"
+                                                            })
+                                                        ]
+                                                    })
+                                                })
+                                            ]
+                                        }),
+                                        /*#__PURE__*/ _jsx("button", {
+                                            type: "button",
+                                            className: "action-icon-btn search-icon",
+                                            onClick: ()=>setShowDesktopSearch((v)=>!v),
+                                            "aria-label": "جستجو",
+                                            children: /*#__PURE__*/ _jsxs("svg", {
+                                                width: "24",
+                                                height: "24",
+                                                viewBox: "0 0 24 24",
+                                                fill: "none",
+                                                stroke: "currentColor",
+                                                strokeWidth: "2.5",
+                                                strokeLinecap: "round",
+                                                strokeLinejoin: "round",
+                                                children: [
+                                                    /*#__PURE__*/ _jsx("circle", {
+                                                        cx: "11",
+                                                        cy: "11",
+                                                        r: "8"
+                                                    }),
+                                                    /*#__PURE__*/ _jsx("line", {
+                                                        x1: "21",
+                                                        y1: "21",
+                                                        x2: "16.65",
+                                                        y2: "16.65"
+                                                    })
+                                                ]
+                                            })
+                                        }),
+                                        /*#__PURE__*/ _jsxs("div", {
+                                            ref: desktopWishlistRef,
+                                            style: {
+                                                position: 'relative',
+                                                display: 'inline-flex'
+                                            },
+                                            children: [
+                                                /*#__PURE__*/ _jsxs("button", {
+                                                    type: "button",
+                                                    className: `action-icon-btn wishlist-icon ${wishlistItems.length > 0 ? 'has-items' : ''}`,
+                                                    onClick: (e)=>{
+                                                        e.preventDefault();
+                                                        setShowWishlistPreview((v)=>!v);
+                                                        setShowCartPreview(false);
+                                                        setShowDesktopUserMenu(false);
+                                                    },
+                                                    "aria-label": "علاقه‌مندی‌ها",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsx("svg", {
+                                                            width: "24",
+                                                            height: "24",
+                                                            viewBox: "0 0 24 24",
+                                                            fill: "none",
+                                                            stroke: "currentColor",
+                                                            strokeWidth: "2.5",
+                                                            strokeLinecap: "round",
+                                                            strokeLinejoin: "round",
+                                                            children: /*#__PURE__*/ _jsx("path", {
+                                                                d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                                            })
+                                                        }),
+                                                        wishlistItems.length > 0 && /*#__PURE__*/ _jsx("span", {
+                                                            className: "cart-badge-cyan",
+                                                            style: {
+                                                                background: '#ec4899'
+                                                            },
+                                                            children: wishlistItems.length
+                                                        })
+                                                    ]
+                                                }),
+                                                showWishlistPreview && /*#__PURE__*/ _jsxs("div", {
+                                                    className: "cart-preview desktop-cart-preview-align wishlist-preview",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxs("div", {
+                                                            className: "cart-preview-header",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsx("span", {
+                                                                    children: "علاقه‌مندی‌ها"
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs("span", {
+                                                                    className: "muted",
+                                                                    style: {
+                                                                        fontSize: 12
+                                                                    },
+                                                                    children: [
+                                                                        wishlistItems.length,
+                                                                        " آیتم"
+                                                                    ]
+                                                                })
+                                                            ]
+                                                        }),
+                                                        /*#__PURE__*/ _jsxs("div", {
+                                                            className: "cart-preview-list",
+                                                            children: [
+                                                                wishlistItems.length === 0 && /*#__PURE__*/ _jsx("div", {
+                                                                    className: "muted",
+                                                                    children: "لیست علاقه‌مندی‌های شما خالی است."
+                                                                }),
+                                                                wishlistItems.map((it)=>{
+                                                                    return /*#__PURE__*/ _jsxs("div", {
+                                                                        className: "cart-preview-item",
+                                                                        children: [
+                                                                            /*#__PURE__*/ _jsx("div", {
+                                                                                className: "cart-preview-image",
+                                                                                children: it.image ? /*#__PURE__*/ _jsx(SmartImage, {
+                                                                                    src: it.image,
+                                                                                    alt: it.name,
+                                                                                    fit: "contain"
+                                                                                }) : /*#__PURE__*/ _jsx("svg", {
+                                                                                    width: "24",
+                                                                                    height: "24",
+                                                                                    viewBox: "0 0 24 24",
+                                                                                    fill: "currentColor",
+                                                                                    children: /*#__PURE__*/ _jsx("path", {
+                                                                                        d: "M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"
+                                                                                    })
+                                                                                })
+                                                                            }),
+                                                                            /*#__PURE__*/ _jsxs("div", {
+                                                                                className: "cart-preview-item-main",
+                                                                                children: [
+                                                                                    /*#__PURE__*/ _jsx(Link, {
+                                                                                        href: productHref(it.slug),
+                                                                                        className: "cart-preview-name",
+                                                                                        style: {
+                                                                                            textDecoration: 'none',
+                                                                                            color: 'inherit'
+                                                                                        },
+                                                                                        onClick: ()=>setShowWishlistPreview(false),
+                                                                                        children: it.name
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsx("div", {
+                                                                                        className: "cart-preview-meta",
+                                                                                        children: it.price > 0 ? `${it.price.toLocaleString('fa-IR')} تومان` : 'ناموجود'
+                                                                                    })
+                                                                                ]
+                                                                            }),
+                                                                            /*#__PURE__*/ _jsxs("div", {
+                                                                                className: "cart-preview-actions",
+                                                                                children: [
+                                                                                    it.price > 0 && /*#__PURE__*/ _jsx("button", {
+                                                                                        type: "button",
+                                                                                        className: "btn primary block",
+                                                                                        style: {
+                                                                                            padding: '6px 12px',
+                                                                                            fontSize: 12,
+                                                                                            borderRadius: 8
+                                                                                        },
+                                                                                        onClick: ()=>{
+                                                                                            addItem({
+                                                                                                product_id: it.product_id,
+                                                                                                name: it.name,
+                                                                                                price: it.price,
+                                                                                                quantity: 1,
+                                                                                                slug: it.slug,
+                                                                                                image: it.image
+                                                                                            });
+                                                                                            setCartBounce(true);
+                                                                                            setTimeout(()=>setCartBounce(false), 500);
+                                                                                            window.dispatchEvent(new CustomEvent("cart:add"));
+                                                                                            toggleWishlist(it.product_id);
+                                                                                        },
+                                                                                        children: "افزودن به سبد"
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsx("button", {
+                                                                                        type: "button",
+                                                                                        className: "ghost-btn cart-preview-remove",
+                                                                                        onClick: ()=>toggleWishlist(it.product_id),
+                                                                                        children: "حذف"
+                                                                                    })
+                                                                                ]
+                                                                            })
+                                                                        ]
+                                                                    }, it.product_id);
+                                                                })
+                                                            ]
+                                                        })
+                                                    ]
+                                                })
+                                            ]
+                                        }),
+                                        /*#__PURE__*/ _jsxs("div", {
+                                            ref: desktopCartRef,
+                                            style: {
+                                                position: 'relative',
+                                                display: 'inline-flex'
+                                            },
+                                            children: [
+                                                /*#__PURE__*/ _jsxs("button", {
+                                                    type: "button",
+                                                    className: `action-icon-btn cart-icon ${cartBounce ? 'cart-bounce' : ''}`,
+                                                    onClick: ()=>setShowCartPreview((v)=>!v),
+                                                    "aria-label": "سبد خرید",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxs("svg", {
+                                                            width: "24",
+                                                            height: "24",
+                                                            viewBox: "0 0 24 24",
+                                                            fill: "none",
+                                                            stroke: "currentColor",
+                                                            strokeWidth: "2.5",
+                                                            strokeLinecap: "round",
+                                                            strokeLinejoin: "round",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsx("path", {
+                                                                    d: "M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
+                                                                }),
+                                                                /*#__PURE__*/ _jsx("line", {
+                                                                    x1: "3",
+                                                                    y1: "6",
+                                                                    x2: "21",
+                                                                    y2: "6"
+                                                                }),
+                                                                /*#__PURE__*/ _jsx("path", {
+                                                                    d: "M16 10a4 4 0 0 1-8 0"
+                                                                })
+                                                            ]
+                                                        }),
+                                                        totalItemsCount > 0 && /*#__PURE__*/ _jsx("span", {
+                                                            className: "cart-badge-cyan",
+                                                            children: totalItemsCount
+                                                        })
+                                                    ]
+                                                }),
+                                                showCartPreview && /*#__PURE__*/ _jsxs("div", {
+                                                    className: "cart-preview desktop-cart-preview-align",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxs("div", {
+                                                            className: "cart-preview-header",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsx("span", {
+                                                                    children: "سبد خرید"
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs("span", {
+                                                                    className: "muted",
+                                                                    style: {
+                                                                        fontSize: 12
+                                                                    },
+                                                                    children: [
+                                                                        items.length,
+                                                                        " آیتم"
+                                                                    ]
+                                                                })
+                                                            ]
+                                                        }),
+                                                        /*#__PURE__*/ _jsxs("div", {
+                                                            className: "cart-preview-list",
+                                                            children: [
+                                                                items.length === 0 && /*#__PURE__*/ _jsx("div", {
+                                                                    className: "muted",
+                                                                    children: "سبد شما خالی است."
+                                                                }),
+                                                                items.map((it)=>{
+                                                                    const quantity = it.quantity || 0;
+                                                                    return /*#__PURE__*/ _jsxs("div", {
+                                                                        className: "cart-preview-item",
+                                                                        children: [
+                                                                            /*#__PURE__*/ _jsx("div", {
+                                                                                className: "cart-preview-image",
+                                                                                children: it.image ? /*#__PURE__*/ _jsx(SmartImage, {
+                                                                                    src: it.image,
+                                                                                    alt: it.name,
+                                                                                    fit: "contain"
+                                                                                }) : /*#__PURE__*/ _jsx("svg", {
+                                                                                    width: "24",
+                                                                                    height: "24",
+                                                                                    viewBox: "0 0 24 24",
+                                                                                    fill: "currentColor",
+                                                                                    children: /*#__PURE__*/ _jsx("path", {
+                                                                                        d: "M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"
+                                                                                    })
+                                                                                })
+                                                                            }),
+                                                                            /*#__PURE__*/ _jsxs("div", {
+                                                                                className: "cart-preview-item-main",
+                                                                                children: [
+                                                                                    /*#__PURE__*/ _jsx("div", {
+                                                                                        className: "cart-preview-name",
+                                                                                        children: it.name
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsxs("div", {
+                                                                                        className: "cart-preview-meta",
+                                                                                        children: [
+                                                                                            quantity,
+                                                                                            " \xd7 ",
+                                                                                            it.price.toLocaleString('fa-IR'),
+                                                                                            " = ",
+                                                                                            (it.price * quantity).toLocaleString('fa-IR'),
+                                                                                            " تومان"
+                                                                                        ]
+                                                                                    })
+                                                                                ]
+                                                                            }),
+                                                                            /*#__PURE__*/ _jsxs("div", {
+                                                                                className: "cart-preview-actions",
+                                                                                children: [
+                                                                                    /*#__PURE__*/ _jsxs("div", {
+                                                                                        className: "qty-control",
+                                                                                        children: [
+                                                                                            /*#__PURE__*/ _jsx("button", {
+                                                                                                type: "button",
+                                                                                                className: "qty-btn",
+                                                                                                onClick: ()=>{
+                                                                                                    if (quantity <= 1) {
+                                                                                                        removeItem(it.product_id);
+                                                                                                    } else {
+                                                                                                        setQty(it.product_id, quantity - 1);
+                                                                                                    }
+                                                                                                },
+                                                                                                "aria-label": "کاهش تعداد",
+                                                                                                children: "−"
+                                                                                            }),
+                                                                                            /*#__PURE__*/ _jsx("div", {
+                                                                                                className: "qty-value",
+                                                                                                children: quantity
+                                                                                            }),
+                                                                                            /*#__PURE__*/ _jsx("button", {
+                                                                                                type: "button",
+                                                                                                className: "qty-btn",
+                                                                                                onClick: ()=>setQty(it.product_id, quantity + 1),
+                                                                                                "aria-label": "افزایش تعداد",
+                                                                                                children: "+"
+                                                                                            })
+                                                                                        ]
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsx("button", {
+                                                                                        type: "button",
+                                                                                        className: "ghost-btn cart-preview-remove",
+                                                                                        onClick: ()=>removeItem(it.product_id),
+                                                                                        children: "حذف"
+                                                                                    })
+                                                                                ]
+                                                                            })
+                                                                        ]
+                                                                    }, it.product_id);
+                                                                })
+                                                            ]
+                                                        }),
+                                                        /*#__PURE__*/ _jsxs("div", {
+                                                            className: "cart-preview-footer",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxs("div", {
+                                                                    className: "cart-preview-total",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsx("span", {
+                                                                            children: "جمع کل"
+                                                                        }),
+                                                                        /*#__PURE__*/ _jsxs("span", {
+                                                                            className: "price",
+                                                                            children: [
+                                                                                total().toLocaleString('fa-IR'),
+                                                                                " تومان"
+                                                                            ]
+                                                                        })
+                                                                    ]
+                                                                }),
+                                                                /*#__PURE__*/ _jsx("button", {
+                                                                    type: "button",
+                                                                    className: "btn primary block",
+                                                                    onClick: ()=>{
+                                                                        setShowCartPreview(false);
+                                                                        router.push('/checkout');
+                                                                    },
+                                                                    disabled: items.length === 0,
+                                                                    children: "ثبت سفارش"
+                                                                })
+                                                            ]
+                                                        })
+                                                    ]
+                                                })
+                                            ]
+                                        })
+                                    ]
+                                }),
+                                /*#__PURE__*/ _jsxs("div", {
+                                    className: "nav-actions",
+                                    children: [
+                                        user?.is_admin && /*#__PURE__*/ _jsxs("a", {
+                                            href: adminCacheBustHref(),
+                                            className: "admin-pill",
+                                            "aria-label": "پنل",
+                                            children: [
+                                                /*#__PURE__*/ _jsx("span", {
+                                                    className: "admin-dot"
+                                                }),
+                                                "پنل"
+                                            ]
+                                        }),
+                                        /*#__PURE__*/ _jsxs("div", {
+                                            ref: mobileCartRef,
+                                            className: "nav-cart",
+                                            children: [
+                                                /*#__PURE__*/ _jsxs("button", {
+                                                    type: "button",
+                                                    className: `icon-btn nav-cart-btn ${cartBounce ? 'cart-bounce' : ''}`,
+                                                    "aria-label": "سبد خرید",
+                                                    onClick: ()=>{
+                                                        setShowCartPreview((v)=>!v);
+                                                    },
+                                                    children: [
+                                                        /*#__PURE__*/ _jsx("svg", {
+                                                            width: "22",
+                                                            height: "22",
+                                                            viewBox: "0 0 24 24",
+                                                            children: /*#__PURE__*/ _jsx("path", {
+                                                                fill: "currentColor",
+                                                                d: "M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2m10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2M7.17 14l-.94-2h11.53c.79 0 1.48-.46 1.82-1.17L22 6.25a1 1 0 0 0-.9-1.45H6.21l-.94-2H2v2h2l3.6 7.59-.95 1.72C6.17 14.77 6 15.37 6 16a2 2 0 0 0 2 2h12v-2H8.42c-.14 0-.25-.11-.25-.25 0-.04.01-.07.02-.1l.98-1.8z"
+                                                            })
+                                                        }),
+                                                        totalItemsCount > 0 && /*#__PURE__*/ _jsx("span", {
+                                                            className: "cart-count-badge",
+                                                            children: totalItemsCount
+                                                        }, totalItemsCount)
+                                                    ]
+                                                }),
+                                                showCartPreview && /*#__PURE__*/ _jsxs("div", {
+                                                    className: "cart-preview",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxs("div", {
+                                                            className: "cart-preview-header",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsx("span", {
+                                                                    children: "سبد خرید"
+                                                                }),
+                                                                /*#__PURE__*/ _jsxs("span", {
+                                                                    className: "muted",
+                                                                    style: {
+                                                                        fontSize: 12
+                                                                    },
+                                                                    children: [
+                                                                        items.length,
+                                                                        " آیتم"
+                                                                    ]
+                                                                })
+                                                            ]
+                                                        }),
+                                                        /*#__PURE__*/ _jsxs("div", {
+                                                            className: "cart-preview-list",
+                                                            children: [
+                                                                items.length === 0 && /*#__PURE__*/ _jsx("div", {
+                                                                    className: "muted",
+                                                                    children: "سبد شما خالی است."
+                                                                }),
+                                                                items.map((it)=>{
+                                                                    const quantity = it.quantity || 0;
+                                                                    return /*#__PURE__*/ _jsxs("div", {
+                                                                        className: "cart-preview-item",
+                                                                        children: [
+                                                                            /*#__PURE__*/ _jsx("div", {
+                                                                                className: "cart-preview-image",
+                                                                                children: it.image ? /*#__PURE__*/ _jsx(SmartImage, {
+                                                                                    src: it.image,
+                                                                                    alt: it.name,
+                                                                                    fit: "contain"
+                                                                                }) : /*#__PURE__*/ _jsx("svg", {
+                                                                                    width: "24",
+                                                                                    height: "24",
+                                                                                    viewBox: "0 0 24 24",
+                                                                                    fill: "currentColor",
+                                                                                    children: /*#__PURE__*/ _jsx("path", {
+                                                                                        d: "M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"
+                                                                                    })
+                                                                                })
+                                                                            }),
+                                                                            /*#__PURE__*/ _jsxs("div", {
+                                                                                className: "cart-preview-item-main",
+                                                                                children: [
+                                                                                    /*#__PURE__*/ _jsx("div", {
+                                                                                        className: "cart-preview-name",
+                                                                                        children: it.name
+                                                                                    }),
+                                                                                    /*#__PURE__*/ _jsxs("div", {
+                                                                                        className: "cart-preview-meta",
+                                                                                        children: [
+                                                                                            quantity,
+                                                                                            " \xd7 ",
+                                                                                            it.price.toLocaleString('fa-IR'),
+                                                                                            " = ",
+                                                                                            (it.price * quantity).toLocaleString('fa-IR'),
+                                                                                            " تومان"
+                                                                                        ]
+                                                                                    })
+                                                                                ]
+                                                                            }),
+                                                                            /*#__PURE__*/ _jsxs("div", {
+                                                                                className: "cart-preview-actions",
+                                                                                children: [
+                                                                                    /*#__PURE__*/ _jsxs("div", {
+                                                                                        className: "qty-control",
+                                                                                        children: [
+                                                                                            /*#__PURE__*/ _jsx("button", {
+                                                                                                type: "button",
+                                                                                                className: "qty-btn",
+                                                                                                onClick: ()=>{
+                                                                                                    if (quantity <= 1) {
+                                                                                                        removeItem(it.product_id);
+                                                                                                    } else {
+                                                                                                        setQty(it.product_id, quantity - 1);
+                                                                                                    }
+                                                                                                },
+                                                                                                "aria-label": "کاهش تعداد",
+                                                                                                children: "−"
+                                                                                            }),
+                                                                                            /*#__PURE__*/ _jsx("div", {
+                                                                                                className: "qty-value",
+                                                                                                children: quantity
+                                                                                            }),
+                                                                                            /*#__PURE__*/ _jsx("button", {
+                                                                                                type: "button",
+                                                                  

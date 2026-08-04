@@ -1,7 +1,7 @@
 // Resilient server-side (SSR) fetch for backend API calls.
 //
 // Server components must use an ABSOLUTE URL. Pointing them at the public
-// domain (e.g. https://nubixshop.ir) is fragile: after an IP/server
+// domain (e.g. https://jinxfamily.ir) is fragile: after an IP/server
 // migration, or behind Cloudflare/hairpin-NAT, the box often cannot reach
 // its own public hostname, so the fetch fails and the page renders blank.
 //

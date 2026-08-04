@@ -6,6 +6,7 @@ from . import spin_views
 from . import blog_views
 from .chat_views import chat_user_api, chat_admin_api, chat_upload_api
 from .ai_playground import ai_playground_api
+from . import marketplace_views
 
 urlpatterns = [
     path('products', views.products_list),
@@ -47,6 +48,7 @@ urlpatterns = [
     path('admin/orders/<str:tracking>/refund-notify', views.admin_refund_notify),
     path('admin/orders/custom-dollar', views.admin_create_custom_dollar_order),
     path('admin/notifications', views.admin_notifications),
+    path('admin/kavenegar/health', views.admin_kavenegar_health),
     path('admin/settings', views.admin_settings),
     path('admin/products', views.admin_products),
     path('admin/products/reorder', views.admin_products_reorder),
@@ -76,6 +78,10 @@ urlpatterns = [
     path('blog/articles', blog_views.article_list),
     path('blog/articles/<slug:slug>', blog_views.article_detail),
     path('blog/categories', blog_views.category_list),
+    path('admin/blog/articles', blog_views.admin_article_list),
+    path('admin/blog/articles/<int:pk>', blog_views.admin_article_detail),
+    path('admin/blog/categories', blog_views.admin_category_list),
+    path('admin/blog/seo-generate', blog_views.admin_seo_generate),
     path('spin/status', spin_views.spin_status),
     path('spin', spin_views.spin),
     path('spin/recent-winners', spin_views.spin_recent_winners),
@@ -87,10 +93,16 @@ urlpatterns = [
     path('stats', views.public_stats),
     path('testimonials', views.public_testimonials),
     path('currency-rates', views.currency_rates),
+    path('coins/games', views.coins_games_list),
+    path('coins/<str:game_slug>', views.coins_game_detail),
     path('settings/public', views.public_settings),
     path('gta6/config', views.gta6_config),
     path('me/profile', views.update_profile),
     path('me/avatar', views.upload_avatar),
+    path('me/wallet', views.wallet_details),
+    path('me/wallet/topup', views.wallet_topup),
+    path('me/wishlist', views.wishlist_list),
+    path('me/wishlist/toggle', views.wishlist_toggle),
     path('payment/request/<str:tracking>', views.payment_request),
     path('payment/verify/<str:tracking>', views.payment_verify),
     path('payment/inquiry/<str:tracking>', views.payment_inquiry),
@@ -145,7 +157,45 @@ urlpatterns = [
 
     # ---- Abandoned cart (سبدهای رها‌شده) ----
     path('cart/sync', views.cart_sync),
+    path('cart/validate', views.cart_validate),
+    path('performance/vitals', views.performance_vitals),
     path('admin/abandoned-carts', views.admin_abandoned_carts),
     path('admin/abandoned-carts/<int:cart_id>/remind', views.admin_abandoned_cart_remind),
     path('admin/abandoned-carts/<int:cart_id>/delete', views.admin_abandoned_cart_delete),
+
+    # ---- Marketplace (بازارچه اکانت) ----
+    path('market/listings', marketplace_views.get_listings),
+    path('market/listings/mine', marketplace_views.get_my_listings),
+    path('market/listings/create', marketplace_views.create_listing),
+    path('market/listings/<int:listing_id>', marketplace_views.get_listing_detail),
+    path('market/listings/<int:listing_id>/images', marketplace_views.upload_listing_image),
+    path('market/listings/<int:listing_id>/favorite', marketplace_views.toggle_favorite),
+    path('market/listings/<int:listing_id>/report', marketplace_views.report_listing),
+    
+    path('market/deals', marketplace_views.initiate_deal),
+    path('market/deals/mine', marketplace_views.get_my_deals),
+    path('market/deals/<int:deal_id>/credentials', marketplace_views.submit_credentials),
+    path('market/deals/<int:deal_id>/confirm', marketplace_views.confirm_deal),
+    path('market/deals/<int:deal_id>/dispute', marketplace_views.dispute_deal),
+    
+    path('market/seller/dashboard', marketplace_views.get_seller_dashboard),
+    path('market/seller/dashboard/payout-info', marketplace_views.update_seller_payment_info),
+    
+    path('admin/market/review-queue', marketplace_views.admin_review_queue),
+    path('admin/market/listings', marketplace_views.admin_all_listings),
+    path('admin/market/listings/<int:listing_id>/approve', marketplace_views.admin_approve_listing),
+    path('admin/market/listings/<int:listing_id>/reject', marketplace_views.admin_reject_listing),
+    path('admin/market/listings/<int:listing_id>/update', marketplace_views.admin_update_listing),
+    path('admin/market/listings/<int:listing_id>/images', marketplace_views.admin_upload_listing_image),
+    path('admin/market/images/<int:image_id>/delete', marketplace_views.admin_delete_listing_image),
+    path('admin/market/listings/<int:listing_id>/delete', marketplace_views.admin_delete_listing),
+    path('admin/market/deals', marketplace_views.admin_all_deals),
+    path('admin/market/deals/<int:deal_id>/update', marketplace_views.admin_update_deal),
+    path('admin/market/deals/<int:deal_id>/delete', marketplace_views.admin_delete_deal),
+
+    # ---- Identity Verification (احراز هویت) ----
+    path('me/verify-identity', views.verify_identity),
+    path('admin/users/verifications', views.admin_verification_list),
+    path('admin/users/verifications/<int:profile_id>/approve', views.admin_approve_verification),
+    path('admin/users/verifications/<int:profile_id>/reject', views.admin_reject_verification),
 ]

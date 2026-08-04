@@ -12,7 +12,7 @@ export default function RelatedProducts({ currentProduct, products = [], title =
     <section className="related-products-section card section" aria-labelledby="related-products-title">
       <div className="related-products-head">
         <div>
-          <p className="related-products-eyebrow">پیشنهاد بعدی نوبیکس</p>
+          <p className="related-products-eyebrow">پیشنهاد بعدی جینکس فمیلی</p>
           <h2 id="related-products-title">{title}</h2>
         </div>
         <a className="related-products-all" href="/#products">

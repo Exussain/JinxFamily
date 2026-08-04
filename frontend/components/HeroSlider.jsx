@@ -1,253 +1,144 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
-import { useCart } from "../lib/useCart";
-import { resolveProductImage } from "../lib/productImageHelpers";
+
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, Heart, Minus, Plus, ShoppingBag, Sparkles } from "lucide-react";
+import { useCart } from "../lib/useCart";
+import { useWishlist } from "../lib/useWishlist";
+import { resolveProductImage } from "../lib/productImageHelpers";
+import { productHref } from "../lib/productUrls.mjs";
 import "./HeroSlider.css";
 
+function stripHtml(html) {
+  if (!html) return "";
+  let decoded = html
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&rsquo;/g, "'")
+    .replace(/&lsquo;/g, "'")
+    .replace(/&ldquo;/g, '"')
+    .replace(/&rdquo;/g, '"')
+    .replace(/&nbsp;/g, " ");
+
+  let stripped = decoded.replace(/<[^>]*>/g, "");
+  return stripped.replace(/\s+/g, " ").trim();
+}
+
 const fallbackProducts = [
-  {
-    id: 1,
-    slug: "fortnite-crew-pack",
-    name_fa: "کروپک فورتنایت",
-    subtitle: "بتل پس + ۱۰۰۰ ویباکس + اسکین",
-    image_url: "/media/products/fortnite-crew-pack-20260603004614.webp",
-    price: 567000,
-    original_price: 770000,
-    discount_override: 26
-  },
-  {
-    id: 34,
-    slug: "gta6",
-    name_fa: "پیش‌خرید GTA VI (Grand Theft Auto VI)",
-    subtitle: "نسخه استاندارد و آلتیمیت — PS5 و Xbox",
-    image_url: "/products/gta6/ps5-ultimate.webp",
-    price: 5258000,
-    original_price: 6199000,
-    discount_override: 15
-  },
-  {
-    id: 29,
-    slug: "starterpack",
-    name_fa: "استارتر پک The Ace فورتنایت",
-    subtitle: "The Ace Pack | اسکین انحصاری + ۸۰۰ ویباکس",
-    image_url: "/media/products/starterpack-20260611201541.webp",
-    price: 769000,
-    original_price: 1100000,
-    discount_override: 30
-  },
-  {
-    id: 8,
-    slug: "spotify-subscription",
-    name_fa: "اشتراک اسپاتیفای پریمیوم",
-    subtitle: "پریمیوم بدون قطعی",
-    image_url: "/media/products/spotify-subscription-20260611210226.webp",
-    price: 159000,
-    original_price: 250000,
-    discount_override: 36
-  }
+  { id: 1, slug: "fortnite-crew-pack", name_fa: "کروپک فورتنایت", subtitle: "بتل پس، ۱۰۰۰ وی باکس و اسکین ماه", image_url: "/products/crewpack.webp", price: 567000, original_price: 770000 },
+  { id: 34, slug: "gta6", name_fa: "پیش خرید GTA VI", subtitle: "نسخه رسمی پلی استیشن و ایکس باکس", image_url: "/products/gta6/ps5-ultimate.webp", price: 5258000, original_price: 6199000 },
+  { id: 29, slug: "starterpack", name_fa: "استارتر پک فورتنایت", subtitle: "اسکین اختصاصی و ۸۰۰ وی باکس", image_url: "/products/starterpack.webp", price: 769000, original_price: 1100000 },
+  { id: 8, slug: "spotify-subscription", name_fa: "اسپاتیفای پریمیوم", subtitle: "اشتراک قانونی روی اکانت شخصی", image_url: "/products/spotify.webp", price: 159000, original_price: 250000 },
 ];
 
-const toFa = (s) => String(s).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
-
-export default function HeroSlider({ trustCount, heroProducts = [], heroSeed = 1 }) {
-  const { items, addItem, setQty } = useCart();
+export default function HeroSlider({ heroProducts = [] }) {
+  const { items, addItem, setQty, removeItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
-  // Update timer every second
   useEffect(() => {
-    const updateTimer = () => {
+    const update = () => {
       const now = new Date();
-      const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
-      const diff = midnight.getTime() - now.getTime();
-      
-      const totalSec = Math.floor(Math.max(0, diff) / 1000);
-      const hours = Math.floor(totalSec / 3600);
-      const mins = Math.floor((totalSec % 3600) / 60);
-      const secs = totalSec % 60;
-      
-      setTimeLeft({ hours, minutes: mins, seconds: secs });
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const seconds = Math.max(0, Math.floor((end - now) / 1000));
+      setTimeLeft({ hours: Math.floor(seconds / 3600), minutes: Math.floor((seconds % 3600) / 60), seconds: seconds % 60 });
     };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
+    update();
+    const interval = window.setInterval(update, 1000);
+    return () => window.clearInterval(interval);
   }, []);
 
-  // Merge API products and fallbacks dynamically
-  const products = useMemo(() => {
-    const targetSlugs = ["fortnite-crew-pack", "gta6", "starterpack", "spotify-subscription"];
-    return targetSlugs.map(slug => {
-      const apiProd = heroProducts.find(p => p.slug === slug);
-      const fallback = fallbackProducts.find(p => p.slug === slug);
-      if (apiProd) {
-        return {
-          ...fallback,
-          ...apiProd,
-          price: Number(apiProd.price) > 0 ? Number(apiProd.price) : (Number(apiProd.min_price) > 0 ? Number(apiProd.min_price) : fallback.price),
-          original_price: Number(apiProd.original_price) > 0 ? Number(apiProd.original_price) : fallback.original_price
-        };
-      }
-      return fallback;
-    }).filter(Boolean);
-  }, [heroProducts]);
+  const products = useMemo(() => fallbackProducts.map((fallback) => {
+    const live = heroProducts.find((product) => product.slug === fallback.slug);
+    if (!live) return fallback;
+    return {
+      ...fallback,
+      ...live,
+      price: Number(live.price) || Number(live.min_price) || fallback.price,
+      original_price: Number(live.original_price) || fallback.original_price,
+    };
+  }), [heroProducts]);
 
-  const handleAddToCart = (e, p) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const price = Number(p.price) > 0 ? Number(p.price) : (Number(p.min_price) > 0 ? Number(p.min_price) : 0);
-    const { imageSrc } = resolveProductImage(p);
-    
-    addItem({
-      product_id: p.id,
-      name: p.name_fa,
-      price: price,
-      quantity: 1,
-      slug: p.slug,
-      image: imageSrc
-    });
-
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('cart:add'));
-    }
+  const addProduct = (product, image) => {
+    addItem({ product_id: product.id, name: product.name_fa, price: Number(product.price), quantity: 1, slug: product.slug, image });
+    window.dispatchEvent(new CustomEvent("cart:add"));
   };
 
   return (
-    <section className="nubix-hero-slider">
-      {/* Background glow or accent */}
-      <div className="discount-glow-accent" />
-      
-      {/* Header section */}
-      <div className="discount-header">
-        <div className="discount-badge-alert">
-          ⚡ آفر طلایی امروز (فرصت محدود)
-        </div>
-        <h1 className="discount-title">
-          تخفیف ویژه خرید وی باکس، کروپک فورتنایت و گیفت کارت
-        </h1>
-        <p className="discount-subtitle">
-          تخفیفات داغ و روزانه نوبیکس شاپ؛ هر روز ۴ آفر ویژه با قیمت‌های استثنایی که فقط تا پایان امروز اعتبار دارند!
-        </p>
+    <section className="jinxfamily-hero-slider" aria-labelledby="daily-drop-title">
+      <div className="jf-offer-noise" aria-hidden="true" />
+      <header className="jf-offer-header">
+        <span className="jf-offer-kicker"><Sparkles size={15} /> انتخاب‌های امروز جینکس</span>
+        <h2 id="daily-drop-title">دراپ نیمه‌شب</h2>
+        <p>چهار انتخاب محبوب با قیمت ویژه؛ قبل از عوض شدن لیست امشب بردارشان.</p>
+      </header>
+
+      <div className="jf-offer-countdown" aria-label="زمان باقی‌مانده تا پایان پیشنهاد">
+        {[[timeLeft.hours, "ساعت"], [timeLeft.minutes, "دقیقه"], [timeLeft.seconds, "ثانیه"]].map(([value, label]) => (
+          <div className="jf-time-unit" key={label}>
+            <strong>{Number(value).toLocaleString("fa-IR", { minimumIntegerDigits: 2 })}</strong>
+            <span>{label}</span>
+          </div>
+        ))}
       </div>
 
-      {/* Countdown Timer */}
-      <div className="discount-timer-wrapper">
-        <div className="timer-box">
-          <span className="timer-value">{toFa(timeLeft.seconds.toString().padStart(2, "0"))}</span>
-          <span className="timer-label">ثانیه</span>
-        </div>
-        <div className="timer-box">
-          <span className="timer-value">{toFa(timeLeft.minutes.toString().padStart(2, "0"))}</span>
-          <span className="timer-label">دقیقه</span>
-        </div>
-        <div className="timer-box">
-          <span className="timer-value">{toFa(timeLeft.hours.toString().padStart(2, "0"))}</span>
-          <span className="timer-label">ساعت</span>
-        </div>
-      </div>
+      <div className="jf-offer-products">
+        {products.map((product, index) => {
+          const price = Number(product.price) || Number(product.min_price) || 0;
+          const original = Number(product.original_price) || 0;
+          const discount = original > price ? Math.round(((original - price) / original) * 100) : 0;
+          const cartItem = items.find((item) => item.product_id === product.id);
+          const quantity = cartItem?.quantity || 0;
+          const wished = isWishlisted(product.id);
+          const { imageSrc } = resolveProductImage(product);
 
-      {/* Product cards container */}
-      <div className="discount-products-grid">
-        {products.map((p, heroIdx) => {
-          const price = Number(p.price) > 0 ? Number(p.price) : (Number(p.min_price) > 0 ? Number(p.min_price) : 0);
-          const original = Number(p.original_price) > 0 ? Number(p.original_price) : Math.round(price * 1.15);
-          
-          // Let's compute discount percent
-          let discountPercent = p.discount_override;
-          if (!discountPercent) {
-            discountPercent = original && price < original ? Math.round(((original - price) / original) * 100) : 0;
-          }
-
-          const hasCartItem = items.some(x => x.product_id === p.id);
-          const { imageSrc } = resolveProductImage(p);
+          const dest = productHref(product.slug);
+          const requiresConfiguration = Boolean(product.has_variants || product.has_required_custom_fields);
+          const sanitizedSubtitle = stripHtml(product.subtitle);
 
           return (
-            <div key={p.slug} className="discount-product-card">
-              <Link
-                href={
-                  { 'fortnite-crew-pack': '/crewpack', 'gta6': '/gta6', 'v-bucks': '/vbucks', 'gemini-subscription': '/gemini', 'lego-starter-pack': '/lego' }[p.slug]
-                  || `/product/${p.slug}`
-                }
-                className="card-link-overlay"
-                aria-label={p.name_fa}
-              />
-              
-              <div className="product-card-img-wrapper">
-                <img
-                  src={imageSrc}
-                  alt={p.name_fa}
-                  decoding="async"
-                  {...(heroIdx === 0 ? { fetchPriority: 'high' } : {})}
-                />
+            <article className="jf-offer-card" key={product.slug}>
+              <div className="jf-offer-media" style={{ pointerEvents: "auto" }}>
+                <Link href={dest} style={{ display: "block", width: "100%", height: "100%" }}>
+                  <img src={imageSrc} alt={product.name_fa} decoding="async" {...(index === 0 ? { fetchPriority: "high" } : {})} />
+                </Link>
+                {discount > 0 && <span className="jf-offer-discount" style={{ pointerEvents: "none" }}>{discount.toLocaleString("fa-IR")}٪</span>}
+                <button className={`jf-offer-heart ${wished ? "is-active" : ""}`} type="button" title="علاقه‌مندی‌ها" aria-label={wished ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"} onClick={(event) => { event.preventDefault(); toggleWishlist(product.id); }}>
+                  <Heart size={18} fill={wished ? "currentColor" : "none"} />
+                </button>
               </div>
-
-              <div className="product-card-info">
-                <h3 className="product-card-title">{p.name_fa}</h3>
-                
-                <div className="product-card-badge-row">
-                  <span className="discount-tag">فوق ویژه: {toFa(discountPercent)}٪ تخفیف</span>
+              <div className="jf-offer-card-body">
+                <div className="jf-offer-copy">
+                  <Link href={dest} style={{ textDecoration: "none", color: "inherit" }}>
+                    <h3>{product.name_fa}</h3>
+                  </Link>
+                  <p>{sanitizedSubtitle}</p>
                 </div>
-
-                <div className="product-card-price-row">
-                  <div className="price-column">
-                    <span className="old-price">
-                      {toFa(original.toLocaleString('fa-IR'))} تومان
-                    </span>
-                    <span className="current-price">
-                      {toFa(price.toLocaleString('fa-IR'))} تومان
-                    </span>
+                <div className="jf-offer-price">
+                  <span>{original > price ? `${original.toLocaleString("fa-IR")} تومان` : ""}</span>
+                  <strong>{price.toLocaleString("fa-IR")} <small>تومان</small></strong>
+                </div>
+                {requiresConfiguration ? (
+                  <Link href={dest} className="jf-offer-cart"><ShoppingBag size={17} /> انتخاب گزینه‌ها</Link>
+                ) : quantity === 0 ? (
+                  <button className="jf-offer-cart" type="button" onClick={(event) => { event.preventDefault(); addProduct(product, imageSrc); }}><ShoppingBag size={17} /> افزودن به سبد</button>
+                ) : (
+                  <div className="jf-offer-qty">
+                    <button type="button" aria-label="کاهش تعداد" onClick={() => quantity <= 1 ? removeItem(product.id) : setQty(product.id, quantity - 1)}><Minus size={17} /></button>
+                    <span>{quantity.toLocaleString("fa-IR")} در سبد</span>
+                    <button type="button" aria-label="افزایش تعداد" onClick={() => setQty(product.id, quantity + 1)}><Plus size={17} /></button>
                   </div>
-                  
-                  {hasCartItem ? (
-                    <div className="product-qty-control" onClick={(e) => e.stopPropagation()}>
-                      <button 
-                        className="qty-btn minus"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const item = items.find(x => x.product_id === p.id);
-                          if (item) {
-                            setQty(p.id, item.quantity - 1);
-                          }
-                        }}
-                        aria-label="کاهش تعداد"
-                      >
-                        −
-                      </button>
-                      <span className="qty-value">{toFa(items.find(x => x.product_id === p.id)?.quantity || 1)}</span>
-                      <button 
-                        className="qty-btn plus"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const item = items.find(x => x.product_id === p.id);
-                          if (item) {
-                            setQty(p.id, item.quantity + 1);
-                          }
-                        }}
-                        aria-label="افزایش تعداد"
-                      >
-                        +
-                      </button>
-                    </div>
-                  ) : (
-                    <button 
-                      onClick={(e) => handleAddToCart(e, p)}
-                      className="add-to-cart-icon-btn"
-                      aria-label="افزودن به سبد خرید"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                      </svg>
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
+
+      <Link href="/products" className="jf-offer-all">دیدن همه محصولات <ArrowLeft size={17} /></Link>
     </section>
   );
 }

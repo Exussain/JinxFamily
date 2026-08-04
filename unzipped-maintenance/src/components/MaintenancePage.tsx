@@ -115,7 +115,7 @@ export default function MaintenancePage() {
             </svg>
           </span>
           <span className="text-3xl font-black tracking-tight text-white sm:text-4xl" dir="ltr">
-            NubixShop<span className="text-sky-400">.ir</span>
+            JinxFamily<span className="text-sky-400">.shop</span>
           </span>
         </div>
         <span className="mt-3 rounded-full border border-sky-400/20 bg-sky-400/5 px-4 py-1.5 text-sm font-medium text-sky-200">
@@ -182,25 +182,25 @@ export default function MaintenancePage() {
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <a
-                href="https://t.me/NubixShopIR"
+                href="https://t.me/JinxFamilyShop"
                 target="_blank"
                 rel="noreferrer"
                 className="group rounded-xl border border-white/10 bg-white/[0.04] p-4 text-right transition hover:border-sky-300/40 hover:bg-sky-400/[0.08]"
               >
                 <span className="block text-xs text-slate-400">کانال تلگرام</span>
                 <span className="mt-1 block font-semibold text-sky-200" dir="ltr">
-                  @NubixShopIR
+                  @JinxFamilyShop
                 </span>
               </a>
               <a
-                href="https://t.me/NubixGroup"
+                href="https://t.me/JinxFamilyGroup"
                 target="_blank"
                 rel="noreferrer"
                 className="group rounded-xl border border-white/10 bg-white/[0.04] p-4 text-right transition hover:border-sky-300/40 hover:bg-sky-400/[0.08]"
               >
                 <span className="block text-xs text-slate-400">گروه تلگرام</span>
                 <span className="mt-1 block font-semibold text-sky-200" dir="ltr">
-                  t.me/NubixGroup
+                  t.me/JinxFamilyGroup
                 </span>
               </a>
             </div>
@@ -221,7 +221,7 @@ export default function MaintenancePage() {
         {...rise(0.6)}
         className="relative z-20 flex flex-col items-center justify-center gap-2 border-t border-white/5 px-6 py-6 text-center text-xs text-slate-500 sm:px-10"
       >
-        <span>© {new Date().getFullYear()} NubixShop.ir — همه‌ی حقوق محفوظ است.</span>
+        <span>© {new Date().getFullYear()} JinxFamily.shop — همه‌ی حقوق محفوظ است.</span>
       </motion.footer>
     </main>
   );

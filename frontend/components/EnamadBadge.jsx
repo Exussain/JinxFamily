@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 
 export default function EnamadBadge() {
   const link =
-    "https://trustseal.enamad.ir/?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2";
+    "https://trustseal.enamad.ir/?id=755815&Code=J7VuAPCB8AJfKBYOo4D7w4bBK3ngu24r";
   const remote =
-    "https://trustseal.enamad.ir/logo.aspx?id=671892&Code=BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2";
+    "https://trustseal.enamad.ir/logo.aspx?id=755815&Code=J7VuAPCB8AJfKBYOo4D7w4bBK3ngu24r";
   const fallback = "/images/enamad-infoparse.webp";
   const [src, setSrc] = useState(fallback);
 
@@ -38,7 +38,7 @@ export default function EnamadBadge() {
         loading="lazy"
         decoding="async"
         style={{ width: "100%", height: "auto", display: "block", cursor: "pointer" }}
-        code="BvHIZx1aeWqVhIlNuGSIySWJ49Yd2uE2"
+        code="J7VuAPCB8AJfKBYOo4D7w4bBK3ngu24r"
         referrerPolicy="origin"
         onError={(e) => {
           if (e.currentTarget.dataset.fallbackApplied) return;

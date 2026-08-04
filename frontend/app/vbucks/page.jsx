@@ -1,6 +1,8 @@
 import VBucksClient from "./VBucksClient";
 import { fetchReviewStats, buildProductJsonLd, buildBreadcrumbJsonLd, buildFaqJsonLd } from "../../lib/seoJsonLd.mjs";
 import { fetchApiJson } from "../../lib/serverFetch.mjs";
+import Navbar from "../../components/Navbar";
+import '../globals.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,22 +10,22 @@ const OG_DESCRIPTION = 'خرید وی‌باکس با بهترین قیمت و �
 
 export const metadata = {
   title: 'خرید وی باکس فورتنایت (V-Bucks) با تحویل فوری',
-  description: 'خرید وی باکس فورتنایت با بهترین قیمت و تحویل فوری — شارژ مستقیم و قانونی روی اکانت شما در همه پلتفرم‌ها. پشتیبانی ۲۴/۷ نوبیکس شاپ.',
+  description: 'خرید وی باکس فورتنایت با بهترین قیمت و تحویل فوری — شارژ مستقیم و قانونی روی اکانت شما در همه پلتفرم‌ها. پشتیبانی ۲۴/۷ جینکس فمیلی.',
   alternates: { canonical: '/vbucks' },
   openGraph: {
     type: 'website',
-    siteName: 'نوبیکس شاپ',
+    siteName: 'جینکس فمیلی',
     locale: 'fa_IR',
-    title: 'خرید وی باکس فورتنایت (V-Bucks) | نوبیکس شاپ',
+    title: 'خرید وی باکس فورتنایت (V-Bucks) | جینکس فمیلی',
     description: OG_DESCRIPTION,
-    url: 'https://nubixshop.ir/vbucks',
-    images: [{ url: 'https://nubixshop.ir/media/products/v-bucks-20260605194216.webp', alt: 'خرید وی باکس فورتنایت' }],
+    url: 'https://jinxfamily.ir/vbucks',
+    images: [{ url: 'https://jinxfamily.ir/media/products/v-bucks-20260605194216.webp', alt: 'خرید وی باکس فورتنایت' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'خرید وی باکس فورتنایت (V-Bucks) | نوبیکس شاپ',
+    title: 'خرید وی باکس فورتنایت (V-Bucks) | جینکس فمیلی',
     description: OG_DESCRIPTION,
-    images: ['https://nubixshop.ir/media/products/v-bucks-20260605194216.webp'],
+    images: ['https://jinxfamily.ir/media/products/v-bucks-20260605194216.webp'],
   },
 };
 
@@ -31,7 +33,7 @@ export default async function VBucksPage() {
   const [initialProductData, stats, productsPayload] = await Promise.all([
     fetchApiJson("/api/products/v-bucks"),
     fetchReviewStats("v-bucks"),
-    fetchApiJson("/api/products"),
+    fetchApiJson("/api/products?view=card&limit=20", { next: { revalidate: 60 } }),
   ]);
   const productLd = buildProductJsonLd({
     path: "/vbucks",
@@ -44,7 +46,7 @@ export default async function VBucksPage() {
     variants: initialProductData?.variants,
   });
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: "نوبیکس شاپ", path: "/" },
+    { name: "جینکس فمیلی", path: "/" },
     { name: "وی‌باکس فورتنایت", path: "/vbucks" },
   ]);
   const faqLd = buildFaqJsonLd(initialProductData?.faq);
@@ -56,6 +58,7 @@ export default async function VBucksPage() {
       {faqLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       )}
+      <Navbar />
       <VBucksClient
         initialProductData={initialProductData}
         initialProducts={productsPayload?.results || []}

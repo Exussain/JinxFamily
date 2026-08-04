@@ -1,0 +1,205 @@
+{
+  "redirect_tests": [
+    {
+      "url": "http://nubixshop.ir/",
+      "expected": "https://nubixshop.ir/",
+      "actual": "Status 301 (Location: https://nubixshop.ir/) → Final: https://nubixshop.ir/ (Status 200)",
+      "pass": true
+    },
+    {
+      "url": "https://nubixshop.ir/index.php",
+      "expected": "https://nubixshop.ir/",
+      "actual": "Status 308 (Location: /) → Final: https://nubixshop.ir/ (Status 200)",
+      "pass": true
+    },
+    {
+      "url": "https://nubixshop.ir/product/fortnite-crew-pack",
+      "expected": "https://nubixshop.ir/crewpack",
+      "actual": "Status 308 (Location: /crewpack) → Final: https://nubixshop.ir/crewpack (Status 200)",
+      "pass": true
+    },
+    {
+      "url": "http://nubixshop.ir/vbucks",
+      "expected": "https://nubixshop.ir/vbucks",
+      "actual": "Status 307 (Location: https://nubixshop.ir/vbucks) → Final: https://nubixshop.ir/vbucks (Status 200)",
+      "pass": false
+    },
+    {
+      "url": "http://nubixshop.ir/product/chatgpt-subscription",
+      "expected": "https://nubixshop.ir/product/chatgpt-subscription",
+      "actual": "Status 307 (Location: https://nubixshop.ir/product/chatgpt-subscription) → Final: https://nubixshop.ir/product/chatgpt-subscription (Status 200)",
+      "pass": false
+    },
+    {
+      "url": "http://nubixshop.ir/product/fortnite-battle-pass",
+      "expected": "https://nubixshop.ir/product/fortnite-battle-pass",
+      "actual": "Status 307 (Location: https://nubixshop.ir/product/fortnite-battle-pass) → Final: https://nubixshop.ir/product/fortnite-battle-pass (Status 200)",
+      "pass": false
+    },
+    {
+      "url": "http://nubixshop.ir/crewpack",
+      "expected": "https://nubixshop.ir/crewpack",
+      "actual": "Status 307 (Location: https://nubixshop.ir/crewpack) → Final: https://nubixshop.ir/crewpack (Status 200)",
+      "pass": false
+    },
+    {
+      "url": "http://nubixshop.ir/lego",
+      "expected": "https://nubixshop.ir/lego",
+      "actual": "Status 307 (Location: https://nubixshop.ir/lego) → Final: https://nubixshop.ir/lego (Status 200)",
+      "pass": false
+    },
+    {
+      "url": "http://nubixshop.ir/gta6",
+      "expected": "https://nubixshop.ir/gta6",
+      "actual": "Status 307 (Location: https://nubixshop.ir/gta6) → Final: https://nubixshop.ir/gta6 (Status 200)",
+      "pass": false
+    },
+    {
+      "url": "https://nubixshop.ir/help",
+      "expected": "301 or live page",
+      "actual": "Status 308 (Location: /faq) → Final: https://nubixshop.ir/faq (Status 200)",
+      "pass": true
+    },
+    {
+      "url": "https://nubixshop.ir/guide",
+      "expected": "301 to /guides or live",
+      "actual": "Status 308 (Location: /faq/how-to-buy) → Final: https://nubixshop.ir/faq/how-to-buy (Status 200)",
+      "pass": true
+    },
+    {
+      "url": "https://ai.nubixshop.ir/",
+      "expected": "verify status & content",
+      "actual": "Status 307 (Location: /dashboard) → Final: https://ai.nubixshop.ir/login (Status 200)",
+      "pass": true
+    }
+  ],
+  "routing_bugs": [
+    {
+      "url": "https://nubixshop.ir/product/[slug]",
+      "expected_status": 404,
+      "actual_status": 404,
+      "pass": true
+    },
+    {
+      "url": "https://nubixshop.ir/blog/category/[slug]",
+      "expected_status": 404,
+      "actual_status": 404,
+      "pass": true
+    },
+    {
+      "url": "https://nubixshop.ir/product/nonexistent-xyz-123",
+      "expected_status": 404,
+      "actual_status": 404,
+      "pass": true
+    }
+  ],
+  "parameter_url_checks": [
+    {
+      "url": "https://nubixshop.ir/?q=test",
+      "has_noindex": true,
+      "has_canonical": true,
+      "canonical_target": "https://nubixshop.ir",
+      "pass": true
+    },
+    {
+      "url": "https://nubixshop.ir/?cat=%D9%81%D9%88%D8%B1%D8%AA%D9%86%D8%A7%DB%8C%D8%AA",
+      "has_noindex": true,
+      "has_canonical": true,
+      "canonical_target": "https://nubixshop.ir",
+      "pass": true
+    },
+    {
+      "url": "https://nubixshop.ir/?cat=%DA%AF%DB%8C%D9%81%D8%AA%20%DA%A9%D8%A7%D8%B1%D8%AA%D9%87%D8%A7",
+      "has_noindex": true,
+      "has_canonical": true,
+      "canonical_target": "https://nubixshop.ir",
+      "pass": true
+    },
+    {
+      "url": "https://nubixshop.ir/?cat=%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%DA%A9%D9%87%D8%A7",
+      "has_noindex": true,
+      "has_canonical": true,
+      "canonical_target": "https://nubixshop.ir",
+      "pass": true
+    }
+  ],
+  "noindex_bugs": [
+    {
+      "url": "/product/chatgpt-subscription",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/product/gemini-subscription",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/product/league-of-legends-rp",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/product/fortnite-music-pass",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/product/perfected-nature",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/product/frozen-legends",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/vbucks",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/crewpack",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/product/fortnite-battle-pass",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/lego",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    },
+    {
+      "url": "/gta6",
+      "meta_robots": "index, follow",
+      "should_be": "index,follow",
+      "pass": true
+    }
+  ],
+  "font_crawl_issue": false,
+  "lol_page_bug": false,
+  "critical_issues": [
+    "Redirect failed for http://nubixshop.ir/vbucks: Expected https://nubixshop.ir/vbucks, got [Status 307 (Location: https://nubixshop.ir/vbucks) → Final: https://nubixshop.ir/vbucks (Status 200)]",
+    "Redirect failed for http://nubixshop.ir/product/chatgpt-subscription: Expected https://nubixshop.ir/product/chatgpt-subscription, got [Status 307 (Location: https://nubixshop.ir/product/chatgpt-subscription) → Final: https://nubixshop.ir/product/chatgpt-subscription (Status 200)]",
+    "Redirect failed for http://nubixshop.ir/product/fortnite-battle-pass: Expected https://nubixshop.ir/product/fortnite-battle-pass, got [Status 307 (Location: https://nubixshop.ir/product/fortnite-battle-pass) → Final: https://nubixshop.ir/product/fortnite-battle-pass (Status 200)]",
+    "Redirect failed for http://nubixshop.ir/crewpack: Expected https://nubixshop.ir/crewpack, got [Status 307 (Location: https://nubixshop.ir/crewpack) → Final: https://nubixshop.ir/crewpack (Status 200)]",
+    "Redirect failed for http://nubixshop.ir/lego: Expected https://nubixshop.ir/lego, got [Status 307 (Location: https://nubixshop.ir/lego) → Final: https://nubixshop.ir/lego (Status 200)]",
+    "Redirect failed for http://nubixshop.ir/gta6: Expected https://nubixshop.ir/gta6, got [Status 307 (Location: https://nubixshop.ir/gta6) → Final: https://nubixshop.ir/gta6 (Status 200)]"
+  ],
+  "all_clear": false
+}

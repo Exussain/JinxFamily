@@ -1,4 +1,5 @@
 import ProductPageClient from "../product/[slug]/ProductPageClient";
+import '../globals.css';
 import { fetchApiJson } from "../../lib/serverFetch.mjs";
 import {
   fetchReviewStats,
@@ -26,14 +27,14 @@ export const metadata = {
   alternates: { canonical: "/lego" },
   openGraph: {
     type: "website",
-    siteName: "نوبیکس شاپ",
+    siteName: "جینکس فمیلی",
     locale: "fa_IR",
     title: "خرید لگو فورتنایت | Operation Brite Starter Pack",
     description: OG_DESCRIPTION,
-    url: "https://nubixshop.ir/lego",
+    url: "https://jinxfamily.ir/lego",
     images: [
       {
-        url: "https://nubixshop.ir/media/products/lego-starter-pack-20260605194438.webp",
+        url: "https://jinxfamily.ir/media/products/lego-starter-pack-20260605194438.webp",
         alt: "لگو فورتنایت Operation Brite",
       },
     ],
@@ -42,7 +43,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "خرید لگو فورتنایت | Operation Brite Starter Pack",
     description: OG_DESCRIPTION,
-    images: ["https://nubixshop.ir/media/products/lego-starter-pack-20260605194438.webp"],
+    images: ["https://jinxfamily.ir/media/products/lego-starter-pack-20260605194438.webp"],
   },
 };
 
@@ -64,7 +65,7 @@ export default async function LegoStarterPackPage() {
     variants: productData?.variants,
   });
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: "نوبیکس شاپ", path: "/" },
+    { name: "جینکس فمیلی", path: "/" },
     { name: "لگو فورتنایت", path: "/lego" },
   ]);
   const faqLd = buildFaqJsonLd(productData?.faq);

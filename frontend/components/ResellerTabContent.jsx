@@ -1187,7 +1187,7 @@ export default function ResellerTabContent({
                 type="text"
                 value={resellerNewName}
                 onChange={(e) => setResellerNewName(e.target.value)}
-                placeholder="مثلاً: @NubixSupport"
+                placeholder="مثلاً: @JinxFamilySupport"
                 className="form-input-premium"
                 autoFocus
               />

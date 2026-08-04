@@ -50,6 +50,10 @@ from .models import (
     SpinResult,
     AccountingTransaction,
     AbandonedCart,
+    G4A4Product,
+    G4A4Variation,
+    CustomerWalletTxn,
+    WishlistItem,
 )
 from .zarinpal_service import ZarinPalService
 from .email_service import (
@@ -223,6 +227,47 @@ def _discount_preview_from_cart_payload(payload, dc):
         "guardrail_warning": bool(warning),
         "guardrail": warning,
     }
+
+def _determine_account_type(category, slug, raw_type=""):
+    t = (raw_type or "").strip().lower()
+    cat = (category or "").strip().upper()
+    slug_lc = (slug or "").strip().lower()
+    
+    if t in {"xbox", "xboxx"}:
+        return "xbox"
+    if t in {"psn", "playstation", "ps"}:
+        return "psn"
+    if t in {"epic", "epicgames"}:
+        return "epic"
+    if t in {"battlenet", "blizzard"}:
+        return "battlenet"
+    if t in {"riot", "valorant"}:
+        return "riot"
+    if t in {"activision", "cod"}:
+        return "activision"
+        
+    if cat == "FORTNITE" or "fortnite" in slug_lc or "vbucks" in slug_lc:
+        return "epic"
+    elif "pubg" in slug_lc or "یوسی" in slug_lc:
+        return "pubg_uid"
+    elif "free-fire" in slug_lc or "فری فایر" in slug_lc:
+        return "freefire_uid"
+    elif "cod" in slug_lc or "کالاف" in slug_lc:
+        return "activision"
+    elif "valorant" in slug_lc or "league" in slug_lc or "ولورانت" in slug_lc:
+        return "riot"
+    elif "roblox" in slug_lc or "روبلاکس" in slug_lc:
+        return "roblox"
+    elif "mobile-legends" in slug_lc or "موبایل لجندز" in slug_lc:
+        return "mlbb_uid"
+    elif "overwatch" in slug_lc or "battlenet" in slug_lc:
+        return "battlenet"
+    elif cat == "GIFTCARDS" or "gift" in slug_lc:
+        return "giftcard"
+    elif cat == "SUBSCRIPTIONS" or "chatgpt" in slug_lc or "gemini" in slug_lc or "spotify" in slug_lc:
+        return "direct"
+    
+    return t or "direct"
 
 # Canonical identifiers for Fortnite Crew pack (used across capacity / limits)
 CREW_SLUG = "fortnite-crew-pack"
@@ -579,7 +624,7 @@ def _normalize_otp_code(code: str) -> str:
     s = re.sub(r"\s+", "", s)
     return s.strip()
 
-def _product_to_dict(p: Product):
+def _product_to_dict(p: Product, include_content=True):
     # Provide a stable slug even if DB field is blank by deriving from name
     name_lc = (p.name_fa or "").lower()
     if not p.slug and ("lego" in name_lc or "لگو" in name_lc):
@@ -620,7 +665,21 @@ def _product_to_dict(p: Product):
         
     min_price = min((item["price"] for item in variants_payload), default=p.price)
     base_price = min_price if raw_variants else p.price
-    return {
+    main_img = _resolve_product_image(p)
+    page_cust = getattr(p, "page_customization", {}) or {}
+    cust_images = []
+    if isinstance(page_cust, dict):
+        cust_images = page_cust.get("images") or page_cust.get("gallery") or []
+
+    images_list = []
+    if main_img:
+        images_list.append(main_img)
+    if isinstance(cust_images, list):
+        for img in cust_images:
+            if img and isinstance(img, str) and img not in images_list:
+                images_list.append(img)
+
+    payload = {
         "id": p.id,
         "name_fa": p.name_fa,
         "slug": slug,
@@ -628,19 +687,19 @@ def _product_to_dict(p: Product):
         "category": p.category,
         "category_title": dict(Product.CATEGORY_CHOICES).get(p.category, p.category),
         "sub": p.subcategory or _giftcard_sub(p) if p.category == "GIFTCARDS" else "",
-        "image_url": _resolve_product_image(p),
+        "image_url": main_img,
+        "images": images_list,
         "price": base_price,
         "original_price": getattr(p, "original_price", 0),
         "price_lira": p.price_lira,
         "min_price": min_price,
         "display_order": getattr(p, "display_order", 0) or 0,
-        "description": p.description,
-        "delivery_text": getattr(p, "delivery_text", "") or "",
-        "faq": getattr(p, "faq", []) or [],
-        "custom_fields": getattr(p, "custom_fields", []) or [],
         "requires_2fa": bool(getattr(p, "requires_2fa", False)),
         "disable_2fa_text": getattr(p, "disable_2fa_text", "") or "",
         "disable_2fa_color": getattr(p, "disable_2fa_color", "amber") or "amber",
+        "jinx_image": getattr(p, "jinx_image", "") or "",
+        "jinx_text": getattr(p, "jinx_text", "") or "",
+        "page_customization": page_cust,
         "link": SPECIAL_PRODUCT_LINKS.get(p.slug),
         "variants": variants_payload,
         "sold_count": getattr(p, "sold_count", 0) or 0,
@@ -654,6 +713,57 @@ def _product_to_dict(p: Product):
             or bool(getattr(p, "customer_ordering_disabled", False))
         ),
     }
+    if include_content:
+        payload.update({
+            "description": p.description,
+            "delivery_text": getattr(p, "delivery_text", "") or "",
+            "faq": getattr(p, "faq", []) or [],
+            "custom_fields": getattr(p, "custom_fields", []) or [],
+        })
+    return payload
+
+
+def _product_card_dict(p: Product):
+    """Compact, stable storefront payload for grids, menus, and live search."""
+    full = _product_to_dict(p, include_content=False)
+    original_price = int(full.get("original_price") or 0)
+    current_price = int(full.get("price") or 0)
+    discount_percent = (
+        round((original_price - current_price) * 100 / original_price)
+        if original_price > current_price > 0
+        else 0
+    )
+    return {
+        "id": full["id"],
+        "slug": full["slug"],
+        "name_fa": full["name_fa"],
+        "subtitle": full["subtitle"],
+        "category": full["category"],
+        "category_title": full["category_title"],
+        "sub": full["sub"],
+        "image_url": full["image_url"],
+        "images": full.get("images", []),
+        "price": current_price,
+        "min_price": int(full.get("min_price") or current_price),
+        "original_price": original_price,
+        "discount_percent": max(0, discount_percent),
+        "purchasable": bool(full["purchasable"]),
+        "display_order": int(full.get("display_order") or 0),
+        "has_variants": bool(full.get("variants")),
+        "has_required_custom_fields": any(
+            isinstance(field, dict) and bool(field.get("required")) and bool(str(field.get("key") or "").strip())
+            for field in (getattr(p, "custom_fields", []) or [])
+        ),
+        "link": full.get("link"),
+    }
+
+
+def _set_public_cache_headers(response, *, cacheable=True):
+    if cacheable:
+        response["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+    else:
+        response["Cache-Control"] = "no-store"
+    return response
 
 
 def _giftcard_sub(p: Product) -> str:
@@ -683,7 +793,25 @@ SOLD_ORDER_STATUSES = ["paid", "registered", "processing", "completed"]
 def products_list(request):
     if request.method != 'GET':
         return HttpResponseNotAllowed(['GET'])
-    qs = Product.objects.filter(active=True).exclude(slug__in=['gift-battle-pass'])
+    view = (request.GET.get('view') or '').strip().lower()
+    if view not in ('', 'card'):
+        return JsonResponse({"error": "view نامعتبر است"}, status=400)
+
+    limit = None
+    raw_limit = (request.GET.get('limit') or '').strip()
+    if raw_limit:
+        try:
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            return JsonResponse({"error": "limit باید عدد صحیح باشد"}, status=400)
+        if limit < 1 or limit > 100:
+            return JsonResponse({"error": "limit باید بین ۱ و ۱۰۰ باشد"}, status=400)
+
+    qs = Product.objects.filter(active=True).exclude(slug__in=['gift-battle-pass']).exclude(
+        Q(name_fa__startswith='اکانت') |
+        Q(name_fa__startswith='آگهی اکانت') |
+        (Q(category='FORTNITE') & Q(name_fa__icontains='اکانت'))
+    ).prefetch_related("variants")
 
     term = (request.GET.get('search') or request.GET.get('q') or '').strip()
     if term:
@@ -694,6 +822,13 @@ def products_list(request):
             | Q(category__icontains=term)
             | Q(variants__title__icontains=term)
         ).distinct()
+
+    cache_key = None
+    if not term:
+        cache_key = f"public-products:v2:{view or 'default'}:{limit or 'all'}"
+        cached_payload = cache.get(cache_key)
+        if cached_payload is not None:
+            return _set_public_cache_headers(JsonResponse(cached_payload))
 
     # ترتیب: اولویت با فورتنایت، سپس بر اساس دسته‌بندی، سپس ID
     from django.db.models import Case, When, Value, IntegerField
@@ -746,8 +881,357 @@ def products_list(request):
         )
     ).order_by('display_order', 'category_order', 'slug_order', '-id')
 
-    data = [_product_to_dict(p) for p in qs]
-    return JsonResponse({"results": data})
+    if limit is not None:
+        qs = qs[:limit]
+
+    serializer = _product_card_dict if view == 'card' else (
+        lambda product: _product_to_dict(product, include_content=False)
+    )
+    data = [serializer(p) for p in qs]
+    payload = {"results": data}
+    if cache_key:
+        cache.set(cache_key, payload, timeout=60)
+    response = JsonResponse(payload)
+    return _set_public_cache_headers(response, cacheable=not bool(term))
+
+
+_SUPPLIER_FIELD_LABELS = {
+    "roblox_username": "نام کاربری Roblox",
+    "player_tag": "شناسه / تگ بازیکن",
+    "game_email": "ایمیل اکانت بازی",
+    "game_password": "رمز عبور اکانت بازی",
+    "character_name": "نام کاراکتر در بازی",
+    "backup_code": "کد بکاپ / 2FA",
+}
+
+
+def _public_required_field_schema(field):
+    """Return field metadata that is safe to send back to a browser.
+
+    Cart validation deliberately reports a schema and missing *keys* only.  It
+    never reflects submitted customer values (in particular passwords).
+    """
+    if isinstance(field, dict):
+        key = str(field.get("key") or "").strip()
+        if not key:
+            return None
+        result = {
+            "key": key,
+            "label": str(field.get("label") or _SUPPLIER_FIELD_LABELS.get(key) or key.replace("_", " ")),
+            "type": str(field.get("type") or ("password" if "password" in key or key.endswith("_pass") else "email" if "email" in key else "text")),
+            "required": bool(field.get("required", True)),
+        }
+        # These are display-only constraints/options managed by the product
+        # schema.  Do not copy arbitrary fields from the stored JSON.
+        for name in ("placeholder", "options"):
+            if name in field and isinstance(field[name], (str, list)):
+                result[name] = field[name]
+        return result
+    key = str(field or "").strip()
+    if not key:
+        return None
+    return {
+        "key": key,
+        "label": _SUPPLIER_FIELD_LABELS.get(key, key.replace("_", " ")),
+        "type": "password" if "password" in key or key.endswith("_pass") else "email" if "email" in key else "text",
+        "required": True,
+    }
+
+
+def _cart_item_custom_fields(item):
+    values = item.get("custom_fields") or item.get("custom_fields_data") or {}
+    return values if isinstance(values, dict) else {}
+
+
+def _required_product_fields_for_items(items):
+    """Resolve and validate required product fields for browser/order items.
+
+    The returned entries are intentionally independent of price and stock
+    validation, so both `/cart/validate` and `/orders` use exactly the same
+    requirement logic.
+    """
+    normal_ids = set()
+    normal_slugs = set()
+    supplier_ids = set()
+    for item in items:
+        supplier_id = item.get("g4a4_variation_id") or item.get("g4a4_var_id")
+        if supplier_id not in (None, ""):
+            try:
+                supplier_ids.add(int(supplier_id))
+            except (TypeError, ValueError):
+                continue
+            continue
+        try:
+            if item.get("product_id") not in (None, ""):
+                normal_ids.add(int(item.get("product_id")))
+        except (TypeError, ValueError):
+            pass
+        slug = str(item.get("slug") or "").strip()
+        if slug:
+            normal_slugs.add(slug)
+
+    products_by_id = {p.id: p for p in Product.objects.filter(id__in=normal_ids)}
+    products_by_slug = {p.slug: p for p in Product.objects.filter(slug__in=normal_slugs)}
+    variations = {
+        v.external_variation_id: v
+        for v in G4A4Variation.objects.filter(external_variation_id__in=supplier_ids).select_related("product")
+    }
+
+    results = []
+    for index, item in enumerate(items):
+        supplier_id = item.get("g4a4_variation_id") or item.get("g4a4_var_id")
+        product = None
+        supplier_variation = None
+        if supplier_id not in (None, ""):
+            try:
+                supplier_variation = variations.get(int(supplier_id))
+            except (TypeError, ValueError):
+                supplier_variation = None
+            raw_fields = supplier_variation.required_fields if supplier_variation and isinstance(supplier_variation.required_fields, list) else []
+            name = f"{supplier_variation.product.name} - {supplier_variation.name}" if supplier_variation else str(item.get("name") or "")
+        else:
+            try:
+                product = products_by_id.get(int(item.get("product_id")))
+            except (TypeError, ValueError):
+                product = None
+            if product is None:
+                product = products_by_slug.get(str(item.get("slug") or "").strip())
+            raw_fields = product.custom_fields if product and isinstance(product.custom_fields, list) else []
+            name = product.name_fa if product else str(item.get("name") or "")
+
+        fields = [schema for schema in (_public_required_field_schema(field) for field in raw_fields) if schema]
+        values = _cart_item_custom_fields(item)
+        missing = [field["key"] for field in fields if field["required"] and not str(values.get(field["key"], "")).strip()]
+        results.append({
+            "index": index,
+            "product_id": item.get("product_id"),
+            "variant_id": item.get("variant_id"),
+            "g4a4_variation_id": supplier_id if supplier_id not in (None, "") else None,
+            "name": name,
+            "required_fields": fields,
+            "missing_field_keys": missing,
+            "complete": not missing,
+        })
+    return results
+
+
+def _required_product_fields_error(items):
+    entries = _required_product_fields_for_items(items)
+    incomplete = [entry for entry in entries if not entry["complete"]]
+    if not incomplete:
+        return None
+    return {
+        "code": "required_product_fields",
+        "message": "اطلاعات مورد نیاز محصول کامل نیست. لطفاً سبد خرید را تکمیل کنید.",
+        "items": incomplete,
+    }
+
+
+@csrf_exempt
+def cart_validate(request):
+    """Reconcile a browser cart against authoritative product/variant prices."""
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    try:
+        payload = json.loads(request.body or b'{}')
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return JsonResponse({"error": "بدنه درخواست JSON معتبر نیست"}, status=400)
+
+    items = payload.get("items") if isinstance(payload, dict) else None
+    if not isinstance(items, list) or not items or len(items) > 50:
+        return JsonResponse({"error": "سبد باید شامل ۱ تا ۵۰ آیتم باشد"}, status=400)
+
+    field_validation = _required_product_fields_for_items(items)
+    field_validation_by_index = {entry["index"]: entry for entry in field_validation}
+    normalized = []
+    g4a4_items = []
+    for index, item in enumerate(items):
+        if not isinstance(item, dict):
+            return JsonResponse({"error": f"آیتم {index + 1} نامعتبر است"}, status=400)
+        g4a4_variation_id = item.get("g4a4_variation_id") or item.get("g4a4_var_id")
+        if g4a4_variation_id:
+            try:
+                variation_id = int(g4a4_variation_id)
+                quantity = int(item.get("quantity"))
+            except (TypeError, ValueError):
+                return JsonResponse({"error": f"شناسه یا تعداد آیتم {index + 1} نامعتبر است"}, status=400)
+            if variation_id < 1 or quantity < 1 or quantity > 99:
+                return JsonResponse({"error": f"مقادیر آیتم {index + 1} خارج از محدوده است"}, status=400)
+            supplied_price = item.get("price")
+            try:
+                supplied_price = int(supplied_price) if supplied_price is not None else None
+            except (TypeError, ValueError):
+                return JsonResponse({"error": f"قیمت آیتم {index + 1} نامعتبر است"}, status=400)
+            g4a4_items.append({
+                "index": index,
+                "product_id": item.get("product_id"),
+                "variant_id": item.get("variant_id"),
+                "g4a4_variation_id": variation_id,
+                "quantity": quantity,
+                "supplied_price": supplied_price,
+            })
+            continue
+        try:
+            product_id = int(item.get("product_id"))
+            quantity = int(item.get("quantity"))
+            variant_id = item.get("variant_id")
+            variant_id = int(variant_id) if variant_id not in (None, "") else None
+        except (TypeError, ValueError):
+            return JsonResponse({"error": f"شناسه یا تعداد آیتم {index + 1} نامعتبر است"}, status=400)
+        if product_id < 1 or quantity < 1 or quantity > 99 or (variant_id is not None and variant_id < 1):
+            return JsonResponse({"error": f"مقادیر آیتم {index + 1} خارج از محدوده است"}, status=400)
+        supplied_price = item.get("price")
+        try:
+            supplied_price = int(supplied_price) if supplied_price is not None else None
+        except (TypeError, ValueError):
+            return JsonResponse({"error": f"قیمت آیتم {index + 1} نامعتبر است"}, status=400)
+        normalized.append((index, product_id, variant_id, quantity, supplied_price))
+
+    product_ids = {item[1] for item in normalized}
+    products = {
+        product.id: product
+        for product in Product.objects.filter(id__in=product_ids).prefetch_related("variants")
+    }
+    results = []
+    total = 0
+    for index, product_id, variant_id, quantity, supplied_price in normalized:
+        product = products.get(product_id)
+        if not product or not product.active:
+            results.append({
+                "product_id": product_id, "variant_id": variant_id, "quantity": quantity,
+                "available": False, "reason": "product_unavailable",
+            })
+            result = results[-1]
+            result.update(field_validation_by_index[index])
+            continue
+
+        serialized = _product_to_dict(product, include_content=False)
+        variants = {variant["id"]: variant for variant in serialized.get("variants", [])}
+        if variants and variant_id is None:
+            results.append({
+                "product_id": product_id, "variant_id": None, "quantity": quantity,
+                "available": False, "reason": "variant_required",
+            })
+            result = results[-1]
+            result.update(field_validation_by_index[index])
+            continue
+        if variant_id is not None and variant_id not in variants:
+            results.append({
+                "product_id": product_id, "variant_id": variant_id, "quantity": quantity,
+                "available": False, "reason": "variant_unavailable",
+            })
+            result = results[-1]
+            result.update(field_validation_by_index[index])
+            continue
+
+        available = bool(serialized["purchasable"])
+        unit_price = int(variants[variant_id]["price"] if variant_id is not None else serialized["price"])
+        line_total = unit_price * quantity
+        if available:
+            total += line_total
+        result = {
+            "product_id": product_id,
+            "variant_id": variant_id,
+            "quantity": quantity,
+            "name": serialized["name_fa"],
+            "available": available,
+            "reason": None if available else "ordering_disabled",
+            "unit_price": unit_price,
+            "line_total": line_total,
+            "price_changed": supplied_price is not None and supplied_price != unit_price,
+        }
+        if supplied_price is not None:
+            result["previous_price"] = supplied_price
+        result.update(field_validation_by_index[index])
+        results.append(result)
+
+    g4a4_variations = {
+        variation.external_variation_id: variation
+        for variation in G4A4Variation.objects.filter(
+            external_variation_id__in={item["g4a4_variation_id"] for item in g4a4_items}
+        ).select_related("product")
+    }
+    for item in g4a4_items:
+        variation = g4a4_variations.get(item["g4a4_variation_id"])
+        available = bool(variation and variation.in_stock and variation.product.is_active)
+        unit_price = int(variation.sell_toman) if variation else 0
+        if available:
+            total += unit_price * item["quantity"]
+        result = {
+            "product_id": item["product_id"],
+            "variant_id": item["variant_id"],
+            "g4a4_variation_id": item["g4a4_variation_id"],
+            "quantity": item["quantity"],
+            "available": available,
+            "reason": None if available else "product_unavailable",
+            "unit_price": unit_price,
+            "line_total": unit_price * item["quantity"],
+            "price_changed": item["supplied_price"] is not None and item["supplied_price"] != unit_price,
+        }
+        if variation:
+            result["name"] = f"{variation.product.name} - {variation.name}"
+        if item["supplied_price"] is not None:
+            result["previous_price"] = item["supplied_price"]
+        result.update(field_validation_by_index[item["index"]])
+        results.append(result)
+
+    response = JsonResponse({
+        "valid": all(item.get("available") and item.get("complete") for item in results),
+        "items": results,
+        "total": total,
+        "changed_count": sum(1 for item in results if item.get("price_changed")),
+    })
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@csrf_exempt
+def performance_vitals(request):
+    """Sample anonymous web-vital measurements with a small per-IP rate limit."""
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    remote_addr = request.META.get("REMOTE_ADDR") or "unknown"
+    digest = hashlib.sha256(remote_addr.encode("utf-8")).hexdigest()[:20]
+    window = int(timezone.now().timestamp() // 60)
+    rate_key = f"performance-vitals:{digest}:{window}"
+    count = int(cache.get(rate_key, 0) or 0)
+    limit = int(getattr(settings, "PERFORMANCE_VITALS_RATE_LIMIT", 30))
+    if count >= limit:
+        response = JsonResponse({"error": "rate_limited"}, status=429)
+        response["Retry-After"] = "60"
+        return response
+    cache.set(rate_key, count + 1, timeout=70)
+
+    try:
+        payload = json.loads(request.body or b'{}')
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return JsonResponse({"error": "بدنه درخواست JSON معتبر نیست"}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({"error": "داده نامعتبر است"}, status=400)
+
+    name = str(payload.get("name") or "").upper()
+    if name not in {"LCP", "CLS", "INP", "NAVIGATION"}:
+        return JsonResponse({"error": "metric نامعتبر است"}, status=400)
+    try:
+        value = float(payload.get("value"))
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "value نامعتبر است"}, status=400)
+    if value < 0 or value > 3600000:
+        return JsonResponse({"error": "value خارج از محدوده است"}, status=400)
+
+    route = str(payload.get("route") or "/")[:160]
+    if not route.startswith("/") or "?" in route or "#" in route:
+        route = "/"
+    logger.info("web_vital %s", json.dumps({
+        "name": name,
+        "value": round(value, 4),
+        "route": route,
+        "rating": str(payload.get("rating") or "")[:24],
+    }, ensure_ascii=False, separators=(",", ":")))
+    response = JsonResponse({"accepted": True}, status=202)
+    response["Cache-Control"] = "no-store"
+    return response
 
 
 def product_detail(request, slug):
@@ -755,8 +1239,24 @@ def product_detail(request, slug):
         return HttpResponseNotAllowed(['GET'])
     if slug == 'gift-battle-pass':
         return JsonResponse({"message": "محصول مورد نظر در دسترس نیست"}, status=404)
-    p = get_object_or_404(Product, slug=slug, active=True)
-    return JsonResponse(_product_to_dict(p))
+    cache_key = f"public-product:v2:{slug}"
+    cached_payload = cache.get(cache_key)
+    if cached_payload is not None:
+        return _set_public_cache_headers(JsonResponse(cached_payload))
+    try:
+        p = Product.objects.prefetch_related("variants").get(slug=slug, active=True)
+        payload = _product_to_dict(p)
+    except Product.DoesNotExist:
+        try:
+            from .models import G4A4Product
+            from .views_categories import _g4a4_product_to_dict
+            g4_prod = G4A4Product.objects.prefetch_related("variations").get(game_slug=slug, is_active=True)
+            payload = _g4a4_product_to_dict(g4_prod)
+        except Exception:
+            return JsonResponse({"error": "محصول مورد نظر یافت نشد"}, status=404)
+
+    cache.set(cache_key, payload, timeout=60)
+    return _set_public_cache_headers(JsonResponse(payload))
 
 
 @csrf_exempt
@@ -807,7 +1307,7 @@ def _get_customer_contact_info(order):
         try:
             profile = order.user.reseller_profile
             email = profile.email or ""
-            name = profile.support_name or "همکار نوبیکس"
+            name = profile.support_name or "همکار جینکس فمیلی"
             return email, name
         except ResellerProfile.DoesNotExist:
             pass
@@ -819,7 +1319,7 @@ def _get_customer_contact_info(order):
     if not customer_email and "@" in (order.epic_username or ""):
         customer_email = order.epic_username
     if not customer_name:
-        customer_name = order.epic_username or "مشتری نوبیکس"
+        customer_name = order.epic_username or "مشتری جینکس فمیلی"
     return customer_email, customer_name
 
 
@@ -897,7 +1397,7 @@ def _notify_customer_payment_success(order, ref_id="", include_sms=True, items_f
                     phone_number=phone_for_sms,
                     customer_name=customer_name,
                     status_fa="",
-                    template_name="nubix-shop-new-order",
+                    template_name="jinxfamily-shop-new-order",
                     include_status_token=False,
                 )
             except Exception:
@@ -916,7 +1416,7 @@ def _send_purchase_points_sms(order, points_awarded: int):
     try:
         profile, _ = UserProfile.objects.get_or_create(user=order.user)
         _email_unused, customer_name = _get_customer_contact_info(order)
-        customer_name = customer_name or order.user.get_full_name() or order.user.username or "مشتری نوبیکس"
+        customer_name = customer_name or order.user.get_full_name() or order.user.username or "مشتری جینکس فمیلی"
         ok, msg = KavenegarService.send_club_points_sms(
             phone_number=phone_for_sms,
             customer_name=customer_name,
@@ -992,7 +1492,7 @@ def create_order(request):
     try:
         diamonds_use = int(payload.get('diamonds_use') or 0)
     except (TypeError, ValueError):
-        return JsonResponse({"message": "مقدار الماس نامعتبر است."}, status=400)
+        return JsonResponse({"message": "مقدار کوین نامعتبر است."}, status=400)
     diamonds_use = max(diamonds_use, 0)
     if 0 < diamonds_use < MIN_DIAMONDS_TO_REDEEM:
         # Below the redeem threshold — silently ignore rather than failing the order.
@@ -1007,6 +1507,14 @@ def create_order(request):
         return JsonResponse({"message": "فرمت سبد خرید نامعتبر است."}, status=400)
     if any(not isinstance(it, dict) for it in items):
         return JsonResponse({"message": "آیتم‌های سبد خرید نامعتبر هستند."}, status=400)
+
+    # Required product data is checked before *any* Order row is created (and
+    # before cart-related side effects below).  This is the final authority
+    # even when an old local cart or a hand-crafted API request bypasses the
+    # checkout UI.
+    required_fields_error = _required_product_fields_error(items)
+    if required_fields_error:
+        return JsonResponse(required_fields_error, status=400)
 
     # Limit: max N crew-pack per user in a 30-day window (both Epic و Xbox)
     CREW_SLUG = "fortnite-crew-pack"
@@ -1059,7 +1567,7 @@ def create_order(request):
         if crew_disabled_setting.value_text.lower() == "true":
             user_name = user.username if user else "کاربر"
             return JsonResponse({
-                "message": f"{user_name} عزیز، امکان ثبت سفارش این محصول برای حساب کاربری شما وجود ندارد، لطفا بعدا تلاش بفرمایید. برای راهنمایی بیشتر، <a href='https://t.me/NubixShopIR/24' target='_blank' style='color: #3b82f6; text-decoration: underline;'>اینجا</a> را کلیک کنید.",
+                "message": f"{user_name} عزیز، امکان ثبت سفارش این محصول برای حساب کاربری شما وجود ندارد، لطفا بعدا تلاش بفرمایید. برای راهنمایی بیشتر، <a href='https://t.me/JinxFamilyShop/24' target='_blank' style='color: #3b82f6; text-decoration: underline;'>اینجا</a> را کلیک کنید.",
                 "message_html": True,
                 "crew_disabled": True
             }, status=400)
@@ -1114,7 +1622,7 @@ def create_order(request):
         if consecutive_days >= 6 and random.randint(0, 99) >= 55:
             user_name = user.username if user else "کاربر"
             return JsonResponse({
-                "message": f"{user_name} عزیز، امکان ثبت سفارش این محصول برای حساب کاربری شما وجود ندارد، لطفا بعدا تلاش بفرمایید. برای راهنمایی بیشتر، <a href='https://t.me/NubixShopIR/24' target='_blank' style='color: #3b82f6; text-decoration: underline;'>اینجا</a> را کلیک کنید.",
+                "message": f"{user_name} عزیز، امکان ثبت سفارش این محصول برای حساب کاربری شما وجود ندارد، لطفا بعدا تلاش بفرمایید. برای راهنمایی بیشتر، <a href='https://t.me/JinxFamilyShop/24' target='_blank' style='color: #3b82f6; text-decoration: underline;'>اینجا</a> را کلیک کنید.",
                 "message_html": True,
                 "smart_limit": True
             }, status=400)
@@ -1238,7 +1746,7 @@ def create_order(request):
     if xbox_create_account:
         if not xbox_section_added:
             note_parts.append(f"--- Xbox ---")
-        note_parts.append("درخواست ساخت اکانت Xbox توسط نوبیکس.")
+        note_parts.append("درخواست ساخت اکانت Xbox توسط جینکس فمیلی.")
     
     # PSN credentials
     psn_email = contact.get('psn_email', '').strip()
@@ -1293,6 +1801,52 @@ def create_order(request):
     discount_percent = 0
     discount_amount = 0
     for it in items:
+        # Check if this is a G4A4 item
+        g4a4_var_id = it.get('g4a4_variation_id') or it.get('g4a4_var_id')
+        if g4a4_var_id:
+            try:
+                g4a4_var = G4A4Variation.objects.select_related('product').get(external_variation_id=g4a4_var_id)
+                if not g4a4_var.in_stock or not g4a4_var.product.is_active:
+                    order.delete()
+                    return JsonResponse(
+                        {"message": f"محصول «{g4a4_var.product.name}» موقتاً غیرفعال یا ناموجود است."},
+                        status=400,
+                    )
+                
+                price = g4a4_var.sell_toman
+                name = f"{g4a4_var.product.name} - {g4a4_var.name}"
+                
+                try:
+                    qty = int(it.get('quantity') or 1)
+                except (TypeError, ValueError):
+                    qty = 1
+                qty = max(1, qty)
+                
+                custom_fields = _cart_item_custom_fields(it)
+                    
+                acc_type = _determine_account_type(g4a4_var.product.category, g4a4_var.product.game_slug, it.get('account_type'))
+                created_item = OrderItem.objects.create(
+                    order=order,
+                    product=None,
+                    variant=None,
+                    name=name,
+                    price=price,
+                    price_lira=0,
+                    quantity=qty,
+                    account_type=acc_type,
+                    g4a4_variation=g4a4_var,
+                    g4a4_status="pending",
+                    custom_fields_data=custom_fields
+                )
+                amount += price * qty
+                continue # early continue for G4A4
+            except G4A4Variation.DoesNotExist:
+                order.delete()
+                return JsonResponse(
+                    {"message": "واریانت محصول کوین یافت نشد. لطفا سبد خرید را بازبینی کنید."},
+                    status=400,
+                )
+
         # Find product / variant price on server to prevent tampering
         product_id = it.get('product_id')
         slug = it.get('slug') or ''
@@ -1435,6 +1989,7 @@ def create_order(request):
             order.delete()
             return JsonResponse({"message": "تعداد یکی از آیتم‌ها نامعتبر است."}, status=400)
         price_lira = int(getattr(p, "price_lira", 0) or 0)
+        custom_fields = _cart_item_custom_fields(it)
         account_type = (it.get('account_type') or '').strip().lower()
         account_email = (it.get('account_email') or '').strip()
         account_password = (it.get('account_password') or it.get('account_pass') or '').strip()
@@ -1448,7 +2003,7 @@ def create_order(request):
             account_email = account_email or psn_email
             account_password = account_password or psn_pass
         else:
-            account_type = account_type or "epic"
+            account_type = _determine_account_type(p.category, p.slug, account_type)
             account_email = account_email or epic_email
             account_password = account_password or epic_pass
 
@@ -1463,6 +2018,7 @@ def create_order(request):
             account_type=account_type,
             account_email=account_email,
             account_password=account_password,
+            custom_fields_data=custom_fields,
         )
 
         amount += price * qty
@@ -1520,7 +2076,7 @@ def create_order(request):
         dc.used_count = (dc.used_count or 0) + 1
         dc.save(update_fields=["used_count"])
     
-    # Apply diamond (الماس) redemption — replaces the old wallet-cashback system.
+    # Apply coin (کوین) redemption — replaces the old wallet-cashback system.
     # Completely disabled for resellers.
     diamonds_applied = 0
     diamond_discount = 0
@@ -1562,10 +2118,32 @@ def create_order(request):
                 )
                 if diamonds_applied > 0:
                     from .rewards import award_points
-                    award_points(user, -diamonds_applied, "redeem", related_order=order, note="تبدیل الماس به تخفیف خرید")
+                    award_points(user, -diamonds_applied, "redeem", related_order=order, note="تبدیل کوین به تخفیف خرید")
     payable = amount - diamond_discount
 
+    # Apply wallet balance deduction
+    use_wallet = bool(payload.get('use_wallet', False))
+    wallet_applied = 0
+    if use_wallet and user is not None and not is_reseller:
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        if profile.wallet_balance > 0:
+            wallet_applied = min(profile.wallet_balance, payable)
+            profile.wallet_balance -= wallet_applied
+            profile.save(update_fields=['wallet_balance'])
+            payable -= wallet_applied
+            
+            # Record customer wallet transaction
+            CustomerWalletTxn.objects.create(
+                profile=profile,
+                kind="order",
+                amount=-wallet_applied,
+                balance_after=profile.wallet_balance,
+                related_order=order,
+                note=f"کسر از کیف پول برای سفارش {order.tracking_code}"
+            )
+
     order.amount = payable
+    order.wallet_used = wallet_applied
     order.diamonds_used = diamonds_applied
     order.save()
 
@@ -1574,7 +2152,7 @@ def create_order(request):
         order.tracking_code, order.amount, order.rush_order, order.rush_fee, diamonds_applied
     )
 
-    # Send new order notification to contact@nubixshop
+    # Send new order notification to contact@jinxfamily
     try:
         items_for_email = [
             {
@@ -1639,7 +2217,7 @@ def create_order(request):
 <div style="white-space:pre-wrap;margin-top:6px">{order.note or "—"}</div>
 </div>
 <div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:8px;line-height:1.8">
-لینک سفارش: <a style="color:#f1c40f;text-decoration:none;font-weight:bold" href="https://nubixshop.ir/track/{order.tracking_code}">track/{order.tracking_code}</a>
+لینک سفارش: <a style="color:#f1c40f;text-decoration:none;font-weight:bold" href="https://jinxfamily.ir/track/{order.tracking_code}">track/{order.tracking_code}</a>
 </div>
 </div>
 <div style="color:#b7bfd8;font-size:12px;padding:0 24px 20px 24px">این ایمیل به صورت خودکار ارسال شده است. لطفاً پاسخ ندهید.</div>
@@ -1648,7 +2226,7 @@ def create_order(request):
 </html>
 """
         _send_email(
-            ["contact.nubixshop@gmail.com"],
+            ["contact.jinxfamily@gmail.com"],
             f"سفارش جدید ثبت شد - {order.tracking_code}",
             html,
         )
@@ -1960,7 +2538,7 @@ def my_referral(request):
         PointsTransaction.objects.filter(user=user, reason="referral")
         .aggregate(s=Sum("amount"))["s"] or 0
     )
-    base = (os.environ.get("PUBLIC_SITE_URL") or "https://nubixshop.ir").rstrip("/")
+    base = (os.environ.get("PUBLIC_SITE_URL") or "https://jinxfamily.ir").rstrip("/")
     link = f"{base}/?ref={code}" if code else ""
     return JsonResponse({
         "referral_code": code,
@@ -2184,7 +2762,7 @@ def _parse_tgju_currency_rates(html):
 
 
 def _bot_token_ok(request) -> bool:
-    expected = os.environ.get("NUBIX_BOT_WEBHOOK_TOKEN", "")
+    expected = os.environ.get("JINXFAMILY_BOT_WEBHOOK_TOKEN", "")
     if not expected:
         return False
     provided = request.headers.get("X-Bot-Token") or request.META.get("HTTP_X_BOT_TOKEN") or ""
@@ -2425,7 +3003,7 @@ def _get_username_by_id(user_id):
         return name
 
     # Check Discord API
-    token = os.environ.get("NUBIX_BOT_WEBHOOK_TOKEN")
+    token = os.environ.get("JINXFAMILY_BOT_WEBHOOK_TOKEN")
     if token:
         try:
             proxies = {
@@ -2531,7 +3109,7 @@ def discord_admin_messages(request, channel_id: int):
         return JsonResponse({"message": "channel_not_found"}, status=404)
 
     # Fetch fresh messages from Discord on-demand to ensure we have the full history (up to 50 messages)
-    token = os.environ.get("NUBIX_BOT_WEBHOOK_TOKEN")
+    token = os.environ.get("JINXFAMILY_BOT_WEBHOOK_TOKEN")
     if token:
         try:
             proxies = {
@@ -2692,7 +3270,7 @@ def _build_cart_data(order):
         "items": items
     }
 
-    # اضافه کردن تخفیفات (کد تخفیف + کیف پول/الماس)
+    # اضافه کردن تخفیفات (کد تخفیف + کیف پول/کوین)
     total_deductions = 0
     if order.discount_amount > 0:
         total_deductions += order.discount_amount
@@ -2737,6 +3315,9 @@ def my_orders(request):
                 "quantity": item.quantity,
                 "price": item.price,
                 "slug": item.product.slug if item.product else "",
+                "g4a4_variation_id": item.g4a4_variation_id,
+                "g4a4_order_id": item.g4a4_order_id,
+                "g4a4_status": item.g4a4_status,
             })
         orders.append({
             "id": o.id,
@@ -2791,7 +3372,7 @@ def cancel_order(request, tracking):
         from .rewards import award_points
         award_points(
             order.user, order.diamonds_used, "redeem",
-            related_order=order, note=f"بازگشت الماس سفارش لغوشده {order.tracking_code}",
+            related_order=order, note=f"بازگشت کوین سفارش لغوشده {order.tracking_code}",
         )
 
     # Permanently delete the canceled order (cascades to OrderItem + Payment)
@@ -2886,6 +3467,7 @@ def _admin_order_dict(o: Order):
         "duplicate_card_count": duplicate_card_count,
         "settled": o.settled,
         "settled_at": o.settled_at.isoformat() if o.settled_at else None,
+        "is_test_order": bool(getattr(o, "is_test_order", False)),
         "is_reseller_order": bool(getattr(o, "is_reseller_order", False)),
         "reseller_seller_code": getattr(o, "reseller_seller_code", "") or "",
     }
@@ -2915,6 +3497,9 @@ def _admin_product_dict(p: Product):
         "requires_2fa": bool(getattr(p, "requires_2fa", False)),
         "disable_2fa_text": getattr(p, "disable_2fa_text", "") or "",
         "disable_2fa_color": getattr(p, "disable_2fa_color", "amber") or "amber",
+        "jinx_image": getattr(p, "jinx_image", "") or "",
+        "jinx_text": getattr(p, "jinx_text", "") or "",
+        "page_customization": getattr(p, "page_customization", {}) or {},
         "display_order": getattr(p, "display_order", 0) or 0,
         "created_at": p.created_at.isoformat() if p.created_at else None,
         "variants": [
@@ -3014,6 +3599,15 @@ def _build_product_updates(payload, require_name=False):
         updates["disable_2fa_text"] = _clean_product_text(payload.get("disable_2fa_text"), 200)
     if "disable_2fa_color" in payload:
         updates["disable_2fa_color"] = _clean_2fa_color(payload.get("disable_2fa_color"))
+    if "jinx_image" in payload:
+        updates["jinx_image"] = _clean_product_text(payload.get("jinx_image"), 500)
+    if "jinx_text" in payload:
+        updates["jinx_text"] = _clean_product_text(payload.get("jinx_text"), 2000)
+    if "page_customization" in payload:
+        page_customization = payload.get("page_customization")
+        if not isinstance(page_customization, dict):
+            raise ValueError("تنظیمات سفارشی‌سازی صفحه باید یک دیکشنری باشد")
+        updates["page_customization"] = page_customization
 
     return updates
 
@@ -3309,15 +3903,8 @@ def public_testimonials(request):
     comments = (
         ProductComment.objects
         .filter(is_approved=True)
-        .annotate(
-            _seed_rank=Case(
-                When(author_name__startswith="[seed]", then=Value(1)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-        )
         .select_related("product", "user", "user__profile")
-        .order_by("_seed_rank", "-rating", "-created_at")[:20]
+        .order_by("-created_at")[:30]
     )
 
     results = []
@@ -3374,7 +3961,7 @@ def currency_rates(request):
             TGJU_CURRENCY_URL,
             timeout=6,
             headers={
-                "User-Agent": "Mozilla/5.0 (compatible; NubixShop/1.0)",
+                "User-Agent": "Mozilla/5.0 (compatible; JinxFamily/1.0)",
                 "Accept": "text/html,application/xhtml+xml",
             },
         )
@@ -3947,6 +4534,8 @@ def admin_orders(request):
         base_qs = base_qs.filter(is_reseller_order=True)
     elif type_filter == "customer":
         base_qs = base_qs.filter(is_reseller_order=False)
+    elif type_filter == "g4a4":
+        base_qs = base_qs.filter(items__g4a4_variation__isnull=False).distinct()
     total_count = base_qs.count()
     orders_qs = base_qs.select_related('user').prefetch_related('payments', 'items', 'items__product').order_by('-rush_order', '-created_at')[:limit]
     data = [_admin_order_dict(o) for o in orders_qs]
@@ -4229,7 +4818,7 @@ def admin_abandoned_cart_remind(request, cart_id):
             status=400,
         )
 
-    site_url = getattr(settings, "SITE_URL", "https://nubixshop.ir")
+    site_url = getattr(settings, "SITE_URL", "https://jinxfamily.ir")
 
     name = ""
     if cart.user:
@@ -4295,7 +4884,7 @@ def admin_refund_notify(request, tracking):
             from .rewards import award_points, toman_to_diamonds_ceil
             award_points(
                 order.user, toman_to_diamonds_ceil(total_paid), "adjust",
-                related_order=order, note=f"استرداد سفارش {order.tracking_code} به الماس",
+                related_order=order, note=f"استرداد سفارش {order.tracking_code} به کوین",
             )
 
         # 3. Maintain global completed orders counter
@@ -4328,7 +4917,7 @@ def admin_refund_notify(request, tracking):
     if not customer_email and "@" in (order.epic_username or ""):
         customer_email = order.epic_username
     if not customer_name:
-        customer_name = "مشتری نوبیکس"
+        customer_name = "مشتری جینکس فمیلی"
     # For reseller orders, route the notification to the reseller instead.
     customer_email = _order_notify_email(order) or customer_email
 
@@ -4347,7 +4936,7 @@ def admin_refund_notify(request, tracking):
       <p>در صورت نیاز به اطلاعات بیشتر با پشتیبانی در ارتباط باشید.</p>
       <p style="margin-top:12px;font-size:13px;color:#64748b;">
         لطفاً از تماس یا مراجعه بی‌مورد به پشتیبانی خودداری کنید؛ این کار تنها باعث تعویق سفارش شما و سایرین خواهد شد.<br/>
-        تیم نوبیکس
+        تیم جینکس فمیلی
       </p>
     </div>
     """
@@ -4361,7 +4950,7 @@ def admin_refund_notify(request, tracking):
     else:
         email_error = "ایمیل مشتری موجود نیست."
 
-    # SMS via Kavenegar template nubixshop-refund-request (توکن‌ها: %token = نام، %token2 = نام‌خانوادگی)
+    # SMS via Kavenegar template jinxfamily-refund-request (توکن‌ها: %token = نام، %token2 = نام‌خانوادگی)
     sms_sent = False
     sms_error = ""
     phone = _order_notify_phone(order)
@@ -4372,7 +4961,7 @@ def admin_refund_notify(request, tracking):
             phone_number=phone,
             customer_name=customer_label,
             status_fa=need_text,
-            template_name="nubixshop-refund-request",
+            template_name="jinxfamily-refund-request",
             include_status_token=False,
         )
         sms_sent = bool(ok)
@@ -4529,6 +5118,19 @@ def admin_notifications(request):
     })
 
 
+def admin_kavenegar_health(request):
+    """Return a read-only Kavenegar credential/service health result for admins."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "authentication required"}, status=401)
+    if not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+
+    result = KavenegarService.health_check()
+    result["provider"] = "kavenegar"
+    result["checked_at"] = timezone.now().isoformat()
+    return JsonResponse(result)
+
+
 @csrf_exempt
 def admin_products(request):
     if not request.user.is_authenticated:
@@ -4592,6 +5194,8 @@ def admin_products(request):
             requires_2fa=updates.get("requires_2fa", False),
             disable_2fa_text=updates.get("disable_2fa_text", ""),
             disable_2fa_color=updates.get("disable_2fa_color", "amber"),
+            jinx_image=updates.get("jinx_image", ""),
+            jinx_text=updates.get("jinx_text", ""),
             display_order=int(max_order) + 1000,
         )
         return JsonResponse(_admin_product_dict(product), status=201)
@@ -4952,7 +5556,7 @@ def _send_order_status_sms_if_changed(order, status, previous_status):
     if not customer_name and order.user:
         customer_name = order.user.get_full_name() or order.user.username or ""
     if not customer_name:
-        customer_name = "مشتری نوبیکس"
+        customer_name = "مشتری جینکس فمیلی"
 
     ok = False
     sms_msg = ""
@@ -4963,7 +5567,7 @@ def _send_order_status_sms_if_changed(order, status, previous_status):
             phone_number=phone,
             customer_name=customer_name,
             status_fa=status_text,
-            template_name="nubixshop-order-done",
+            template_name="jinxfamily-order-done",
             include_status_token=False,
         )
     elif status == "invalid_info":
@@ -4971,7 +5575,7 @@ def _send_order_status_sms_if_changed(order, status, previous_status):
             phone_number=phone,
             customer_name=customer_name,
             status_fa="",
-            template_name="nubixshop-wrong-details",
+            template_name="jinxfamily-wrong-details",
             include_status_token=False,
         )
     elif status in ("needs_2fa", "needs_tr_region"):
@@ -4979,7 +5583,7 @@ def _send_order_status_sms_if_changed(order, status, previous_status):
             phone_number=phone,
             customer_name=customer_name,
             status_fa="رسیدگی",
-            template_name="nubixshop-alert",
+            template_name="jinxfamily-alert",
             include_status_token=True,
         )
     else:
@@ -4988,7 +5592,7 @@ def _send_order_status_sms_if_changed(order, status, previous_status):
             phone_number=phone,
             customer_name=customer_name,
             status_fa=status_fa,
-            template_name="nubixshop-alert",
+            template_name="jinxfamily-alert",
             include_status_token=True,
         )
 
@@ -5031,7 +5635,7 @@ def _send_account_status_sms_if_changed(account, status, previous_status):
             phone_number=phone,
             customer_name=customer_name,
             status_fa="",
-            template_name="nubixshop-order-done",
+            template_name="jinxfamily-order-done",
             include_status_token=False,
         )
     elif status == "invalid_info":
@@ -5039,7 +5643,7 @@ def _send_account_status_sms_if_changed(account, status, previous_status):
             phone_number=phone,
             customer_name=customer_name,
             status_fa="",
-            template_name="nubixshop-wrong-details",
+            template_name="jinxfamily-wrong-details",
             include_status_token=False,
         )
     elif status in ("needs_2fa", "needs_tr_region"):
@@ -5047,7 +5651,7 @@ def _send_account_status_sms_if_changed(account, status, previous_status):
             phone_number=phone,
             customer_name=customer_name,
             status_fa="رسیدگی",
-            template_name="nubixshop-alert",
+            template_name="jinxfamily-alert",
             include_status_token=True,
         )
     else:
@@ -5055,7 +5659,7 @@ def _send_account_status_sms_if_changed(account, status, previous_status):
             phone_number=phone,
             customer_name=customer_name,
             status_fa="رسیدگی",
-            template_name="nubixshop-alert",
+            template_name="jinxfamily-alert",
             include_status_token=True,
         )
 
@@ -5172,7 +5776,7 @@ def admin_update_account_status(request, account_id: int):
                     if not reseller_name and order.user:
                         reseller_name = order.user.get_full_name() or order.user.username or ""
                     if not reseller_name:
-                        reseller_name = "همکار نوبیکس"
+                        reseller_name = "همکار جینکس فمیلی"
 
                     if reseller_email:
                         try:
@@ -5302,7 +5906,7 @@ def admin_update_order_status(request, tracking):
 
     # اگر وضعیت به مسترد شده تغییر کرد:
     # ۱) آخرین پرداخت را refunded می‌کنیم
-    # ۲) مبلغ سفارش به‌صورت الماس به کاربر برمی‌گردد (کش‌بک کیف پول حذف شده)
+    # ۲) مبلغ سفارش به‌صورت کوین به کاربر برمی‌گردد (کش‌بک کیف پول حذف شده)
     if status == "refunded":
         latest_payment = order.payments.order_by("-created_at").first()
         if latest_payment and latest_payment.status != "refunded":
@@ -5313,7 +5917,7 @@ def admin_update_order_status(request, tracking):
             from .rewards import award_points, toman_to_diamonds_ceil
             award_points(
                 order.user, toman_to_diamonds_ceil(total_paid), "adjust",
-                related_order=order, note=f"استرداد سفارش {order.tracking_code} به الماس",
+                related_order=order, note=f"استرداد سفارش {order.tracking_code} به کوین",
             )
 
     paid_transitioned = previous_status != "paid" and status == "paid"
@@ -5347,7 +5951,7 @@ def admin_update_order_status(request, tracking):
             if not customer_email and "@" in (order.epic_username or ""):
                 customer_email = order.epic_username
             if not customer_name:
-                customer_name = "مشتری نوبیکس"
+                customer_name = "مشتری جینکس فمیلی"
 
         if not customer_email:
             email_error = "ایمیل کاربر موجود نیست."
@@ -5465,7 +6069,7 @@ def admin_update_order_status(request, tracking):
             </div>
 
             <!-- CTA Button -->
-            <a href="https://nubixshop.ir/track/{order.tracking_code}" style="display: block; width: 100%; padding: 16px 24px; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 800; text-align: center; box-sizing: border-box;">
+            <a href="https://jinxfamily.ir/track/{order.tracking_code}" style="display: block; width: 100%; padding: 16px 24px; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 800; text-align: center; box-sizing: border-box;">
                 مشاهده جزئیات سفارش
             </a>
         </div>
@@ -5473,13 +6077,13 @@ def admin_update_order_status(request, tracking):
         <!-- Footer -->
         <div style="background: #f8fafc; padding: 24px 28px; text-align: center; border-top: 1px solid #e2e8f0;">
             <div style="font-size: 13px; color: #64748b; line-height: 1.8;">
-                از اعتماد شما به نوبیکس شاپ سپاسگزاریم!<br/>
+                از اعتماد شما به جینکس فمیلی سپاسگزاریم!<br/>
                 لطفاً ما را به دوستان خود معرفی کنید 💜
             </div>
             <div style="margin-top: 16px;">
-                <a href="https://t.me/nubixshop" style="display: inline-block; margin: 0 8px; color: #10b981; text-decoration: none; font-weight: 700; font-size: 13px;">تلگرام</a>
+                <a href="https://t.me/jinxfamily" style="display: inline-block; margin: 0 8px; color: #10b981; text-decoration: none; font-weight: 700; font-size: 13px;">تلگرام</a>
                 <span style="color: #cbd5e1;">|</span>
-                <a href="https://nubixshop.ir" style="display: inline-block; margin: 0 8px; color: #10b981; text-decoration: none; font-weight: 700; font-size: 13px;">وب‌سایت</a>
+                <a href="https://jinxfamily.ir" style="display: inline-block; margin: 0 8px; color: #10b981; text-decoration: none; font-weight: 700; font-size: 13px;">وب‌سایت</a>
             </div>
         </div>
     </div>
@@ -5519,7 +6123,7 @@ def admin_update_order_status(request, tracking):
             if not customer_name and order.user:
                 customer_name = order.user.get_full_name() or order.user.username or ""
             if not customer_name:
-                customer_name = "مشتری نوبیکس"
+                customer_name = "مشتری جینکس فمیلی"
 
             # پیامک برای وضعیت تکمیل شده (فقط اگه وضعیت واقعاً تغییر کرده باشه)
             if status == "completed" and previous_status != "completed":
@@ -5528,7 +6132,7 @@ def admin_update_order_status(request, tracking):
                     phone_number=phone,
                     customer_name=customer_name,
                     status_fa=status_text,
-                    template_name="nubixshop-order-done",
+                    template_name="jinxfamily-order-done",
                     include_status_token=False,
                 )
                 sms_sent = bool(ok)
@@ -5553,7 +6157,7 @@ def admin_update_order_status(request, tracking):
                     phone_number=phone,
                     customer_name=customer_name,
                     status_fa="",
-                    template_name="nubixshop-wrong-details",
+                    template_name="jinxfamily-wrong-details",
                     include_status_token=False,
                 )
                 sms_sent = bool(ok)
@@ -5566,7 +6170,7 @@ def admin_update_order_status(request, tracking):
                     phone_number=phone,
                     customer_name=customer_name,
                     status_fa="رسیدگی",
-                    template_name="nubixshop-alert",
+                    template_name="jinxfamily-alert",
                     include_status_token=True,
                 )
                 sms_sent = bool(ok)
@@ -5579,7 +6183,7 @@ def admin_update_order_status(request, tracking):
                     phone_number=phone,
                     customer_name=customer_name,
                     status_fa="رسیدگی",
-                    template_name="nubixshop-alert",
+                    template_name="jinxfamily-alert",
                     include_status_token=True,
                 )
                 sms_sent = bool(ok)
@@ -5593,7 +6197,7 @@ def admin_update_order_status(request, tracking):
                     phone_number=phone,
                     customer_name=customer_name,
                     status_fa=status_fa,
-                    template_name="nubixshop-alert",
+                    template_name="jinxfamily-alert",
                     include_status_token=True,
                 )
                 sms_sent = bool(ok)
@@ -6062,7 +6666,7 @@ def payment_verify(request, tracking):
                         # Card has been used before - add concise AI hint for admin review
                         total_uses = duplicate_count + 1
                         warning_msg = (
-                            "🤖 Nubix AI\n"
+                            "🤖 JinxFamily AI\n"
                             f"این کارت با هشت رقم آخر مشابه در {total_uses} پرداخت استفاده شده؛ احتمال حساب واسطه/دلالی."
                         )
 
@@ -6080,6 +6684,81 @@ def payment_verify(request, tracking):
         # تغییر وضعیت سفارش به پرداخت شده
         order.status = 'paid'
         order.save()
+
+        # Account Listing Fee Payment Check
+        try:
+            from .marketplace_models import AccountListing
+            from .email_service import send_admin_new_listing_email
+            paid_listing = AccountListing.objects.filter(payment_order=order, status='payment_pending').first()
+            if paid_listing:
+                paid_listing.status = 'pending_review'
+                paid_listing.save(update_fields=['status'])
+                try:
+                    send_admin_new_listing_email(paid_listing)
+                except Exception as listing_email_err:
+                    logger.error(f"Failed to send admin notification for paid listing {paid_listing.id}: {listing_email_err}")
+                logger.info(f"Listing {paid_listing.id} status updated to pending_review after 80k listing fee payment.")
+        except Exception as listing_err:
+            logger.error(f"Error updating listing status on payment verify: {listing_err}")
+
+        # Wallet Top-up Check
+        wallet_item = order.items.filter(name="شارژ کیف پول").first()
+        if wallet_item and order.user:
+            profile, _ = UserProfile.objects.get_or_create(user=order.user)
+            profile.wallet_balance += order.amount
+            profile.save(update_fields=['wallet_balance'])
+            
+            CustomerWalletTxn.objects.create(
+                profile=profile,
+                kind="topup",
+                amount=order.amount,
+                balance_after=profile.wallet_balance,
+                related_order=order,
+                related_payment=payment if 'payment' in locals() else None,
+                note="شارژ حساب با درگاه زرین‌پال"
+            )
+            
+            order.status = 'completed'
+            order.save(update_fields=['status'])
+            logger.info(f"Wallet successfully charged for user {order.user.username} by {order.amount:,} Tomans.")
+
+        # G4A4 Automatic Fulfillment
+        try:
+            from . import g4a4_service
+            for item in order.items.filter(g4a4_variation__isnull=False):
+                # Ensure idempotency: check if already sent/ordered on G4A4
+                if not item.g4a4_order_id:
+                    client_ref = f"JF-{order.id}-{item.id}"
+                    cust_data = item.custom_fields_data or {}
+                    
+                    customer_info = {
+                        "first_name": order.user.first_name if (order.user and order.user.first_name) else "مشتری",
+                        "last_name": order.user.last_name if (order.user and order.user.last_name) else "جینکس",
+                        "phone": order.phone,
+                        "email": order.user.email if (order.user and order.user.email) else "no-reply@jinxfamily.shop"
+                    }
+                    
+                    is_test_order = getattr(order, 'is_test_order', False) or (order.user and order.user.is_staff)
+                    
+                    res = g4a4_service.add_order(
+                        client_reference=client_ref,
+                        variation_id=item.g4a4_variation.external_variation_id,
+                        quantity=item.quantity,
+                        customer=customer_info,
+                        data=cust_data,
+                        test_mode=is_test_order
+                    )
+                    
+                    if res and "order_id" in res:
+                        item.g4a4_order_id = str(res["order_id"])
+                        item.g4a4_status = "processing"
+                        item.save(update_fields=['g4a4_order_id', 'g4a4_status'])
+                        logger.info(f"G4A4 Auto-fulfillment triggered for item {item.id}, G4A4 Order ID: {item.g4a4_order_id}")
+                    else:
+                        logger.error(f"G4A4 Auto-fulfillment failed for item {item.id}: {res}")
+        except Exception as g4_err:
+            logger.error(f"G4A4 Auto-fulfillment critical error: {g4_err}")
+
         points_awarded = 0
         try:
             from .rewards import award_purchase_points
@@ -6126,7 +6805,7 @@ def payment_verify(request, tracking):
                     rush_order=False,
                     wallet_used=order.wallet_used,
                     customer_email=customer_email,
-                    customer_name=customer_name or "مشتری نوبیکس",
+                    customer_name=customer_name or "مشتری جینکس فمیلی",
                 )
             except Exception as admin_err:
                 logger.error(f"Admin notification email error: {admin_err}")
@@ -6139,12 +6818,12 @@ def payment_verify(request, tracking):
 
             phone_for_sms = order.phone or ""
             if phone_for_sms:
-                customer_name_sms = customer_name or "مشتری نوبیکس"
+                customer_name_sms = customer_name or "مشتری جینکس فمیلی"
                 KavenegarService.send_status_sms(
                     phone_number=phone_for_sms,
                     customer_name=customer_name_sms,
                     status_fa="",
-                    template_name="nubix-shop-new-order",
+                    template_name="jinxfamily-shop-new-order",
                     include_status_token=False,
                 )
 
@@ -6304,10 +6983,13 @@ def send_otp_view(request):
         return captcha_response
 
     # آیا کاربر با این شماره قبلا وجود دارد؟ (برای اینکه محدودیت فقط روی ثبت‌نام‌های جدید اعمال شود)
-    user_exists = User.objects.filter(username=phone_number).exists()
+    user_exists = User.objects.filter(username=phone_number).exists() or UserProfile.objects.filter(phone_number=phone_number).exists()
 
     if intent == "signup" and user_exists:
         return JsonResponse({"message": "این شماره قبلاً ثبت‌نام شده است. لطفاً وارد شوید."}, status=400)
+        
+    if intent in ["login", "reset_password"] and not user_exists:
+        return JsonResponse({"message": "کاربری با این شماره پیدا نشد. لطفاً ابتدا ثبت‌نام کنید."}, status=404)
 
     # محدودیت برای شماره‌ای که با IPهای متفاوت تلاش می‌کند (فقط برای ثبت‌نام جدید)
     if intent == "signup" and not user_exists:
@@ -6335,13 +7017,29 @@ def send_otp_view(request):
                     "message": "امکان ایجاد بیش از ۲ حساب از این اتصال/دستگاه وجود ندارد."
                 }, status=429)
 
-    # بررسی محدودیت زمانی: آیا کد معتبری قبلاً ارسال شده؟
-    latest_otp = OTPVerification.get_latest_valid_otp(phone_number)
-    if latest_otp and phone_number not in OTP_WHITELIST_NUMBERS and not OTP_RATE_LIMIT_DISABLED:
-        remaining_seconds = int((latest_otp.expires_at - timezone.now()).total_seconds())
+    # بررسی محدودیت زمانی: حداقل فاصله ۲ دقیقه بین هر درخواست برای یک شماره تلفن
+    two_minutes_ago = timezone.now() - timedelta(minutes=2)
+    last_requested_otp = OTPVerification.objects.filter(
+        phone_number=phone_number,
+        created_at__gte=two_minutes_ago
+    ).order_by('-created_at').first()
+    if last_requested_otp and phone_number not in OTP_WHITELIST_NUMBERS and not OTP_RATE_LIMIT_DISABLED:
+        remaining_seconds = int((last_requested_otp.created_at + timedelta(minutes=2) - timezone.now()).total_seconds())
+        if remaining_seconds > 0:
+            return JsonResponse({
+                "message": f"لطفاً {remaining_seconds} ثانیه دیگر صبر کنید.",
+                "remaining_seconds": remaining_seconds
+            }, status=429)
+
+    # محدودیت تعداد درخواست: حداکثر ۷ بار در ساعت برای هر شماره تلفن
+    one_hour_ago = timezone.now() - timedelta(hours=1)
+    hourly_count = OTPVerification.objects.filter(
+        phone_number=phone_number,
+        created_at__gte=one_hour_ago
+    ).count()
+    if hourly_count >= 7 and phone_number not in OTP_WHITELIST_NUMBERS and not OTP_RATE_LIMIT_DISABLED:
         return JsonResponse({
-            "message": f"کد تایید قبلاً ارسال شده است. لطفاً {remaining_seconds} ثانیه دیگر صبر کنید.",
-            "remaining_seconds": remaining_seconds
+            "message": "تعداد درخواست‌های شما بیش از حد مجاز (۷ بار در ساعت) است. لطفاً یک ساعت دیگر تلاش کنید."
         }, status=429)
 
     # محدودیت روزانه برای جلوگیری از سوءاستفاده
@@ -6351,20 +7049,10 @@ def send_otp_view(request):
         created_at__gte=day_ago
     ).count()
 
-    DAILY_CAP = 5
+    DAILY_CAP = 20
     if daily_count >= DAILY_CAP and phone_number not in OTP_WHITELIST_NUMBERS and not OTP_RATE_LIMIT_DISABLED:
-        reuse = OTPVerification.get_latest_valid_otp(phone_number)
-        if reuse and reuse.expires_at > timezone.now():
-            # افزایش مختصر اعتبار کد موجود برای راحتی کاربر
-            reuse.expires_at = max(reuse.expires_at, timezone.now() + timedelta(minutes=2))
-            reuse.save(update_fields=["expires_at"])
-            return JsonResponse({
-                "message": "تعداد درخواست‌ها زیاد است. لطفاً آخرین کد ارسال‌شده را وارد کنید.",
-                "reuse_last_code": True,
-                "expires_in": int((reuse.expires_at - timezone.now()).total_seconds())
-            }, status=429)
         return JsonResponse({
-            "message": "محدودیت درخواست فعال شده است. لطفاً بعداً تلاش کنید."
+            "message": "محدودیت درخواست روزانه فعال شده است. لطفاً ۲۴ ساعت دیگر تلاش کنید."
         }, status=429)
 
     # بررسی محدودیت IP: حداکثر 3 درخواست در 10 دقیقه گذشته
@@ -6427,7 +7115,8 @@ def reset_password_request(request):
         return JsonResponse({"message": result}, status=400)
     phone_number = result
 
-    if not User.objects.filter(username=phone_number).exists():
+    user_exists = User.objects.filter(username=phone_number).exists() or UserProfile.objects.filter(phone_number=phone_number).exists()
+    if not user_exists:
         return JsonResponse({"message": "کاربری با این شماره پیدا نشد"}, status=404)
 
     ip_address = _get_client_ip(request)
@@ -6437,13 +7126,29 @@ def reset_password_request(request):
     if captcha_response is not None:
         return captcha_response
 
-    # بررسی محدودیت زمانی: آیا کد معتبری قبلاً ارسال شده؟
-    latest_otp = OTPVerification.get_latest_valid_otp(phone_number)
-    if latest_otp and phone_number not in OTP_WHITELIST_NUMBERS and not OTP_RATE_LIMIT_DISABLED:
-        remaining_seconds = int((latest_otp.expires_at - timezone.now()).total_seconds())
+    # بررسی محدودیت زمانی: حداقل فاصله ۲ دقیقه بین هر درخواست برای یک شماره تلفن
+    two_minutes_ago = timezone.now() - timedelta(minutes=2)
+    last_requested_otp = OTPVerification.objects.filter(
+        phone_number=phone_number,
+        created_at__gte=two_minutes_ago
+    ).order_by('-created_at').first()
+    if last_requested_otp and phone_number not in OTP_WHITELIST_NUMBERS and not OTP_RATE_LIMIT_DISABLED:
+        remaining_seconds = int((last_requested_otp.created_at + timedelta(minutes=2) - timezone.now()).total_seconds())
+        if remaining_seconds > 0:
+            return JsonResponse({
+                "message": f"لطفاً {remaining_seconds} ثانیه دیگر صبر کنید.",
+                "remaining_seconds": remaining_seconds
+            }, status=429)
+
+    # محدودیت تعداد درخواست: حداکثر ۷ بار در ساعت برای هر شماره تلفن
+    one_hour_ago = timezone.now() - timedelta(hours=1)
+    hourly_count = OTPVerification.objects.filter(
+        phone_number=phone_number,
+        created_at__gte=one_hour_ago
+    ).count()
+    if hourly_count >= 7 and phone_number not in OTP_WHITELIST_NUMBERS and not OTP_RATE_LIMIT_DISABLED:
         return JsonResponse({
-            "message": f"کد تایید قبلاً ارسال شده است. لطفاً {remaining_seconds} ثانیه دیگر صبر کنید.",
-            "remaining_seconds": remaining_seconds
+            "message": "تعداد درخواست‌های شما بیش از حد مجاز (۷ بار در ساعت) است. لطفاً یک ساعت دیگر تلاش کنید."
         }, status=429)
 
     # محدودیت روزانه برای جلوگیری از سوءاستفاده
@@ -6453,19 +7158,10 @@ def reset_password_request(request):
         created_at__gte=day_ago
     ).count()
 
-    DAILY_CAP = 5
+    DAILY_CAP = 20
     if daily_count >= DAILY_CAP and phone_number not in OTP_WHITELIST_NUMBERS and not OTP_RATE_LIMIT_DISABLED:
-        reuse = OTPVerification.get_latest_valid_otp(phone_number)
-        if reuse and reuse.expires_at > timezone.now():
-            reuse.expires_at = max(reuse.expires_at, timezone.now() + timedelta(minutes=2))
-            reuse.save(update_fields=["expires_at"])
-            return JsonResponse({
-                "message": "تعداد درخواست‌ها زیاد است. لطفاً آخرین کد ارسال‌شده را وارد کنید.",
-                "reuse_last_code": True,
-                "expires_in": int((reuse.expires_at - timezone.now()).total_seconds())
-            }, status=429)
         return JsonResponse({
-            "message": "محدودیت درخواست فعال شده است. لطفاً بعداً تلاش کنید."
+            "message": "محدودیت درخواست روزانه فعال شده است. لطفاً ۲۴ ساعت دیگر تلاش کنید."
         }, status=429)
 
     # محدودیت IP: حداکثر 3 درخواست در 10 دقیقه گذشته
@@ -6519,9 +7215,12 @@ def reset_password_confirm(request):
             return JsonResponse({"message": result}, status=400)
         phone_number = result
 
-        try:
-            user = User.objects.get(username=phone_number)
-        except User.DoesNotExist:
+        profile_with_phone = UserProfile.objects.filter(phone_number=phone_number).select_related("user").first()
+        if profile_with_phone and profile_with_phone.user:
+            user = profile_with_phone.user
+        else:
+            user = User.objects.filter(username=phone_number).first()
+        if not user:
             return JsonResponse({"message": "کاربری با این شماره پیدا نشد"}, status=404)
 
         now = timezone.now()
@@ -6649,8 +7348,11 @@ def verify_otp_view(request):
     otp.mark_as_verified()
 
     # بررسی اینکه آیا کاربری با این شماره تلفن وجود دارد
-    # فرض می‌کنیم username = phone_number
-    user = User.objects.filter(username=phone_number).first()
+    profile_with_phone = UserProfile.objects.filter(phone_number=phone_number).select_related("user").first()
+    if profile_with_phone and profile_with_phone.user:
+        user = profile_with_phone.user
+    else:
+        user = User.objects.filter(username=phone_number).first()
 
     if user:
         if intent == "signup":
@@ -7408,7 +8110,7 @@ def _get_usd_rate_toman():
             TGJU_CURRENCY_URL,
             timeout=4,
             headers={
-                "User-Agent": "Mozilla/5.0 (compatible; NubixShop/1.0)",
+                "User-Agent": "Mozilla/5.0 (compatible; JinxFamily/1.0)",
                 "Accept": "text/html,application/xhtml+xml",
             },
         )
@@ -8012,7 +8714,7 @@ def exchange_points(request):
     except Exception:
         is_reseller = False
     if is_reseller:
-        return JsonResponse({"error": "همکاران امکان استفاده از سیستم الماس را ندارند."}, status=403)
+        return JsonResponse({"error": "همکاران امکان استفاده از سیستم کوین را ندارند."}, status=403)
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
         
@@ -8024,9 +8726,9 @@ def exchange_points(request):
             try:
                 diamonds_count = int(diamonds_count)
             except (TypeError, ValueError):
-                return JsonResponse({"error": "مقدار الماس نامعتبر است."}, status=400)
+                return JsonResponse({"error": "مقدار کوین نامعتبر است."}, status=400)
             if diamonds_count < 350:
-                return JsonResponse({"error": "حداقل الماس برای تبدیل ۳۵۰ عدد است."}, status=400)
+                return JsonResponse({"error": "حداقل کوین برای تبدیل ۳۵۰ عدد است."}, status=400)
         else:
             reward_type = data.get("reward_type")
             if reward_type == "cash_110":
@@ -8037,11 +8739,11 @@ def exchange_points(request):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         
         if profile.points_balance < diamonds_count:
-            return JsonResponse({"error": "الماس کافی برای این تبدیل ندارید."}, status=400)
+            return JsonResponse({"error": "کوین کافی برای این تبدیل ندارید."}, status=400)
             
         # Deduct points
         from .rewards import award_points, generate_discount_code
-        award_points(request.user, -diamonds_count, "exchange", note=f"تبدیل {diamonds_count} الماس")
+        award_points(request.user, -diamonds_count, "exchange", note=f"تبدیل {diamonds_count} کوین")
         
         # Reload profile to get accurate balance after award_points
         profile.refresh_from_db()
@@ -8357,3 +9059,371 @@ def admin_product_requests(request):
             return JsonResponse({"error": str(e)}, status=500)
             
     return HttpResponseNotAllowed(['GET', 'POST', 'DELETE'])
+
+
+def coins_games_list(request):
+    """
+    GET /api/coins/games
+    Returns distinct list of active games (G4A4Product)
+    """
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+        
+    games = G4A4Product.objects.filter(is_active=True).values('game_slug', 'category').annotate(
+        product_count=Count('id')
+    )
+    
+    result = []
+    seen_slugs = set()
+    for g in games:
+        slug = g['game_slug']
+        if slug not in seen_slugs:
+            seen_slugs.add(slug)
+            prod_name = G4A4Product.objects.filter(game_slug=slug, is_active=True).first()
+            name = prod_name.category if prod_name else g['category']
+            result.append({
+                "slug": slug,
+                "name": name,
+                "category": g['category']
+            })
+            
+    return JsonResponse(result, safe=False)
+
+
+def coins_game_detail(request, game_slug):
+    """
+    GET /api/coins/<game_slug>
+    Returns all active products and variations for this game
+    """
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+        
+    products = G4A4Product.objects.filter(game_slug=game_slug, is_active=True).prefetch_related('variations')
+    if not products.exists():
+        return JsonResponse({"message": "بازی مورد نظر یافت نشد."}, status=404)
+        
+    result = []
+    for prod in products:
+        prod_data = {
+            "id": prod.id,
+            "external_product_id": prod.external_product_id,
+            "name": prod.name,
+            "category": prod.category,
+            "game_slug": prod.game_slug,
+            "variations": []
+        }
+        
+        for var in prod.variations.filter(in_stock=True).order_by('sell_toman'):
+            prod_data["variations"].append({
+                "id": var.id,
+                "external_variation_id": var.external_variation_id,
+                "name": var.name,
+                "cost_irt": var.cost_irt,
+                "sell_toman": var.sell_toman,
+                "delivery_type": var.delivery_type,
+                "region": var.region,
+                "required_fields": var.required_fields,
+                "attributes": var.attributes
+            })
+            
+        if prod_data["variations"]:
+            result.append(prod_data)
+            
+    return JsonResponse(result, safe=False)
+
+
+def wallet_details(request):
+    """
+    GET /api/me/wallet
+    Returns wallet balance and history of transactions
+    """
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+        
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "وارد شوید"}, status=401)
+        
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    txns = CustomerWalletTxn.objects.filter(profile=profile).order_by('-created_at')
+    
+    txn_list = []
+    for t in txns:
+        txn_list.append({
+            "id": t.id,
+            "kind": t.kind,
+            "kind_display": t.get_kind_display(),
+            "amount": t.amount,
+            "balance_after": t.balance_after,
+            "note": t.note,
+            "created_at": t.created_at.isoformat()
+        })
+        
+    return JsonResponse({
+        "balance": profile.wallet_balance,
+        "transactions": txn_list
+    })
+
+
+@csrf_exempt
+def wallet_topup(request):
+    """
+    POST /api/me/wallet/topup
+    Request body: { amount }
+    Creates a wallet top-up order and payments, returns ZarinPal link
+    """
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+        
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "وارد شوید"}, status=401)
+        
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+        amount = int(payload.get('amount', 0))
+    except Exception:
+        return JsonResponse({"message": "مبلغ نامعتبر است"}, status=400)
+        
+    if amount < 5000:
+        return JsonResponse({"message": "حداقل مبلغ شارژ ۵,۰۰۰ تومان است."}, status=400)
+        
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    
+    # Create top-up order
+    order = Order.objects.create(
+        user=request.user,
+        phone=profile.phone_number or request.user.username,
+        amount=amount,
+        status="pending",
+        note="شارژ کیف پول",
+        is_test_order=_is_test_user(request.user)
+    )
+    
+    # Create OrderItem
+    OrderItem.objects.create(
+        order=order,
+        product=None,
+        name="شارژ کیف پول",
+        price=amount,
+        quantity=1,
+    )
+    
+    # Generate payment authority using ZarinPal service
+    callback_base = getattr(settings, "PAYMENT_CALLBACK_BASE_URL", "").rstrip("/")
+    if callback_base:
+        callback_url = urljoin(f"{callback_base}/", f"payment/verify/{order.tracking_code}")
+    else:
+        callback_url = request.build_absolute_uri(f'/api/payment/verify/{order.tracking_code}')
+        
+    is_test = _is_test_user(request.user)
+    zarinpal = ZarinPalService(force_sandbox=is_test)
+    success, data = zarinpal.create_payment_request(
+        amount=amount,
+        description=f"شارژ کیف پول {request.user.username}",
+        callback_url=callback_url,
+        mobile=profile.phone_number,
+        email=request.user.email,
+        order_id=order.tracking_code,
+        currency=settings.ZARINPAL_CURRENCY
+    )
+    
+    if success:
+        Payment.objects.create(
+            order=order,
+            authority=data.get("authority"),
+            amount=amount,
+            status="pending"
+        )
+        return JsonResponse({
+            "success": True,
+            "redirect_url": data.get("redirect_url")
+        })
+    else:
+        order.delete()
+        return JsonResponse({"message": "خطا در ایجاد درخواست پرداخت در درگاه"}, status=500)
+
+
+def wishlist_list(request):
+    """
+    GET /api/me/wishlist
+    Returns wishlist items for logged in user
+    """
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+        
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "وارد شوید"}, status=401)
+        
+    items = WishlistItem.objects.filter(user=request.user).select_related('product', 'g4a4_product')
+    
+    result = []
+    for item in items:
+        if item.product:
+            result.append({
+                "id": item.id,
+                "type": "catalog",
+                "product_id": item.product.id,
+                "name": item.product.name_fa,
+                "slug": item.product.slug,
+                "price": item.product.price,
+                "image": item.product.image_url
+            })
+        elif item.g4a4_product:
+            result.append({
+                "id": item.id,
+                "type": "coins",
+                "g4a4_product_id": item.g4a4_product.id,
+                "name": item.g4a4_product.name,
+                "slug": item.g4a4_product.game_slug,
+                "price": 0,
+                "image": ""
+            })
+            
+    return JsonResponse(result, safe=False)
+
+
+@csrf_exempt
+def wishlist_toggle(request):
+    """
+    POST /api/me/wishlist/toggle
+    Request body: { product_id?, g4a4_product_id? }
+    Adds or removes item from wishlist
+    """
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+        
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "وارد شوید"}, status=401)
+        
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+        prod_id = payload.get('product_id')
+        g4a4_prod_id = payload.get('g4a4_product_id')
+    except Exception:
+        return JsonResponse({"message": "JSON نامعتبر"}, status=400)
+        
+    if not prod_id and not g4a4_prod_id:
+        return JsonResponse({"message": "شناسه محصول الزامی است."}, status=400)
+        
+    if prod_id:
+        product = get_object_or_404(Product, id=prod_id)
+        w_item = WishlistItem.objects.filter(user=request.user, product=product)
+        if w_item.exists():
+            w_item.delete()
+            return JsonResponse({"status": "removed", "message": "محصول از لیست علاقه‌مندی‌ها حذف شد."})
+        else:
+            WishlistItem.objects.create(user=request.user, product=product)
+            return JsonResponse({"status": "added", "message": "محصول به لیست علاقه‌مندی‌ها اضافه شد."})
+            
+    if g4a4_prod_id:
+        g4a4_prod = get_object_or_404(G4A4Product, id=g4a4_prod_id)
+        w_item = WishlistItem.objects.filter(user=request.user, g4a4_product=g4a4_prod)
+        if w_item.exists():
+            w_item.delete()
+            return JsonResponse({"status": "removed", "message": "بازی از لیست علاقه‌مندی‌ها حذف شد."})
+        else:
+            WishlistItem.objects.create(user=request.user, g4a4_product=g4a4_prod)
+            return JsonResponse({"status": "added", "message": "بازی به لیست علاقه‌مندی‌ها اضافه شد."})
+
+
+@csrf_exempt
+def verify_identity(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "وارد شوید"}, status=401)
+        
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'GET':
+        return JsonResponse({
+            "national_code": profile.national_code,
+            "verification_status": profile.verification_status,
+            "verification_reject_reason": profile.verification_reject_reason,
+            "national_card_image": profile.national_card_image.url if profile.national_card_image else None
+        })
+        
+    elif request.method == 'POST':
+        national_code = request.POST.get("national_code", "").strip()
+        card_image = request.FILES.get("national_card_image")
+        
+        if not national_code or len(national_code) != 10 or not national_code.isdigit():
+            return JsonResponse({"message": "کد ملی ۱۰ رقمی معتبر الزامی است."}, status=400)
+            
+        if not card_image and not profile.national_card_image:
+            return JsonResponse({"message": "تصویر کارت ملی الزامی است."}, status=400)
+            
+        profile.national_code = national_code
+        if card_image:
+            profile.national_card_image = card_image
+        profile.verification_status = 'pending'
+        profile.verification_reject_reason = ""
+        profile.save()
+        
+        return JsonResponse({
+            "status": "pending",
+            "message": "مدارک شما ثبت شد و در انتظار تایید ادمین قرار گرفت."
+        })
+        
+    return HttpResponseNotAllowed(['GET', 'POST'])
+
+
+def admin_verification_list(request):
+    if not request.user.is_authenticated or not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+        
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+        
+    status_filter = request.GET.get("status", "pending")
+    profiles = UserProfile.objects.filter(verification_status=status_filter)
+    
+    results = []
+    for p in profiles:
+        results.append({
+            "profile_id": p.id,
+            "username": p.user.username,
+            "email": p.user.email,
+            "phone_number": p.phone_number,
+            "national_code": p.national_code,
+            "verification_status": p.verification_status,
+            "national_card_image": p.national_card_image.url if p.national_card_image else None
+        })
+        
+    return JsonResponse({"results": results})
+
+
+@csrf_exempt
+def admin_approve_verification(request, profile_id):
+    if not request.user.is_authenticated or not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+        
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+        
+    profile = get_object_or_404(UserProfile, id=profile_id)
+    profile.verification_status = 'verified'
+    profile.verification_reject_reason = ""
+    profile.save()
+    
+    return JsonResponse({"message": "مدارک هویت کاربر با موفقیت تایید شد."})
+
+
+@csrf_exempt
+def admin_reject_verification(request, profile_id):
+    if not request.user.is_authenticated or not _is_admin_user(request.user):
+        return JsonResponse({"detail": "forbidden"}, status=403)
+        
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+        
+    profile = get_object_or_404(UserProfile, id=profile_id)
+    
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+        reason = payload.get('reason', '').strip()
+    except Exception:
+        reason = ""
+        
+    profile.verification_status = 'rejected'
+    profile.verification_reject_reason = reason
+    profile.save()
+    
+    return JsonResponse({"message": "مدارک هویت کاربر رد صلاحیت شد."})

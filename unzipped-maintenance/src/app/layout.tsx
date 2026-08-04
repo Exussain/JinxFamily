@@ -10,12 +10,12 @@ const vazirmatn = Vazirmatn({
 });
 
 export const metadata: Metadata = {
-  title: "NubixShop.ir | در حال بروزرسانی",
+  title: "JinxFamily.shop | در حال بروزرسانی",
   description:
-    "NubixShop.ir موقتاً در حال بروزرسانی است و امکانات جدیدی به وبسایت اضافه می‌شود. لطفاً کمی بعد دوباره سر بزنید.",
-  metadataBase: new URL("https://nubixshop.ir"),
+    "JinxFamily.shop موقتاً در حال بروزرسانی است و امکانات جدیدی به وبسایت اضافه می‌شود. لطفاً کمی بعد دوباره سر بزنید.",
+  metadataBase: new URL("https://jinxfamily.shop"),
   openGraph: {
-    title: "NubixShop.ir | در حال بروزرسانی",
+    title: "JinxFamily.shop | در حال بروزرسانی",
     description:
       "در حال اضافه کردن امکانات جدید به وبسایت هستیم. لطفاً کمی بعد دوباره سر بزنید.",
     type: "website",

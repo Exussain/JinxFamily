@@ -122,7 +122,7 @@ export default function TrackClient({ code }) {
               <div className="muted" style={{ lineHeight: 1.8, fontSize: 13 }}>
                 ⚠️ در صورت وجود هرگونه سوال <a href="https://t.me/c/2255757818/1632" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 800 }}>اینجا کلیک کنید</a> ✅<br />
                 تنها برای سفارش‌های دارای مشکل (2FA، ریجن، اطلاعات غلط، لغو شده) پیام دهید. وضعیت را از پنل یا پیامک چک کنید. از ارسال پیام‌های غیرضروری خودداری کنید.<br />
-                ⚠️ پشتیبانی فقط از طریق <a href="https://t.me/Nubixsupport" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 800 }}>@Nubixsupport</a> در تلگرام فعالیت می‌کند ❌<br />
+                ⚠️ پشتیبانی فقط از طریق <a href="https://t.me/JinxFamilySupport" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 800 }}>@JinxFamilySupport</a> در تلگرام فعالیت می‌کند ❌<br />
                 ثبت سفارشات خودکار است و نیازی به ارسال رسید نیست ❌
               </div>
             </div>

@@ -12,7 +12,7 @@ from telethon import TelegramClient, events
 from urllib.parse import urlparse
 
 # --- 0. DJANGO SETUP (برای دسترسی به دیتابیس) ---
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nubixstore.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jinxfamily.settings')
 sys.path.insert(0, '/var/www/public/backend')
 import django
 django.setup()
@@ -322,9 +322,9 @@ SESSION_NAME = 'arshia_session'
 
 # OpenRouter / AI Config
 OPENROUTER_API_KEY = "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"
-MODEL_NAME = "x-ai/grok-4.1-fast"  # main chat model for Nubix bot
-APP_NAME = "Nubix Shop AI"
-SITE_URL = "https://nubixshop.ir"
+MODEL_NAME = "x-ai/grok-4.1-fast"  # main chat model for JinxFamily bot
+APP_NAME = "JinxFamily AI"
+SITE_URL = "https://jinxfamily.shop"
 
 import python_socks
 
@@ -349,7 +349,7 @@ LOG_DIR = "logs"
 ERROR_LOG_FILE = os.path.join(LOG_DIR, "my_userbot_errors.log")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-logger = logging.getLogger("nubix_bot")
+logger = logging.getLogger("jinxfamily_bot")
 logger.setLevel(logging.INFO)
 if not logger.handlers:
     file_handler = RotatingFileHandler(
@@ -478,15 +478,15 @@ def strip_leading_greeting(text: str) -> str:
     return text
 
 def normalize_style(text: str) -> str:
-    """Make text less repetitive/emoji-heavy, brand it as Nubix, drop internal notes."""
+    """Make text less repetitive/emoji-heavy, brand it as JinxFamily, drop internal notes."""
     if not text:
         return text
     # drop internal note part if present (only for internal history / AI, نه پیام کاربر)
     if "\n(یادداشت:" in text:
         text = text.split("\n(یادداشت:")[0].rstrip()
     # rename old persona name to brand
-    text = text.replace("عرشیا", "نوبیکس شاپ")
-    text = text.replace("Arshia", "Nubix Shop")
+    text = text.replace("عرشیا", "جینکس فمیلی")
+    text = text.replace("Arshia", "Jinx Family")
     # سبک نوشتار رو طبیعی نگه دار؛ ایموجی و کلمات صمیمی رو کامل حذف نکن
     text = re.sub(r"[ ]{2,}", " ", text).strip()
     return text
@@ -510,7 +510,7 @@ def apply_assistant_tone_rules(text: str) -> str:
 def sanitize_reply(text: str) -> str:
     cleaned = END_PUNCTUATION_REGEX.sub(" ", text)
     # بازگرداندن آدرس سایت به شکل قابل کلیک
-    cleaned = cleaned.replace("Nubixshop ir", "Nubixshop.ir")
+    cleaned = cleaned.replace("JinxFamily.shop", "JinxFamily.shop")
     cleaned = re.sub(r"[ ]{2,}", " ", cleaned).strip()
     return cleaned
 
@@ -581,33 +581,33 @@ HUMAN_TAKEOVER_SECONDS = 60  # pause duration after human sends message before b
 
 GOLDEN_EXAMPLES = """
 User: سلام خسته نباشید
-Nubix: سلام در خدمتم، خوش اومدی به نوبیکس شاپ، چی لازم داری
+Jinx: سلام در خدمتم، خوش اومدی به جینکس فمیلی، چی لازم داری
 ---
 User: کروپک چنده؟
-Nubix: قیمت دقیق تو سایت هست، همین الان میتونی چک کنی
-Nubixshop.ir
+Jinx: قیمت دقیق تو سایت هست، همین الان میتونی چک کنی
+jinxfamily.shop
 ---
 User: داداش کی سفارش من انجام میشه؟ ۳ ساعت شد
-Nubix: حق داری نگران شی، بابت تاخیر معذرت میخوام، سفارشات به ترتیب دارن انجام میشن، اگه کد پیگیری داری بفرست تا دقیق بگم کجاست
+Jinx: حق داری نگران شی، بابت تاخیر معذرت میخوام، سفارشات به ترتیب دارن انجام میشن، اگه کد پیگیری داری بفرست تا دقیق بگم کجاست
 ---
 User: اکانتم بن نشه؟
-Nubix: خیالت راحت، خریدها کاملا قانونی و مستقیم از Epic انجام میشه
+Jinx: خیالت راحت، خریدها کاملا قانونی و مستقیم از Epic انجام میشه
 ---
 User: کد پیگیری: 2990 چرا انجام نشده؟
-Nubix: کد رو گرفتم، الان چک میکنم، اگه لازمه اطلاعات اکانت رو دوباره بفرست
+Jinx: کد رو گرفتم، الان چک میکنم، اگه لازمه اطلاعات اکانت رو دوباره بفرست
 ---
 User: داداش این کد تخفیف کار نمیکنه
-Nubix: بذار بررسی کنم، کد درستش NUBIX-SHOP هست
+Jinx: بذار بررسی کنم، کد درستش JINX-FAMILY هست
 ---
 User: سفارش من تکمیل شد؟
-Nubix: بله سفارش انجام شده، اگه چیزی جا مونده بهم بگو تا پیگیری کنم
+Jinx: بله سفارش انجام شده، اگه چیزی جا مونده بهم بگو تا پیگیری کنم
 ---
 User: شماره کارت میدی کارت به کارت کنم؟
-Nubix: پرداخت فقط از طریق سایت ممکنه، درگاه امن فعاله
-Nubixshop.ir
+Jinx: پرداخت فقط از طریق سایت ممکنه، درگاه امن فعاله
+jinxfamily.shop
 ---
 User: من ایکس باکس ندارم مشکلی نیست؟
-Nubix: نه مشکلی نیست، با اپیک هم فعال میکنیم
+Jinx: نه مشکلی نیست، با اپیک هم فعال میکنیم
 """
 
 SYSTEM_PROMPT = """
@@ -615,10 +615,10 @@ You are a customer support assistant for a Persian-speaking Fortnite item store.
 The store sells and activates Fortnite items (V-Bucks, skins, bundles, etc.) for customers, mostly via Telegram and website chat.
 
 STORE FACTS (use when user asks about اعتبار/قانونی بودن):
-- فروشگاه نوبیکس شاپ دفتر فعال در ازمیر ترکیه و دفتر رسمی ثبت‌شده در تهران (منطقه ۸) دارد
+- فروشگاه جینکس فمیلی دفتر فعال در ازمیر ترکیه و دفتر رسمی ثبت‌شده در تهران (منطقه ۸) دارد
 - سفارش‌ها مستقیم از Epic Games ثبت می‌شوند و حساب‌ها احراز هویت‌شده هستند
 - اینماد فعال و درگاه زرین‌پال امن داریم و رضایت مشتری‌ها بالاست
-- آدرس سایت: Nubixshop.ir
+- آدرس سایت: jinxfamily.shop
 
 IDENTITY & HONESTY:
 - If the user asks "انسانی؟ رباتی؟", reply with: "من دستیار هوشمند فروشگاهم 😊 کارم اینه سریع به سوالای معمولی جواب بدم. هر جا نیاز به بررسی خاص یا تصمیم‌گیری باشه، همکار انسانی‌مون میاد تو چت و ادامه رو اون پیگیری می‌کنه."
@@ -682,7 +682,7 @@ Now wait for the user's message and answer in Persian only.
 """
 
 # --- 4. TELEGRAM & BOT LOGIC ---
-print(f"🚀 Initializing Nubix AI (Nubix Shop Persona)...")
+print(f"🚀 Initializing JinxFamily AI (JinxFamily Persona)...")
 
 try:
     ai_client = OpenAI(
@@ -889,13 +889,13 @@ async def process_buffered_messages(user_id, chat_id, sender):
                     reply = (
                         f"💰 {p['name']}: {p['price']} تومان\n"
                         f"🔗 لینک مستقیم: {p['url']}\n"
-                        "🛒 خرید: Nubixshop.ir"
+                        "🛒 خرید: JinxFamily.shop"
                     )
                 else:
                     lines = []
                     for p in results:
                         lines.append(f"• {p['name']}: {p['price']} تومان – {p['url']}")
-                    reply = "💰 چند گزینه پیدا کردم:\n" + "\n".join(lines) + "\n\n🛒 خرید: Nubixshop.ir"
+                    reply = "💰 چند گزینه پیدا کردم:\n" + "\n".join(lines) + "\n\n🛒 خرید: JinxFamily.shop"
 
                 async with client.action(chat_id, 'typing'):
                     await asyncio.sleep(0.3)
@@ -921,10 +921,10 @@ async def process_buffered_messages(user_id, chat_id, sender):
             user_histories[user_id].append({"role": "user", "content": normalized_text})
 
         pacing_hint = (
-            "یادآوری لحن و محدوده: تو پشتیبان نوبیکس شاپی و کاربر رو مهربون و راضی نگه دار. "
+            "یادآوری لحن و محدوده: تو پشتیبان جینکس فمیلی هستی و کاربر رو مهربون و راضی نگه دار. "
             "فقط به سوالات مرتبط با فروشگاه، فورتنایت، سفارش، پرداخت و اکانت جواب بده. "
             "اگه سوال بی‌ربط پرسید، خیلی محترمانه و کوتاه بگو که فقط درباره خرید و سفارش کمک میکنی و بعد بپرس چه کمکی از دستت برمیاد. "
-            "از کلمات «مشتی» و «جینکس» استفاده نکن. "
+            "از کلمات «مشتی» استفاده نکن. "
             "جواب‌ها کوتاه و جمع‌بندی‌شده باشه، مخصوصا وقتی چند پیام پشت سرهم اومده."
         )
 
@@ -1013,7 +1013,7 @@ async def process_buffered_messages(user_id, chat_id, sender):
                 await asyncio.sleep(min(base_delay, 2.0))
 
                 sent_message = await last_event.reply(reply)
-                print(f"📤 Nubix: {reply}")
+                print(f"📤 JinxFamily: {reply}")
                 log_chat_event(
                     user_id,
                     "assistant",
@@ -1152,7 +1152,7 @@ async def handle_new_message(event):
 
 
 if __name__ == '__main__':
-    print("✅ Nubix Bot is Online & Ready.")
+    print("✅ JinxFamily Bot is Online & Ready.")
     print(f"📂 Memory loaded: {len(user_histories)} chats.")
     print(f"⏱️ Message batching: {DEBOUNCE_SECONDS}s debounce")
     client.start()

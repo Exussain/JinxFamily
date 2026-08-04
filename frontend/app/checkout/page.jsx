@@ -1,28 +1,59 @@
 "use client";
 export const dynamic = 'force-dynamic';
 import { useCart } from "../../lib/useCart";
-import { useEffect, useState, Suspense, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
+import dynamicImport from "next/dynamic";
 import { useRouter } from "next/navigation";
-import Navbar from "../../components/Navbar";
 import BackToHomeButton from "../../components/BackToHomeButton";
 import SmartImage from "../../components/SmartImage";
 import { getPlatformOption } from "../../lib/platforms";
 import PasswordInput from '../../components/PasswordInput';
-import { SpinWheelSvg, FALLBACK_TYPES, SLICE } from "../../components/spinWheel";
+const OTPLogin = dynamicImport(() => import('../../components/OTPLogin'), { ssr: false });
 
 // Constants
 const CREWPACK_SLUG = 'fortnite-crew-pack';
 const ACK_STORAGE_KEY = 'checkout_ack_timestamp';
 const ACK_EXPIRY_DAYS = 7; // یادآوری هر 7 روز
 
-// Diamond (الماس) <-> Toman conversion, mirrors backend/shop/rewards.py
+// Coin (کوین) <-> Toman conversion, mirrors backend/shop/rewards.py
 const DIAMOND_TO_TOMAN_NUMERATOR = 110000;
 const DIAMOND_TO_TOMAN_DENOMINATOR = 350;
 const MIN_DIAMONDS_TO_REDEEM = 10;
 const diamondsToToman = (d) => Math.floor((d * DIAMOND_TO_TOMAN_NUMERATOR) / DIAMOND_TO_TOMAN_DENOMINATOR);
 const tomanToDiamondsCeil = (t) => Math.ceil((Math.max(0, t) * DIAMOND_TO_TOMAN_DENOMINATOR) / DIAMOND_TO_TOMAN_NUMERATOR);
 
+const isAccountItem = (it) => {
+  if (!it) return false;
+  const category = (it.category || '').toString().toLowerCase();
+  const subcategory = (it.subcategory || '').toString().toLowerCase();
+  const slug = (it.slug || '').toString().toLowerCase();
+  const name = (it.name || it.name_fa || '').toString().toLowerCase();
+
+  return (
+    it.is_account === true ||
+    category === 'accounts' ||
+    category === 'account' ||
+    category.includes('account') ||
+    subcategory === 'accounts' ||
+    subcategory === 'account' ||
+    subcategory.includes('account') ||
+    slug.includes('account') ||
+    name.includes('آگهی اکانت') ||
+    (name.includes('اکانت') && !name.includes('ویباکس') && !name.includes('گیفت کارت') && !name.includes('شارژ'))
+  );
+};
+
 const productSupportsPlatforms = (it) => {
+  if (isAccountItem(it)) {
+    return null;
+  }
+  // Product and supplier-specific details are collected on the product page
+  // and travel with this line item. They must not be replaced by the broad
+  // Fortnite/Epic platform prompt at checkout.
+  const customFields = it.custom_fields || it.custom_fields_data;
+  if (customFields && typeof customFields === 'object' && Object.keys(customFields).length > 0) {
+    return null;
+  }
   const name = (it.name || '').toLowerCase();
   const slug = (it.slug || '').toLowerCase();
   const category = (it.category || '').toLowerCase();
@@ -33,14 +64,30 @@ const productSupportsPlatforms = (it) => {
   if (category === 'gta6' || slug.includes('gta6') || name.includes('gta') || name.includes('جی تی ای')) {
     return ['psn', 'xbox'];
   }
-  if (it.account_type) {
-    return ['epic', 'psn', 'xbox'];
+  if (category === 'playstation-games' || slug.includes('playstation') || slug.includes('psn') || name.includes('پلی استیشن')) {
+    return ['psn'];
   }
+  if (category === 'xbox-games' || slug.includes('xbox') || name.includes('ایکس باکس')) {
+    return ['xbox'];
+  }
+  if (category === 'battlenet' || category === 'overwatch-2' || slug.includes('overwatch') || slug.includes('battlenet') || name.includes('بتل نت')) {
+    return ['battlenet'];
+  }
+  if (category === 'valorant-points' || category === 'league-of-legends' || slug.includes('valorant') || slug.includes('league') || name.includes('ولورانت')) {
+    return ['riot'];
+  }
+  if (category === 'cod-cp' || slug.includes('cod') || name.includes('کالاف')) {
+    return ['activision'];
+  }
+  if (category === 'supercell' || slug.includes('supercell') || name.includes('سوپرسل') || name.includes('کلش')) {
+    return ['supercell'];
+  }
+  // Direct topups (PUBG UC, Free Fire, Mobile Legends, Genshin, Roblox) and Gift Cards use their custom fields and do not force Epic login
   return null;
 };
 
-export default function CheckoutPage() {
-  const { items, total, setQty, removeItem, clear, setPlatform } = useCart();
+function CheckoutPage() {
+  const { items, total, setQty, removeItem, clear, setPlatform, setCustomFields, validateCart } = useCart();
   const [form, setForm] = useState({
     epic_email: '',
     epic_pass: '',
@@ -78,13 +125,6 @@ export default function CheckoutPage() {
   const [discountOpen, setDiscountOpen] = useState(false);
   const [howToGetDiscount, setHowToGetDiscount] = useState(false);
   const [joinedChannel, setJoinedChannel] = useState(false);
-  const [wheelRotation, setWheelRotation] = useState(0);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [spinStatus, setSpinStatus] = useState(null);
-  const [spinError, setSpinError] = useState(null);
-  const [spinResult, setSpinResult] = useState(null);
-  const [spinCopied, setSpinCopied] = useState(false);
-  const spinTimer = useRef(null);
   const [rushDisabled, setRushDisabled] = useState(false);
   const [rushDisabledReason, setRushDisabledReason] = useState('');
   const [hideRushOption, setHideRushOption] = useState(false);
@@ -93,6 +133,10 @@ export default function CheckoutPage() {
   const [vpnDetected, setVpnDetected] = useState(false);
   const [vpnLocationData, setVpnLocationData] = useState(null);
   const [activeStep, setActiveStep] = useState(1);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const [resumeAfterLogin, setResumeAfterLogin] = useState(false);
+  const draftTimer = useRef(null);
   const router = useRouter();
 
   const validateStep1 = () => {
@@ -116,6 +160,13 @@ export default function CheckoutPage() {
           return false;
         }
       }
+    }
+    const incompleteItem = items.find((it) => Array.isArray(it.missing_field_keys) && it.missing_field_keys.length > 0);
+    if (incompleteItem) {
+      const field = (incompleteItem.required_fields || []).find((entry) => entry.key === incompleteItem.missing_field_keys[0]);
+      setError(`لطفاً «${field?.label || incompleteItem.missing_field_keys[0]}» را برای «${incompleteItem.name}» وارد کنید.`);
+      document.getElementById(`required-fields-${incompleteItem.line_key}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
     }
     setError('');
     return true;
@@ -171,6 +222,7 @@ export default function CheckoutPage() {
   // collect their own custom_fields and must NOT ask for Epic/Xbox/PSN creds.
   const platformSet = new Set(
     items
+      .filter((it) => !isAccountItem(it))
       .map((it) => (it.account_type || '').toLowerCase())
       .filter(Boolean)
   );
@@ -200,6 +252,7 @@ export default function CheckoutPage() {
 
   const requiredMissing = [];
   items.forEach(it => {
+    if (isAccountItem(it)) return;
     const supported = productSupportsPlatforms(it);
     if (supported && it.account_type) {
       if (!(it.account_email || '').trim()) requiredMissing.push(`ایمیل حساب ${it.name}`);
@@ -415,14 +468,18 @@ export default function CheckoutPage() {
     }
   };
 
+  // Guests can complete the entire checkout. Keep their work locally and only
+  // ask them to authenticate when they are ready to place the order.
   useEffect(() => {
-    if (meLoaded && !me && !redirectingToLogin) {
+    if (!meLoaded || typeof window === "undefined") return;
+    window.clearTimeout(draftTimer.current);
+    setDraftSaved(false);
+    draftTimer.current = window.setTimeout(() => {
       saveDraft();
-      setRedirectingToLogin(true);
-      setError('برای ثبت سفارش باید وارد حساب شوید.');
-      router.replace('/login');
-    }
-  }, [meLoaded, me, redirectingToLogin, router]);
+      setDraftSaved(true);
+    }, 450);
+    return () => window.clearTimeout(draftTimer.current);
+  }, [form, diamondsUse, rushOrder, contactEmail, discountCode, fullName, items, meLoaded]);
 
   // Prefill platform credentials from cart items (added on product page)
   useEffect(() => {
@@ -664,6 +721,11 @@ export default function CheckoutPage() {
     setSubmitAttempted(true);
     setError('');
 
+    if (!items.length) {
+      setError('سبد خرید شما خالی است.');
+      return;
+    }
+
     // Check if any product is missing a platform choice
     const missingPlatformItems = items.filter(it => {
       const supported = productSupportsPlatforms(it);
@@ -684,6 +746,14 @@ export default function CheckoutPage() {
       setError('لطفاً اطلاعات اجباری مربوط به پلتفرم را کامل کنید.');
       return;
     }
+    if (emailRequired) {
+      setError('لطفاً یک ایمیل تماس معتبر وارد کنید.');
+      return;
+    }
+    if (!form.telegram.trim()) {
+      setError('لطفاً آی‌دی تلگرام را برای هماهنگی سفارش وارد کنید.');
+      return;
+    }
 
     // VPN check disabled to avoid ipinfo dependency.
 
@@ -693,10 +763,27 @@ export default function CheckoutPage() {
     }
     if (!me) {
       saveDraft();
-      setError('برای ثبت سفارش باید وارد شوید. در حال هدایت به صفحه ورود/ثبت‌نام...');
-      setTimeout(() => {
-        router.push('/login');
-      }, 600);
+      setDraftSaved(true);
+      setResumeAfterLogin(true);
+      setShowLoginPrompt(true);
+      return;
+    }
+    const validation = await validateCart(items);
+    if (validation?.unavailable) {
+      setError('امکان بررسی قیمت و موجودی سبد وجود ندارد. لطفاً اتصال خود را بررسی و دوباره تلاش کنید.');
+      return;
+    }
+    const incomplete = (validation?.items || []).find((item) => item.complete === false);
+    if (incomplete) {
+      const missingKey = incomplete.missing_field_keys?.[0];
+      const field = (incomplete.required_fields || []).find((entry) => entry.key === missingKey);
+      setError(`لطفاً «${field?.label || missingKey}» را برای «${incomplete.name || 'این محصول'}» وارد کنید.`);
+      const cartItem = items[incomplete.index];
+      document.getElementById(`required-fields-${cartItem?.line_key}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (!validation?.valid) {
+      setError('قیمت یا موجودی بعضی اقلام تغییر کرده است. لطفاً سبد را بررسی کنید.');
       return;
     }
     setLoading(true);
@@ -740,13 +827,14 @@ export default function CheckoutPage() {
       }
       
       items.forEach((it, idx) => {
+        if (isAccountItem(it)) return;
         const supported = productSupportsPlatforms(it);
         if (supported && it.account_type) {
           const option = getPlatformOption(it.account_type);
           noteParts.push(`--- مشخصات اکانت آیتم #${idx + 1} (${it.name}) ---`);
           noteParts.push(`پلتفرم: ${option.shortLabel}`);
           if (it.account_type === 'xbox' && it.xbox_create_account) {
-            noteParts.push(`درخواست ساخت اکانت Xbox توسط نوبیکس.`);
+            noteParts.push(`درخواست ساخت اکانت Xbox توسط جینکس فمیلی.`);
           } else {
             noteParts.push(`ایمیل: ${it.account_email || ''}`);
             noteParts.push(`رمز عبور: ${it.account_password || ''}`);
@@ -804,6 +892,16 @@ export default function CheckoutPage() {
       }
 
       if (!res.ok) {
+        if (data?.code === 'required_product_fields') {
+          const incomplete = data.items?.[0];
+          const missingKey = incomplete?.missing_field_keys?.[0];
+          const field = incomplete?.required_fields?.find((entry) => entry.key === missingKey);
+          setError(`لطفاً «${field?.label || missingKey}» را برای «${incomplete?.name || 'این محصول'}» وارد کنید.`);
+          const cartItem = items[incomplete?.index];
+          document.getElementById(`required-fields-${cartItem?.line_key}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setLoading(false);
+          return;
+        }
         const error = new Error(data?.message || 'خطا در ایجاد سفارش');
         error.isHtml = data?.message_html || false;
         throw error;
@@ -831,6 +929,15 @@ export default function CheckoutPage() {
     }
   };
 
+  useEffect(() => {
+    if (!me || !resumeAfterLogin || showLoginPrompt) return;
+    setResumeAfterLogin(false);
+    const timer = window.setTimeout(() => submit(), 250);
+    return () => window.clearTimeout(timer);
+    // `submit` intentionally runs only after the authentication handoff.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me, resumeAfterLogin, showLoginPrompt]);
+
   // Platform label helper
   const getPlatformLabel = (platform) => {
     const option = getPlatformOption(platform);
@@ -845,15 +952,33 @@ export default function CheckoutPage() {
   return (
     <div className="checkout-page-wrapper">
       <BackToHomeButton />
-      <Suspense fallback={null}>
-        <Navbar />
-      </Suspense>
-
       <main className="container checkout-container">
         {/* Checkout Top Header */}
         <div className="checkout-top-header">
-          <h1 className="checkout-main-title">تکمیل و ثبت سفارش آنلاین</h1>
+          <div className="checkout-heading-copy">
+            <span className="checkout-eyebrow">تسویه‌حساب امن</span>
+            <h1 className="checkout-main-title">همه‌چیز آماده‌ست.</h1>
+            <p>اطلاعات سفارش را تکمیل کنید؛ ورود فقط در لحظه نهایی لازم است.</p>
+          </div>
+          <div className={`draft-status ${draftSaved ? 'saved' : ''}`}>
+            {draftSaved ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            ) : (
+              <span className="draft-status-dot" />
+            )}
+            <span>{draftSaved ? 'ذخیره شد' : 'در حال ذخیره…'}</span>
+          </div>
         </div>
+
+        <div className="guest-checkout-note" aria-live="polite">
+            <div className="guest-note-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            </div>
+            <div>
+              <strong>{!meLoaded ? 'در حال بررسی ورود…' : me ? 'حساب شما آماده است' : 'به‌صورت مهمان ادامه می‌دهید'}</strong>
+              <span>{me ? 'اطلاعات سفارش به حساب شما متصل می‌شود.' : 'سبد و اطلاعاتتان روی همین دستگاه ذخیره می‌شود. در آخرین مرحله، همین‌جا وارد می‌شوید.'}</span>
+            </div>
+          </div>
 
         <div className="checkout-grid">
           {/* Main Form Flow Column (Right in RTL) */}
@@ -870,6 +995,15 @@ export default function CheckoutPage() {
                 ) : (
                   <span>{error}</span>
                 )}
+              </div>
+            )}
+
+            {!items.length && (
+              <div className="empty-checkout-card">
+                <div className="empty-checkout-icon">🛒</div>
+                <h2>سبدتان هنوز خالی است</h2>
+                <p>اول محصولتان را انتخاب کنید؛ سبد خرید خودکار ذخیره می‌شود.</p>
+                <a href="/products" className="empty-checkout-link">مشاهده محصولات</a>
               </div>
             )}
 
@@ -929,6 +1063,45 @@ export default function CheckoutPage() {
               </div>
             )}
 
+            <div className="checkout-card contact-card">
+              <div className="card-header">
+                <div className="card-step">۰۱</div>
+                <div>
+                  <h3>راه ارتباطی</h3>
+                  <p>تایید و وضعیت سفارش را اینجا ارسال می‌کنیم</p>
+                </div>
+              </div>
+              <div className="contact-fields-grid">
+                <div className="field">
+                  <label>ایمیل تماس</label>
+                  <input
+                    type="email"
+                    dir="ltr"
+                    value={me?.email || contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    disabled={Boolean(me?.email)}
+                    className={contactEmailMissing ? 'input-error' : ''}
+                  />
+                </div>
+                <div className="field">
+                  <label>آی‌دی تلگرام</label>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    value={form.telegram}
+                    onChange={(e) => setForm({...form, telegram: e.target.value})}
+                    placeholder="@username"
+                    className={telegramMissing ? 'input-error' : ''}
+                  />
+                </div>
+                <div className="field full-width">
+                  <label>توضیحات سفارش <span>(اختیاری)</span></label>
+                  <input value={form.note} onChange={(e) => setForm({...form, note: e.target.value})} placeholder="اگر نکته‌ای هست، اینجا بنویسید…" />
+                </div>
+              </div>
+            </div>
+
             {/* 1. Account Credentials Card (if any item supports platform login) */}
             {items.some(it => productSupportsPlatforms(it)) && (
               <div className="checkout-card credentials-card">
@@ -941,7 +1114,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h3>اطلاعات پرداخت</h3>
-                    <p>پلتفرم و مشخصات اکانت خود را برای ورود پشتیبان نوبیکس وارد کنید</p>
+                    <p>پلتفرم و مشخصات اکانت خود را برای ورود پشتیبان جینکس فمیلی وارد کنید</p>
                   </div>
                 </div>
                 
@@ -950,7 +1123,7 @@ export default function CheckoutPage() {
                     const supportedPlatforms = productSupportsPlatforms(it);
                     const option = it.account_type ? getPlatformOption(it.account_type) : null;
                     return (
-                      <div key={`${it.product_id}-${it.variant_id ?? ""}`} className="item-credentials-block">
+                      <div key={it.line_key || `${it.product_id}-${it.variant_id ?? ""}`} className="item-credentials-block">
                         <div className="item-credentials-header">
                           <span className="item-index-badge">آیتم {idx + 1}</span>
                           <span className="item-product-name">{it.name}</span>
@@ -980,7 +1153,7 @@ export default function CheckoutPage() {
                                   key={key}
                                   type="button"
                                   className={`inline-platform-btn ${isActive ? 'active' : ''} platform-${key}`}
-                                  onClick={() => setPlatform(it.product_id, it.variant_id ?? null, key)}
+                                  onClick={() => setPlatform(it.product_id, it.variant_id ?? null, key, {}, it.line_key)}
                                 >
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={opt.icon} alt={opt.iconAlt || key} />
@@ -997,7 +1170,7 @@ export default function CheckoutPage() {
                               <input
                                 type="checkbox"
                                 checked={it.xbox_create_account || false}
-                                onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, 'xbox', { xbox_create_account: e.target.checked })}
+                                onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, 'xbox', { xbox_create_account: e.target.checked }, it.line_key)}
                               />
                               <span className="checkbox-text">اکانت ایکس‌باکس ندارم، لطفاً برای من بسازید (رایگان و ایمن)</span>
                             </label>
@@ -1012,7 +1185,7 @@ export default function CheckoutPage() {
                                 <input
                                   type="email"
                                   value={it.account_email || ''}
-                                  onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_email: e.target.value })}
+                                  onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_email: e.target.value }, it.line_key)}
                                   placeholder="example@email.com"
                                   required
                                 />
@@ -1021,7 +1194,7 @@ export default function CheckoutPage() {
                                 <label>رمز عبور اکانت (اپیک گیمز)</label>
                                 <PasswordInput
                                   value={it.account_password || ''}
-                                  onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_password: e.target.value })}
+                                  onChange={(e) => setPlatform(it.product_id, it.variant_id ?? null, it.account_type, { account_password: e.target.value }, it.line_key)}
                                   placeholder="Password"
                                   required
                                 />
@@ -1029,7 +1202,7 @@ export default function CheckoutPage() {
                             </div>
                           ) : (
                             <div className="xbox-create-message">
-                              💚 تیم نوبیکس یک اکانت جدید و امن Xbox متصل به اکانت شما خواهد ساخت و اطلاعات آن پس از تکمیل سفارش ارسال می‌شود.
+                              💚 تیم جینکس فمیلی یک اکانت جدید و امن Xbox متصل به اکانت شما خواهد ساخت و اطلاعات آن پس از تکمیل سفارش ارسال می‌شود.
                             </div>
                           )
                         ) : null}
@@ -1038,14 +1211,65 @@ export default function CheckoutPage() {
                     );
                   })}
 
-                  <div className="field" style={{ marginTop: 16 }}>
-                    <label>توضیحات سفارش (اختیاری)</label>
-                    <input
-                      value={form.note}
-                      onChange={(e) => setForm({...form, note: e.target.value})}
-                      placeholder="نکته یا توضیح خاصی دارید؟ اینجا بنویسید..."
-                    />
+                </div>
+              </div>
+            )}
+
+            {/* Saved carts from older versions may not contain product-specific
+                data.  The server supplies this schema and never echoes values. */}
+            {items.some((it) => Array.isArray(it.required_fields) && it.required_fields.length > 0) && (
+              <div className="checkout-card credentials-card">
+                <div className="card-header">
+                  <div className="card-icon">✦</div>
+                  <div>
+                    <h3>اطلاعات لازم برای محصولات</h3>
+                    <p>این اطلاعات فقط برای انجام همان سفارش استفاده می‌شود.</p>
                   </div>
+                </div>
+                <div className="credentials-list">
+                  {items.filter((it) => Array.isArray(it.required_fields) && it.required_fields.length > 0).map((it) => {
+                    const values = (it.custom_fields && typeof it.custom_fields === 'object')
+                      ? it.custom_fields
+                      : ((it.custom_fields_data && typeof it.custom_fields_data === 'object') ? it.custom_fields_data : {});
+                    const missing = new Set(it.missing_field_keys || []);
+                    return (
+                      <div id={`required-fields-${it.line_key}`} key={`fields-${it.line_key}`} className="item-credentials-block">
+                        <div className="item-credentials-header">
+                          <span className="item-product-name">{it.name}</span>
+                          {missing.size > 0 && <span className="platform-required-badge">اطلاعات ناقص است</span>}
+                        </div>
+                        <div className="credentials-inputs-grid">
+                          {it.required_fields.map((field) => {
+                            const key = field.key;
+                            const invalid = missing.has(key);
+                            const update = (value) => setCustomFields(
+                              it.product_id,
+                              it.variant_id ?? null,
+                              { ...values, [key]: value },
+                              it.line_key,
+                            );
+                            return (
+                              <div className="field" key={key}>
+                                <label>{field.label || key}{field.required && <span> (اجباری)</span>}</label>
+                                {field.type === 'textarea' ? (
+                                  <textarea value={values[key] || ''} onChange={(e) => update(e.target.value)} placeholder={field.placeholder || ''} className={invalid ? 'input-error' : ''} />
+                                ) : field.type === 'select' && Array.isArray(field.options) ? (
+                                  <select value={values[key] || ''} onChange={(e) => update(e.target.value)} className={invalid ? 'input-error' : ''}>
+                                    <option value="">انتخاب کنید</option>
+                                    {field.options.map((option) => <option key={String(option)} value={typeof option === 'object' ? option.value : option}>{typeof option === 'object' ? option.label : option}</option>)}
+                                  </select>
+                                ) : field.type === 'password' ? (
+                                  <PasswordInput value={values[key] || ''} onChange={(e) => update(e.target.value)} placeholder={field.placeholder || ''} required={field.required} />
+                                ) : (
+                                  <input type={field.type === 'email' ? 'email' : 'text'} value={values[key] || ''} onChange={(e) => update(e.target.value)} placeholder={field.placeholder || ''} className={invalid ? 'input-error' : ''} required={field.required} />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1177,7 +1401,7 @@ export default function CheckoutPage() {
                   const platform = getPlatformLabel(it.account_type);
                   const supportedPlatforms = productSupportsPlatforms(it);
                   return (
-                    <div key={`${it.product_id}-${it.variant_id ?? ""}`} className="cart-item-wrapper-compact">
+                    <div key={it.line_key || `${it.product_id}-${it.variant_id ?? ""}`} className="cart-item-wrapper-compact">
                       <div className="cart-item-compact">
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                           <div className="cart-item-image">
@@ -1209,7 +1433,7 @@ export default function CheckoutPage() {
                                           key={key}
                                           type="button"
                                           className={`platform-icon-btn-compact ${isActive ? 'active' : ''} platform-${key}`}
-                                          onClick={() => setPlatform(it.product_id, it.variant_id ?? null, key)}
+                                          onClick={() => setPlatform(it.product_id, it.variant_id ?? null, key, {}, it.line_key)}
                                           title={option.longLabel}
                                         >
                                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1244,7 +1468,7 @@ export default function CheckoutPage() {
                           <div className="qty-control-compact">
                             <button 
                               className="qty-btn"
-                              onClick={() => setQty(it.product_id, Math.max(1, it.quantity - 1), it.variant_id ?? null)}
+                              onClick={() => setQty(it.product_id, Math.max(1, it.quantity - 1), it.variant_id ?? null, it.line_key)}
                               disabled={it.quantity <= 1}
                             >
                               −
@@ -1252,7 +1476,7 @@ export default function CheckoutPage() {
                             <span className="qty-value">{it.quantity}</span>
                             <button 
                               className="qty-btn"
-                              onClick={() => setQty(it.product_id, it.quantity + 1, it.variant_id ?? null)}
+                              onClick={() => setQty(it.product_id, it.quantity + 1, it.variant_id ?? null, it.line_key)}
                             >
                               +
                             </button>
@@ -1262,7 +1486,7 @@ export default function CheckoutPage() {
                           </span>
                           <button 
                             className="remove-btn-compact" 
-                            onClick={() => removeItem(it.product_id, it.variant_id ?? null)}
+                            onClick={() => removeItem(it.product_id, it.variant_id ?? null, it.line_key)}
                             title="حذف"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1297,7 +1521,7 @@ export default function CheckoutPage() {
                 )}
                 {diamondDiscount > 0 && (
                   <div className="price-row discount-row-price">
-                    <span>تخفیف وفاداری (الماس)</span>
+                    <span>تخفیف وفاداری (کوین)</span>
                     <span>-{diamondDiscount.toLocaleString('fa-IR')} تومان</span>
                   </div>
                 )}
@@ -1341,7 +1565,7 @@ export default function CheckoutPage() {
                       className={`sidebar-discount-action-btn ${diamondsUse > 0 ? 'active' : ''}`}
                       onClick={() => setDiamondsUse(diamondsUse > 0 ? 0 : Math.min(diamondsBalance, diamondsCap))}
                     >
-                      <span>💎 استفاده از الماس ({diamondsBalance.toLocaleString('fa-IR')})</span>
+                      <span>🪙 استفاده از کوین ({diamondsBalance.toLocaleString('fa-IR')})</span>
                     </button>
                   )}
 
@@ -1364,9 +1588,9 @@ export default function CheckoutPage() {
                         max={diamondsCap}
                         value={diamondsUse}
                         onChange={(e) => setDiamondsUse(Math.min(diamondsCap, Math.max(0, Number(e.target.value) || 0)))}
-                        placeholder="تعداد الماس"
+                        placeholder="تعداد کوین"
                       />
-                      <span className="wallet-input-unit">💎</span>
+                      <span className="wallet-input-unit">🪙</span>
                     </div>
                     {diamondsUse >= MIN_DIAMONDS_TO_REDEEM ? (
                       <span className="diamond-discount-tag">
@@ -1374,7 +1598,7 @@ export default function CheckoutPage() {
                       </span>
                     ) : (
                       <span className="diamond-discount-tag warning">
-                        ⚠️ حداقل {MIN_DIAMONDS_TO_REDEEM} الماس
+                        ⚠️ حداقل {MIN_DIAMONDS_TO_REDEEM} کوین
                       </span>
                     )}
                   </div>
@@ -1389,7 +1613,7 @@ export default function CheckoutPage() {
                         <div className="discount-how-steps">
                           <div className="discount-how-step">
                             <span className="discount-how-step-num">۱</span>
-                            <span>عضویت در کانال تلگرام <a href="https://t.me/NubixShopIR" target="_blank" rel="noopener noreferrer" className="discount-how-link">@NubixShopIR</a></span>
+                            <span>عضویت در کانال تلگرام <a href="https://t.me/JinxFamily" target="_blank" rel="noopener noreferrer" className="discount-how-link">@JinxFamily</a></span>
                           </div>
                           <div className="discount-how-step">
                             <span className="discount-how-step-num">۲</span>
@@ -1410,43 +1634,14 @@ export default function CheckoutPage() {
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L13.41 17l-2.81 2.73c-.32.32-.59.59-1.22.59l.4-.67z"/></svg>
                             عضو کانال شدم، گردونه را فعال کن!
                           </button>
-                        ) : !spinResult ? (
-                          <div className="inline-spin-wheel-new">
-                            <div className="spin-wheel-wrap-inline">
-                              <div className="spin-pointer-inline" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" width="24" height="24">
-                                  <polygon points="12,22 3,3 21,3" fill="#fbbf24" stroke="#92400e" strokeWidth="1" />
-                                </svg>
-                              </div>
-                              <SpinWheelSvg
-                                rotation={wheelRotation}
-                                isSpinning={isSpinning}
-                                types={(spinStatus?.segments && spinStatus.segments.map((s) => s.type)) || FALLBACK_TYPES}
-                                className="spin-svg-inline"
-                              />
-                            </div>
-                            {spinError && <div className="spin-error-inline">⚠ {spinError}</div>}
-                            <button
-                              type="button"
-                              className="spin-btn-inline"
-                              onClick={handleInlineSpin}
-                              disabled={isSpinning || !spinStatus?.can_spin}
-                            >
-                              {isSpinning ? "در حال چرخش..." : spinStatus?.can_spin ? "چرخش گردونه شانس 🎡" : "سهمیه چرخش شما تمام شده"}
-                            </button>
-                          </div>
                         ) : (
-                          <div className="spin-result-inline-new">
-                            <span className="spin-result-emoji-inline">{spinResult?.type !== "blank" ? "🎉" : "🙁"}</span>
-                            <div className="spin-result-text-group">
-                              <strong className="spin-result-name-inline">{spinResult?.label}</strong>
-                            </div>
-                            {spinResult?.code && (
-                              <button type="button" className="apply-spin-code-btn" onClick={applySpinCode}>
-                                اعمال خودکار کد: {spinResult.code}
-                              </button>
-                            )}
-                          </div>
+                          <button
+                            type="button"
+                            className="spin-btn-inline"
+                            onClick={() => window.dispatchEvent(new Event('open-spin-wheel'))}
+                          >
+                            باز کردن گردونه شانس 🎡
+                          </button>
                         )}
                       </div>
                     </div>
@@ -1464,6 +1659,11 @@ export default function CheckoutPage() {
                   <>
                     <span className="spinner"></span>
                     در حال اتصال به درگاه پرداخت...
+                  </>
+                ) : !me ? (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                    ادامه و ورود امن
                   </>
                 ) : (
                   <>
@@ -1505,3408 +1705,44 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      <style jsx>{`
-        .checkout-page-wrapper {
-          min-height: 100vh;
-          background: var(--bg);
-        }
+      {showLoginPrompt && (
+        <div className="checkout-login-overlay" role="dialog" aria-modal="true" aria-label="ورود برای ثبت سفارش" onMouseDown={(e) => e.target === e.currentTarget && setShowLoginPrompt(false)}>
+          <div className="checkout-login-sheet">
+            <button type="button" className="checkout-login-close" onClick={() => setShowLoginPrompt(false)} aria-label="بستن">×</button>
+            <div className="checkout-login-saved">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <div><strong>سفارشتان ذخیره شد</strong><span>هیچ‌کدام از اطلاعاتی که وارد کردید از بین نمی‌رود.</span></div>
+            </div>
+            <div className="checkout-login-heading">
+              <span>آخرین قدم</span>
+              <h2>ورود سریع برای ثبت سفارش</h2>
+              <p>با شماره موبایل وارد شوید؛ بعد از تایید، مستقیماً به همین سفارش برمی‌گردید.</p>
+            </div>
+            <div className="checkout-otp-wrap">
+              <OTPLogin onSuccess={(user) => {
+                setMe(user);
+                setMeLoaded(true);
+                if (user?.email) setContactEmail(user.email);
+                const userName = user?.name || '';
+                const isPhoneName = /^09\d{9}$/.test(userName) || /^\+?98\d{10}$/.test(userName);
+                if (userName && !isPhoneName && userName.length > 2) {
+                  setFullName(userName);
+                  setNeedsName(false);
+                } else {
+                  setNeedsName(true);
+                }
+                setShowLoginPrompt(false);
+                setError('');
+              }} />
+            </div>
+            <div className="checkout-login-footnote">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              اطلاعات سبد فقط روی دستگاه شما نگهداری شده است.
+            </div>
+          </div>
+        </div>
+      )}
 
-        .auth-guard {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 18px;
-          border: 1px solid var(--line);
-          border-radius: 16px;
-          background: linear-gradient(135deg, rgba(44,75,255,0.06), rgba(16,185,129,0.05));
-          margin-bottom: 16px;
-        }
-
-        .auth-guard h3 {
-          margin: 0 0 6px;
-        }
-
-        .auth-guard p {
-          margin: 0;
-          color: var(--muted);
-        }
-
-        .auth-guard-actions {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-shrink: 0;
-        }
-
-        /* Hero Section */
-        .checkout-hero {
-          background: linear-gradient(135deg, var(--primary), var(--primary-2));
-          padding: 40px 0;
-          margin-bottom: 32px;
-        }
-
-        .checkout-hero-content {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          color: white;
-        }
-
-        .checkout-hero-icon {
-          width: 64px;
-          height: 64px;
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          backdrop-filter: blur(10px);
-        }
-
-        .checkout-hero-text h1 {
-          margin: 0 0 8px 0;
-          font-size: 28px;
-          font-weight: 900;
-        }
-
-        .checkout-hero-text p {
-          margin: 0;
-          opacity: 0.9;
-          font-size: 15px;
-        }
-
-        /* Name Required Section */
-        .name-required-section {
-          background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-          border: 2px solid #3b82f6;
-          border-radius: 16px;
-          padding: 24px;
-          margin-bottom: 24px;
-        }
-
-        .name-required-header {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          margin-bottom: 20px;
-        }
-
-        .name-icon {
-          width: 48px;
-          height: 48px;
-          background: #3b82f6;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          flex-shrink: 0;
-        }
-
-        .name-required-header h3 {
-          margin: 0;
-          font-size: 18px;
-          font-weight: 800;
-          color: #1e40af;
-        }
-
-        .name-required-header p {
-          margin: 4px 0 0 0;
-          font-size: 13px;
-          color: #1e3a8a;
-        }
-
-        .name-input-wrapper {
-          display: flex;
-          gap: 12px;
-          align-items: stretch;
-        }
-
-        .name-input {
-          flex: 1;
-          padding: 14px 18px;
-          border: 2px solid #93c5fd;
-          border-radius: 12px;
-          font-size: 15px;
-          font-weight: 600;
-          background: white;
-          color: #1e3a8a;
-          transition: all 0.2s ease;
-        }
-
-        .input-error {
-          border-color: #ef4444 !important;
-          background: rgba(239, 68, 68, 0.06);
-        }
-
-        .input-error:focus {
-          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
-        }
-
-        .name-input:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .name-input::placeholder {
-          color: #93c5fd;
-        }
-
-        .save-name-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 14px 24px;
-          background: linear-gradient(135deg, #22c55e, #16a34a);
-          border: none;
-          border-radius: 12px;
-          color: white;
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-          white-space: nowrap;
-        }
-
-        .save-name-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
-        }
-
-        .save-name-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .spinner-small {
-          width: 18px;
-          height: 18px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: white;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-        }
-
-        .name-required-hint {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-top: 12px;
-          padding: 10px 14px;
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          border-radius: 10px;
-          font-size: 13px;
-          font-weight: 600;
-          color: #dc2626;
-        }
-
-        /* Dark mode for name section */
-        :global([data-theme="dark"]) .name-required-section {
-          background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1));
-          border-color: #2563eb;
-        }
-
-        :global([data-theme="dark"]) .name-required-header h3 {
-          color: #93c5fd;
-        }
-
-        :global([data-theme="dark"]) .name-required-header p {
-          color: #60a5fa;
-        }
-
-        :global([data-theme="dark"]) .name-input {
-          background: var(--card);
-          border-color: #1e40af;
-          color: var(--text);
-        }
-
-        :global([data-theme="dark"]) .name-input::placeholder {
-          color: #3b82f6;
-        }
-
-        :global([data-theme="dark"]) .name-required-hint {
-          background: rgba(239, 68, 68, 0.15);
-          border-color: rgba(239, 68, 68, 0.3);
-          color: #fca5a5;
-        }
-
-
-        /* Main Container */
-        .checkout-container {
-          padding-top: 32px;
-          padding-bottom: 64px;
-        }
-
-        .checkout-grid {
-          display: grid;
-          grid-template-columns: 1.2fr 1fr;
-          gap: 24px;
-          align-items: start;
-        }
-
-        /* Form Section */
-        .checkout-form-section {
-          background: var(--card);
-          border: 1px solid var(--line);
-          border-radius: 20px;
-          padding: 28px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        }
-
-        .section-header {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          margin-bottom: 24px;
-          padding-bottom: 20px;
-          border-bottom: 1px solid var(--line);
-        }
-
-        .section-icon {
-          width: 48px;
-          height: 48px;
-          background: linear-gradient(135deg, var(--primary), var(--primary-2));
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-        }
-
-        .section-header h2 {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 800;
-          color: var(--text);
-        }
-
-        .section-header p {
-          margin: 4px 0 0 0;
-          font-size: 13px;
-          color: var(--muted);
-        }
-
-        .optional-fields {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-          margin-top: 20px;
-        }
-
-        .field {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .field label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--muted);
-        }
-
-        .field input,
-        .field textarea {
-          background: var(--bg);
-          border: 2px solid var(--line);
-          border-radius: 12px;
-          padding: 14px 16px;
-          font-size: 14px;
-          color: var(--text);
-          transition: all 0.2s ease;
-        }
-
-        .field input:focus,
-        .field textarea:focus {
-          outline: none;
-          border-color: var(--primary);
-          box-shadow: 0 0 0 3px rgba(44, 75, 255, 0.1);
-        }
-
-        .error-message {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 14px 18px;
-          background: #fee2e2;
-          border: 1px solid #fecaca;
-          border-radius: 12px;
-          color: #dc2626;
-          font-weight: 600;
-          margin-top: 16px;
-        }
-
-        :global([data-theme="dark"]) .error-message {
-          background: rgba(239, 68, 68, 0.15);
-          border-color: rgba(239, 68, 68, 0.3);
-          color: #fca5a5;
-        }
-
-        /* Sidebar */
-        .checkout-sidebar {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          position: sticky;
-          top: 100px;
-        }
-
-        /* Rush Order Card */
-        .rush-order-card {
-          background: linear-gradient(135deg, rgba(254, 243, 199, 0.8), rgba(253, 230, 138, 0.9));
-          backdrop-filter: blur(8px);
-          border: 2px solid rgba(245, 158, 11, 0.5);
-          border-radius: 16px;
-          padding: 16px;
-          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          position: relative;
-          overflow: hidden;
-          cursor: pointer;
-        }
-
-        .rush-order-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 24px rgba(245, 158, 11, 0.15);
-        }
-
-        .rush-order-card.active {
-          background: linear-gradient(135deg, #f59e0b, #ea580c);
-          border-color: #c2410c;
-          transform: scale(1.02);
-          box-shadow: 0 16px 32px rgba(234, 88, 12, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.3);
-        }
-
-        .rush-order-card.disabled {
-          opacity: 0.65;
-          pointer-events: none;
-          filter: grayscale(0.15);
-        }
-
-        .rush-ambient {
-          position: absolute;
-          inset: -20%;
-          background:
-            radial-gradient(35% 35% at 20% 20%, rgba(255, 241, 197, 0.26), transparent 60%),
-            radial-gradient(50% 45% at 85% 75%, rgba(255, 166, 43, 0.18), transparent 70%);
-          opacity: 0.35;
-          filter: blur(10px);
-          pointer-events: none;
-          transform: scale(0.96);
-          animation: emberGlow 3s ease-in-out infinite;
-          transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-
-        .rush-ambient.active {
-          opacity: 0.65;
-          transform: scale(1);
-        }
-
-        .instant-card {
-          border: 1px solid transparent;
-          background:
-            linear-gradient(var(--card), var(--card)) padding-box,
-            linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(34, 211, 238, 0.4)) border-box;
-          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
-          border-radius: 16px;
-        }
-
-        .instant-card.active {
-          border: 2px solid transparent;
-          background:
-            linear-gradient(135deg, #f97316, #ea580c) padding-box,
-            linear-gradient(135deg, #fbbf24, #f97316) border-box;
-          box-shadow:
-            0 20px 40px rgba(234, 88, 12, 0.35),
-            0 0 40px rgba(245, 158, 11, 0.2),
-            inset 0 2px 4px rgba(255, 255, 255, 0.4);
-          animation: fireGlow 2s ease-in-out infinite;
-          transform: scale(1.03);
-        }
-
-        .instant-card.active::before {
-          content: '';
-          position: absolute;
-          inset: -2px;
-          background: linear-gradient(90deg, transparent, rgba(255, 200, 100, 0.5), transparent);
-          transform: translateX(-80%);
-          animation: vipShine 2.2s ease-in-out infinite;
-          opacity: 0.7;
-          pointer-events: none;
-        }
-
-        .instant-card.active::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background:
-            radial-gradient(circle at 15% 0%, rgba(255, 255, 255, 0.3), transparent 45%),
-            radial-gradient(circle at 85% 120%, rgba(249, 115, 22, 0.35), transparent 55%),
-            radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.12), transparent 70%);
-          opacity: 0.8;
-          pointer-events: none;
-          animation: emberPulse 3s ease-in-out infinite;
-        }
-
-        @keyframes fireGlow {
-          0%, 100% {
-            box-shadow:
-              0 20px 40px rgba(234, 88, 12, 0.35),
-              0 0 40px rgba(245, 158, 11, 0.2),
-              inset 0 2px 4px rgba(255, 255, 255, 0.4);
-          }
-          50% {
-            box-shadow:
-              0 24px 48px rgba(234, 88, 12, 0.45),
-              0 0 50px rgba(245, 158, 11, 0.3),
-              inset 0 2px 4px rgba(255, 255, 255, 0.5);
-          }
-        }
-
-        @keyframes emberPulse {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 0.9; }
-        }
-
-        .vip-card {
-          position: relative;
-          overflow: hidden;
-          cursor: pointer;
-          isolation: isolate;
-        }
-
-        .vip-card::before {
-          content: '';
-          position: absolute;
-          inset: -2px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
-          transform: translateX(-80%);
-          animation: vipShine 3.4s ease-in-out infinite;
-          opacity: 0.55;
-          pointer-events: none;
-        }
-
-        .instant-card::before {
-          animation: none;
-          opacity: 0;
-        }
-
-        .vip-card::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background:
-            radial-gradient(circle at 15% 0%, rgba(255, 255, 255, 0.26), transparent 45%),
-            radial-gradient(circle at 85% 120%, rgba(245, 158, 11, 0.22), transparent 55%);
-          opacity: 0.6;
-          pointer-events: none;
-        }
-
-        .instant-card::after {
-          background: none;
-          opacity: 0;
-        }
-
-        .vip-card.active::before {
-          opacity: 0.85;
-          animation-duration: 2.6s;
-        }
-
-        .vip-card > * {
-          position: relative;
-          z-index: 1;
-        }
-
-        .vip-badge {
-          position: absolute;
-          top: 12px;
-          right: 12px;
-          padding: 6px 10px;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 900;
-          letter-spacing: 0.6px;
-          background: rgba(0, 0, 0, 0.12);
-          color: #92400e;
-          border: 1px solid rgba(245, 158, 11, 0.35);
-          backdrop-filter: blur(6px);
-          max-width: calc(100% - 24px);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .rush-order-card.active .vip-badge {
-          background: rgba(255, 255, 255, 0.22);
-          border-color: rgba(255, 255, 255, 0.35);
-          color: white;
-        }
-
-        .vip-points {
-          margin: 10px 0 14px;
-          display: grid;
-          gap: 6px;
-          font-size: 12.5px;
-          font-weight: 650;
-          color: #92400e;
-          line-height: 1.5;
-        }
-
-        .rush-order-card.active .vip-points {
-          color: rgba(255, 255, 255, 0.92);
-        }
-
-        .rush-chips {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin: 6px 0 8px;
-        }
-
-        .rush-chip {
-          display: inline-flex;
-          align-items: center;
-          padding: 4px 8px;
-          border-radius: 999px;
-          font-size: 11px;
-          font-weight: 850;
-          color: var(--text);
-          background: rgba(99, 102, 241, 0.10);
-          border: 1px solid rgba(99, 102, 241, 0.18);
-          white-space: nowrap;
-        }
-
-        .rush-chip.muted {
-          color: var(--muted);
-          background: rgba(99, 102, 241, 0.06);
-          border-color: rgba(99, 102, 241, 0.12);
-        }
-
-        .rush-epic-note {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          background: rgba(44, 75, 255, 0.08);
-          border: 1px solid rgba(44, 75, 255, 0.15);
-          border-radius: 10px;
-          margin: 8px 0;
-        }
-
-        .rush-epic-note img {
-          width: 20px;
-          height: 20px;
-          object-fit: contain;
-        }
-
-        .rush-epic-note span {
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--text);
-        }
-
-        .rush-order-card.active .rush-epic-note {
-          background: rgba(255, 255, 255, 0.12);
-          border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .rush-order-card.active .rush-epic-note span {
-          color: rgba(255, 255, 255, 0.95);
-        }
-
-        .rush-order-card.active .rush-chip {
-          color: rgba(255, 255, 255, 0.95);
-          background: rgba(255, 255, 255, 0.16);
-          border-color: rgba(255, 255, 255, 0.22);
-        }
-
-        @keyframes vipShine {
-          0% { transform: translateX(-80%); opacity: 0; }
-          20% { opacity: 0.65; }
-          50% { transform: translateX(80%); opacity: 0.55; }
-          100% { transform: translateX(80%); opacity: 0; }
-        }
-
-        @keyframes fireFlicker {
-          0% { transform: translateY(0) scale(0.96); filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.18)); }
-          35% { transform: translateY(-1px) scale(1.02); filter: drop-shadow(0 4px 10px rgba(249, 115, 22, 0.26)); }
-          70% { transform: translateY(1px) scale(0.98); filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.20)); }
-          100% { transform: translateY(0) scale(1); filter: drop-shadow(0 2px 12px rgba(249, 115, 22, 0.24)); }
-        }
-
-        @keyframes emberGlow {
-          0% { opacity: 0.32; }
-          45% { opacity: 0.5; }
-          100% { opacity: 0.32; }
-        }
-
-        .rush-order-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 8px;
-        }
-
-        .rush-info {
-          min-width: 0;
-          flex: 1;
-        }
-
-        .rush-title-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          min-width: 0;
-        }
-
-        .rush-title-actions {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          flex-shrink: 0;
-        }
-
-        .rush-fire {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-          border-radius: 8px;
-          background: radial-gradient(circle at 30% 30%, #fff7e6, transparent 55%), linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(234, 88, 12, 0.26));
-          color: #ea580c;
-          box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.12), 0 6px 14px rgba(249, 115, 22, 0.16);
-          font-size: 12px;
-          transform-origin: center;
-          animation: fireFlicker 2.4s ease-in-out infinite;
-          opacity: 0.82;
-        }
-
-        .rush-fire.active {
-          background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), transparent 55%), linear-gradient(135deg, rgba(249, 115, 22, 0.32), rgba(251, 146, 60, 0.45));
-          color: #fb923c;
-          box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.3), 0 10px 24px rgba(249, 115, 22, 0.28), 0 0 24px rgba(249, 115, 22, 0.32);
-          animation-duration: 1.8s;
-          opacity: 1;
-        }
-
-        .rush-pill {
-          display: inline-flex;
-          align-items: center;
-          padding: 3px 8px;
-          border-radius: 999px;
-          font-size: 10px;
-          font-weight: 900;
-          color: var(--text);
-          background: rgba(99, 102, 241, 0.10);
-          border: 1px solid rgba(99, 102, 241, 0.18);
-          white-space: nowrap;
-          flex-shrink: 0;
-        }
-
-        .rush-pill.active {
-          background: rgba(255, 255, 255, 0.18);
-          border-color: rgba(255, 255, 255, 0.26);
-          color: rgba(255, 255, 255, 0.96);
-        }
-
-        .rush-icon {
-          width: 36px;
-          height: 36px;
-          background: rgba(245, 158, 11, 0.2);
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #92400e;
-        }
-        .rush-icon svg {
-          width: 18px;
-          height: 18px;
-        }
-
-        .instant-card .rush-icon {
-          background: rgba(99, 102, 241, 0.10);
-          color: var(--text);
-          border: 1px solid rgba(99, 102, 241, 0.16);
-        }
-
-        .instant-card.active .rush-icon {
-          background: rgba(255, 255, 255, 0.2);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.25);
-          box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
-        }
-
-        .rush-order-card.active .rush-icon {
-          background: rgba(255, 255, 255, 0.2);
-          color: white;
-        }
-
-        .rush-info h3 {
-          margin: 0;
-          font-size: 14px;
-          font-weight: 800;
-          color: #92400e;
-          line-height: 1.2;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .rush-info p {
-          margin: 2px 0 0 0;
-          font-size: 12px;
-          color: #a16207;
-          line-height: 1.3;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .instant-card .rush-info h3 {
-          color: var(--text);
-        }
-
-        .instant-card .rush-info p {
-          color: var(--muted);
-        }
-
-        .instant-card.active .rush-info h3 {
-          color: white;
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-        }
-
-        .instant-card.active .rush-info p {
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .rush-order-card.active .rush-info h3,
-        .rush-order-card.active .rush-info p {
-          color: white;
-        }
-
-        .rush-order-body {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .rush-price {
-          display: flex;
-          align-items: baseline;
-          gap: 4px;
-        }
-
-        .rush-price-value {
-          font-size: 18px;
-          font-weight: 900;
-          color: #92400e;
-        }
-
-        .rush-price-unit {
-          font-size: 12px;
-          color: #a16207;
-        }
-
-        .instant-card .rush-price-value,
-        .instant-card .rush-price-unit,
-        .instant-card .toggle-label {
-          color: var(--text);
-        }
-
-        .instant-card .toggle-slider {
-          background: rgba(99, 102, 241, 0.14);
-        }
-
-        .instant-card.active .rush-price-value,
-        .instant-card.active .rush-price-unit,
-        .instant-card.active .toggle-label {
-          color: white;
-        }
-
-        .instant-card.active .toggle-slider {
-          background: rgba(255, 255, 255, 0.2);
-        }
-
-        .instant-card.active .rush-chip {
-          color: rgba(255, 255, 255, 0.95);
-          background: rgba(255, 255, 255, 0.18);
-          border-color: rgba(255, 255, 255, 0.25);
-        }
-
-        .instant-card.active .rush-pill {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.3);
-          color: white;
-        }
-
-        .rush-order-card.active .rush-price-value,
-        .rush-order-card.active .rush-price-unit {
-          color: white;
-        }
-
-        /* Toggle Switch */
-        .rush-toggle {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          user-select: none;
-          justify-content: flex-end;
-        }
-
-        .rush-toggle input {
-          display: none;
-        }
-
-        .toggle-slider {
-          width: 42px;
-          height: 22px;
-          background: rgba(0, 0, 0, 0.15);
-          border-radius: 11px;
-          position: relative;
-          transition: all 0.3s ease;
-        }
-
-        .toggle-slider::after {
-          content: '';
-          position: absolute;
-          top: 2px;
-          left: 2px;
-          width: 18px;
-          height: 18px;
-          background: white;
-          border-radius: 50%;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .rush-toggle input:checked + .toggle-slider {
-          background: #22c55e;
-        }
-
-        .rush-toggle input:checked + .toggle-slider::after {
-          left: 22px;
-        }
-
-        .toggle-label {
-          font-size: 12px;
-          font-weight: 700;
-          color: #92400e;
-          white-space: nowrap;
-        }
-
-        .rush-order-card.active .toggle-label {
-          color: white;
-        }
-
-        .rush-disabled-hint {
-          margin-top: 10px;
-          font-size: 13px;
-          color: #b91c1c;
-          background: rgba(239, 68, 68, 0.08);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-          border-radius: 10px;
-          padding: 8px 10px;
-        }
-
-        /* Dark mode for rush order */
-        :global([data-theme="dark"]) .rush-order-card:not(.active) {
-          background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.1));
-          border-color: #b45309;
-        }
-
-        :global([data-theme="dark"]) .instant-card {
-          box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
-        }
-
-        :global([data-theme="dark"]) .instant-card .rush-pill {
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        :global([data-theme="dark"]) .instant-card .rush-chip {
-          color: rgba(255, 255, 255, 0.92);
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        :global([data-theme="dark"]) .instant-card .rush-chip.muted {
-          color: rgba(255, 255, 255, 0.72);
-          background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.10);
-        }
-
-        :global([data-theme="dark"]) .instant-card .toggle-slider {
-          background: rgba(255, 255, 255, 0.14);
-        }
-
-        :global([data-theme="dark"]) .instant-card.active {
-          background:
-            linear-gradient(135deg, rgba(251, 146, 60, 0.22), rgba(249, 115, 22, 0.18)) padding-box,
-            linear-gradient(135deg, rgba(249, 115, 22, 1), rgba(251, 191, 36, 0.9)) border-box;
-          box-shadow:
-            0 20px 50px rgba(249, 115, 22, 0.35),
-            0 0 40px rgba(251, 146, 60, 0.25);
-        }
-
-        :global([data-theme="dark"]) .rush-order-card:not(.active) .rush-icon {
-          background: rgba(245, 158, 11, 0.2);
-          color: #fbbf24;
-        }
-
-        :global([data-theme="dark"]) .rush-order-card:not(.active) .rush-info h3,
-        :global([data-theme="dark"]) .rush-order-card:not(.active) .rush-price-value {
-          color: #fcd34d;
-        }
-
-        :global([data-theme="dark"]) .rush-order-card:not(.active) .rush-info p,
-        :global([data-theme="dark"]) .rush-order-card:not(.active) .rush-price-unit,
-        :global([data-theme="dark"]) .rush-order-card:not(.active) .toggle-label {
-          color: #fbbf24;
-        }
-
-        /* Cart Summary Card */
-        .cart-summary-card {
-          background: var(--card);
-          border: 1px solid var(--line);
-          border-radius: 20px;
-          padding: 24px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        }
-
-        .cart-summary-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 20px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid var(--line);
-        }
-
-        .cart-summary-header h3 {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin: 0;
-          font-size: 18px;
-          font-weight: 800;
-          color: var(--text);
-        }
-
-        .cart-count {
-          background: var(--primary);
-          color: white;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 700;
-        }
-
-        .cart-items-list {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          max-height: 300px;
-          overflow-y: auto;
-          padding-left: 4px;
-        }
-
-        .empty-cart {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 40px 20px;
-          color: var(--muted);
-          text-align: center;
-        }
-
-        .empty-cart p {
-          margin: 12px 0 0 0;
-          font-weight: 600;
-        }
-
-        .cart-platform-guides {
-          margin-top: 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .platform-guide-card {
-          border: 1px dashed var(--guide-color, var(--line));
-          background: var(--guide-bg, rgba(59, 130, 246, 0.08));
-          padding: 16px;
-          border-radius: 14px;
-        }
-
-        .platform-guide-header {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          margin-bottom: 12px;
-        }
-
-        .platform-guide-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          background: rgba(255, 255, 255, 0.4);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          border: 2px solid var(--guide-color, var(--primary));
-        }
-
-        :global([data-theme="dark"]) .platform-guide-icon {
-          background: rgba(0, 0, 0, 0.2);
-        }
-
-        .platform-guide-title {
-          font-weight: 800;
-          font-size: 14px;
-          color: var(--text);
-        }
-
-        .platform-guide-subtitle {
-          font-size: 12px;
-          color: var(--muted);
-        }
-
-        .platform-guide-steps {
-          margin: 0;
-          padding-inline-start: 18px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          font-size: 13px;
-          color: var(--text);
-        }
-
-        .platform-guide-note {
-          margin-top: 10px;
-          font-size: 12px;
-          color: var(--guide-color, var(--primary));
-          font-weight: 600;
-        }
-
-        .cart-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px;
-          background: var(--bg);
-          border: 1px solid var(--line);
-          border-radius: 14px;
-          transition: all 0.2s ease;
-        }
-
-        .cart-item:hover {
-          border-color: var(--primary);
-        }
-
-        .cart-item-image {
-          position: relative;
-          width: 60px;
-          height: 60px;
-          border-radius: 10px;
-          overflow: hidden;
-          background: linear-gradient(135deg, #0f2250, #1a2b6a);
-          flex-shrink: 0;
-        }
-
-        .cart-item-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .cart-item-placeholder {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--muted);
-        }
-
-        .cart-item-details {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .cart-item-name {
-          font-weight: 700;
-          font-size: 14px;
-          color: var(--text);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          margin-bottom: 6px;
-        }
-
-        .cart-item-meta {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .platform-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 4px 10px;
-          background: var(--platform-color);
-          color: white;
-          border-radius: 6px;
-          font-size: 11px;
-          font-weight: 700;
-        }
-
-        .platform-badge-icon {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .platform-badge-icon img {
-          width: 18px;
-          height: 18px;
-          object-fit: contain;
-          display: block;
-        }
-
-        /* Compact Platform Selector */
-        .item-platform-selector {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-top: 4px;
-        }
-
-        .selector-label {
-          font-size: 11px;
-          color: var(--muted);
-          font-weight: 700;
-        }
-
-        .platform-icon-buttons {
-          display: flex;
-          gap: 4px;
-        }
-
-        .platform-icon-btn {
-          background: #f3f4f6;
-          border: 1.5px solid transparent;
-          border-radius: 6px;
-          width: 26px;
-          height: 26px;
-          padding: 3px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .platform-icon-btn img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          opacity: 0.55;
-          transition: opacity 0.2s ease;
-        }
-
-        .platform-icon-btn:hover {
-          background: #e5e7eb;
-        }
-
-        .platform-icon-btn.active {
-          background: #ffffff;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-          transform: scale(1.05);
-        }
-
-        .platform-icon-btn.active img {
-          opacity: 1;
-        }
-
-        .platform-icon-btn.active.platform-epic {
-          border-color: #1d4ed8;
-        }
-
-        .platform-icon-btn.active.platform-psn {
-          border-color: #0ea5e9;
-        }
-
-        .platform-icon-btn.active.platform-xbox {
-          border-color: #22c55e;
-        }
-
-        .platform-missing-warn {
-          font-size: 10px;
-          color: #ef4444;
-          font-weight: 700;
-          margin-right: 6px;
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-
-        :global([data-theme="dark"]) .platform-icon-btn {
-          background: #1d1829;
-        }
-
-        :global([data-theme="dark"]) .platform-icon-btn:hover {
-          background: #272037;
-        }
-
-        :global([data-theme="dark"]) .platform-icon-btn.active {
-          background: #2e2642;
-        }
-
-        /* Per-Item Credentials Layout */
-        .cart-item-wrapper {
-          border-bottom: 1px solid var(--border);
-          padding-bottom: 12px;
-          margin-bottom: 12px;
-        }
-
-        .cart-item-wrapper:last-child {
-          border-bottom: none;
-          padding-bottom: 0;
-          margin-bottom: 0;
-        }
-
-        .item-credentials-section {
-          margin-top: 10px;
-          background: rgba(243, 244, 246, 0.4);
-          padding: 10px;
-          border-radius: 10px;
-          border: 1px solid var(--border);
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        :global([data-theme="dark"]) .item-credentials-section {
-          background: rgba(30, 25, 41, 0.3);
-        }
-
-        .credentials-fields-row {
-          display: flex;
-          gap: 10px;
-        }
-
-        .compact-field {
-          flex: 1;
-          margin-bottom: 0 !important;
-        }
-
-        .compact-field label {
-          font-size: 11px !important;
-          margin-bottom: 4px !important;
-          font-weight: 700;
-          color: var(--muted) !important;
-        }
-
-        .compact-field input {
-          height: 32px !important;
-          font-size: 12px !important;
-          padding: 4px 8px !important;
-          border-radius: 6px !important;
-          background: var(--bg-hover) !important;
-        }
-
-        .xbox-extra-fields {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          border-top: 1px dashed var(--border);
-          padding-top: 8px;
-          margin-top: 4px;
-        }
-
-        .xbox-create-option {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 11px;
-          font-weight: 700;
-          color: var(--text);
-          cursor: pointer;
-        }
-
-        .xbox-create-option input {
-          width: 14px;
-          height: 14px;
-        }
-
-        .cart-item-price {
-          font-size: 12px;
-          color: var(--muted);
-          font-weight: 600;
-        }
-
-        .cart-item-actions {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 8px;
-        }
-
-        .qty-control {
-          display: flex;
-          align-items: center;
-          background: var(--card);
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        .qty-btn {
-          width: 28px;
-          height: 28px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          font-weight: 800;
-          font-size: 16px;
-          color: var(--text);
-          transition: all 0.2s ease;
-        }
-
-        .qty-btn:hover:not(:disabled) {
-          background: var(--primary);
-          color: white;
-        }
-
-        .qty-btn:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
-        }
-
-        .qty-value {
-          padding: 0 10px;
-          font-weight: 700;
-          font-size: 13px;
-          color: var(--text);
-        }
-
-        .remove-btn {
-          width: 28px;
-          height: 28px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          color: var(--muted);
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-        }
-
-        .remove-btn:hover {
-          background: #fee2e2;
-          color: #ef4444;
-        }
-
-        :global([data-theme="dark"]) .remove-btn:hover {
-          background: rgba(239, 68, 68, 0.2);
-        }
-
-        /* 2FA Warning Card */
-        /* Friendly order tips card */
-        .order-tips-card {
-          margin-top: 20px;
-          padding: 18px;
-          background: linear-gradient(135deg, rgba(250, 204, 21, 0.14), rgba(245, 158, 11, 0.10));
-          border: 1px solid rgba(245, 158, 11, 0.45);
-          border-radius: 16px;
-          box-shadow: 0 6px 18px rgba(245, 158, 11, 0.12);
-        }
-
-        .order-tips-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-weight: 800;
-          font-size: 15px;
-          color: #b45309;
-          margin-bottom: 12px;
-        }
-
-        .order-tips-emoji {
-          font-size: 20px;
-          line-height: 1;
-        }
-
-        .order-tips-list {
-          margin: 0;
-          padding-inline-start: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          font-size: 13.5px;
-          color: var(--text);
-          line-height: 1.8;
-        }
-
-        .order-tips-list strong {
-          color: #b45309;
-        }
-
-        .order-tips-link {
-          display: inline-block;
-          margin-top: 4px;
-          color: #d97706;
-          font-weight: 700;
-          font-size: 12.5px;
-          text-decoration: none;
-        }
-
-        .order-tips-link:hover {
-          text-decoration: underline;
-        }
-
-        :global([data-theme="dark"]) .order-tips-card {
-          background: linear-gradient(135deg, rgba(250, 204, 21, 0.10), rgba(245, 158, 11, 0.07));
-        }
-
-        :global([data-theme="dark"]) .order-tips-header,
-        :global([data-theme="dark"]) .order-tips-list strong {
-          color: #fbbf24;
-        }
-
-        :global([data-theme="dark"]) .order-tips-link {
-          color: #fcd34d;
-        }
-
-        .ack-checkbox {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-top: 14px;
-          padding: 12px 14px;
-          background: var(--card);
-          border: 2px solid #f97316;
-          border-radius: 10px;
-          cursor: pointer;
-          font-weight: 800;
-          font-size: 14px;
-          color: #b45309;
-          transition: all 0.2s ease;
-        }
-
-        .ack-checkbox:hover {
-          border-color: var(--primary);
-        }
-
-        .ack-checkbox input {
-          display: none;
-        }
-
-        .checkmark {
-          width: 22px;
-          height: 22px;
-          border: 2px solid var(--line);
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-          flex-shrink: 0;
-        }
-
-        .ack-checkbox input:checked + .checkmark {
-          background: var(--primary);
-          border-color: var(--primary);
-        }
-
-        .ack-checkbox input:checked + .checkmark::after {
-          content: '✓';
-          color: white;
-          font-size: 14px;
-          font-weight: 800;
-        }
-
-        /* Wallet Section */
-        .wallet-section {
-          margin-top: 12px;
-          padding: 8px 12px;
-        /* Step Content Box & Rectangular Card Layout */
-        .step-content-box {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .wallet-section {
-          background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(124, 58, 237, 0.08));
-          border: 1px solid rgba(251, 191, 36, 0.25);
-          border-radius: 16px;
-          padding: 16px 20px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          flex-wrap: wrap;
-          margin-bottom: 18px;
-        }
-
-        .wallet-balance {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .wallet-balance-info {
-          display: flex;
-          align-items: baseline;
-          gap: 8px;
-        }
-
-        .wallet-amount {
-          font-size: 24px;
-          font-weight: 900;
-          color: #fbbf24;
-          line-height: 1;
-          letter-spacing: -0.5px;
-        }
-
-        .wallet-currency {
-          font-size: 14px;
-          font-weight: 700;
-          color: #f1f5f9;
-        }
-
-        /* Compact Tips Section Grid */
-        .tips-grid-compact {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 14px;
-          margin-bottom: 16px;
-        }
-
-        .tip-box-compact {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          background: rgba(124, 58, 237, 0.05);
-          border: 1px solid rgba(139, 92, 246, 0.15);
-          border-radius: 14px;
-          padding: 14px;
-          transition: all 0.2s ease;
-        }
-
-        .tip-box-compact:hover {
-          background: rgba(124, 58, 237, 0.1);
-          border-color: rgba(139, 92, 246, 0.3);
-        }
-
-        .tip-icon {
-          font-size: 20px;
-          line-height: 1;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-
-        .tip-text-group {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .tip-text-group strong {
-          font-size: 13.5px;
-          font-weight: 800;
-          color: #f8fafc;
-        }
-
-        .tip-text-group span {
-          font-size: 12px;
-          color: #94a3b8;
-          line-height: 1.4;
-        }
-
-        @media (max-width: 768px) {
-          .tips-grid-compact {
-            grid-template-columns: 1fr;
-            gap: 10px;
-          }
-
-          .wallet-section {
-            flex-direction: column;
-            align-items: stretch;
-          }
-
-          .wallet-balance {
-            justify-content: center;
-          }
-        }
-          background: none;
-          border: none;
-          padding: 0;
-          cursor: pointer;
-          font-size: 11.5px;
-          color: var(--muted);
-          opacity: 0.7;
-          text-decoration: underline;
-          text-decoration-style: dotted;
-          text-underline-offset: 3px;
-          transition: opacity 0.15s ease, color 0.15s ease;
-          text-align: right;
-          font-family: inherit;
-          display: inline-block;
-          align-self: flex-start;
-        }
-        .discount-toggle-link:hover,
-        .discount-toggle-link.active {
-          opacity: 1;
-          color: var(--muted);
-        }
-
-        .discount-form {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .discount-input-row {
-          display: flex;
-          gap: 6px;
-          align-items: center;
-        }
-
-        .discount-input-row input {
-          flex: 1;
-          border: 1px solid var(--line);
-          border-radius: 7px;
-          padding: 6px 10px;
-          font-size: 12px;
-          background: var(--card);
-          color: var(--text);
-          caret-color: var(--text);
-          outline: none;
-          transition: border-color 0.15s ease;
-        }
-        .discount-input-row input:focus {
-          border-color: var(--muted);
-        }
-        .discount-input-row input::placeholder {
-          color: var(--muted);
-          opacity: 0.5;
-        }
-
-        .discount-apply-btn {
-          background: none;
-          border: 1px solid var(--line);
-          border-radius: 7px;
-          padding: 6px 12px;
-          font-size: 12px;
-          color: var(--muted);
-          cursor: pointer;
-          font-family: inherit;
-          white-space: nowrap;
-          transition: border-color 0.15s ease, color 0.15s ease;
-        }
-        .discount-apply-btn:hover {
-          border-color: var(--muted);
-          color: var(--text);
-        }
-
-        .discount-message {
-          font-size: 11px;
-          margin-top: 2px;
-        }
-
-        /* Price Summary */
-        .price-summary {
-          margin-top: 20px;
-          padding-top: 20px;
-          border-top: 1px solid var(--line);
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .price-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 14px;
-          color: var(--muted);
-        }
-
-        .price-row.rush-fee {
-          color: #f59e0b;
-          font-weight: 600;
-        }
-
-        .price-row.wallet-discount {
-          color: #22c55e;
-          font-weight: 600;
-        }
-
-        .price-row.total {
-          margin-top: 8px;
-          padding-top: 14px;
-          border-top: 2px dashed var(--line);
-          font-size: 16px;
-          font-weight: 800;
-          color: var(--text);
-        }
-
-        .total-price {
-          font-size: 20px;
-          color: var(--primary);
-        }
-
-        /* Submit Button */
-        .submit-btn {
-          width: 100%;
-          margin-top: 20px;
-          padding: 18px 24px;
-          background: linear-gradient(135deg, var(--primary), var(--primary-2));
-          border: none;
-          border-radius: 14px;
-          color: white;
-          font-size: 16px;
-          font-weight: 800;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          transition: all 0.3s ease;
-          box-shadow: 0 8px 24px rgba(44, 75, 255, 0.3);
-        }
-
-        .submit-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 32px rgba(44, 75, 255, 0.4);
-        }
-
-        .submit-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .submit-btn.loading {
-          pointer-events: none;
-        }
-
-        .spinner {
-          width: 20px;
-          height: 20px;
-          border: 3px solid rgba(255, 255, 255, 0.3);
-          border-top-color: white;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        /* Delivery Info */
-        .delivery-info {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          margin-top: 16px;
-          padding: 12px;
-          background: rgba(34, 197, 94, 0.1);
-          border-radius: 10px;
-          font-size: 13px;
-          font-weight: 600;
-          color: #22c55e;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-          .checkout-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .checkout-sidebar {
-            position: static;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .checkout-hero {
-            padding: 28px 0;
-          }
-
-          .checkout-hero-content {
-            flex-direction: column;
-            text-align: center;
-          }
-
-          .checkout-hero-text h1 {
-            font-size: 22px;
-          }
-
-          .checkout-form-section {
-            padding: 20px;
-          }
-
-          .optional-fields {
-            grid-template-columns: 1fr;
-          }
-
-          .cart-item {
-            flex-wrap: wrap;
-          }
-
-          .cart-item-actions {
-            width: 100%;
-            flex-direction: row;
-            justify-content: space-between;
-            margin-top: 8px;
-          }
-
-          .vip-card {
-            padding-top: 52px;
-          }
-
-          .rush-order-header {
-            gap: 12px;
-          }
-
-          .rush-order-body {
-            grid-template-columns: 1fr;
-            align-items: stretch;
-          }
-
-          .rush-toggle {
-            width: 100%;
-            justify-content: space-between;
-          }
-
-          .rush-price-value {
-            font-size: 16px;
-          }
-        }
-
-        /* ========================================================== */
-        /* Antigravity Checkout Polish Styles                         */
-        /* ========================================================== */
-
-        /* Header & Title Bar */
-        .checkout-top-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 16px;
-          padding: 10px 18px;
-          background: rgba(124, 58, 237, 0.04);
-          border: 1px solid rgba(139, 92, 246, 0.15);
-          border-radius: 12px;
-        }
-
-        .checkout-main-title {
-          font-size: 16px;
-          font-weight: 800;
-          color: var(--text);
-          margin: 0;
-        }
-
-        .checkout-steps-bar {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          width: 100%;
-          max-width: 780px;
-          justify-content: space-between;
-        }
-
-        .checkout-step-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(30, 27, 75, 0.4);
-          border: 1.5px solid rgba(139, 92, 246, 0.2);
-          border-radius: 14px;
-          padding: 10px 18px;
-          color: #94a3b8;
-          font-size: 13.5px;
-          font-weight: 700;
-          cursor: default;
-          user-select: none;
-          transition: all 0.25s ease;
-        }
-
-        .checkout-step-item.active {
-          background: linear-gradient(135deg, #7c3aed, #4f46e5);
-          border-color: #a78bfa;
-          color: #ffffff;
-          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
-        }
-
-        .checkout-step-item.completed {
-          background: rgba(16, 185, 129, 0.15);
-          border-color: rgba(16, 185, 129, 0.4);
-          color: #34d399;
-        }
-
-        .step-num {
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.15);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 12px;
-          font-weight: 800;
-        }
-
-        .checkout-step-item.active .step-num {
-          background: rgba(255, 255, 255, 0.25);
-        }
-
-        .step-line {
-          flex: 1;
-          height: 3px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 3px;
-          min-width: 20px;
-          transition: background 0.3s ease;
-        }
-
-        .step-line.active {
-          background: linear-gradient(90deg, #8b5cf6, #10b981);
-        }
-
-        /* Wizard Step Action Buttons */
-        .wizard-step-actions {
-          display: flex;
-          gap: 16px;
-          margin-top: 24px;
-        }
-
-        .wizard-step-actions.split {
-          justify-content: space-between;
-        }
-
-        .wizard-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 14px 28px;
-          border-radius: 14px;
-          font-size: 14px;
-          font-weight: 800;
-          cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          border: none;
-        }
-
-        .wizard-btn.primary {
-          background: linear-gradient(135deg, #8b5cf6, #6366f1);
-          color: white;
-          box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
-          flex: 1;
-        }
-
-        .wizard-btn.primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(139, 92, 246, 0.5);
-          background: linear-gradient(135deg, #7c3aed, #4f46e5);
-        }
-
-        .wizard-btn.secondary {
-          background: rgba(30, 27, 75, 0.6);
-          border: 1px solid rgba(139, 92, 246, 0.25);
-          color: #cbd5e1;
-        }
-
-        .wizard-btn.secondary:hover {
-          background: rgba(139, 92, 246, 0.2);
-          color: white;
-        }
-
-        .no-creds-card {
-          text-align: center;
-          padding: 36px 24px;
-        }
-
-        /* Main Grid and Two Column Layout on Desktop */
-        .checkout-grid {
-          display: grid;
-          grid-template-columns: 1.55fr 1fr; /* Make forms column wider, sidebar summary narrower */
-          gap: 32px;
-          align-items: start;
-          direction: rtl;
-        }
-
-        .checkout-main-content {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        /* checkout card base */
-        .checkout-card {
-          background: var(--card);
-          border: 1px solid var(--line);
-          border-radius: 20px;
-          padding: 28px;
-          margin-bottom: 24px !important;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .compact-rewards {
-          padding: 16px 20px !important;
-          border-radius: 16px !important;
-          background: rgba(124, 58, 237, 0.06) !important;
-          border: 1px solid rgba(139, 92, 246, 0.2) !important;
-        }
-
-        :global([data-theme="dark"]) .checkout-card {
-          background: rgba(30, 27, 75, 0.4);
-          border-color: rgba(139, 92, 246, 0.15);
-          box-shadow: 0 10px 45px rgba(0, 0, 0, 0.35);
-          backdrop-filter: blur(12px);
-        }
-
-        .checkout-card:hover {
-          border-color: rgba(139, 92, 246, 0.35);
-          box-shadow: 0 12px 50px rgba(124, 58, 237, 0.1);
-        }
-
-        /* Card Header */
-        .card-header {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          margin-bottom: 24px;
-          padding-bottom: 20px;
-          border-bottom: 1px solid var(--line);
-        }
-
-        :global([data-theme="dark"]) .card-header {
-          border-bottom-color: rgba(139, 92, 246, 0.1);
-        }
-
-        .card-icon {
-          width: 48px;
-          height: 48px;
-          background: linear-gradient(135deg, var(--primary), var(--primary-2));
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-          flex-shrink: 0;
-        }
-
-        .card-icon.warning-icon {
-          background: linear-gradient(135deg, #f59e0b, #ea580c);
-          box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
-        }
-
-        .card-header h3 {
-          margin: 0;
-          font-size: 18px;
-          font-weight: 800;
-          color: var(--text);
-        }
-
-        .card-header p {
-          margin: 4px 0 0 0;
-          font-size: 13px;
-          color: var(--muted);
-        }
-
-        /* Credentials list */
-        .credentials-list {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        .item-credentials-block {
-          background: rgba(124, 58, 237, 0.03);
-          border: 1px solid rgba(124, 58, 237, 0.1);
-          border-radius: 16px;
-          padding: 20px;
-        }
-
-        :global([data-theme="dark"]) .item-credentials-block {
-          background: rgba(124, 58, 237, 0.05);
-          border-color: rgba(139, 92, 246, 0.15);
-        }
-
-        .item-credentials-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          flex-wrap: wrap;
-          margin-bottom: 16px;
-          padding-bottom: 12px;
-          border-bottom: 1px dashed var(--line);
-        }
-
-        :global([data-theme="dark"]) .item-credentials-header {
-          border-bottom-color: rgba(139, 92, 246, 0.1);
-        }
-
-        /* Inline Platform Selector inside Credentials Card */
-        .inline-platform-selector-box {
-          margin-bottom: 18px;
-          background: rgba(15, 12, 33, 0.5);
-          border: 1px solid rgba(139, 92, 246, 0.15);
-          border-radius: 14px;
-          padding: 14px 16px;
-        }
-
-        .inline-platform-label {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--text);
-          margin-bottom: 12px;
-        }
-
-        .platform-required-badge {
-          font-size: 11px;
-          background: rgba(245, 158, 11, 0.15);
-          color: #fbbf24;
-          border: 1px solid rgba(245, 158, 11, 0.3);
-          padding: 3px 10px;
-          border-radius: 6px;
-          font-weight: 700;
-        }
-
-        .inline-platform-buttons {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-
-        .inline-platform-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          border-radius: 10px;
-          background: rgba(30, 27, 75, 0.5);
-          border: 1.5px solid rgba(255, 255, 255, 0.1);
-          color: var(--text);
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .inline-platform-btn:hover {
-          background: rgba(139, 92, 246, 0.2);
-          border-color: rgba(167, 139, 250, 0.4);
-          color: #ffffff;
-        }
-
-        .inline-platform-btn.active {
-          background: linear-gradient(135deg, #7c3aed, #4f46e5);
-          border-color: #a78bfa;
-          color: #ffffff;
-          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
-        }
-
-        .inline-platform-btn img {
-          width: 18px;
-          height: 18px;
-          object-fit: contain;
-        }
-
-        /* Light mode overrides for platform selector */
-        :global([data-theme="light"]) .inline-platform-selector-box {
-          background: rgba(124, 58, 237, 0.04) !important;
-          border: 1px solid rgba(139, 92, 246, 0.2) !important;
-        }
-
-        :global([data-theme="light"]) .inline-platform-label {
-          color: #0f172a !important;
-        }
-
-        :global([data-theme="light"]) .platform-required-badge {
-          background: rgba(245, 158, 11, 0.1) !important;
-          color: #b45309 !important;
-          border-color: rgba(245, 158, 11, 0.25) !important;
-        }
-
-        :global([data-theme="light"]) .inline-platform-btn {
-          background: #ffffff !important;
-          border: 1.5px solid rgba(139, 92, 246, 0.2) !important;
-          color: #1e293b !important;
-        }
-
-        :global([data-theme="light"]) .inline-platform-btn:hover {
-          background: rgba(139, 92, 246, 0.1) !important;
-          border-color: #7c3aed !important;
-          color: #7c3aed !important;
-        }
-
-        :global([data-theme="light"]) .inline-platform-btn.active {
-          background: linear-gradient(135deg, #7c3aed, #4f46e5) !important;
-          border-color: #7c3aed !important;
-          color: #ffffff !important;
-          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
-        }
-
-        .item-index-badge {
-          background: var(--primary);
-          color: white;
-          font-size: 11px;
-          font-weight: 700;
-          padding: 2px 8px;
-          border-radius: 6px;
-        }
-
-        .item-product-name {
-          font-size: 14px;
-          font-weight: 700;
-          color: var(--text);
-          flex: 1;
-        }
-
-        .platform-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: var(--platform-color, #7c3aed);
-          color: white;
-          font-size: 12px;
-          font-weight: 700;
-          padding: 4px 10px;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .platform-badge-icon {
-          width: 14px;
-          height: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .platform-badge-icon img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-
-        /* Xbox create account styles */
-        .xbox-create-option-wrapper {
-          margin-bottom: 16px;
-        }
-
-        .xbox-create-option {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          cursor: pointer;
-          font-size: 13px;
-          color: var(--text);
-          font-weight: 600;
-        }
-
-        .xbox-create-option input {
-          width: 18px;
-          height: 18px;
-          accent-color: #107c10;
-        }
-
-        .xbox-create-message {
-          background: rgba(16, 124, 16, 0.08);
-          border: 1px solid rgba(16, 124, 16, 0.2);
-          color: #107c10;
-          border-radius: 12px;
-          padding: 12px 16px;
-          font-size: 13px;
-          font-weight: 600;
-          line-height: 1.6;
-        }
-
-        :global([data-theme="dark"]) .xbox-create-message {
-          background: rgba(16, 124, 16, 0.15);
-          color: #a7f3d0;
-          border-color: rgba(16, 124, 16, 0.3);
-        }
-
-        .credentials-inputs-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-
-        .credentials-inputs-grid.extra-fields-row {
-          margin-top: 16px;
-          border-top: 1px dashed rgba(139, 92, 246, 0.1);
-          padding-top: 16px;
-        }
-
-        /* Contact Details */
-        .contact-fields-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-
-        .contact-fields-grid .field.full-width {
-          grid-column: span 2;
-        }
-
-        /* Rewards section */
-        .rewards-content {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        /* Wallet input new */
-        .wallet-input-wrap-new {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          background: rgba(124, 58, 237, 0.04);
-          border: 1px solid rgba(124, 58, 237, 0.12);
-          border-radius: 12px;
-          padding: 8px 16px;
-          margin-top: 12px;
-        }
-
-        :global([data-theme="dark"]) .wallet-input-wrap-new {
-          background: rgba(139, 92, 246, 0.05);
-          border-color: rgba(139, 92, 246, 0.15);
-        }
-
-        .wallet-input-label {
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--muted);
-        }
-
-        .wallet-input-inner {
-          position: relative;
-          display: flex;
-          align-items: center;
-          flex: 1;
-        }
-
-        .wallet-input-inner input {
-          width: 100%;
-          background: transparent;
-          border: none !important;
-          outline: none !important;
-          padding: 8px 0;
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--text);
-          text-align: left;
-          direction: ltr;
-        }
-
-        .wallet-input-unit {
-          font-size: 16px;
-          margin-right: 8px;
-        }
-
-        .wallet-warning-hint {
-          color: #f59e0b;
-          font-size: 12px;
-          font-weight: 600;
-          margin-top: 8px;
-        }
-
-        .wallet-success-hint {
-          color: #10b981;
-          font-size: 12px;
-          font-weight: 600;
-          margin-top: 8px;
-        }
-
-        /* Discount toggle & how-to buttons */
-        .discount-section-new {
-          border-top: 1px solid var(--line);
-          padding-top: 20px;
-        }
-
-        :global([data-theme="dark"]) .discount-section-new {
-          border-top-color: rgba(139, 92, 246, 0.1);
-        }
-
-        .discount-actions-row {
-          display: flex;
-          gap: 12px;
-          margin-bottom: 16px;
-        }
-
-        .discount-toggle-btn,
-        .discount-how-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 16px;
-          border-radius: 10px;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          border: 1px solid var(--line);
-          background: var(--bg);
-          color: var(--text);
-        }
-
-        :global([data-theme="dark"]) .discount-toggle-btn,
-        :global([data-theme="dark"]) .discount-how-btn {
-          border-color: rgba(139, 92, 246, 0.15);
-          background: rgba(30, 27, 75, 0.3);
-        }
-
-        .discount-toggle-btn.active,
-        .discount-toggle-btn:hover {
-          background: var(--primary);
-          color: white;
-          border-color: var(--primary);
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-        }
-
-        .discount-how-btn.active,
-        .discount-how-btn:hover {
-          background: #fbbf24;
-          color: #92400e;
-          border-color: #fbbf24;
-          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
-        }
-
-        .discount-form-new {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          background: rgba(124, 58, 237, 0.03);
-          border: 1px dashed rgba(124, 58, 237, 0.2);
-          border-radius: 12px;
-          padding: 16px;
-        }
-
-        .discount-input-row {
-          display: flex;
-          gap: 10px;
-        }
-
-        .discount-input-row input {
-          flex: 1;
-          background: var(--bg);
-          border: 2px solid var(--line);
-          border-radius: 10px;
-          padding: 10px 14px;
-          font-size: 14px;
-          font-weight: 700;
-          color: var(--text);
-          text-align: center;
-          text-transform: uppercase;
-        }
-
-        .discount-apply-btn {
-          background: var(--primary);
-          color: white;
-          border: none;
-          border-radius: 10px;
-          padding: 0 20px;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .discount-apply-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
-        }
-
-        .discount-message-box {
-          border-radius: 8px;
-          padding: 8px 12px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .discount-message-box.success {
-          background: rgba(16, 185, 129, 0.1);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          color: #10b981;
-        }
-
-        .discount-message-box.error {
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-          color: #ef4444;
-        }
-
-        /* Telegram Spin Wheel section */
-        .discount-how-section {
-          background: rgba(30, 27, 75, 0.3);
-          border: 1px solid rgba(139, 92, 246, 0.2);
-          border-radius: 14px;
-          padding: 16px;
-          margin-top: 12px;
-        }
-
-        .discount-how-card {
-          display: flex;
-          gap: 16px;
-        }
-
-        .discount-how-icon {
-          font-size: 32px;
-          flex-shrink: 0;
-        }
-
-        .discount-how-content {
-          flex: 1;
-        }
-
-        .discount-how-title {
-          font-size: 15px;
-          font-weight: 800;
-          color: var(--text);
-          margin-bottom: 12px;
-        }
-
-        .discount-how-steps {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-bottom: 16px;
-        }
-
-        .discount-how-step {
-          display: flex;
-          gap: 8px;
-          font-size: 13px;
-          line-height: 1.6;
-          color: var(--muted);
-          align-items: flex-start;
-        }
-
-        .discount-how-step-num {
-          background: #fbbf24;
-          color: #92400e;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 11px;
-          font-weight: 800;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-
-        .discount-how-link {
-          color: #38bdf8;
-          font-weight: 700;
-          text-decoration: underline;
-        }
-
-        .join-channel-btn {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          background: #229ed9;
-          color: white;
-          border: none;
-          border-radius: 10px;
-          padding: 12px;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .join-channel-btn:hover {
-          background: #24a1de;
-          box-shadow: 0 4px 12px rgba(34, 158, 217, 0.4);
-        }
-
-        /* Inline Spin Wheel SVG and logic */
-        .inline-spin-wheel-new {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
-          margin-top: 16px;
-          padding: 16px;
-          background: rgba(124, 58, 237, 0.05);
-          border: 1px solid rgba(124, 58, 237, 0.15);
-          border-radius: 12px;
-        }
-
-        .spin-wheel-wrap-inline {
-          position: relative;
-          width: 180px;
-          height: 180px;
-        }
-
-        .spin-pointer-inline {
-          position: absolute;
-          top: -12px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 10;
-        }
-
-        .spin-svg-inline {
-          width: 100%;
-          height: 100%;
-        }
-
-        .spin-btn-inline {
-          background: linear-gradient(135deg, #fbbf24, #ea580c);
-          color: white;
-          border: none;
-          border-radius: 10px;
-          padding: 10px 20px;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .spin-btn-inline:hover:not(:disabled) {
-          transform: scale(1.05);
-          box-shadow: 0 4px 15px rgba(234, 88, 12, 0.4);
-        }
-
-        .spin-btn-inline:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .spin-error-inline {
-          color: #ef4444;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .spin-signin-hint {
-          font-size: 11px;
-          color: var(--muted);
-          margin: 0;
-        }
-
-        /* Spin Result styling */
-        .spin-result-inline-new {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 12px;
-          background: rgba(16, 185, 129, 0.08);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          border-radius: 12px;
-          padding: 16px;
-          text-align: center;
-        }
-
-        .spin-result-emoji-inline {
-          font-size: 36px;
-        }
-
-        .spin-result-text-group {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .spin-result-label-inline {
-          font-size: 12px;
-          color: var(--muted);
-        }
-
-        .spin-result-name-inline {
-          font-size: 16px;
-          font-weight: 800;
-          color: #10b981;
-        }
-
-        .spin-code-box {
-          background: var(--bg);
-          border: 1px dashed rgba(16, 185, 129, 0.4);
-          border-radius: 8px;
-          padding: 8px 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .spin-code-box:hover {
-          border-color: #10b981;
-          background: rgba(16, 185, 129, 0.03);
-        }
-
-        .spin-code-box span {
-          font-size: 11px;
-          color: var(--muted);
-        }
-
-        .spin-code-box code {
-          font-family: monospace;
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--text);
-          letter-spacing: 1px;
-        }
-
-        .apply-spin-code-btn {
-          background: #10b981;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          padding: 8px 16px;
-          font-size: 12px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .apply-spin-code-btn:hover {
-          background: #059669;
-          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
-        }
-
-        /* Tips and agreement section styling */
-        .order-tips-list-new {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .order-tips-list-new li {
-          display: flex;
-          gap: 14px;
-          align-items: flex-start;
-          line-height: 1.6;
-          font-size: 13.5px;
-          color: var(--text);
-        }
-
-        .tip-bullet {
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: rgba(245, 158, 11, 0.15);
-          color: #d97706;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 12px;
-          font-weight: 800;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-
-        :global([data-theme="dark"]) .tip-bullet {
-          background: rgba(245, 158, 11, 0.2);
-          color: #fbbf24;
-        }
-
-        .order-tips-link-new {
-          color: var(--primary-2);
-          font-weight: 700;
-          margin-right: 6px;
-          text-decoration: underline;
-        }
-
-        .ack-agreement-row {
-          border-top: 1px solid var(--line);
-          padding-top: 16px;
-          margin-top: 20px;
-        }
-
-        :global([data-theme="dark"]) .ack-agreement-row {
-          border-top-color: rgba(139, 92, 246, 0.1);
-        }
-
-        .ack-checkbox-new {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          cursor: pointer;
-          font-size: 14px;
-          font-weight: 700;
-          color: var(--text);
-        }
-
-        .ack-checkbox-new input {
-          width: 20px;
-          height: 20px;
-          accent-color: var(--primary);
-        }
-
-        /* Order Summary Sidebar Card */
-        .cart-summary-card {
-          background: var(--card);
-          border: 1px solid var(--line);
-          border-radius: 20px;
-          padding: 24px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        }
-
-        :global([data-theme="dark"]) .cart-summary-card {
-          background: rgba(30, 27, 75, 0.6);
-          border-color: rgba(139, 92, 246, 0.2);
-          box-shadow: 0 12px 48px rgba(124, 58, 237, 0.12);
-        }
-
-        .summary-title-row {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 20px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid var(--line);
-        }
-
-        :global([data-theme="dark"]) .summary-title-row {
-          border-bottom-color: rgba(139, 92, 246, 0.1);
-        }
-
-        .summary-title-row h3 {
-          margin: 0;
-          font-size: 16px;
-          font-weight: 800;
-          color: var(--text);
-          flex: 1;
-        }
-
-        .cart-badge {
-          background: rgba(124, 58, 237, 0.1);
-          color: var(--primary-2);
-          font-size: 11px;
-          font-weight: 800;
-          padding: 2px 8px;
-          border-radius: 6px;
-        }
-
-        .cart-summary-items-list {
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-          max-height: 350px;
-          overflow-y: auto;
-          margin-bottom: 20px;
-          padding-left: 4px;
-        }
-
-        .cart-item-wrapper-compact {
-          border-bottom: 1px solid var(--line);
-          padding-bottom: 14px;
-        }
-
-        .cart-item-wrapper-compact:last-child {
-          border-bottom: none;
-          padding-bottom: 0;
-        }
-
-        :global([data-theme="dark"]) .cart-item-wrapper-compact {
-          border-bottom-color: rgba(139, 92, 246, 0.08);
-        }
-
-        .cart-item-compact {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .cart-item-meta-compact {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-top: 4px;
-        }
-
-        .platform-badge-compact {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          background: var(--platform-color, #7c3aed);
-          color: white;
-          font-size: 10px;
-          font-weight: 700;
-          padding: 2px 6px;
-          border-radius: 4px;
-        }
-
-        .platform-badge-icon-compact {
-          width: 10px;
-          height: 10px;
-        }
-
-        .platform-badge-icon-compact img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-
-        .item-platform-selector-compact {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .platform-icon-buttons-compact {
-          display: flex;
-          gap: 4px;
-        }
-
-        .platform-icon-btn-compact {
-          background: var(--bg);
-          border: 1px solid var(--line);
-          width: 22px;
-          height: 22px;
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          padding: 2px;
-        }
-
-        :global([data-theme="dark"]) .platform-icon-btn-compact {
-          border-color: rgba(139, 92, 246, 0.15);
-          background: rgba(30, 27, 75, 0.4);
-        }
-
-        .platform-icon-btn-compact img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-
-        .platform-icon-btn-compact.active {
-          border-color: var(--primary);
-          background: rgba(124, 58, 237, 0.15);
-        }
-
-        .platform-missing-warn-compact {
-          color: #f59e0b;
-          font-size: 10px;
-          font-weight: 700;
-        }
-
-        .cart-item-price-quantity-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .qty-control-compact {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          background: var(--bg);
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          padding: 2px 6px;
-        }
-
-        :global([data-theme="dark"]) .qty-control-compact {
-          border-color: rgba(139, 92, 246, 0.15);
-          background: rgba(30, 27, 75, 0.4);
-        }
-
-        .qty-control-compact .qty-btn {
-          background: none;
-          border: none;
-          color: var(--text);
-          cursor: pointer;
-          font-size: 13px;
-          font-weight: 700;
-          padding: 0 4px;
-          transition: opacity 0.2s ease;
-        }
-
-        .qty-control-compact .qty-value {
-          font-size: 12px;
-          font-weight: 700;
-          color: var(--text);
-          min-width: 12px;
-          text-align: center;
-        }
-
-        .remove-btn-compact {
-          background: none;
-          border: none;
-          color: var(--muted);
-          cursor: pointer;
-          transition: color 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 4px;
-        }
-
-        .remove-btn-compact:hover {
-          color: #ef4444;
-        }
-
-        .price-summary-box {
-          background: rgba(124, 58, 237, 0.02);
-          border: 1px solid var(--line);
-          border-radius: 14px;
-          padding: 16px;
-          margin-bottom: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        :global([data-theme="dark"]) .price-summary-box {
-          background: rgba(30, 27, 75, 0.2);
-          border-color: rgba(139, 92, 246, 0.1);
-        }
-
-        .price-summary-box .price-row {
-          display: flex;
-          justify-content: space-between;
-          font-size: 13px;
-          color: var(--muted);
-          font-weight: 600;
-        }
-
-        .price-summary-box .price-row.rush-fee {
-          color: #f59e0b;
-        }
-
-        .price-summary-box .price-row.discount-row-price {
-          color: #10b981;
-        }
-
-        .price-summary-box .price-divider {
-          height: 1px;
-          background: var(--line);
-        }
-
-        :global([data-theme="dark"]) .price-summary-box .price-divider {
-          background: rgba(139, 92, 246, 0.1);
-        }
-
-        .price-summary-box .price-row.total {
-          color: var(--text);
-          font-size: 14px;
-          font-weight: 800;
-          align-items: center;
-        }
-
-        .price-summary-box .price-row.total .total-price {
-          font-size: 18px;
-          color: var(--primary-2);
-          text-shadow: 0 0 15px rgba(167, 139, 250, 0.2);
-        }
-
-        /* Small Sidebar Discount & Diamonds Textbox Widget */
-        .sidebar-discount-box {
-          margin-top: 14px;
-          margin-bottom: 20px;
-          padding: 12px 14px;
-          background: rgba(30, 27, 75, 0.35);
-          border: 1px solid rgba(139, 92, 246, 0.2);
-          border-radius: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        :global([data-theme="light"]) .sidebar-discount-box {
-          background: rgba(241, 245, 249, 0.8);
-          border-color: rgba(139, 92, 246, 0.15);
-        }
-
-        .sidebar-discount-input-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .sidebar-discount-input {
-          flex: 1;
-          height: 38px;
-          padding: 0 12px;
-          border-radius: 10px;
-          border: 1px solid var(--line);
-          background: var(--bg);
-          color: var(--text);
-          font-size: 13px;
-          outline: none;
-          transition: border-color 0.2s;
-        }
-
-        .sidebar-discount-input:focus {
-          border-color: var(--primary);
-        }
-
-        .sidebar-discount-btn {
-          height: 38px;
-          padding: 0 16px;
-          border-radius: 10px;
-          border: none;
-          background: linear-gradient(135deg, #7c3aed, #4f46e5);
-          color: white;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: opacity 0.2s;
-          white-space: nowrap;
-        }
-
-        .sidebar-discount-btn:hover {
-          opacity: 0.9;
-        }
-
-        .sidebar-discount-actions {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-        }
-
-        .sidebar-discount-action-btn {
-          background: none;
-          border: none;
-          color: #a78bfa;
-          font-size: 11.5px;
-          font-weight: 700;
-          cursor: pointer;
-          padding: 2px 4px;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          transition: color 0.2s;
-        }
-
-        .sidebar-discount-action-btn:hover,
-        .sidebar-discount-action-btn.active {
-          color: #fbbf24;
-        }
-
-        .sidebar-diamond-use-box {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-          padding-top: 8px;
-          border-top: 1px dashed rgba(139, 92, 246, 0.15);
-        }
-
-        .sidebar-diamond-use-box .wallet-input-inner {
-          display: flex;
-          align-items: center;
-          width: 100px;
-          background: var(--bg);
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          padding: 2px 8px;
-        }
-
-        .sidebar-diamond-use-box input {
-          width: 100%;
-          border: none;
-          background: none;
-          color: var(--text);
-          font-size: 12px;
-          font-weight: 700;
-          outline: none;
-        }
-
-        .diamond-discount-tag {
-          font-size: 11px;
-          font-weight: 700;
-          color: #34d399;
-        }
-
-        .diamond-discount-tag.warning {
-          color: #f59e0b;
-        }
-
-        .discount-how-section-compact {
-          padding-top: 8px;
-          border-top: 1px dashed rgba(139, 92, 246, 0.15);
-          font-size: 11.5px;
-        }
-
-        .discount-how-title {
-          font-weight: 800;
-          color: #fbbf24;
-          margin-bottom: 6px;
-        }
-
-        .discount-how-steps {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          color: var(--muted);
-        }
-
-        .discount-how-step {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .discount-how-step-num {
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background: rgba(124, 58, 237, 0.2);
-          color: #a78bfa;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 10px;
-          font-weight: 800;
-        }
-
-        /* Glowing Submit button */
-        .submit-btn-new {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          border: none;
-          border-radius: 14px;
-          padding: 16px 24px;
-          font-size: 15px;
-          font-weight: 800;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
-        }
-
-        .submit-btn-new:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-          background: linear-gradient(135deg, #059669, #047857);
-        }
-
-        .submit-btn-new:active:not(:disabled) {
-          transform: translateY(1px);
-        }
-
-        .submit-btn-new.loading {
-          opacity: 0.8;
-          cursor: not-allowed;
-        }
-
-        .delivery-info-new {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          margin-top: 14px;
-          font-size: 12.5px;
-          color: var(--muted);
-          font-weight: 600;
-        }
-
-        /* Trust & Security Badges */
-        .checkout-trust-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 8px;
-          margin-top: 18px;
-          padding-top: 16px;
-          border-top: 1px dashed var(--line);
-        }
-
-        :global([data-theme="dark"]) .checkout-trust-grid {
-          border-top-color: rgba(139, 92, 246, 0.15);
-        }
-
-        .trust-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 6px;
-          text-align: center;
-          font-size: 11px;
-          font-weight: 700;
-          color: var(--muted);
-        }
-
-        .trust-item svg {
-          color: #10b981;
-        }
-
-        /* Mobile Responsive media query updates */
-        @media (max-width: 1024px) {
-          .checkout-grid {
-            grid-template-columns: 1fr;
-            gap: 24px;
-          }
-
-          .checkout-sidebar {
-            position: static;
-            order: 2; /* Forms first, then Order Summary */
-          }
-
-          .checkout-main-content {
-            order: 1;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .credentials-inputs-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .contact-fields-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .contact-fields-grid .field.full-width {
-            grid-column: span 1;
-          }
-        }
-      `}</style>
 
       {/* VPN Detection Modal */}
       {vpnDetected && vpnLocationData && (
@@ -4955,6 +1791,14 @@ export default function CheckoutPage() {
   );
 }
 
+export default function CheckoutPageWithCart() {
+  return (
+    <Suspense fallback={<div className="checkout-loading" style={{ padding: "60px", textAlign: "center", color: "#fff" }}>در حال بارگذاری تسویه‌حساب...</div>}>
+      <CheckoutPage />
+    </Suspense>
+  );
+}
+
 function PlatformFields({ form, setForm, items, rushOrder, showValidation }) {
   const [editMode, setEditMode] = useState({});
 
@@ -4975,6 +1819,7 @@ function PlatformFields({ form, setForm, items, rushOrder, showValidation }) {
 
   // Fortnite packs without account_type / custom_fields still need Epic login.
   const hasFortniteLoginItem = items.some((it) => {
+    if (isAccountItem(it)) return false;
     if ((it.account_type || '').trim()) return false;
     if (it.custom_fields && Object.keys(it.custom_fields).length > 0) return false;
     return (it.category || '').toLowerCase() === 'fortnite';
@@ -5045,7 +1890,7 @@ function PlatformFields({ form, setForm, items, rushOrder, showValidation }) {
       passPlaceholder: 'Xbox Password',
       note: isXboxFromCrewpack
         ? null
-        : 'فقط ایمیل و رمز حساب Xbox را وارد کنید؛ اگر قبل از خرید حساب Epic نداشتید، تیم نوبیکس در صورت نیاز برای شما حساب امن می‌سازد.',
+        : 'فقط ایمیل و رمز حساب Xbox را وارد کنید؛ اگر قبل از خرید حساب Epic نداشتید، تیم جینکس فمیلی در صورت نیاز برای شما حساب امن می‌سازد.',
     },
     {
       show: needsPsn,
@@ -5145,7 +1990,7 @@ function PlatformFields({ form, setForm, items, rushOrder, showValidation }) {
             )}
           {platform.key === 'xbox' && form.xbox_create_account && (
             <div className="platform-note" style={{ background: 'rgba(16, 124, 16, 0.1)', marginTop: 0 }}>
-              تیم نوبیکس یک حساب Xbox امن برای شما می‌سازد و اطلاعات آن را پس از تکمیل سفارش ارسال می‌کند.
+              تیم جینکس فمیلی یک حساب Xbox امن برای شما می‌سازد و اطلاعات آن را پس از تکمیل سفارش ارسال می‌کند.
             </div>
           )}
           {platform.note && !(platform.key === 'xbox' && form.xbox_create_account) && (

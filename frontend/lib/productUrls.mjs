@@ -1,9 +1,9 @@
 export const DEDICATED_PRODUCT_PATHS = {
-  "fortnite-crew-pack": "/crewpack",
   gta6: "/gta6",
   "v-bucks": "/vbucks",
   "gemini-subscription": "/gemini",
   "lego-starter-pack": "/lego",
+  "fortnite-crew-pack": "/crewpack",
 };
 
 export function productHref(slug, suffix = "") {

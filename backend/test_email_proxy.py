@@ -5,7 +5,7 @@ import socks
 import socket
 import smtplib
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nubixstore.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jinxfamily.settings')
 django.setup()
 
 # Set proxy env variables for resend
@@ -14,7 +14,7 @@ os.environ['HTTPS_PROXY'] = 'socks5h://127.0.0.1:10808'
 
 from shop.email_service import _send_email_sync
 
-admin_email = os.environ.get("ADMIN_NOTIFICATION_EMAIL", "test@nubixshop.ir")
+admin_email = os.environ.get("ADMIN_NOTIFICATION_EMAIL", "test@jinxfamily.shop")
 print(f"Sending proxy test email to: {admin_email}")
 
 # Save original socket
@@ -27,7 +27,7 @@ try:
 
     success = _send_email_sync(
         [admin_email],
-        "Proxy Test Email from NubixShop",
+        "Proxy Test Email from JinxFamily",
         "<p>This is a proxy test email.</p>",
         text="This is a proxy test email."
     )

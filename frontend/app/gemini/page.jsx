@@ -1,4 +1,5 @@
 import ProductPageClient from "../product/[slug]/ProductPageClient";
+import '../globals.css';
 import { fetchApiJson } from "../../lib/serverFetch.mjs";
 import {
   fetchReviewStats,
@@ -29,23 +30,23 @@ export const metadata = {
   alternates: { canonical: "/gemini" },
   openGraph: {
     type: "website",
-    siteName: "نوبیکس شاپ",
+    siteName: "جینکس فمیلی",
     locale: "fa_IR",
-    title: "خرید اشتراک جیمینی (Google Gemini) | نوبیکس شاپ",
+    title: "خرید اشتراک جیمینی (Google Gemini) | جینکس فمیلی",
     description: OG_DESCRIPTION,
-    url: "https://nubixshop.ir/gemini",
+    url: "https://jinxfamily.ir/gemini",
     images: [
       {
-        url: "https://nubixshop.ir/products/gemini.webp",
-        alt: "خرید اشتراک جیمینی (Google Gemini) از نوبیکس شاپ",
+        url: "https://jinxfamily.ir/products/gemini.webp",
+        alt: "خرید اشتراک جیمینی (Google Gemini) از جینکس فمیلی",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "خرید اشتراک جیمینی (Google Gemini) | نوبیکس شاپ",
+    title: "خرید اشتراک جیمینی (Google Gemini) | جینکس فمیلی",
     description: OG_DESCRIPTION,
-    images: ["https://nubixshop.ir/products/gemini.webp"],
+    images: ["https://jinxfamily.ir/products/gemini.webp"],
   },
 };
 
@@ -67,7 +68,7 @@ export default async function GeminiPage() {
     variants: productData?.variants,
   });
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: "نوبیکس شاپ", path: "/" },
+    { name: "جینکس فمیلی", path: "/" },
     { name: "اشتراک جیمینی", path: "/gemini" },
   ]);
   const faqLd = buildFaqJsonLd(productData?.faq);

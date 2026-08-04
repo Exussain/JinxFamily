@@ -1,5 +1,5 @@
 """
-تست اتصال کاوه‌نگار با قالب موجود (nubixshop-alert) برای تأیید درستی کارکرد API.
+تست اتصال کاوه‌نگار با قالب موجود (jinxfamily-alert) برای تأیید درستی کارکرد API.
 """
 import os
 import sys
@@ -7,7 +7,7 @@ import django
 import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nubixstore.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jinxfamily.settings")
 django.setup()
 
 from shop.kavenegar_service import KavenegarService
@@ -20,11 +20,11 @@ payload = {
     "receptor": PHONE,
     "token": "تست",
     "token2": "۳",
-    "template": "nubixshop-alert",
+    "template": "jinxfamily-alert",
     "type": "sms",
 }
 
-print(f"Testing with EXISTING template 'nubixshop-alert' to {PHONE} ...")
+print(f"Testing with EXISTING template 'jinxfamily-alert' to {PHONE} ...")
 r = requests.post(url, data=payload, timeout=10)
 print(f"HTTP status: {r.status_code}")
 print(f"Response: {r.text[:500]}")
