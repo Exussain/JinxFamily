@@ -3,7 +3,7 @@ import sys
 import django
 import json
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nubixstore.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jinxfamilystore.settings")
 django.setup()
 
 from django.contrib.auth import get_user_model
@@ -75,16 +75,16 @@ def run_tests():
     assert auto_ticket.messages.count() == 1, "Auto-ticket should have initial admin message"
     print(f"✓ Auto-ticket #{auto_ticket.id} created for invalid_info order #{order.tracking_code}")
 
-    # 5. Verify Kavenegar SMS payload for nubixshop-wrong-details template
+    # 5. Verify Kavenegar SMS payload for jinxfamily-wrong-details template
     # Mocking Kavenegar send_status_sms call test
     ok, sms_msg = KavenegarService.send_status_sms(
         phone_number="09129990011",
         customer_name="علی رضایی",
-        status_fa=f"https://nubixshop.ir/panel/user?tab=tickets&ticket_id={auto_ticket.id}",
-        template_name="nubixshop-wrong-details",
+        status_fa=f"https://jinxfamily.com/panel/user?tab=tickets&ticket_id={auto_ticket.id}",
+        template_name="jinxfamily-wrong-details",
         include_status_token=False
     )
-    print("✓ Kavenegar lookup for nubixshop-wrong-details verified (%token=علی, %token2=رضایی, %token3=ticket_url)")
+    print("✓ Kavenegar lookup for jinxfamily-wrong-details verified (%token=علی, %token2=رضایی, %token3=ticket_url)")
 
     # 6. Test User Replying on Ticket
     reply_req = rf.post(f'/api/me/tickets/{auto_ticket.id}/reply', data=json.dumps({

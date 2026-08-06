@@ -8,11 +8,11 @@ from playwright.async_api import async_playwright
 USER_DATA_DIR = "/root/jinxfamily/chrome_user_data_scraper"
 
 QUERIES = [
-    {"id": "site_search", "query": "site:nubixshop.ir"},
-    {"id": "brand_fa", "query": "\"نوبیکس شاپ\""},
-    {"id": "brand_en", "query": "\"nubixshop\""},
-    {"id": "directories", "query": "\"nubixshop\" OR \"نوبیکس شاپ\" site:enamad.ir OR site:zarinpal.com OR site:persiantools.com"},
-    {"id": "gaming_news", "query": "\"نوبیکس شاپ\" site:zoomg.ir OR site:vigiato.net OR site:gamefa.com OR site:bazicenter.com"}
+    {"id": "site_search", "query": "site:jinxfamily.com"},
+    {"id": "brand_fa", "query": "\"جینکس فمیلی\""},
+    {"id": "brand_en", "query": "\"jinxfamily\""},
+    {"id": "directories", "query": "\"jinxfamily\" OR \"جینکس فمیلی\" site:enamad.ir OR site:zarinpal.com OR site:persiantools.com"},
+    {"id": "gaming_news", "query": "\"جینکس فمیلی\" site:zoomg.ir OR site:vigiato.net OR site:gamefa.com OR site:bazicenter.com"}
 ]
 
 async def check_captcha(page):

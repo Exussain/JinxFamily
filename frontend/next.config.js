@@ -33,7 +33,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'nubixshop.ir',
+        hostname: 'jinxfamily.com',
       },
       {
         protocol: 'http',
@@ -77,7 +77,7 @@ const nextConfig = {
       { source: '/products/fortnite-starter-pack', destination: '/product/starterpack', permanent: true },
       { source: '/products/spotify', destination: '/product/spotify-subscription', permanent: true },
       { source: '/product/frozenlegends', destination: '/product/frozen-legends', permanent: true },
-      { source: '/product/nubixshopirrocket-leaguecredits', destination: '/product/rocket-league-credits', permanent: true },
+      { source: '/product/jinxfamilyirrocket-leaguecredits', destination: '/product/rocket-league-credits', permanent: true },
       { source: '/products/lol_rp', destination: '/product/league-of-legends-rp', permanent: true },
       { source: '/products/lol_rp_', destination: '/product/league-of-legends-rp', permanent: true },
       { source: '/blog/unlink-xbox-from-epic-games', destination: '/guides/link-unlink', permanent: true },

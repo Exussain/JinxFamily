@@ -463,10 +463,10 @@ function NavbarContent() {
   // Telegram promo modal disabled - now shown only on invalid discount code in checkout
   // useEffect(() => {
   //   if (typeof window === 'undefined') return;
-  //   const seen = localStorage.getItem('nubix_promo_seen');
+  //   const seen = localStorage.getItem('jinxfamily_promo_seen');
   //   if (!seen) {
   //     setShowPromo(true);
-  //     localStorage.setItem('nubix_promo_seen', '1');
+  //     localStorage.setItem('jinxfamily_promo_seen', '1');
   //   }
   // }, []);
 

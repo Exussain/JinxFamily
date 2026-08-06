@@ -197,7 +197,7 @@ async function analyzeCompetitors() {
   }
 
   await browser.close();
-  fs.writeFileSync('/root/NubixShop/public/competitor_analysis_raw.json', JSON.stringify(results, null, 2));
+  fs.writeFileSync('/root/JinxFamily/public/competitor_analysis_raw.json', JSON.stringify(results, null, 2));
   console.log('\nAnalysis completed and saved to competitor_analysis_raw.json');
 }
 

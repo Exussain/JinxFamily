@@ -291,8 +291,8 @@ export default function UserPanelPage() {
           setActiveTab(e.detail);
         }
       };
-      window.addEventListener("nubix_switch_tab", handleSwitchTab);
-      return () => window.removeEventListener("nubix_switch_tab", handleSwitchTab);
+      window.addEventListener("jinxfamily_switch_tab", handleSwitchTab);
+      return () => window.removeEventListener("jinxfamily_switch_tab", handleSwitchTab);
     }
   }, []);
 
@@ -364,12 +364,12 @@ export default function UserPanelPage() {
   const getStatusMessage = (status) => {
     switch (status) {
       case "pending":
-        return "نوبیکس شاپ منتظر پرداخته تا برات بفرسته 😉";
+        return "جینکس فمیلی منتظر پرداخته تا برات بفرسته 😉";
       case "paid":
       case "registered":
-        return "سفارش شما ثبت شد! نوبیکس شاپ به زودی شروع به انجامش می‌کنه 🧡";
+        return "سفارش شما ثبت شد! جینکس فمیلی به زودی شروع به انجامش می‌کنه 🧡";
       case "processing":
-        return "نوبیکس شاپ داره برات می‌فرسته 😉";
+        return "جینکس فمیلی داره برات می‌فرسته 😉";
       case "completed":
         return "سفارش شما با موفقیت تحویل داده شد! مبارکت باشه 😍🎉";
       case "needs_2fa":
@@ -403,7 +403,7 @@ export default function UserPanelPage() {
   const handleCelebrationClose = () => {
     setShowCelebration(false);
     if (typeof window !== "undefined" && celebrationOrder?.tracking_code) {
-      window.localStorage.setItem("nubix_last_celebration", celebrationOrder.tracking_code);
+      window.localStorage.setItem("jinxfamily_last_celebration", celebrationOrder.tracking_code);
     }
   };
 
@@ -581,7 +581,7 @@ export default function UserPanelPage() {
       return;
     }
     if (typeof window === "undefined") return;
-    const lastCelebrated = window.localStorage.getItem("nubix_last_celebration");
+    const lastCelebrated = window.localStorage.getItem("jinxfamily_last_celebration");
     if (lastCelebrated === completed.tracking_code) {
       setShowCelebration(false);
       return;
@@ -714,7 +714,7 @@ export default function UserPanelPage() {
             </div>
             <div className="account-hero__meta">
               <p className="kicker light">حساب کاربری</p>
-              <h2>{displayName || user?.name || "کاربر نوبیکس"}</h2>
+              <h2>{displayName || user?.name || "کاربر جینکس فمیلی"}</h2>
               <div className="pill-row">
                 {displayPhone && <span className="pill">{displayPhone}</span>}
                 {user?.email && <span className="pill subtle">{user.email}</span>}
@@ -1064,7 +1064,7 @@ export default function UserPanelPage() {
                               <strong>اطلاعات ورود یا تماس این سفارش اشتباه ثبت شده است</strong>
                             </div>
                             <p className="banner-desc">
-                              پشتیبانی نوبیکس شاپ نتوانسته با اطلاعات فوق وارد اکانت شما شود یا اطلاعات تماس نادرست است. لطفاً جهت تسریع در انجام سفارش، اطلاعات صحیح را از طریق دکمه زیر ویرایش و ثبت کنید تا سفارش شما مجدداً در اولویت قرار گیرد.
+                              پشتیبانی جینکس فمیلی نتوانسته با اطلاعات فوق وارد اکانت شما شود یا اطلاعات تماس نادرست است. لطفاً جهت تسریع در انجام سفارش، اطلاعات صحیح را از طریق دکمه زیر ویرایش و ثبت کنید تا سفارش شما مجدداً در اولویت قرار گیرد.
                             </p>
                             {editingTracking !== o.tracking_code && (
                               <button
@@ -1221,7 +1221,7 @@ export default function UserPanelPage() {
               {/* Header Hero Banner */}
               <div className="tickets-hero-banner">
                 <div className="hero-text-side">
-                  <span className="tickets-kicker">پشتیبانی اختصاصی نوبیکس</span>
+                  <span className="tickets-kicker">پشتیبانی اختصاصی جینکس فمیلی</span>
                   <h3 className="tickets-title">مرکز پاسخگویی و تیکت‌ها</h3>
                   <p className="tickets-subtitle">
                     پاسخگویی سریع و پیگیری سفارشات شما در کمترین زمان ممکن
@@ -1436,7 +1436,7 @@ export default function UserPanelPage() {
                               <div className="bubble-content-box">
                                 <div className="bubble-sender-title">
                                   <span className="name">{m.sender_name}</span>
-                                  {isAdmin && <span className="verified-badge">پشتیبانی نوبیکس شاپ ✓</span>}
+                                  {isAdmin && <span className="verified-badge">پشتیبانی جینکس فمیلی ✓</span>}
                                 </div>
                                 <div className="bubble-message-text">{m.message}</div>
                                 <div className="bubble-timestamp">{formatDate(m.created_at)}</div>
@@ -1661,7 +1661,7 @@ export default function UserPanelPage() {
                               code: referralData.referral_code,
                             });
                             const result = await shareReferralInvite({
-                              title: "دعوت به نوبیکس شاپ",
+                              title: "دعوت به جینکس فمیلی",
                               text,
                               url: referralData.link,
                             });
@@ -1785,7 +1785,7 @@ export default function UserPanelPage() {
               ×
             </button>
             <div className="celebration-badge" style={{ background: "rgba(168, 85, 247, 0.2)", color: "#c084fc", borderColor: "rgba(168, 85, 247, 0.4)", marginBottom: 12 }}>
-              🎮 پشتیبانی نوبیکس شاپ
+              🎮 پشتیبانی جینکس فمیلی
             </div>
             <h3 style={{ color: "#c084fc", margin: "0 0 12px 0", fontSize: 18, fontWeight: 800 }}>
               ثبت اطلاعات اکانت ایکس باکس #{xboxModalOrder.tracking_code}
@@ -1898,7 +1898,7 @@ export default function UserPanelPage() {
             <button className="celebration-close" onClick={handleCelebrationClose} aria-label="بستن">
               ×
             </button>
-            <div className="celebration-badge">تبریک از نوبیکس</div>
+            <div className="celebration-badge">تبریک از جینکس فمیلی</div>
             <h3>مبارک! سفارش #{celebrationOrder.tracking_code} تکمیل شد</h3>
             <p>
               سفارش شما توسط تیم پشتیبانی تکمیل شد. وضعیت لحظه‌ای سفارش را با کلیک روی دکمه زیر مشاهده کنید؛ همچنین به محض فعال‌سازی در پنل، از طریق پیامک و ایمیل مطلع خواهید شد.

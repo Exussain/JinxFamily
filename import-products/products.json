@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.1-nubix-import",
+  "schema_version": "1.1-jinxfamily-import",
   "generated_at": "2026-07-30T00:42:26.713Z",
   "brand": {
-    "name_fa": "نوبیکس",
-    "name_en": "Nubix",
-    "domain": "NubixShop.ir"
+    "name_fa": "جینکس فمیلی",
+    "name_en": "JinxFamily",
+    "domain": "JinxFamily.ir"
   },
   "package": {
     "type": "complete-catalog",
@@ -85,8 +85,8 @@
         "filename": "01-pubg-mobile-offers.png",
         "file": "covers/01-pubg-mobile-offers.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -123,8 +123,8 @@
         "filename": "02-eternal-pickaxe-1000-vbucks.png",
         "file": "covers/02-eternal-pickaxe-1000-vbucks.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -207,8 +207,8 @@
         "filename": "03-lego-fortnite-starter-pack.png",
         "file": "covers/03-lego-fortnite-starter-pack.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -362,8 +362,8 @@
         "filename": "04-call-of-duty-starter-pack.png",
         "file": "covers/04-call-of-duty-starter-pack.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -400,8 +400,8 @@
         "filename": "05-strange-transmission-pack.png",
         "file": "covers/05-strange-transmission-pack.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -438,8 +438,8 @@
         "filename": "06-sting-pack-fortnite.png",
         "file": "covers/06-sting-pack-fortnite.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -608,8 +608,8 @@
         "filename": "07-call-of-duty-mobile-offer.png",
         "file": "covers/07-call-of-duty-mobile-offer.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -836,8 +836,8 @@
         "filename": "08-clash-royale-offers.png",
         "file": "covers/08-clash-royale-offers.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -874,8 +874,8 @@
         "filename": "09-pubg-new-state-nc.png",
         "file": "covers/09-pubg-new-state-nc.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -912,8 +912,8 @@
         "filename": "10-inferno-pack-fortnite.png",
         "file": "covers/10-inferno-pack-fortnite.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -950,8 +950,8 @@
         "filename": "011-aynfynyty-dryft-pk-fvrtnayt.png",
         "file": "covers/011-aynfynyty-dryft-pk-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -988,8 +988,8 @@
         "filename": "012-bandl-askal-askvad-fvrtnayt.png",
         "file": "covers/012-bandl-askal-askvad-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1026,8 +1026,8 @@
         "filename": "013-bandl-anymh-ljndz-fvrtnayt.png",
         "file": "covers/013-bandl-anymh-ljndz-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1064,8 +1064,8 @@
         "filename": "014-bandl-ayjnsy-rngyd-fvrtnayt.png",
         "file": "covers/014-bandl-ayjnsy-rngyd-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1106,8 +1106,8 @@
         "filename": "015-bandl-btmn-fvrtnayt.png",
         "file": "covers/015-bandl-btmn-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1144,8 +1144,8 @@
         "filename": "016-bandl-pvlar-ljnd-fvrtnayt.png",
         "file": "covers/016-bandl-pvlar-ljnd-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1182,8 +1182,8 @@
         "filename": "017-bandl-py-1000-fvrtnayt.png",
         "file": "covers/017-bandl-py-1000-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1220,8 +1220,8 @@
         "filename": "018-bandl-trnsfvrmrz-fvrtnayt.png",
         "file": "covers/018-bandl-trnsfvrmrz-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1258,8 +1258,8 @@
         "filename": "019-bandl-tk-fyvchr.png",
         "file": "covers/019-bandl-tk-fyvchr.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1296,8 +1296,8 @@
         "filename": "020-bandl-jly-asplsh-1000-vybaks.png",
         "file": "covers/020-bandl-jly-asplsh-1000-vybaks.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1372,8 +1372,8 @@
         "filename": "021-bandl-jm-astvn-rynbv-syks.png",
         "file": "covers/021-bandl-jm-astvn-rynbv-syks.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1410,8 +1410,8 @@
         "filename": "022-bandl-d-lst-lf-fvrtnayt.png",
         "file": "covers/022-bandl-d-lst-lf-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1448,8 +1448,8 @@
         "filename": "023-bandl-dark-rflkshn.png",
         "file": "covers/023-bandl-dark-rflkshn.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1486,8 +1486,8 @@
         "filename": "024-bandl-dark-fayr-fvrtnayt.png",
         "file": "covers/024-bandl-dark-fayr-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1562,8 +1562,8 @@
         "filename": "025-bandl-safary-rynbv-syks.png",
         "file": "covers/025-bandl-safary-rynbv-syks.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1600,8 +1600,8 @@
         "filename": "026-bandl-samr-ljnd-fvrtnayt.png",
         "file": "covers/026-bandl-samr-ljnd-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1638,8 +1638,8 @@
         "filename": "027-bandl-saykv-bndyt-fvrtnayt.png",
         "file": "covers/027-bandl-saykv-bndyt-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1676,8 +1676,8 @@
         "filename": "028-bandl-synt-akadmy-fvrtnayt.png",
         "file": "covers/028-bandl-synt-akadmy-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1714,8 +1714,8 @@
         "filename": "029-bandl-syv-d-vrld-fvrtnayt.png",
         "file": "covers/029-bandl-syv-d-vrld-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1752,8 +1752,8 @@
         "filename": "030-bandl-shdv-rayznyng-fvrtnayt.png",
         "file": "covers/030-bandl-shdv-rayznyng-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1790,8 +1790,8 @@
         "filename": "031-bandl-faynal-rkvnyng-fvrtnayt.png",
         "file": "covers/031-bandl-faynal-rkvnyng-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1828,8 +1828,8 @@
         "filename": "032-bandl-frvzn-ljnd-fvrtnayt.png",
         "file": "covers/032-bandl-frvzn-ljnd-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1866,8 +1866,8 @@
         "filename": "033-bandl-krvptd-ljndz.png",
         "file": "covers/033-bandl-krvptd-ljndz.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1904,8 +1904,8 @@
         "filename": "034-bandl-gardyn-af-glksy-fvrtnayt.png",
         "file": "covers/034-bandl-gardyn-af-glksy-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1942,8 +1942,8 @@
         "filename": "035-bandl-grvyard-dryft-fvrtnayt.png",
         "file": "covers/035-bandl-grvyard-dryft-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -1980,8 +1980,8 @@
         "filename": "036-bandl-gld-alayt-fvrtnayt.png",
         "file": "covers/036-bandl-gld-alayt-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2064,8 +2064,8 @@
         "filename": "037-bandl-gldn-tach-fvrtnayt.png",
         "file": "covers/037-bandl-gldn-tach-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2102,8 +2102,8 @@
         "filename": "038-bandl-gldn-taktykal-fvrtnayt.png",
         "file": "covers/038-bandl-gldn-taktykal-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2140,8 +2140,8 @@
         "filename": "039-bandl-lava-ljndz-fvrtnayt.png",
         "file": "covers/039-bandl-lava-ljndz-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2178,8 +2178,8 @@
         "filename": "040-bandl-marvl-rvyalyty-fvrtnayt.png",
         "file": "covers/040-bandl-marvl-rvyalyty-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2216,8 +2216,8 @@
         "filename": "041-bandl-magma-mstr-fvrtnayt.png",
         "file": "covers/041-bandl-magma-mstr-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2254,8 +2254,8 @@
         "filename": "042-bandl-myn-frym-trvbk-fvrtnayt.png",
         "file": "covers/042-bandl-myn-frym-trvbk-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2292,8 +2292,8 @@
         "filename": "043-bandl-hay-astyks-klab-fvrtnayt.png",
         "file": "covers/043-bandl-hay-astyks-klab-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2330,8 +2330,8 @@
         "filename": "044-bandl-vmpayr-kvyst-fvrtnayt.png",
         "file": "covers/044-bandl-vmpayr-kvyst-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2368,8 +2368,8 @@
         "filename": "045-bandl-vychyng-vyng.png",
         "file": "covers/045-bandl-vychyng-vyng.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2406,8 +2406,8 @@
         "filename": "046-bandl-vydlndz-agzayl-kv-yst.png",
         "file": "covers/046-bandl-vydlndz-agzayl-kv-yst.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2444,8 +2444,8 @@
         "filename": "047-bandl-vysh-st-mch-fvrtnayt.png",
         "file": "covers/047-bandl-vysh-st-mch-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2482,8 +2482,8 @@
         "filename": "048-bandl-vyndr-mn-fvrtnayt.png",
         "file": "covers/048-bandl-vyndr-mn-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2558,8 +2558,8 @@
         "filename": "049-btl-ps-rynbv-syks.png",
         "file": "covers/049-btl-ps-rynbv-syks.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2698,8 +2698,8 @@
         "filename": "050-prmyvm-ps-kalaf-dyvty-mvbayl.png",
         "file": "covers/050-prmyvm-ps-kalaf-dyvty-mvbayl.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2933,8 +2933,8 @@
         "filename": "051-khryd-afr-bravl-astarz.png",
         "file": "covers/051-khryd-afr-bravl-astarz.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -2971,8 +2971,8 @@
         "filename": "052-khryd-astartr-pk-fvrtnayt.png",
         "file": "covers/052-khryd-astartr-pk-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3199,8 +3199,8 @@
         "filename": "053-khryd-afr-klsh-af-klnz.png",
         "file": "covers/053-khryd-afr-klsh-af-klnz.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3238,8 +3238,8 @@
         "filename": "054-khryd-afrhay-fry-fayr.png",
         "file": "covers/054-khryd-afrhay-fry-fayr.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3276,8 +3276,8 @@
         "filename": "055-khryd-agzyt-lg.png",
         "file": "covers/055-khryd-agzyt-lg.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3315,8 +3315,8 @@
         "filename": "056-khryd-alayt-ps-fry-fayr.png",
         "file": "covers/056-khryd-alayt-ps-fry-fayr.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3353,8 +3353,8 @@
         "filename": "057-khryd-almas-farlayt-84.png",
         "file": "covers/057-khryd-almas-farlayt-84.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3437,8 +3437,8 @@
         "filename": "058-khryd-avjy-ps-fvrtnayt.png",
         "file": "covers/058-khryd-avjy-ps-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3521,8 +3521,8 @@
         "filename": "059-khryd-bandl-ays-pk-fvrtnayt.png",
         "file": "covers/059-khryd-bandl-ays-pk-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3559,8 +3559,8 @@
         "filename": "060-khryd-bandl-bsasyn-fvrtnayt.png",
         "file": "covers/060-khryd-bandl-bsasyn-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3597,8 +3597,8 @@
         "filename": "061-khryd-bandl-prfktd-nychr-fvrtnayt.png",
         "file": "covers/061-khryd-bandl-prfktd-nychr-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3635,8 +3635,8 @@
         "filename": "062-khryd-bandl-dyp-fryz-fvrtnayt.png",
         "file": "covers/062-khryd-bandl-dyp-fryz-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3673,8 +3673,8 @@
         "filename": "063-khryd-bandl-kvy-kyngdam-fvrtnayt.png",
         "file": "covers/063-khryd-bandl-kvy-kyngdam-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3711,8 +3711,8 @@
         "filename": "064-khryd-bandl-gldn-byn-fvrtnayt.png",
         "file": "covers/064-khryd-bandl-gldn-byn-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3795,8 +3795,8 @@
         "filename": "065-khryd-bandl-mynty-ljndz-fvrtnayt.png",
         "file": "covers/065-khryd-bandl-mynty-ljndz-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -3935,8 +3935,8 @@
         "filename": "066-khryd-btl-ps-fvrtnayt.png",
         "file": "covers/066-khryd-btl-ps-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4035,8 +4035,8 @@
         "filename": "067-khryd-bravl-ps-bravl-astarz.png",
         "file": "covers/067-khryd-bravl-ps-bravl-astarz.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4137,8 +4137,8 @@
         "filename": "068-khryd-blyt-tlayy-klsh-af-klnz.png",
         "file": "covers/068-khryd-blyt-tlayy-klsh-af-klnz.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4176,8 +4176,8 @@
         "filename": "069-khryd-praym-pabjy-mvbayl.png",
         "file": "covers/069-khryd-praym-pabjy-mvbayl.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4214,8 +4214,8 @@
         "filename": "070-khryd-pvynt-fyfa-mvbayl.png",
         "file": "covers/070-khryd-pvynt-fyfa-mvbayl.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4359,8 +4359,8 @@
         "filename": "071-khryd-jm-bravl-astarz.png",
         "file": "covers/071-khryd-jm-bravl-astarz.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4490,8 +4490,8 @@
         "filename": "072-khryd-jm-fry-fayr.png",
         "file": "covers/072-khryd-jm-fry-fayr.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4635,8 +4635,8 @@
         "filename": "073-khryd-jm-klsh-af-klnz.png",
         "file": "covers/073-khryd-jm-klsh-af-klnz.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4780,8 +4780,8 @@
         "filename": "074-khryd-jm-klsh-rvyal.png",
         "file": "covers/074-khryd-jm-klsh-rvyal.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4818,8 +4818,8 @@
         "filename": "075-khryd-jm-mvbayl-ljnd.png",
         "file": "covers/075-khryd-jm-mvbayl-ljnd.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4857,8 +4857,8 @@
         "filename": "076-khryd-rvyal-ps-pabjy.png",
         "file": "covers/076-khryd-rvyal-ps-pabjy.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4904,8 +4904,8 @@
         "filename": "077-khryd-rvyal-ps-klsh-rvyal.png",
         "file": "covers/077-khryd-rvyal-ps-klsh-rvyal.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -4942,8 +4942,8 @@
         "filename": "078-khryd-svpr-nva-akadmy-fvrtnayt.png",
         "file": "covers/078-khryd-svpr-nva-akadmy-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5202,8 +5202,8 @@
         "filename": "079-khryd-sy-py-kalaf-dyvty-mvbayl.png",
         "file": "covers/079-khryd-sy-py-kalaf-dyvty-mvbayl.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5241,8 +5241,8 @@
         "filename": "080-khryd-kart-mahanh-fry-fayr.png",
         "file": "covers/080-khryd-kart-mahanh-fry-fayr.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5329,8 +5329,8 @@
         "filename": "081-khryd-krv-pk-fvrtnayt.png",
         "file": "covers/081-khryd-krv-pk-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5367,8 +5367,8 @@
         "filename": "082-khryd-krystal-gnshyn-aympkt.png",
         "file": "covers/082-khryd-krystal-gnshyn-aympkt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5405,8 +5405,8 @@
         "filename": "083-khryd-kvyn-ay-fvtbal-mvbayl.png",
         "file": "covers/083-khryd-kvyn-ay-fvtbal-mvbayl.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5610,8 +5610,8 @@
         "filename": "084-khryd-kvyn-dlta-fvrs.png",
         "file": "covers/084-khryd-kvyn-dlta-fvrs.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5648,8 +5648,8 @@
         "filename": "085-khryd-gyr-ap-bvstr.png",
         "file": "covers/085-khryd-gyr-ap-bvstr.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5796,8 +5796,8 @@
         "filename": "086-khryd-latys-marvl-ryvalz.png",
         "file": "covers/086-khryd-latys-marvl-ryvalz.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5880,8 +5880,8 @@
         "filename": "087-khryd-lgv-ps-fvrtnayt.png",
         "file": "covers/087-khryd-lgv-ps-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -5919,8 +5919,8 @@
         "filename": "088-khryd-lvl-ap-ps-fry-fayr.png",
         "file": "covers/088-khryd-lvl-ap-ps-fry-fayr.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -6051,8 +6051,8 @@
         "filename": "089-khryd-mmbr-shyp-rynbvsyks.png",
         "file": "covers/089-khryd-mmbr-shyp-rynbvsyks.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -6236,8 +6236,8 @@
         "filename": "090-khryd-vybaks-fvrtnayt.png",
         "file": "covers/090-khryd-vybaks-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -6442,8 +6442,8 @@
         "filename": "091-khryd-yvsy-pabjy-mvbayl.png",
         "file": "covers/091-khryd-yvsy-pabjy-mvbayl.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -6627,8 +6627,8 @@
         "filename": "092-svplay-ps-kalaf-dyvty.png",
         "file": "covers/092-svplay-ps-kalaf-dyvty.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -6665,8 +6665,8 @@
         "filename": "093-faln-lav-pk-fvrtnayt.png",
         "file": "covers/093-faln-lav-pk-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -6703,8 +6703,8 @@
         "filename": "094-fstyval-ps-fvrtnayt.png",
         "file": "covers/094-fstyval-ps-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -6741,8 +6741,8 @@
         "filename": "095-kart-hftgy-fry-fayr.png",
         "file": "covers/095-kart-hftgy-fry-fayr.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -6920,8 +6920,8 @@
         "filename": "096-krdyt-rynbv-syks.png",
         "file": "covers/096-krdyt-rynbv-syks.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -7004,8 +7004,8 @@
         "filename": "097-gyft-avjy-ps-fvrtnayt.png",
         "file": "covers/097-gyft-avjy-ps-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -7088,8 +7088,8 @@
         "filename": "098-gyft-btl-ps-fvrtnayt.png",
         "file": "covers/098-gyft-btl-ps-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -7399,8 +7399,8 @@
         "filename": "099-gyftyng-fvrtnayt.png",
         "file": "covers/099-gyftyng-fvrtnayt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -7437,8 +7437,8 @@
         "filename": "100-vlkam-pk-rynbv-syks.png",
         "file": "covers/100-vlkam-pk-rynbv-syks.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     },
     {
@@ -7705,8 +7705,8 @@
         "filename": "101-vlvrant-pvynt.png",
         "file": "covers/101-vlvrant-pvynt.png",
         "mime_type": "image/png",
-        "brand": "Nubix",
-        "domain": "NubixShop.ir"
+        "brand": "JinxFamily",
+        "domain": "JinxFamily.ir"
       }
     }
   ]

@@ -86,12 +86,12 @@ Delay before next: 20s
 
 Prompt:
 """
-You are the Data Ingestion Agent for nubixshop.ir.
+You are the Data Ingestion Agent for jinxfamily.com.
 
 Use Playwright to:
-1. Fetch https://nubixshop.ir/sitemap.xml → record ALL URLs
-2. Fetch https://nubixshop.ir/robots.txt → record all rules
-3. Navigate to https://nubixshop.ir/ → extract all nav/footer links
+1. Fetch https://jinxfamily.com/sitemap.xml → record ALL URLs
+2. Fetch https://jinxfamily.com/robots.txt → record all rules
+3. Navigate to https://jinxfamily.com/ → extract all nav/footer links
 4. Navigate to each category page:
    - /category/fortnite
    - /category/ai
@@ -150,34 +150,34 @@ Delay before next: 20s
 
 Prompt:
 """
-You are the Technical SEO Agent for nubixshop.ir.
+You are the Technical SEO Agent for jinxfamily.com.
 
 Use Playwright to test:
 
 1. REDIRECTS (test each one, wait 3s between):
-   - http://nubixshop.ir/ → expect 301 → https://nubixshop.ir/
-   - https://nubixshop.ir/index.php → expect 301 → /
-   - https://nubixshop.ir/product/fortnite-crew-pack → expect 301 → /crewpack
-   - http://nubixshop.ir/vbucks → expect 301 → https://nubixshop.ir/vbucks
-   - http://nubixshop.ir/product/chatgpt-subscription → 301 → https://
-   - http://nubixshop.ir/product/fortnite-battle-pass → 301 → https://
-   - http://nubixshop.ir/crewpack → 301 → https://
-   - http://nubixshop.ir/lego → 301 → https://
-   - http://nubixshop.ir/gta6 → 301 → https://
-   - https://nubixshop.ir/help → verify: 301 or live page?
-   - https://nubixshop.ir/guide → verify: 301 to /guides or live?
-   - https://ai.nubixshop.ir/ → verify: what is this?
+   - http://jinxfamily.com/ → expect 301 → https://jinxfamily.com/
+   - https://jinxfamily.com/index.php → expect 301 → /
+   - https://jinxfamily.com/product/fortnite-crew-pack → expect 301 → /crewpack
+   - http://jinxfamily.com/vbucks → expect 301 → https://jinxfamily.com/vbucks
+   - http://jinxfamily.com/product/chatgpt-subscription → 301 → https://
+   - http://jinxfamily.com/product/fortnite-battle-pass → 301 → https://
+   - http://jinxfamily.com/crewpack → 301 → https://
+   - http://jinxfamily.com/lego → 301 → https://
+   - http://jinxfamily.com/gta6 → 301 → https://
+   - https://jinxfamily.com/help → verify: 301 or live page?
+   - https://jinxfamily.com/guide → verify: 301 to /guides or live?
+   - https://ai.jinxfamily.com/ → verify: what is this?
 
 2. ROUTING BUGS (must return 404):
-   - https://nubixshop.ir/product/[slug] → MUST be 404
-   - https://nubixshop.ir/blog/category/[slug] → MUST be 404
-   - https://nubixshop.ir/product/nonexistent-xyz-123 → MUST be 404
+   - https://jinxfamily.com/product/[slug] → MUST be 404
+   - https://jinxfamily.com/blog/category/[slug] → MUST be 404
+   - https://jinxfamily.com/product/nonexistent-xyz-123 → MUST be 404
 
 3. PARAMETER URLs (must have canonical or noindex):
-   - https://nubixshop.ir/?q=test → check noindex
-   - https://nubixshop.ir/?cat=فورتنایت → check canonical
-   - https://nubixshop.ir/?cat=گیفت کارتها → check canonical
-   - https://nubixshop.ir/?cat=اشتراکها → check canonical
+   - https://jinxfamily.com/?q=test → check noindex
+   - https://jinxfamily.com/?cat=فورتنایت → check canonical
+   - https://jinxfamily.com/?cat=گیفت کارتها → check canonical
+   - https://jinxfamily.com/?cat=اشتراکها → check canonical
 
 4. NOINDEX CHECK on revenue pages (MUST be index,follow):
    - /product/chatgpt-subscription
@@ -235,7 +235,7 @@ Delay before Wave 2: 60s after this agent completes
 
 Prompt:
 """
-You are the Keyword & Search Intent Agent for nubixshop.ir.
+You are the Keyword & Search Intent Agent for jinxfamily.com.
 
 Use Playwright to search Google.fa for these queries.
 Wait 5 seconds between each search to avoid rate limiting.
@@ -252,11 +252,11 @@ SEARCHES TO PERFORM:
 
 For each search:
 - Record: rank, title, URL, snippet for top 10
-- Note if nubixshop.ir appears (and at what position)
+- Note if jinxfamily.com appears (and at what position)
 - Note which competitors appear most frequently
 - Identify search intent (transactional/informational/mixed)
 
-Then map keywords to nubixshop.ir URLs:
+Then map keywords to jinxfamily.com URLs:
 - "خرید وی باکس" → /vbucks
 - "خرید بتل پس" → /product/fortnite-battle-pass
 - "خرید کروپک" → /crewpack
@@ -277,8 +277,8 @@ Return JSON:
       "query": "",
       "intent": "transactional/informational/mixed",
       "top_10": [{"rank": 1, "title": "", "url": "", "snippet": ""}],
-      "nubixshop_position": null,
-      "nubixshop_in_top_10": false,
+      "jinxfamily_position": null,
+      "jinxfamily_in_top_10": false,
       "top_competitors": []
     }
   ],
@@ -318,7 +318,7 @@ For each competitor:
 - Check: E-E-A-T signals (about page, author, trust badges)
 - Check: mobile responsiveness (viewport meta)
 
-Compare with nubixshop.ir data from Wave 1.
+Compare with jinxfamily.com data from Wave 1.
 
 RATE LIMIT: 5s between site visits. Max 3 competitor sites.
 
@@ -338,7 +338,7 @@ Return JSON:
       "exploitable_gaps": []
     }
   ],
-  "nubixshop_vs_competitors": "",
+  "jinxfamily_vs_competitors": "",
   "recommendations": []
 }
 """
@@ -442,7 +442,7 @@ PAGES TO CHECK:
 - /product/starterpack
 - /product/summer-legends
 - /product/minty-legends-pack
-- /product/nubixshopirpgolden-touch-quest-pack
+- /product/jinxfamilyirpgolden-touch-quest-pack
 - ALL gift card product pages (discover from /category/giftcards)
 
 For EACH product page:
@@ -533,10 +533,10 @@ INPUT: Wave 1 + Wave 2 Data Pools.
 
 No backlink tool available. Use Playwright for what's possible:
 
-1. Search Google for: site:nubixshop.ir → record indexed pages count
+1. Search Google for: site:jinxfamily.com → record indexed pages count
 2. Search Google for: "نوبیکس شاپ" → record brand mentions
-3. Search Google for: "nubixshop" → record brand mentions
-4. Check if nubixshop.ir appears in any directories, forums,
+3. Search Google for: "jinxfamily" → record brand mentions
+4. Check if jinxfamily.com appears in any directories, forums,
    or review sites in the search results
 5. Identify 5-10 potential link opportunities:
    - Iranian gaming forums
@@ -571,7 +571,7 @@ You are the Local & International SEO Agent.
 
 INPUT: Wave 1 Data Pool.
 
-nubixshop.ir targets Iran only (fa-IR). No international targeting.
+jinxfamily.com targets Iran only (fa-IR). No international targeting.
 
 Check:
 1. Is there hreflang on any page? (Should NOT be needed for single locale)
@@ -618,13 +618,13 @@ Use Playwright with CDP to measure performance on these URLs.
 Wait 5s between each page. Run 2 passes per page (warm + cold).
 
 URLS TO MEASURE:
-1. https://nubixshop.ir/
-2. https://nubixshop.ir/crewpack
-3. https://nubixshop.ir/product/fortnite-battle-pass
-4. https://nubixshop.ir/product/chatgpt-subscription
-5. https://nubixshop.ir/vbucks
-6. https://nubixshop.ir/lego
-7. https://nubixshop.ir/product/gemini-subscription
+1. https://jinxfamily.com/
+2. https://jinxfamily.com/crewpack
+3. https://jinxfamily.com/product/fortnite-battle-pass
+4. https://jinxfamily.com/product/chatgpt-subscription
+5. https://jinxfamily.com/vbucks
+6. https://jinxfamily.com/lego
+7. https://jinxfamily.com/product/gemini-subscription
 
 For each page measure:
 - TTFB (Time to First Byte)
@@ -693,10 +693,10 @@ Prompt:
 """
 You are the Analytics & Measurement Agent.
 
-Use Playwright to check nubixshop.ir for:
+Use Playwright to check jinxfamily.com for:
 
 1. Analytics presence:
-   - Navigate to https://nubixshop.ir/
+   - Navigate to https://jinxfamily.com/
    - Check <head> for: gtag.js, analytics.js, GA4, Matomo, Yandex
    - Check for: dataLayer initialization
    - Check for: conversion event tracking (purchase, add_to_cart)
@@ -756,11 +756,11 @@ MUST GENERATE:
      "@type": "Product",
      "name": "بتل پس سیزن جدید فورتنایت",
      "description": "بتلپس سیزن جدید فورتنایت کلید دسترسی به ارزشمندترین جوایز هر فصل است...",
-     "image": "https://nubixshop.ir/images/products/battle-pass.webp",
+     "image": "https://jinxfamily.com/images/products/battle-pass.webp",
      "brand": {"@type": "Brand", "name": "Epic Games"},
      "offers": {
        "@type": "Offer",
-       "url": "https://nubixshop.ir/product/fortnite-battle-pass",
+       "url": "https://jinxfamily.com/product/fortnite-battle-pass",
        "priceCurrency": "IRR",
        "price": "9490000",
        "availability": "https://schema.org/InStock",

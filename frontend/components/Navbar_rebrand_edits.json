@@ -8,7 +8,7 @@
         "Summary": "Updated Navbar.jsx with JinxFamily branding and updated the sub-nav menu architecture.",
         "UserFacing": true
       },
-      "Description": "Update branding from Nubix to JinxFamily, update links structure, and point to JinxFamily Telegram.",
+      "Description": "Update branding from JinxFamily to JinxFamily, update links structure, and point to JinxFamily Telegram.",
       "Instruction": "Apply multiple replacements in Navbar.jsx to rebrand copy to JinxFamily, configure the new menu list including the two gradient buttons (market and products), and use the correct Telegram link.",
       "ReplacementChunks": [
         {
@@ -16,21 +16,21 @@
           "EndLine": 765,
           "ReplacementContent": "                        درخواست تهیه این محصول توسط جینکس فمیلی",
           "StartLine": 762,
-          "TargetContent": "                        درخواست تهیه این محصول توسط نوبیکس شاپ"
+          "TargetContent": "                        درخواست تهیه این محصول توسط جینکس فمیلی"
         },
         {
           "AllowMultiple": false,
           "EndLine": 856,
           "ReplacementContent": "            <Link className=\"brand logo\" href=\"/\" aria-label=\"جینکس فمیلی\">\n              <picture>\n                <source srcSet=\"/web_logo.webp\" media=\"(min-width: 1024px)\" />\n                <img\n                  src=\"/web_logo.webp\"\n                  alt=\"JinxFamily Logo\"\n                  className=\"nav-logo-img\"\n                  width=\"52\"\n                  height=\"52\"\n                  loading=\"eager\"\n                />\n              </picture>\n              <span className=\"nav-logo-text\">جینکس فمیلی</span>\n            </Link>",
           "StartLine": 841,
-          "TargetContent": "            {/* Right: Logo */}\n            <Link className=\"brand logo\" href=\"/\" aria-label=\"نوبیکس\">\n              <picture>\n                <source srcSet=\"/web_logo.webp\" media=\"(min-width: 1024px)\" />\n                <img\n                  src=\"/web_logo.webp\"\n                  alt=\"Nubix Logo\"\n                  className=\"nav-logo-img\"\n                  width=\"52\"\n                  height=\"52\"\n                  loading=\"eager\"\n                />\n              </picture>\n              <span className=\"nav-logo-text\">فروشگاه نوبیکس</span>\n            </Link>"
+          "TargetContent": "            {/* Right: Logo */}\n            <Link className=\"brand logo\" href=\"/\" aria-label=\"جینکس فمیلی\">\n              <picture>\n                <source srcSet=\"/web_logo.webp\" media=\"(min-width: 1024px)\" />\n                <img\n                  src=\"/web_logo.webp\"\n                  alt=\"JinxFamily Logo\"\n                  className=\"nav-logo-img\"\n                  width=\"52\"\n                  height=\"52\"\n                  loading=\"eager\"\n                />\n              </picture>\n              <span className=\"nav-logo-text\">فروشگاه جینکس فمیلی</span>\n            </Link>"
         },
         {
           "AllowMultiple": false,
           "EndLine": 895,
           "ReplacementContent": "                    <span className=\"mobile-menu-user-name\">{user.name || 'کاربر جینکس فمیلی'}</span>",
           "StartLine": 892,
-          "TargetContent": "                    <span className=\"mobile-menu-user-name\">{user.name || 'کاربر نوبیکس'}</span>"
+          "TargetContent": "                    <span className=\"mobile-menu-user-name\">{user.name || 'کاربر جینکس فمیلی'}</span>"
         },
         {
           "AllowMultiple": false,
@@ -44,21 +44,21 @@
           "EndLine": 989,
           "ReplacementContent": "            <h3>به کانال رسمی جینکس فمیلی بپیوندید</h3>\n            <p className=\"promo-text\">آخرین کدهای تخفیف، خبرهای آیتم‌های ویژه و جشنواره‌ها را مستقیم در تلگرام دریافت کنید.</p>\n            <a className=\"btn primary promo-btn\" href=\"https://t.me/JinxFamilyShop\" target=\"_blank\" rel=\"noopener noreferrer\">",
           "StartLine": 984,
-          "TargetContent": "            <h3>به کانال رسمی نوبیکس بپیوندید</h3>\n            <p className=\"promo-text\">آخرین کدهای تخفیف، خبرهای آیتم‌های ویژه و جشنواره‌ها را مستقیم در تلگرام دریافت کنید.</p>\n            <a className=\"btn primary promo-btn\" href=\"https://t.me/NubixShopIR\" target=\"_blank\" rel=\"noopener noreferrer\">"
+          "TargetContent": "            <h3>به کانال رسمی جینکس فمیلی بپیوندید</h3>\n            <p className=\"promo-text\">آخرین کدهای تخفیف، خبرهای آیتم‌های ویژه و جشنواره‌ها را مستقیم در تلگرام دریافت کنید.</p>\n            <a className=\"btn primary promo-btn\" href=\"https://t.me/JinxFamilyIR\" target=\"_blank\" rel=\"noopener noreferrer\">"
         },
         {
           "AllowMultiple": false,
           "EndLine": 1054,
           "ReplacementContent": "              placeholder=\"جستجو در محصولات جینکس فمیلی...\"",
           "StartLine": 1052,
-          "TargetContent": "              placeholder=\"جستجو در محصولات نوبیکس شاپ...\""
+          "TargetContent": "              placeholder=\"جستجو در محصولات جینکس فمیلی...\""
         },
         {
           "AllowMultiple": false,
           "EndLine": 1135,
           "ReplacementContent": "                درخواست تهیه این محصول توسط جینکس فمیلی",
           "StartLine": 1132,
-          "TargetContent": "                درخواست تهیه این محصول توسط نوبیکس شاپ"
+          "TargetContent": "                درخواست تهیه این محصول توسط جینکس فمیلی"
         }
       ],
       "TargetFile": "/root/jinxfamily/frontend/components/Navbar.jsx",

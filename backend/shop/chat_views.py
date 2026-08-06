@@ -16,7 +16,7 @@ from .models import LiveChatSession, LiveChatMessage
 from .views import ADMIN_PHONE_WHITELIST
 
 
-_CHAT_COOKIE_NAME = "nubix_live_chat"
+_CHAT_COOKIE_NAME = "jinxfamily_live_chat"
 _CHAT_COOKIE_SALT = "shop.live-chat-session"
 _CHAT_COOKIE_MAX_AGE = 60 * 60 * 24 * 31
 _MESSAGE_PAGE_SIZE = 100

@@ -7,7 +7,7 @@ import {
   categoryPathFromCode,
 } from '../../../lib/productCategoryRoutes';
 
-const BASE_URL = 'https://nubixshop.ir';
+const BASE_URL = 'https://jinxfamily.com';
 
 const CATEGORY_TITLES = {
   FORTNITE: 'خرید محصولات فورتنایت؛ وی باکس، کروپک و بتل پس',
@@ -46,24 +46,24 @@ export async function generateMetadata({ params }) {
   const category = data.category;
   const path = categoryPathFromCode(code);
   const title = CATEGORY_TITLES[code] || `خرید محصولات ${category.name}`;
-  const description = `${category.description} — خرید قانونی، تحویل سریع و پشتیبانی ۲۴/۷ نوبیکس شاپ.`;
+  const description = `${category.description} — خرید قانونی، تحویل سریع و پشتیبانی ۲۴/۷ جینکس فمیلی.`;
   const image = category.image ? `${BASE_URL}${category.image}` : `${BASE_URL}/web_logo.webp`;
 
   return {
     title,
     description,
-    keywords: [category.name, category.name_en, 'خرید آنلاین', 'نوبیکس شاپ'],
+    keywords: [category.name, category.name_en, 'خرید آنلاین', 'جینکس فمیلی'],
     alternates: { canonical: path },
     robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     openGraph: {
-      title: `${title} | نوبیکس شاپ`,
+      title: `${title} | جینکس فمیلی`,
       description,
       url: `${BASE_URL}${path}`,
       type: 'website',
       locale: 'fa_IR',
       images: [{ url: image, alt: category.name }],
     },
-    twitter: { card: 'summary_large_image', title: `${title} | نوبیکس شاپ`, description, images: [image] },
+    twitter: { card: 'summary_large_image', title: `${title} | جینکس فمیلی`, description, images: [image] },
   };
 }
 

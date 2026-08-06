@@ -27,7 +27,7 @@ export default function InvalidInfoNoticeModal({ order, onClose }) {
     onClose();
     if (typeof window !== "undefined") {
       if (window.location.pathname === "/panel/user") {
-        window.dispatchEvent(new CustomEvent("nubix_switch_tab", { detail: "orders" }));
+        window.dispatchEvent(new CustomEvent("jinxfamily_switch_tab", { detail: "orders" }));
         const heading = document.querySelector(".section-head h3") || document.querySelector("h3");
         if (heading) {
           heading.scrollIntoView({ behavior: "smooth" });
@@ -77,7 +77,7 @@ export default function InvalidInfoNoticeModal({ order, onClose }) {
             کد پیگیری سفارش: <strong>#{order.tracking_code}</strong>
           </p>
           <p className="desc">
-            کاربر گرامی، پشتیبانی نوبیکس شاپ هنگام بررسی سفارش شما متوجه اشتباه یا ناقص بودن اطلاعات ورود/تماس شده است. لطفاً جهت جلوگیری از معطلی، وارد پنل کاربری بخش <strong>سفارش‌های من</strong> شوید و اطلاعات صحیح را بررسی فرمایید.
+            کاربر گرامی، پشتیبانی جینکس فمیلی هنگام بررسی سفارش شما متوجه اشتباه یا ناقص بودن اطلاعات ورود/تماس شده است. لطفاً جهت جلوگیری از معطلی، وارد پنل کاربری بخش <strong>سفارش‌های من</strong> شوید و اطلاعات صحیح را بررسی فرمایید.
           </p>
           <div className="guide-box">
             <span className="guide-icon">💡</span>

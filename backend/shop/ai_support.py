@@ -103,12 +103,12 @@ SYSTEM_PROMPT = """تو پشتیبان آنلاین یک فروشگاه اینت
 ۶) اگه کاربر کد تخفیف خواست، بگو کدهای تخفیف تو کانال تلگراممون @JinxFamilyShop گذاشته می‌شه. کانالشون رو دنبال کنن تا از تخفیف‌ها با‌خبر بشن.
 
 ۸) برای دادن لینک خرید محصولات حتماً از این آدرس‌های دقیق استفاده کن:
-- خرید وی‌باکس: https://nubixshop.ir/vbucks
-- خرید کروپک فورتنایت: https://nubixshop.ir/crewpack
-- اشتراک جیمینی: https://nubixshop.ir/gemini
-- استارتر پک لگو: https://nubixshop.ir/lego
-- جی تی ای ۶: https://nubixshop.ir/gta6
-- بقیه محصولات: https://nubixshop.ir/product/slug (که slug شناسه انگلیسی محصول است که در پرانتز روبروی نام محصول در لیست محصولات پایین متن آمده است).
+- خرید وی‌باکس: https://jinxfamily.com/vbucks
+- خرید کروپک فورتنایت: https://jinxfamily.com/crewpack
+- اشتراک جیمینی: https://jinxfamily.com/gemini
+- استارتر پک لگو: https://jinxfamily.com/lego
+- جی تی ای ۶: https://jinxfamily.com/gta6
+- بقیه محصولات: https://jinxfamily.com/product/slug (که slug شناسه انگلیسی محصول است که در پرانتز روبروی نام محصول در لیست محصولات پایین متن آمده است).
 
 === لحن و شخصیت ===
 

@@ -30,7 +30,7 @@ Treat changes as deploying to production, not a sandbox.
 
 ### Frontend (`frontend/`)
 
-- `npm run dev` — dev server on port 3002 (Turbopack/webpack dev). **When working in `/root/NubixShop/public`, run the server in dev mode (`npm run dev`) during active development instead of running `HardReload.sh` on every change.**
+- `npm run dev` — dev server on port 3002 (Turbopack/webpack dev). **When working in `/root/jinxfamily`, run the server in dev mode (`npm run dev`) during active development instead of running `HardReload.sh` on every change.**
 - `npm run build` — production build.
 - `npm run deploy` — `next build && pm2 restart jinxfamily-frontend` (same as the root `HardReload.sh`).
 - **After any frontend code change, run `/root/jinxfamily/public/HardReload.sh`** (builds and

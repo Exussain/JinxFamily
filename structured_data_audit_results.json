@@ -1,7 +1,7 @@
 {
   "product_schema_audit": [
     {
-      "url": "https://nubixshop.ir/vbucks",
+      "url": "https://jinxfamily.com/vbucks",
       "has_product_schema": true,
       "name_matches_h1": false,
       "description_present": true,
@@ -27,7 +27,7 @@
       "fix_needed": "Product name 'ویباکس فورتنایت' does not match H1 'خرید V-Bucks فورتنایت'; CRITICAL PRICE MISMATCH: Schema price 9390000 (IRR) does not match visible final price 2449000 Toman"
     },
     {
-      "url": "https://nubixshop.ir/crewpack",
+      "url": "https://jinxfamily.com/crewpack",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -50,7 +50,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/fortnite-battle-pass",
+      "url": "https://jinxfamily.com/product/fortnite-battle-pass",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -73,7 +73,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/chatgpt-subscription",
+      "url": "https://jinxfamily.com/product/chatgpt-subscription",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -96,7 +96,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/gemini-subscription",
+      "url": "https://jinxfamily.com/product/gemini-subscription",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -116,12 +116,12 @@
       "has_breadcrumb": true,
       "has_faq_schema": false,
       "issues": [
-        "Offer URL 'https://nubixshop.ir/gemini' does not match page path 'https://nubixshop.ir/product/gemini-subscription'"
+        "Offer URL 'https://jinxfamily.com/gemini' does not match page path 'https://jinxfamily.com/product/gemini-subscription'"
       ],
-      "fix_needed": "Offer URL 'https://nubixshop.ir/gemini' does not match page path 'https://nubixshop.ir/product/gemini-subscription'"
+      "fix_needed": "Offer URL 'https://jinxfamily.com/gemini' does not match page path 'https://jinxfamily.com/product/gemini-subscription'"
     },
     {
-      "url": "https://nubixshop.ir/lego",
+      "url": "https://jinxfamily.com/lego",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -144,7 +144,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/gta6",
+      "url": "https://jinxfamily.com/gta6",
       "has_product_schema": true,
       "name_matches_h1": false,
       "description_present": true,
@@ -171,7 +171,7 @@
       "fix_needed": "Product name 'پیش‌خرید GTA VI (Grand Theft Auto VI)' does not match H1 'GTA VI پیش‌خرید نسخه دیجیتال وایس سیتی'; Availability mismatch: schema has 'https://schema.org/InStock', expected 'https://schema.org/PreOrder'; CRITICAL PRICE MISMATCH: Schema price 53940000 (IRR) does not match visible final price 8092000 Toman"
     },
     {
-      "url": "https://nubixshop.ir/product/league-of-legends-rp",
+      "url": "https://jinxfamily.com/product/league-of-legends-rp",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -194,7 +194,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/fortnite-music-pass",
+      "url": "https://jinxfamily.com/product/fortnite-music-pass",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -217,7 +217,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/perfected-nature",
+      "url": "https://jinxfamily.com/product/perfected-nature",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -240,7 +240,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/frozen-legends",
+      "url": "https://jinxfamily.com/product/frozen-legends",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -263,7 +263,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/agency-renegades",
+      "url": "https://jinxfamily.com/product/agency-renegades",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -286,7 +286,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/skate-park",
+      "url": "https://jinxfamily.com/product/skate-park",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -309,7 +309,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/spotify-subscription",
+      "url": "https://jinxfamily.com/product/spotify-subscription",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -332,7 +332,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/change-region-turkey",
+      "url": "https://jinxfamily.com/product/change-region-turkey",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -355,7 +355,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/starterpack",
+      "url": "https://jinxfamily.com/product/starterpack",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -378,7 +378,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/summer-legends",
+      "url": "https://jinxfamily.com/product/summer-legends",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -401,7 +401,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/minty-legends-pack",
+      "url": "https://jinxfamily.com/product/minty-legends-pack",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -424,7 +424,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/nubixshopirpgolden-touch-quest-pack",
+      "url": "https://jinxfamily.com/product/jinxfamilyirpgolden-touch-quest-pack",
       "has_product_schema": true,
       "name_matches_h1": true,
       "description_present": true,
@@ -447,7 +447,7 @@
       "fix_needed": "None"
     },
     {
-      "url": "https://nubixshop.ir/product/turkey-vcc",
+      "url": "https://jinxfamily.com/product/turkey-vcc",
       "has_product_schema": false,
       "name_matches_h1": false,
       "description_present": false,
@@ -472,7 +472,7 @@
       "fix_needed": "Add Product JSON-LD structured data to page layout"
     },
     {
-      "url": "https://nubixshop.ir/product/steam-giftcard",
+      "url": "https://jinxfamily.com/product/steam-giftcard",
       "has_product_schema": false,
       "name_matches_h1": false,
       "description_present": false,
@@ -497,7 +497,7 @@
       "fix_needed": "Add Product JSON-LD structured data to page layout"
     },
     {
-      "url": "https://nubixshop.ir/product/playstation-giftcard",
+      "url": "https://jinxfamily.com/product/playstation-giftcard",
       "has_product_schema": false,
       "name_matches_h1": false,
       "description_present": false,
@@ -522,7 +522,7 @@
       "fix_needed": "Add Product JSON-LD structured data to page layout"
     },
     {
-      "url": "https://nubixshop.ir/product/xbox-giftcard",
+      "url": "https://jinxfamily.com/product/xbox-giftcard",
       "has_product_schema": false,
       "name_matches_h1": false,
       "description_present": false,
@@ -554,45 +554,45 @@
   },
   "critical_price_mismatches": [
     {
-      "url": "https://nubixshop.ir/vbucks",
+      "url": "https://jinxfamily.com/vbucks",
       "schema_price": "9390000",
       "displayed_final_price": "۲٬۴۴۹٬۰۰۰ تومان"
     },
     {
-      "url": "https://nubixshop.ir/gta6",
+      "url": "https://jinxfamily.com/gta6",
       "schema_price": "53940000",
       "displayed_final_price": "۸٬۰۹۲٬۰۰۰ تومان"
     },
     {
-      "url": "https://nubixshop.ir/product/turkey-vcc",
+      "url": "https://jinxfamily.com/product/turkey-vcc",
       "schema_price": "",
       "displayed_final_price": ""
     },
     {
-      "url": "https://nubixshop.ir/product/steam-giftcard",
+      "url": "https://jinxfamily.com/product/steam-giftcard",
       "schema_price": "",
       "displayed_final_price": ""
     },
     {
-      "url": "https://nubixshop.ir/product/playstation-giftcard",
+      "url": "https://jinxfamily.com/product/playstation-giftcard",
       "schema_price": "",
       "displayed_final_price": ""
     },
     {
-      "url": "https://nubixshop.ir/product/xbox-giftcard",
+      "url": "https://jinxfamily.com/product/xbox-giftcard",
       "schema_price": "",
       "displayed_final_price": ""
     }
   ],
   "missing_validFrom": [
-    "https://nubixshop.ir/product/turkey-vcc",
-    "https://nubixshop.ir/product/steam-giftcard",
-    "https://nubixshop.ir/product/playstation-giftcard",
-    "https://nubixshop.ir/product/xbox-giftcard"
+    "https://jinxfamily.com/product/turkey-vcc",
+    "https://jinxfamily.com/product/steam-giftcard",
+    "https://jinxfamily.com/product/playstation-giftcard",
+    "https://jinxfamily.com/product/xbox-giftcard"
   ],
   "availability_errors": [
     {
-      "url": "https://nubixshop.ir/gta6",
+      "url": "https://jinxfamily.com/gta6",
       "schema_availability": "https://schema.org/InStock",
       "issues": [
         "Product name 'پیش‌خرید GTA VI (Grand Theft Auto VI)' does not match H1 'GTA VI پیش‌خرید نسخه دیجیتال وایس سیتی'",
@@ -601,28 +601,28 @@
       ]
     },
     {
-      "url": "https://nubixshop.ir/product/turkey-vcc",
+      "url": "https://jinxfamily.com/product/turkey-vcc",
       "schema_availability": "",
       "issues": [
         "Missing Product schema (<script type=\"application/ld+json\">)"
       ]
     },
     {
-      "url": "https://nubixshop.ir/product/steam-giftcard",
+      "url": "https://jinxfamily.com/product/steam-giftcard",
       "schema_availability": "",
       "issues": [
         "Missing Product schema (<script type=\"application/ld+json\">)"
       ]
     },
     {
-      "url": "https://nubixshop.ir/product/playstation-giftcard",
+      "url": "https://jinxfamily.com/product/playstation-giftcard",
       "schema_availability": "",
       "issues": [
         "Missing Product schema (<script type=\"application/ld+json\">)"
       ]
     },
     {
-      "url": "https://nubixshop.ir/product/xbox-giftcard",
+      "url": "https://jinxfamily.com/product/xbox-giftcard",
       "schema_availability": "",
       "issues": [
         "Missing Product schema (<script type=\"application/ld+json\">)"

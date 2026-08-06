@@ -13,7 +13,7 @@ from pathlib import Path
 from PIL import Image, ImageOps
 import io
 
-OUTPUT_DIR = Path("/root/Projects/NubixShop/frontend/public/categories")
+OUTPUT_DIR = Path("/root/Projects/JinxFamily/frontend/public/categories")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 TMP_DIR = Path("/tmp/logo_dl3")
 TMP_DIR.mkdir(exist_ok=True)

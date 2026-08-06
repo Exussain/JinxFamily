@@ -1,14 +1,14 @@
 ---
 name: playwright-e2e-testing
 description: >-
-  Playwright E2E browser automation & visual testing skill for NubixShop. Use this
+  Playwright E2E browser automation & visual testing skill for JinxFamily. Use this
   skill when running browser tests, validating UI layouts, checking checkout
   flows, or using Playwright MCP tools.
 ---
 
 # Playwright E2E Browser Testing Skill
 
-This skill standardizes browser automation, UI inspection, and E2E validation for NubixShop using Playwright and the `@playwright/mcp` protocol server.
+This skill standardizes browser automation, UI inspection, and E2E validation for JinxFamily using Playwright and the `@playwright/mcp` protocol server.
 
 ## Capabilities & MCP Tools
 
@@ -29,7 +29,7 @@ When Playwright MCP is connected, the agent can perform high-fidelity browser te
    npx playwright test
    ```
 
-## Best Practices for NubixShop E2E
+## Best Practices for JinxFamily E2E
 
 - Test both Desktop (`1920x1080`) and Mobile (`390x844`) viewport dimensions.
 - Verify RTL alignment of text, buttons, drawer menus, and price badges.

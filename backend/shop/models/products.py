@@ -92,13 +92,13 @@ class Product(models.Model):
                 
                 for req in requests:
                     try:
-                        subject = f"محصول {self.name_fa} در نوبیکس شاپ موجود شد!"
+                        subject = f"محصول {self.name_fa} در جینکس فمیلی موجود شد!"
                         body_html = f"""
                         <div dir="rtl" style="font-family: Tahoma, sans-serif; line-height: 1.8; text-align: right;">
                             <h3>کاربر گرامی،</h3>
-                            <p>محصول <strong>{self.name_fa}</strong> که درخواست اطلاع‌رسانی برای موجود شدن آن را ثبت کرده بودید، هم‌اکنون در نوبیکس شاپ موجود و قابل سفارش است.</p>
+                            <p>محصول <strong>{self.name_fa}</strong> که درخواست اطلاع‌رسانی برای موجود شدن آن را ثبت کرده بودید، هم‌اکنون در جینکس فمیلی موجود و قابل سفارش است.</p>
                             <p>برای مشاهده و خرید محصول، می‌توانید روی لینک زیر کلیک کنید:</p>
-                            <p><a href="https://nubixshop.ir/product/{self.slug}" style="display: inline-block; padding: 10px 20px; background-color: #7c3aed; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;">مشاهده و خرید محصول</a></p>
+                            <p><a href="https://jinxfamily.com/product/{self.slug}" style="display: inline-block; padding: 10px 20px; background-color: #7c3aed; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;">مشاهده و خرید محصول</a></p>
                             <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;"/>
                             <p style="font-size: 11px; color: #64748b;">این یک ایمیل خودکار است، لطفاً به آن پاسخ ندهید.</p>
                         </div>

@@ -251,7 +251,7 @@ def admin_seo_generate(request):
                 "provider": "gemini"
             }).encode('utf-8')
             
-            req = urllib.request.Request("https://ai.nubixshop.ir/v1/search", data=req_data, headers={
+            req = urllib.request.Request("https://ai.jinxfamily.com/v1/search", data=req_data, headers={
                 "Content-Type": "application/json",
                 "Authorization": "Bearer sk-30421f0fa038f93a-uwsi7t-10f1c5d2"
             })

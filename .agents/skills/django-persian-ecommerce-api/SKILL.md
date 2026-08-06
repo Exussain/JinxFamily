@@ -4,18 +4,18 @@ description: >-
   Specialized Django 4.2 REST backend skill for Uvicorn ASGI server, Iranian
   payment gateways (Zarinpal/Shaparak/IDPay), Kavenegar SMS, reseller tiers, and
   profit guardrail validations. Use this skill when working on Django backend code
-  in NubixShop.
+  in JinxFamily.
 ---
 
 # Django 4.2 Persian E-Commerce Backend Skill
 
-This skill guides development on the NubixShop Django backend API (`backend/`).
+This skill guides development on the JinxFamily Django backend API (`backend/`).
 
 ## Architecture & Server Execution
 
 - Python Environment: `backend/.venv/bin/python` (Python 3.12).
 - Server Launcher: `asgi_server.py` (Uvicorn on port 8001; do NOT use `manage.py runserver` for production testing).
-- Single core Django application: `shop/` package inside `nubixstore/` project settings.
+- Single core Django application: `shop/` package inside `jinxfamily/` project settings.
 
 ## Core Rules & Guardrails
 

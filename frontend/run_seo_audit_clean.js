@@ -54,18 +54,18 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
 
   // 1. REDIRECT TESTS
   const redirectUrls = [
-    { url: "http://nubixshop.ir/", expected: "https://nubixshop.ir/", type: "exact_target" },
-    { url: "https://nubixshop.ir/index.php", expected: "https://nubixshop.ir/", type: "exact_target" },
-    { url: "https://nubixshop.ir/product/fortnite-crew-pack", expected: "https://nubixshop.ir/crewpack", type: "exact_target" },
-    { url: "http://nubixshop.ir/vbucks", expected: "https://nubixshop.ir/vbucks", type: "exact_target" },
-    { url: "http://nubixshop.ir/product/chatgpt-subscription", expected: "https://nubixshop.ir/product/chatgpt-subscription", type: "https_upgrade" },
-    { url: "http://nubixshop.ir/product/fortnite-battle-pass", expected: "https://nubixshop.ir/product/fortnite-battle-pass", type: "https_upgrade" },
-    { url: "http://nubixshop.ir/crewpack", expected: "https://nubixshop.ir/crewpack", type: "https_upgrade" },
-    { url: "http://nubixshop.ir/lego", expected: "https://nubixshop.ir/lego", type: "https_upgrade" },
-    { url: "http://nubixshop.ir/gta6", expected: "https://nubixshop.ir/gta6", type: "https_upgrade" },
-    { url: "https://nubixshop.ir/help", expected: "301 or live page", type: "verify" },
-    { url: "https://nubixshop.ir/guide", expected: "301 to /guides or live", type: "verify" },
-    { url: "https://ai.nubixshop.ir/", expected: "verify status & content", type: "verify" }
+    { url: "http://jinxfamily.com/", expected: "https://jinxfamily.com/", type: "exact_target" },
+    { url: "https://jinxfamily.com/index.php", expected: "https://jinxfamily.com/", type: "exact_target" },
+    { url: "https://jinxfamily.com/product/fortnite-crew-pack", expected: "https://jinxfamily.com/crewpack", type: "exact_target" },
+    { url: "http://jinxfamily.com/vbucks", expected: "https://jinxfamily.com/vbucks", type: "exact_target" },
+    { url: "http://jinxfamily.com/product/chatgpt-subscription", expected: "https://jinxfamily.com/product/chatgpt-subscription", type: "https_upgrade" },
+    { url: "http://jinxfamily.com/product/fortnite-battle-pass", expected: "https://jinxfamily.com/product/fortnite-battle-pass", type: "https_upgrade" },
+    { url: "http://jinxfamily.com/crewpack", expected: "https://jinxfamily.com/crewpack", type: "https_upgrade" },
+    { url: "http://jinxfamily.com/lego", expected: "https://jinxfamily.com/lego", type: "https_upgrade" },
+    { url: "http://jinxfamily.com/gta6", expected: "https://jinxfamily.com/gta6", type: "https_upgrade" },
+    { url: "https://jinxfamily.com/help", expected: "301 or live page", type: "verify" },
+    { url: "https://jinxfamily.com/guide", expected: "301 to /guides or live", type: "verify" },
+    { url: "https://ai.jinxfamily.com/", expected: "verify status & content", type: "verify" }
   ];
 
   for (const item of redirectUrls) {
@@ -87,8 +87,8 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
         actualStr = `Status ${initialStep.status} (Location: ${initialStep.location}) → Final: ${finalUrl} (Status ${finalStatus})`;
         
         if (item.type === "exact_target") {
-          const targetUrl = new URL(item.expected, "https://nubixshop.ir").href;
-          const endedUrl = new URL(finalUrl, "https://nubixshop.ir").href;
+          const targetUrl = new URL(item.expected, "https://jinxfamily.com").href;
+          const endedUrl = new URL(finalUrl, "https://jinxfamily.com").href;
           isPass = (initialStep.status === 301 || initialStep.status === 308) && endedUrl === targetUrl;
         } else if (item.type === "https_upgrade") {
           isPass = (initialStep.status === 301 || initialStep.status === 308) && finalUrl.startsWith("https://");
@@ -123,9 +123,9 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
 
   // 2. ROUTING BUGS
   const routingUrls = [
-    "https://nubixshop.ir/product/[slug]",
-    "https://nubixshop.ir/blog/category/[slug]",
-    "https://nubixshop.ir/product/nonexistent-xyz-123"
+    "https://jinxfamily.com/product/[slug]",
+    "https://jinxfamily.com/blog/category/[slug]",
+    "https://jinxfamily.com/product/nonexistent-xyz-123"
   ];
 
   for (const url of routingUrls) {
@@ -152,10 +152,10 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
 
   // 3. PARAMETER URL CHECKS
   const paramUrls = [
-    { url: "https://nubixshop.ir/?q=test", expectedType: "noindex" },
-    { url: "https://nubixshop.ir/?cat=" + encodeURIComponent("فورتنایت"), expectedType: "canonical" },
-    { url: "https://nubixshop.ir/?cat=" + encodeURIComponent("گیفت کارتها"), expectedType: "canonical" },
-    { url: "https://nubixshop.ir/?cat=" + encodeURIComponent("اشتراکها"), expectedType: "canonical" }
+    { url: "https://jinxfamily.com/?q=test", expectedType: "noindex" },
+    { url: "https://jinxfamily.com/?cat=" + encodeURIComponent("فورتنایت"), expectedType: "canonical" },
+    { url: "https://jinxfamily.com/?cat=" + encodeURIComponent("گیفت کارتها"), expectedType: "canonical" },
+    { url: "https://jinxfamily.com/?cat=" + encodeURIComponent("اشتراکها"), expectedType: "canonical" }
   ];
 
   for (const item of paramUrls) {
@@ -219,7 +219,7 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
   ];
 
   for (const path of revenuePages) {
-    const fullUrl = `https://nubixshop.ir${path}`;
+    const fullUrl = `https://jinxfamily.com${path}`;
     console.error(`Testing revenue page indexing: ${fullUrl}`);
     const { page, response, error } = await testPage(fullUrl);
 
@@ -252,7 +252,7 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
   // 5. FONT FILES & ROBOTS.TXT CHECK
   {
     console.error("Testing robots.txt for /fonts/ block...");
-    const { page, response, error } = await testPage("https://nubixshop.ir/robots.txt");
+    const { page, response, error } = await testPage("https://jinxfamily.com/robots.txt");
     let robotsContent = "";
     if (page && !error) {
       robotsContent = await page.evaluate(() => document.body.innerText).catch(() => "");
@@ -273,7 +273,7 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
   // 6. /lol BUG CHECK
   {
     console.error("Testing /lol page content...");
-    const { page, response, error } = await testPage("https://nubixshop.ir/lol");
+    const { page, response, error } = await testPage("https://jinxfamily.com/lol");
     if (page && !error) {
       const title = await page.title();
       const pageHtml = await page.content();
@@ -284,7 +284,7 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
                              pageHtml.includes("آر پی") ||
                              pageHtml.includes("RP");
       
-      const isHomepageClone = !hasLolKeywords || (h1Text === "" && title.includes("نوبیکس شاپ") && !title.includes("لیگ"));
+      const isHomepageClone = !hasLolKeywords || (h1Text === "" && title.includes("جینکس فمیلی") && !title.includes("لیگ"));
       
       results.lol_page_bug = isHomepageClone;
       if (isHomepageClone) {

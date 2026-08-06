@@ -8,7 +8,7 @@ from PIL import Image
 
 # Setup Django environment
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nubixstore.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jinxfamilystore.settings')
 
 import django
 django.setup()
@@ -26,13 +26,13 @@ def replace_aghagame(text):
     if not text:
         return text
     if isinstance(text, str):
-        res = text.replace('aghagame.ir', 'nubixshop.ir')
-        res = res.replace('AGHAGAME.IR', 'nubixshop.ir')
-        res = res.replace('aghagame', 'nubixshop')
-        res = res.replace('AghaGame', 'NubixShop')
+        res = text.replace('aghagame.ir', 'jinxfamily.com')
+        res = res.replace('AGHAGAME.IR', 'jinxfamily.com')
+        res = res.replace('aghagame', 'jinxfamily')
+        res = res.replace('AghaGame', 'JinxFamily')
         res = res.replace('AGHAGAME', 'NUBIXSHOP')
-        res = res.replace('آقاگیم', 'نوبیکس شاپ')
-        res = res.replace('آقا گیم', 'نوبیکس شاپ')
+        res = res.replace('آقاگیم', 'جینکس فمیلی')
+        res = res.replace('آقا گیم', 'جینکس فمیلی')
         return res
     if isinstance(text, list):
         return [replace_aghagame(item) for item in text]
@@ -232,7 +232,7 @@ def run_import():
             else:
                 subtitle = "تحویل سریع و پشتیبانی ۲۴/۷"
                 
-        description = p_clean.get('description', '') or f"<p>خرید آنلاین {title} با تحویل سریع، فعال‌سازی قانونی و پشتیبانی ۲۴/۷ در نوبیکس شاپ.</p>"
+        description = p_clean.get('description', '') or f"<p>خرید آنلاین {title} با تحویل سریع، فعال‌سازی قانونی و پشتیبانی ۲۴/۷ در جینکس فمیلی.</p>"
         
         pfields = p_clean.get('options', {}).get('purchase_fields', [])
         custom_fields = convert_purchase_fields(pfields)

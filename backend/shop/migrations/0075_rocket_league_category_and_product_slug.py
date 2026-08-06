@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 def move_rocket_league_product(apps, schema_editor):
     Product = apps.get_model('shop', 'Product')
-    product = Product.objects.filter(slug='nubixshopirrocket-leaguecredits').first()
+    product = Product.objects.filter(slug='jinxfamilyirrocket-leaguecredits').first()
     if not product:
         return
 
@@ -21,7 +21,7 @@ def move_rocket_league_product(apps, schema_editor):
         },
         {
             'q': 'آیا خرید کردیت برای اکانت خطر دارد؟',
-            'a': 'خیر؛ خرید و فعال‌سازی از مسیرهای رسمی انجام می‌شود و تیم نوبیکس شاپ تا تکمیل سفارش همراه شماست.',
+            'a': 'خیر؛ خرید و فعال‌سازی از مسیرهای رسمی انجام می‌شود و تیم جینکس فمیلی تا تکمیل سفارش همراه شماست.',
         },
         {
             'q': 'آیا باید تأیید دو مرحله‌ای اکانت را خاموش کنم؟',
@@ -38,7 +38,7 @@ def move_rocket_league_product(apps, schema_editor):
 def reverse_rocket_league_product(apps, schema_editor):
     Product = apps.get_model('shop', 'Product')
     Product.objects.filter(slug='rocket-league-credits').update(
-        slug='nubixshopirrocket-leaguecredits', category='GAMES', requires_2fa=False
+        slug='jinxfamilyirrocket-leaguecredits', category='GAMES', requires_2fa=False
     )
 
 

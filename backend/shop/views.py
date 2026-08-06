@@ -6568,7 +6568,7 @@ def admin_update_order_status(request, tracking):
 
             # پیامک و تیکت خودکار برای مشکل اکانت ایکس باکس (فقط اگه وضعیت واقعاً تغییر کرده باشه)
             elif status == "needs_xbox_info" and previous_status != "needs_xbox_info":
-                ticket_url = "https://nubixshop.ir/panel/user?tab=tickets"
+                ticket_url = "https://jinxfamily.com/panel/user?tab=tickets"
                 if order.user:
                     try:
                         ticket, created_t = Ticket.objects.get_or_create(
@@ -6592,7 +6592,7 @@ def admin_update_order_status(request, tracking):
                                     f"لطف کنید اطلاعات اکانت ایکس باکس لینک به اپیک گیمزتون رو بفرستید و یا از اخرین فروشگاهی که خرید کردید بگیرید و برای پشتیبانی بفرستید"
                                 )
                             )
-                        ticket_url = f"https://nubixshop.ir/panel/user?tab=tickets&ticket_id={ticket.id}"
+                        ticket_url = f"https://jinxfamily.com/panel/user?tab=tickets&ticket_id={ticket.id}"
                         ticket_created = True
                         ticket_id = ticket.id
                     except Exception as t_err:
@@ -6603,7 +6603,7 @@ def admin_update_order_status(request, tracking):
                         phone_number=phone,
                         customer_name=customer_name,
                         status_fa=order.tracking_code,
-                        template_name="nubix-re-wronginfo",
+                        template_name="jinxfamily-re-wronginfo",
                         include_status_token=False,
                     )
                 else:
@@ -6611,7 +6611,7 @@ def admin_update_order_status(request, tracking):
                         phone_number=phone,
                         customer_name=customer_name,
                         status_fa=ticket_url,
-                        template_name="nubixshop-action-required",
+                        template_name="jinxfamily-action-required",
                         include_status_token=False,
                     )
                 sms_sent = bool(ok)

@@ -17,7 +17,7 @@ import subprocess
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
-OUT_DIR = Path("/root/Projects/NubixShop/frontend/public/categories")
+OUT_DIR = Path("/root/Projects/JinxFamily/frontend/public/categories")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 HEADERS = {

@@ -1931,8 +1931,8 @@ class ResellerStatusSmsTests(TestCase):
             "https://api.kavenegar.com/v1/test-api-key/verify/lookup.json",
             data={
                 "receptor": "09129999999",
-                "token": "https://vip-reseller.nubixshop.ir/reseller/orders",
-                "template": "nubix-re-wronginfo",
+                "token": "https://vip-reseller.jinxfamily.com/reseller/orders",
+                "template": "jinxfamily-re-wronginfo",
                 "type": "sms",
             },
             timeout=10,

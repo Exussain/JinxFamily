@@ -6,7 +6,7 @@ Crawl 10 candidate images for each category, rate them out of 10 based on:
 3. High resolution & no awkward letterboxing/padding (2 points)
 4. Visual aesthetic & vibrancy (2 points)
 
-Select the #1 rated image for each category and output to /root/Projects/NubixShop/frontend/public/categories/
+Select the #1 rated image for each category and output to /root/Projects/JinxFamily/frontend/public/categories/
 """
 
 import os
@@ -19,7 +19,7 @@ import subprocess
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageOps
 
-PUBLIC_DIR = Path("/root/Projects/NubixShop/frontend/public/categories")
+PUBLIC_DIR = Path("/root/Projects/JinxFamily/frontend/public/categories")
 CANDIDATES_DIR = Path("/tmp/category_candidates")
 PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
 CANDIDATES_DIR.mkdir(parents=True, exist_ok=True)

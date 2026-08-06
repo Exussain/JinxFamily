@@ -4,12 +4,12 @@ description: >-
   Specialized Next.js 16 (App Router), React 19, and Tailwind CSS design &
   development skill for Persian RTL (fa-IR) e-commerce interfaces, product cards,
   cart, and checkout UI. Use this skill when modifying or creating frontend
-  components or pages in NubixShop.
+  components or pages in JinxFamily.
 ---
 
 # Next.js 16 RTL E-Commerce UI Skill
 
-This skill provides guidelines and patterns for building high-converting, visually stunning, RTL-native Persian UI components for NubixShop (Fortnite V-Bucks, GTA6, LoL RP, ChatGPT subscriptions, and digital game top-ups).
+This skill provides guidelines and patterns for building high-converting, visually stunning, RTL-native Persian UI components for JinxFamily (Fortnite V-Bucks, GTA6, LoL RP, ChatGPT subscriptions, and digital game top-ups).
 
 ## Key Principles
 

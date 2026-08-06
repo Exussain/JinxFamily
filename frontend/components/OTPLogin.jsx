@@ -47,7 +47,7 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const stored = (window.localStorage.getItem("nubix_ref") || "").trim().toUpperCase();
+      const stored = (window.localStorage.getItem("jinxfamily_ref") || "").trim().toUpperCase();
       if (stored) setReferralCodeInput(stored);
     } catch {}
   }, []);

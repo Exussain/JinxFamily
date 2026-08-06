@@ -72,7 +72,7 @@ async def scrape_bing():
             raw_results = await page.evaluate(items_eval)
 
             top_10 = []
-            nubix_rank = None
+            jinxfamily_rank = None
             competitors_in_query = []
 
             for rank, res in enumerate(raw_results[:10], start=1):
@@ -86,11 +86,11 @@ async def scrape_bing():
 
                 parsed_domain = urllib.parse.urlparse(res["url"]).netloc.lower().replace("www.", "")
                 
-                if "nubixshop.ir" in parsed_domain or "nubixshop.ir" in res["url"].lower():
-                    if nubix_rank is None:
-                        nubix_rank = rank
+                if "jinxfamily.com" in parsed_domain or "jinxfamily.com" in res["url"].lower():
+                    if jinxfamily_rank is None:
+                        jinxfamily_rank = rank
 
-                if parsed_domain and "nubixshop.ir" not in parsed_domain:
+                if parsed_domain and "jinxfamily.com" not in parsed_domain:
                     competitors_in_query.append(parsed_domain)
                     all_competitors_freq[parsed_domain] = all_competitors_freq.get(parsed_domain, 0) + 1
 
@@ -104,39 +104,39 @@ async def scrape_bing():
             else:
                 intent = "mixed"
 
-            nubix_in_top_10 = (nubix_rank is not None)
+            jinxfamily_in_top_10 = (jinxfamily_rank is not None)
             top_competitors_query = list(dict.fromkeys(competitors_in_query))[:5]
 
             search_results_data.append({
                 "query": query,
                 "intent": intent,
                 "top_10": top_10,
-                "nubixshop_position": nubix_rank,
-                "nubixshop_in_top_10": nubix_in_top_10,
+                "jinxfamily_position": jinxfamily_rank,
+                "jinxfamily_in_top_10": jinxfamily_in_top_10,
                 "top_competitors": top_competitors_query
             })
 
-            if nubix_rank is None:
+            if jinxfamily_rank is None:
                 gap_desc = "Not ranking in top 10"
                 missing_coverage.append(keyword)
-            elif nubix_rank > 3:
-                gap_desc = f"Position #{nubix_rank} - Quick win opportunity for Top 3"
+            elif jinxfamily_rank > 3:
+                gap_desc = f"Position #{jinxfamily_rank} - Quick win opportunity for Top 3"
                 quick_wins.append({
                     "keyword": keyword,
-                    "current_rank": nubix_rank,
+                    "current_rank": jinxfamily_rank,
                     "target_url": target_url
                 })
             else:
-                gap_desc = f"Strong ranking at #{nubix_rank}"
+                gap_desc = f"Strong ranking at #{jinxfamily_rank}"
 
             keyword_to_url_map.append({
                 "keyword": keyword,
                 "target_url": target_url,
-                "current_rank": nubix_rank,
+                "current_rank": jinxfamily_rank,
                 "gap": gap_desc
             })
 
-            print(f"-> Bing Query '{query}': {len(top_10)} results found. Nubix position: {nubix_rank or 'None'}. Intent: {intent}")
+            print(f"-> Bing Query '{query}': {len(top_10)} results found. JinxFamily position: {jinxfamily_rank or 'None'}. Intent: {intent}")
 
         await browser.close()
 

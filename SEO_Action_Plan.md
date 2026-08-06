@@ -1,5 +1,5 @@
 # SEO Swarm Orchestrator X: Comprehensive Audit & Action Plan
-**Target**: nubixshop.ir
+**Target**: jinxfamily.com
 **Date**: 2026-07-21
 **Status**: 12/12 Tasks Completed & Verified
 
@@ -50,7 +50,7 @@ The blog directory (`/blog`) uses robust JSON-LD schemas, but internal links to 
 
 ### C. Trust & E-E-A-T (Expertise, Authoritativeness, Trustworthiness)
 While your footer successfully displays trust signals, content authorship is lacking.
-*   **Action**: Link the generic author strings found in `articlesMockData` (e.g., "بخش فنی نوبیکس") to a dedicated `/authors/[name]` biography page. This proves domain expertise to Google's Quality Raters.
+*   **Action**: Link the generic author strings found in `articlesMockData` (e.g., "بخش فنی جینکس فمیلی") to a dedicated `/authors/[name]` biography page. This proves domain expertise to Google's Quality Raters.
 
 ---
 

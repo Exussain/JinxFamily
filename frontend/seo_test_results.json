@@ -1,93 +1,93 @@
 {
   "redirect_tests": [
     {
-      "url": "http://nubixshop.ir/",
-      "expected": "https://nubixshop.ir/",
-      "actual": "Status 301 (Location: https://nubixshop.ir/) → Final: https://nubixshop.ir/ (Status 200)",
+      "url": "http://jinxfamily.com/",
+      "expected": "https://jinxfamily.com/",
+      "actual": "Status 301 (Location: https://jinxfamily.com/) → Final: https://jinxfamily.com/ (Status 200)",
       "pass": true
     },
     {
-      "url": "https://nubixshop.ir/index.php",
-      "expected": "https://nubixshop.ir/",
-      "actual": "Status 308 (Location: /) → Final: https://nubixshop.ir/ (Status 200)",
+      "url": "https://jinxfamily.com/index.php",
+      "expected": "https://jinxfamily.com/",
+      "actual": "Status 308 (Location: /) → Final: https://jinxfamily.com/ (Status 200)",
       "pass": true
     },
     {
-      "url": "https://nubixshop.ir/product/fortnite-crew-pack",
-      "expected": "https://nubixshop.ir/crewpack",
-      "actual": "Status 308 (Location: /crewpack) → Final: https://nubixshop.ir/crewpack (Status 200)",
+      "url": "https://jinxfamily.com/product/fortnite-crew-pack",
+      "expected": "https://jinxfamily.com/crewpack",
+      "actual": "Status 308 (Location: /crewpack) → Final: https://jinxfamily.com/crewpack (Status 200)",
       "pass": true
     },
     {
-      "url": "http://nubixshop.ir/vbucks",
-      "expected": "https://nubixshop.ir/vbucks",
-      "actual": "Status 307 (Location: https://nubixshop.ir/vbucks) → Final: https://nubixshop.ir/vbucks (Status 200)",
+      "url": "http://jinxfamily.com/vbucks",
+      "expected": "https://jinxfamily.com/vbucks",
+      "actual": "Status 307 (Location: https://jinxfamily.com/vbucks) → Final: https://jinxfamily.com/vbucks (Status 200)",
       "pass": false
     },
     {
-      "url": "http://nubixshop.ir/product/chatgpt-subscription",
-      "expected": "https://nubixshop.ir/product/chatgpt-subscription",
-      "actual": "Status 307 (Location: https://nubixshop.ir/product/chatgpt-subscription) → Final: https://nubixshop.ir/product/chatgpt-subscription (Status 200)",
+      "url": "http://jinxfamily.com/product/chatgpt-subscription",
+      "expected": "https://jinxfamily.com/product/chatgpt-subscription",
+      "actual": "Status 307 (Location: https://jinxfamily.com/product/chatgpt-subscription) → Final: https://jinxfamily.com/product/chatgpt-subscription (Status 200)",
       "pass": false
     },
     {
-      "url": "http://nubixshop.ir/product/fortnite-battle-pass",
-      "expected": "https://nubixshop.ir/product/fortnite-battle-pass",
-      "actual": "Status 307 (Location: https://nubixshop.ir/product/fortnite-battle-pass) → Final: https://nubixshop.ir/product/fortnite-battle-pass (Status 200)",
+      "url": "http://jinxfamily.com/product/fortnite-battle-pass",
+      "expected": "https://jinxfamily.com/product/fortnite-battle-pass",
+      "actual": "Status 307 (Location: https://jinxfamily.com/product/fortnite-battle-pass) → Final: https://jinxfamily.com/product/fortnite-battle-pass (Status 200)",
       "pass": false
     },
     {
-      "url": "http://nubixshop.ir/crewpack",
-      "expected": "https://nubixshop.ir/crewpack",
-      "actual": "Status 307 (Location: https://nubixshop.ir/crewpack) → Final: https://nubixshop.ir/crewpack (Status 200)",
+      "url": "http://jinxfamily.com/crewpack",
+      "expected": "https://jinxfamily.com/crewpack",
+      "actual": "Status 307 (Location: https://jinxfamily.com/crewpack) → Final: https://jinxfamily.com/crewpack (Status 200)",
       "pass": false
     },
     {
-      "url": "http://nubixshop.ir/lego",
-      "expected": "https://nubixshop.ir/lego",
-      "actual": "Status 307 (Location: https://nubixshop.ir/lego) → Final: https://nubixshop.ir/lego (Status 200)",
+      "url": "http://jinxfamily.com/lego",
+      "expected": "https://jinxfamily.com/lego",
+      "actual": "Status 307 (Location: https://jinxfamily.com/lego) → Final: https://jinxfamily.com/lego (Status 200)",
       "pass": false
     },
     {
-      "url": "http://nubixshop.ir/gta6",
-      "expected": "https://nubixshop.ir/gta6",
-      "actual": "Status 307 (Location: https://nubixshop.ir/gta6) → Final: https://nubixshop.ir/gta6 (Status 200)",
+      "url": "http://jinxfamily.com/gta6",
+      "expected": "https://jinxfamily.com/gta6",
+      "actual": "Status 307 (Location: https://jinxfamily.com/gta6) → Final: https://jinxfamily.com/gta6 (Status 200)",
       "pass": false
     },
     {
-      "url": "https://nubixshop.ir/help",
+      "url": "https://jinxfamily.com/help",
       "expected": "301 or live page",
-      "actual": "Status 308 (Location: /faq) → Final: https://nubixshop.ir/faq (Status 200)",
+      "actual": "Status 308 (Location: /faq) → Final: https://jinxfamily.com/faq (Status 200)",
       "pass": true
     },
     {
-      "url": "https://nubixshop.ir/guide",
+      "url": "https://jinxfamily.com/guide",
       "expected": "301 to /guides or live",
-      "actual": "Status 308 (Location: /faq/how-to-buy) → Final: https://nubixshop.ir/faq/how-to-buy (Status 200)",
+      "actual": "Status 308 (Location: /faq/how-to-buy) → Final: https://jinxfamily.com/faq/how-to-buy (Status 200)",
       "pass": true
     },
     {
-      "url": "https://ai.nubixshop.ir/",
+      "url": "https://ai.jinxfamily.com/",
       "expected": "verify status & content",
-      "actual": "Status 307 (Location: /dashboard) → Final: https://ai.nubixshop.ir/login (Status 200)",
+      "actual": "Status 307 (Location: /dashboard) → Final: https://ai.jinxfamily.com/login (Status 200)",
       "pass": true
     }
   ],
   "routing_bugs": [
     {
-      "url": "https://nubixshop.ir/product/[slug]",
+      "url": "https://jinxfamily.com/product/[slug]",
       "expected_status": 404,
       "actual_status": 404,
       "pass": true
     },
     {
-      "url": "https://nubixshop.ir/blog/category/[slug]",
+      "url": "https://jinxfamily.com/blog/category/[slug]",
       "expected_status": 404,
       "actual_status": 404,
       "pass": true
     },
     {
-      "url": "https://nubixshop.ir/product/nonexistent-xyz-123",
+      "url": "https://jinxfamily.com/product/nonexistent-xyz-123",
       "expected_status": 404,
       "actual_status": 404,
       "pass": true
@@ -95,31 +95,31 @@
   ],
   "parameter_url_checks": [
     {
-      "url": "https://nubixshop.ir/?q=test",
+      "url": "https://jinxfamily.com/?q=test",
       "has_noindex": true,
       "has_canonical": true,
-      "canonical_target": "https://nubixshop.ir",
+      "canonical_target": "https://jinxfamily.com",
       "pass": true
     },
     {
-      "url": "https://nubixshop.ir/?cat=%D9%81%D9%88%D8%B1%D8%AA%D9%86%D8%A7%DB%8C%D8%AA",
+      "url": "https://jinxfamily.com/?cat=%D9%81%D9%88%D8%B1%D8%AA%D9%86%D8%A7%DB%8C%D8%AA",
       "has_noindex": true,
       "has_canonical": true,
-      "canonical_target": "https://nubixshop.ir",
+      "canonical_target": "https://jinxfamily.com",
       "pass": true
     },
     {
-      "url": "https://nubixshop.ir/?cat=%DA%AF%DB%8C%D9%81%D8%AA%20%DA%A9%D8%A7%D8%B1%D8%AA%D9%87%D8%A7",
+      "url": "https://jinxfamily.com/?cat=%DA%AF%DB%8C%D9%81%D8%AA%20%DA%A9%D8%A7%D8%B1%D8%AA%D9%87%D8%A7",
       "has_noindex": true,
       "has_canonical": true,
-      "canonical_target": "https://nubixshop.ir",
+      "canonical_target": "https://jinxfamily.com",
       "pass": true
     },
     {
-      "url": "https://nubixshop.ir/?cat=%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%DA%A9%D9%87%D8%A7",
+      "url": "https://jinxfamily.com/?cat=%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%DA%A9%D9%87%D8%A7",
       "has_noindex": true,
       "has_canonical": true,
-      "canonical_target": "https://nubixshop.ir",
+      "canonical_target": "https://jinxfamily.com",
       "pass": true
     }
   ],
@@ -194,12 +194,12 @@
   "font_crawl_issue": false,
   "lol_page_bug": false,
   "critical_issues": [
-    "Redirect failed for http://nubixshop.ir/vbucks: Expected https://nubixshop.ir/vbucks, got [Status 307 (Location: https://nubixshop.ir/vbucks) → Final: https://nubixshop.ir/vbucks (Status 200)]",
-    "Redirect failed for http://nubixshop.ir/product/chatgpt-subscription: Expected https://nubixshop.ir/product/chatgpt-subscription, got [Status 307 (Location: https://nubixshop.ir/product/chatgpt-subscription) → Final: https://nubixshop.ir/product/chatgpt-subscription (Status 200)]",
-    "Redirect failed for http://nubixshop.ir/product/fortnite-battle-pass: Expected https://nubixshop.ir/product/fortnite-battle-pass, got [Status 307 (Location: https://nubixshop.ir/product/fortnite-battle-pass) → Final: https://nubixshop.ir/product/fortnite-battle-pass (Status 200)]",
-    "Redirect failed for http://nubixshop.ir/crewpack: Expected https://nubixshop.ir/crewpack, got [Status 307 (Location: https://nubixshop.ir/crewpack) → Final: https://nubixshop.ir/crewpack (Status 200)]",
-    "Redirect failed for http://nubixshop.ir/lego: Expected https://nubixshop.ir/lego, got [Status 307 (Location: https://nubixshop.ir/lego) → Final: https://nubixshop.ir/lego (Status 200)]",
-    "Redirect failed for http://nubixshop.ir/gta6: Expected https://nubixshop.ir/gta6, got [Status 307 (Location: https://nubixshop.ir/gta6) → Final: https://nubixshop.ir/gta6 (Status 200)]"
+    "Redirect failed for http://jinxfamily.com/vbucks: Expected https://jinxfamily.com/vbucks, got [Status 307 (Location: https://jinxfamily.com/vbucks) → Final: https://jinxfamily.com/vbucks (Status 200)]",
+    "Redirect failed for http://jinxfamily.com/product/chatgpt-subscription: Expected https://jinxfamily.com/product/chatgpt-subscription, got [Status 307 (Location: https://jinxfamily.com/product/chatgpt-subscription) → Final: https://jinxfamily.com/product/chatgpt-subscription (Status 200)]",
+    "Redirect failed for http://jinxfamily.com/product/fortnite-battle-pass: Expected https://jinxfamily.com/product/fortnite-battle-pass, got [Status 307 (Location: https://jinxfamily.com/product/fortnite-battle-pass) → Final: https://jinxfamily.com/product/fortnite-battle-pass (Status 200)]",
+    "Redirect failed for http://jinxfamily.com/crewpack: Expected https://jinxfamily.com/crewpack, got [Status 307 (Location: https://jinxfamily.com/crewpack) → Final: https://jinxfamily.com/crewpack (Status 200)]",
+    "Redirect failed for http://jinxfamily.com/lego: Expected https://jinxfamily.com/lego, got [Status 307 (Location: https://jinxfamily.com/lego) → Final: https://jinxfamily.com/lego (Status 200)]",
+    "Redirect failed for http://jinxfamily.com/gta6: Expected https://jinxfamily.com/gta6, got [Status 307 (Location: https://jinxfamily.com/gta6) → Final: https://jinxfamily.com/gta6 (Status 200)]"
   ],
   "all_clear": false
 }

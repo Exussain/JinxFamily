@@ -1358,7 +1358,7 @@ function XboxArchiveCards({
 
 
 
-export default function AdminPanelPage() {
+export default function AdminPanelPage({ initialTab = "orders" } = {}) {
   const router = useRouter();
   const { items, total } = useCart();
   const [user, setUser] = useState(null);
@@ -1976,7 +1976,7 @@ export default function AdminPanelPage() {
 
 اگه پرداخت رو انجام دادید و این پیام رو دریافت کردید، لطفاً با پشتیبانی تماس بگیرید.
 
-فروشگاه آنلاین Nubix Shop`
+فروشگاه آنلاین JinxFamily`
     },
     paid: {
       subject: "پرداخت شما تأیید شد 💰",
@@ -1986,7 +1986,7 @@ export default function AdminPanelPage() {
 
 مرسی از خریدتون 🙏
 
-فروشگاه آنلاین Nubix Shop`
+فروشگاه آنلاین JinxFamily`
     },
     registered: {
       subject: "سفارش شما ثبت شد ✅",
@@ -1997,7 +1997,7 @@ export default function AdminPanelPage() {
 مرسی از صبر، همراهی و شکیبایی‌تون 🙏
 به‌محض تکمیل، براتون پیام ارسال می‌شه.
 
-فروشگاه آنلاین Nubix Shop`
+فروشگاه آنلاین JinxFamily`
     },
     processing: {
       subject: "سفارش شما در حال پردازش است ⚙️",
@@ -2009,7 +2009,7 @@ export default function AdminPanelPage() {
 مرسی از صبرتون 🙏
 به‌محض تکمیل، بهتون اطلاع می‌دیم.
 
-فروشگاه آنلاین Nubix Shop`
+فروشگاه آنلاین JinxFamily`
     },
     needs_2fa: {
       subject: "نیاز به خاموش کردن کد دو مرحله‌ای 🔐",
@@ -2018,11 +2018,11 @@ export default function AdminPanelPage() {
 به دلیل فعال بودن کد دو مرحله‌ای روی حساب شما، پردازش سفارشتون با تأخیر مواجه شده.
 
 لطفاً برای ادامه روند، تایید دو مرحله‌ای رو خاموش کنید و برای هماهنگی بیشتر با پشتیبانی فنی در تلگرام ارتباط بگیرید:
-@Nubixsupport
+@JinxFamilysupport
 
 مرسی از صبر و همکاری‌تون.
 
-فروشگاه آنلاین Nubix Shop`
+فروشگاه آنلاین JinxFamily`
     },
     needs_tr_region: {
       subject: "نیاز به تغییر ریجن به ترکیه 🌍",
@@ -2032,9 +2032,9 @@ export default function AdminPanelPage() {
 
 لطفاً ریجن را به ترکیه تغییر دهید و سپس به ما اطلاع دهید یا مجدداً وارد حساب شوید تا ادامه دهیم.
 
-در صورت نیاز به راهنمایی، با پشتیبانی تلگرام در ارتباط باشید: @Nubixsupport
+در صورت نیاز به راهنمایی، با پشتیبانی تلگرام در ارتباط باشید: @JinxFamilysupport
 
-فروشگاه آنلاین Nubix Shop`
+فروشگاه آنلاین JinxFamily`
     },
     needs_xbox_info: {
       subject: "مشکل اکانت ایکس باکس ❌",
@@ -2049,16 +2049,16 @@ export default function AdminPanelPage() {
 مرسی از اعتمادتون به ما 🙌
 لطفاً ما رو به دوستاتون هم معرفی کنید.
 
-فروشگاه آنلاین Nubix Shop`
+فروشگاه آنلاین JinxFamily`
     },
     canceled: {
       subject: "سفارش شما لغو شد ❌",
       body: `سفارش شما لغو شده.
 
 برای دریافت اطلاعات بیشتر و بررسی جزئیات، لطفاً با پشتیبانی تلگرام در ارتباط باشید:
-@Nubixsupport
+@JinxFamilysupport
 
-فروشگاه آنلاین Nubix Shop`
+فروشگاه آنلاین JinxFamily`
     },
     refunded: {
       subject: "بازگشت وجه سفارش شما 💳",
@@ -2066,7 +2066,7 @@ export default function AdminPanelPage() {
 
 لطفاً اگر سوالی دارید با پشتیبانی در ارتباط باشید.
 
-فروشگاه آنلاین Nubix Shop`
+فروشگاه آنلاین JinxFamily`
     },
     invalid_info: {
       subject: "اطلاعات سفارش نیاز به اصلاح دارد 🛠",
@@ -7006,7 +7006,7 @@ export default function AdminPanelPage() {
               <div className="settings-card sms-notification-settings">
                 <div>
                   <h3 className="settings-title">📱 ارسال پیامک همراه با بروزرسانی وضعیت</h3>
-                  <p className="settings-subtitle">الگوی پیامک: nubixshop-order-status | شامل وضعیت فارسی و کد پیگیری</p>
+                  <p className="settings-subtitle">الگوی پیامک: jinxfamily-order-status | شامل وضعیت فارسی و کد پیگیری</p>
                 </div>
                 <div className="settings-grid">
                   <div className="settings-row">

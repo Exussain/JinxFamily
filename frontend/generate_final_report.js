@@ -22,7 +22,7 @@ const vbucksDiagnosis =
   "5. Duplicate Layout Structure: Follows identical boilerplate text length and structure as 6 other authored guides.";
 
 const missingFromSitemap = [
-  "https://nubixshop.ir/blog/unlink-xbox-from-epic-games"
+  "https://jinxfamily.com/blog/unlink-xbox-from-epic-games"
 ];
 
 const contentGaps = [

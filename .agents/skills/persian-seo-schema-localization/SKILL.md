@@ -1,14 +1,14 @@
 ---
 name: persian-seo-schema-localization
 description: >-
-  SEO optimization and Persian localization skill for NubixShop. Use this skill when
+  SEO optimization and Persian localization skill for JinxFamily. Use this skill when
   modifying page metadata, OpenGraph tags, Schema.org JSON-LD structured data,
   sitemap, or Persian RTL accessibility.
 ---
 
 # Persian SEO & Structured Data Localization Skill
 
-This skill provides guidelines for maximizing organic search visibility and search engine snippet presentation for NubixShop.
+This skill provides guidelines for maximizing organic search visibility and search engine snippet presentation for JinxFamily.
 
 ## Core SEO Requirements
 

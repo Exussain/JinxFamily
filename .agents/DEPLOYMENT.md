@@ -5,7 +5,7 @@
 Before starting any deployment, we must **always** check for any existing `HardReload.sh` or
 `next build` child processes. If an older/stale deployment is still running, we terminate
 it completely first, verify that it has stopped, and then start **exactly one fresh**
-`/root/NubixShop/public/HardReload.sh`.
+`/root/jinxfamily/HardReload.sh`.
 
 This prevents multiple builds from running concurrently and **racing/corrupting** the
 `.next-build`, `.next-prev`, and `.next` build directories.
@@ -66,7 +66,7 @@ pgrep -f 'HardReload.sh|next build' || echo 'All clear — safe to deploy'
 ### Step 4 — Start exactly one fresh deployment
 
 ```bash
-/root/NubixShop/public/HardReload.sh
+/root/jinxfamily/HardReload.sh
 ```
 
 ---
@@ -76,7 +76,7 @@ pgrep -f 'HardReload.sh|next build' || echo 'All clear — safe to deploy'
 ```bash
 pkill -TERM -f 'HardReload.sh'; pkill -TERM -f 'next build'; sleep 5; \
 pgrep -f 'HardReload.sh|next build' && echo 'WARNING: processes still alive!' \
-|| (echo 'All clear — starting fresh deployment' && /root/NubixShop/public/HardReload.sh)
+|| (echo 'All clear — starting fresh deployment' && /root/jinxfamily/HardReload.sh)
 ```
 
 ---

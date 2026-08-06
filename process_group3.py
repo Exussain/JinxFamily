@@ -3,7 +3,7 @@ import sys
 from PIL import Image, ImageOps
 
 base_dir = '/tmp/candidates/group3'
-output_dir = '/root/Projects/NubixShop/frontend/public/categories'
+output_dir = '/root/Projects/JinxFamily/frontend/public/categories'
 
 os.makedirs(output_dir, exist_ok=True)
 

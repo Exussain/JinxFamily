@@ -2,19 +2,19 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 
 const PAGES = [
-  'https://nubixshop.ir/blog',
-  'https://nubixshop.ir/blog/guide-buy-vbucks',
-  'https://nubixshop.ir/blog/guide-crew-pack',
-  'https://nubixshop.ir/blog/guide-buy-chatgpt-plus',
-  'https://nubixshop.ir/blog/guide-gemini-advanced',
-  'https://nubixshop.ir/blog/guide-buy-steam-giftcard',
-  'https://nubixshop.ir/blog/guide-preorder-gta6',
-  'https://nubixshop.ir/blog/guide-spotify-premium',
-  'https://nubixshop.ir/blog/unlink-xbox-from-epic-games',
-  'https://nubixshop.ir/guides/disable-2fa',
-  'https://nubixshop.ir/guides/link-unlink',
-  'https://nubixshop.ir/guides/remove-restriction',
-  'https://nubixshop.ir/faq'
+  'https://jinxfamily.com/blog',
+  'https://jinxfamily.com/blog/guide-buy-vbucks',
+  'https://jinxfamily.com/blog/guide-crew-pack',
+  'https://jinxfamily.com/blog/guide-buy-chatgpt-plus',
+  'https://jinxfamily.com/blog/guide-gemini-advanced',
+  'https://jinxfamily.com/blog/guide-buy-steam-giftcard',
+  'https://jinxfamily.com/blog/guide-preorder-gta6',
+  'https://jinxfamily.com/blog/guide-spotify-premium',
+  'https://jinxfamily.com/blog/unlink-xbox-from-epic-games',
+  'https://jinxfamily.com/guides/disable-2fa',
+  'https://jinxfamily.com/guides/link-unlink',
+  'https://jinxfamily.com/guides/remove-restriction',
+  'https://jinxfamily.com/faq'
 ];
 
 const SLEEP_MS = 3000;
@@ -89,7 +89,7 @@ function sleep(ms) {
         const href = a.getAttribute('href');
         if (!href) return;
         
-        const isInternal = href.startsWith('/') || href.includes('nubixshop.ir');
+        const isInternal = href.startsWith('/') || href.includes('jinxfamily.com');
         if (isInternal) {
           internalLinksCount++;
           if (

@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound, redirect, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '../../../components/Navbar';
 import StaticProductCard from '../../../components/StaticProductCard';
@@ -240,7 +240,7 @@ export default async function CategoryPage({ params, searchParams }) {
               .filter((c) => c !== code && c !== 'accounts' && c !== 'account' && c !== 'market')
               .map((c) => (
                 <Link key={c} href={`/category/${c}`} className="ghost-btn">
-                  {(TITLES[c] || `خرید محصولات ${c}`).split('؛')[0]}
+                  {String(TITLES[c] || `خرید محصولات ${c}`).split('؛')[0]}
                 </Link>
               ))}
             <Link href="/blog" className="ghost-btn">وبلاگ جینکس فمیلی</Link>
