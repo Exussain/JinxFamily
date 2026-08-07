@@ -48,7 +48,7 @@ def kavenegar_admin_usage(request):
     start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    qs_sms = NotificationLog.objects.filter(channel="sms")
+    qs_sms = NotificationLog.objects.filter(channel="sms").exclude(template__startswith="nubixshop")
 
     # 2. Aggregations
     today_agg = qs_sms.filter(created_at__gte=start_of_today).aggregate(
@@ -92,10 +92,13 @@ def kavenegar_admin_usage(request):
 
     template_labels = {
         "jinxfamily-otp": "کد ورود / OTP",
-        "jinxfamily-signup": "ثبت نام کاربر",
+        "jinxfamily-otp-": "کد تایید اولیه",
+        "new-order": "ثبت سفارش جدید",
+        "jinxfamily-shop-new-order": "سفارش جدید فروشگاه",
+        "jinxfamily-club-points": "امتیازات باشگاه مشتریان",
         "jinxfamily-order-done": "تکمیل سفارش",
+        "jinxfamily-signup": "ثبت نام کاربر",
         "jinxfamily-alert": "هشدارهای سیستم",
-        "jinxfamily-club-points": "امتیازات باشگاه",
         "jinxfamily-abandoned-cart": "سبد خرید رها شده",
         "jinxfamily-re-wronginfo": "اصلاح اطلاعات سفارش",
     }
