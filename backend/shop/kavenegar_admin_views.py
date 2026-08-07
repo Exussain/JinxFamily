@@ -211,7 +211,7 @@ def external_zarinpal_topup_request(request):
     authority = data.get("data", {}).get("authority")
 
     if code == 100 and authority:
-        payment_url = f"{EXTERNAL_ZARINPAL_BASE_URL}/pg/StartPay/{authority}"
+        payment_url = f"https://payment.zarinpal.com/pg/StartPay/{authority}"
         if hasattr(request, "session"):
             request.session[f"topup_amt_{authority}"] = amount_toman
         return JsonResponse({
