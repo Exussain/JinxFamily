@@ -225,3 +225,96 @@ class ProductRequest(models.Model):
 
     def __str__(self):
         return f"{self.product_name} - {self.contact_info}"
+
+
+class G4A4Product(models.Model):
+    external_product_id = models.IntegerField(unique=True, verbose_name="شناسه محصول خارجی")
+    category = models.CharField(max_length=200, verbose_name="دسته‌بندی G4A4")
+    name = models.CharField(max_length=255, verbose_name="نام محصول")
+    game_slug = models.SlugField(max_length=200, verbose_name="اسلاگ بازی")
+    is_active = models.BooleanField(default=False, verbose_name="فعال برای نمایش در سایت")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "محصول G4A4"
+        verbose_name_plural = "محصولات G4A4"
+
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
+
+class G4A4Variation(models.Model):
+    external_variation_id = models.IntegerField(unique=True, verbose_name="شناسه واریانت خارجی")
+    product = models.ForeignKey(G4A4Product, on_delete=models.CASCADE, related_name='variations', verbose_name="محصول")
+    name = models.CharField(max_length=255, verbose_name="نام واریانت")
+    cost_irt = models.PositiveIntegerField(verbose_name="قیمت خرید از G4A4 (تومان)")
+    sell_toman = models.PositiveIntegerField(verbose_name="قیمت فروش ما (تومان)")
+    in_stock = models.BooleanField(default=True, verbose_name="موجود")
+    delivery_type = models.CharField(max_length=50, blank=True, verbose_name="نوع تحویل")
+    region = models.CharField(max_length=100, blank=True, verbose_name="ریجن")
+    required_fields = models.JSONField(default=list, blank=True, verbose_name="فیلدهای مورد نیاز")
+    attributes = models.JSONField(default=dict, blank=True, verbose_name="ویژگی‌ها")
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "واریانت G4A4"
+        verbose_name_plural = "واریانت‌های G4A4"
+
+    def __str__(self):
+        return f"{self.name} - {self.sell_toman} تومان"
+
+
+class G4A4MarkupRule(models.Model):
+    category_name = models.CharField(max_length=200, unique=True, verbose_name="نام دسته‌بندی G4A4")
+    markup_percent = models.FloatField(default=20.0, verbose_name="درصد سود (مثلاً ۱۵.۵)")
+
+    class Meta:
+        verbose_name = "قانون سود G4A4"
+        verbose_name_plural = "قوانین سود G4A4"
+
+    def __str__(self):
+        return f"{self.category_name} - {self.markup_percent}٪"
+
+
+class CustomerWalletTxn(models.Model):
+    KIND_CHOICES = [
+        ("topup_pending", "شارژ در انتظار پرداخت"),
+        ("topup", "شارژ کیف پول"),
+        ("order", "خرید سفارش"),
+        ("refund", "بازگشت سفارش"),
+        ("adjust", "تعدیل دستی"),
+    ]
+
+    profile = models.ForeignKey("UserProfile", on_delete=models.CASCADE, related_name="wallet_txns")
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES)
+    amount = models.IntegerField(help_text="مقدار تراکنش (تومان)؛ مثبت = افزایش، منفی = کاهش")
+    balance_after = models.PositiveIntegerField(default=0, help_text="موجودی بعد از اعمال")
+    related_order = models.ForeignKey("Order", on_delete=models.SET_NULL, null=True, blank=True)
+    related_payment = models.ForeignKey("Payment", on_delete=models.SET_NULL, null=True, blank=True)
+    note = models.CharField(max_length=240, blank=True, default="")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="customer_wallet_actions")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "تراکنش کیف پول مشتری"
+        verbose_name_plural = "تراکنش‌های کیف پول مشتری"
+
+    def __str__(self):
+        return f"{self.kind} - {self.amount} تومان"
+
+
+class WishlistItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="wishlist")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, related_name="wishlisted_by")
+    g4a4_product = models.ForeignKey(G4A4Product, on_delete=models.CASCADE, null=True, blank=True, related_name="wishlisted_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "آیتم علاقه‌مندی"
+        verbose_name_plural = "لیست علاقه‌مندی‌ها"
+
+    def __str__(self):
+        p_name = self.product.name_fa if self.product else (self.g4a4_product.name if self.g4a4_product else "Unknown")
+        return f"{self.user.username} - {p_name}"

@@ -65,6 +65,22 @@ class KavenegarService:
         return session.get(url, timeout=timeout)
 
     @classmethod
+    def _extract_entry_metadata(cls, data: dict) -> Tuple[int, Optional[str], int]:
+        """Extract cost (in Rials), message ID, and segments from Kavenegar API response."""
+        try:
+            entries = data.get("entries")
+            if isinstance(entries, list) and len(entries) > 0:
+                first = entries[0]
+                if isinstance(first, dict):
+                    cost = int(first.get("cost") or 0)
+                    msg_id = str(first.get("messageid") or "") if first.get("messageid") else None
+                    part = int(first.get("part") or 1)
+                    return cost, msg_id, part
+        except Exception as exc:
+            logger.debug("Failed to extract Kavenegar entry metadata: %s", exc)
+        return 0, None, 1
+
+    @classmethod
     def health_check(cls) -> dict:
         """Check Kavenegar credentials without sending an SMS.
 
@@ -274,6 +290,7 @@ class KavenegarService:
 
                 # بررسی response برای موفقیت
                 if data.get("return", {}).get("status") == 200:
+                    cost, msg_id, segments = cls._extract_entry_metadata(data)
                     logger.info(f"OTP sent successfully to {phone_number}")
                     log_notification(
                         "sms",
@@ -282,6 +299,9 @@ class KavenegarService:
                         success=True,
                         message="کد تایید ارسال شد",
                         context={"response": data},
+                        cost=cost,
+                        provider_msg_id=msg_id,
+                        segments=segments,
                     )
                     return True, "کد تایید با موفقیت ارسال شد"
                 else:
@@ -509,6 +529,7 @@ class KavenegarService:
             if response.status_code == cls.STATUS_SUCCESS:
                 data = response.json()
                 if data.get("return", {}).get("status") == 200:
+                    cost, msg_id, segments = cls._extract_entry_metadata(data)
                     log_notification(
                         "sms",
                         normalized,
@@ -516,6 +537,9 @@ class KavenegarService:
                         success=True,
                         message="پیامک وضعیت ارسال شد",
                         context={"response": data, "payload": payload},
+                        cost=cost,
+                        provider_msg_id=msg_id,
+                        segments=segments,
                     )
                     return True, "پیامک وضعیت ارسال شد"
                 error = data.get("return", {}).get("message", "خطای نامشخص")
@@ -681,6 +705,7 @@ class KavenegarService:
             if response.status_code == cls.STATUS_SUCCESS:
                 data = response.json()
                 if data.get("return", {}).get("status") == 200:
+                    cost, msg_id, segments = cls._extract_entry_metadata(data)
                     log_notification(
                         "sms",
                         normalized,
@@ -688,6 +713,9 @@ class KavenegarService:
                         success=True,
                         message="پیامک باشگاه ارسال شد",
                         context={"response": data, "payload": payload},
+                        cost=cost,
+                        provider_msg_id=msg_id,
+                        segments=segments,
                     )
                     return True, "پیامک باشگاه ارسال شد"
                 error = data.get("return", {}).get("message", "خطای نامشخص")

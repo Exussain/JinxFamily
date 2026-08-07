@@ -23,6 +23,514 @@ const KAVENEGAR_HEALTH_FAILURE_MESSAGE = "اعتبار رایگان کاوه‌�
 
 const LIRA_RATE_MARKUP_TOMAN = 140;
 
+function KavenegarUsageWidget({ apiBase, setReport }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [logsOpen, setLogsOpen] = useState(false);
+  const [topupAmount, setTopupAmount] = useState(100000);
+  const [customAmount, setCustomAmount] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [topupBanner, setTopupBanner] = useState(null);
+
+  const formatNum = (val) => Number(val || 0).toLocaleString("fa-IR");
+
+  const fetchUsage = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/kavenegar/usage`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      const result = await res.json();
+      if (res.ok && result.ok) {
+        setData(result);
+      }
+    } catch (err) {
+      console.error("Error loading Kavenegar usage:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiBase]);
+
+  useEffect(() => {
+    fetchUsage();
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const topupStatus = params.get("topup");
+      const refId = params.get("ref_id");
+      const amount = params.get("amount");
+      if (topupStatus === "success" && refId) {
+        setTopupBanner({
+          kind: "success",
+          msg: `شارژ کیف پول کاوه‌نگار با موفقیت انجام شد. مبلغ: ${Number(amount || 0).toLocaleString("fa-IR")} تومان (کد پیگیری: ${refId})`,
+        });
+      } else if (topupStatus === "failed" || topupStatus === "canceled") {
+        setTopupBanner({
+          kind: "error",
+          msg: topupStatus === "canceled" ? "تراکنش شارژ کاوه‌نگار لغو شد." : "تراکنش شارژ کاوه‌نگار ناموفق بود.",
+        });
+      }
+    }
+  }, [fetchUsage]);
+
+  const handleTopupSubmit = async (e) => {
+    e?.preventDefault();
+    const finalAmount = customAmount ? parseInt(customAmount, 10) : topupAmount;
+    if (!finalAmount || finalAmount < 5000) {
+      alert("لطفاً مبلغ معتبری (حداقل ۵,۰۰۰ تومان) وارد کنید.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/kavenegar/topup/request`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: finalAmount }),
+      });
+      const json = await res.json();
+      if (res.ok && json.ok && json.payment_url) {
+        window.location.href = json.payment_url;
+      } else {
+        alert(json.error || "خطا در برقراری ارتباط با درگاه زرین‌پال");
+      }
+    } catch (err) {
+      alert("خطا در ایجاد تراکنش شارژ");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading && !data) {
+    return (
+      <div className="kavenegar-usage-card loading-state">
+        <span>🔄 در حال دریافت آمار و میزان مصرف کاوه‌نگار...</span>
+      </div>
+    );
+  }
+
+  const account = data?.account || {};
+  const stats = data?.stats || {};
+  const templates = data?.templates || [];
+  const logs = data?.recent_logs || [];
+
+  return (
+    <div className="kavenegar-usage-card">
+      {topupBanner && (
+        <div className={`topup-banner ${topupBanner.kind}`}>
+          <span>{topupBanner.kind === "success" ? "✅" : "⚠️"}</span>
+          <p>{topupBanner.msg}</p>
+          <button type="button" onClick={() => setTopupBanner(null)}>✕</button>
+        </div>
+      )}
+
+      {/* Main Bar */}
+      <div className="kavenegar-usage-header">
+        <div className="kavenegar-info">
+          <div className="kavenegar-badge-icon">📱</div>
+          <div>
+            <div className="kavenegar-title-row">
+              <h3>پنل و میزان مصرف کاوه‌نگار (SMS API)</h3>
+              <span className={`status-pill ${account.is_healthy ? "healthy" : "warning"}`}>
+                {account.is_healthy ? "اتصال سالم" : "نیاز به شارژ"}
+              </span>
+            </div>
+            <p className="kavenegar-subtext">
+              موجودی کل حساب: <strong className="credit-val">{formatNum(account.credit_toman)} تومان</strong> ({formatNum(account.credit_rial)} ریال)
+            </p>
+          </div>
+        </div>
+
+        <div className="kavenegar-header-actions">
+          <button type="button" className="btn-logs" onClick={() => setLogsOpen(!logsOpen)}>
+            📜 {logsOpen ? "بستن تاریخچه" : "تاریخچه پیامک‌ها"}
+          </button>
+          <button type="button" className="btn-topup" onClick={() => setModalOpen(true)}>
+            💳 شارژ کیف پول کاوه‌نگار
+          </button>
+        </div>
+      </div>
+
+      {/* Metrics Grid */}
+      <div className="kavenegar-stats-grid">
+        <div className="stat-box">
+          <span className="stat-label">مصرف امروز</span>
+          <strong className="stat-value">{formatNum(stats.today?.count)} پیامک</strong>
+          <span className="stat-cost">{formatNum(stats.today?.cost_toman)} تومان</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-label">مصرف این ماه</span>
+          <strong className="stat-value">{formatNum(stats.month?.count)} پیامک</strong>
+          <span className="stat-cost">{formatNum(stats.month?.cost_toman)} تومان</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-label">مجموع کل ارسال‌ها</span>
+          <strong className="stat-value">{formatNum(stats.total?.count)} پیامک</strong>
+          <span className="stat-cost">{formatNum(stats.total?.cost_toman)} تومان</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-label">نرخ تحویل موفق</span>
+          <strong className="stat-value success">{stats.total?.success_rate}%</strong>
+          <span className="stat-cost">تحویل به مخابرات</span>
+        </div>
+      </div>
+
+      {/* Template Breakdown */}
+      {templates.length > 0 && (
+        <div className="kavenegar-templates-section">
+          <h4>تفکیک هزینه و تعداد به تفکیک موضوع پیامک</h4>
+          <div className="templates-pills">
+            {templates.map((item, idx) => (
+              <div key={idx} className="tmpl-pill">
+                <span className="tmpl-name">{item.label}</span>
+                <span className="tmpl-count">{formatNum(item.count)} پیامک</span>
+                <span className="tmpl-cost">{formatNum(item.cost_toman)} تومان</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Logs Table Drawer */}
+      {logsOpen && (
+        <div className="kavenegar-logs-drawer">
+          <h4>آخرین پیامک‌های ارسال شده از سیستم</h4>
+          <div className="logs-table-wrapper">
+            <table className="logs-table">
+              <thead>
+                <tr>
+                  <th>زمان ارسال</th>
+                  <th>گیرنده</th>
+                  <th>قالب / موضوع</th>
+                  <th>هزینه (تومان)</th>
+                  <th>شناسه پیامک</th>
+                  <th>وضعیت</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id}>
+                    <td>{new Date(log.created_at).toLocaleString("fa-IR")}</td>
+                    <td dir="ltr" style={{ textAlign: "right" }}>{log.target}</td>
+                    <td>{log.template || "عمومی"}</td>
+                    <td>{formatNum(log.cost_toman)}</td>
+                    <td dir="ltr" style={{ textAlign: "right" }}>{log.provider_msg_id || "—"}</td>
+                    <td>
+                      <span className={`log-status ${log.success ? "ok" : "fail"}`}>
+                        {log.success ? "موفق" : "ناموفق"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* TopUp Modal */}
+      {modalOpen && (
+        <div className="topup-modal-backdrop" onClick={() => setModalOpen(false)}>
+          <div className="topup-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>💳 شارژ کیف پول کاوه‌نگار با درگاه زرین‌پال</h3>
+              <button type="button" className="close-btn" onClick={() => setModalOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-desc">
+                مبلغ مورد نظر برای افزایش اعتبار پنل پیامکی کاوه‌نگار را انتخاب یا وارد کنید. پرداخت از طریق درگاه امن زرین‌پال (pay.nubixshop.ir) انجام می‌شود.
+              </p>
+
+              <div className="amount-presets">
+                {[100000, 250000, 500000, 1000000].map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    className={`preset-btn ${topupAmount === amt && !customAmount ? "active" : ""}`}
+                    onClick={() => { setTopupAmount(amt); setCustomAmount(""); }}
+                  >
+                    {formatNum(amt)} تومان
+                  </button>
+                ))}
+              </div>
+
+              <div className="custom-input-group">
+                <label>یا مبلغ دلخواه (تومان):</label>
+                <input
+                  type="number"
+                  placeholder="مثال: 150000"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-submit-pay"
+                  onClick={handleTopupSubmit}
+                  disabled={submitting}
+                >
+                  {submitting ? "در حال انتقال به درگاه..." : `انتقال به درگاه و پرداخت ${formatNum(customAmount ? parseInt(customAmount, 10) : topupAmount)} تومان`}
+                </button>
+                <button type="button" className="btn-cancel" onClick={() => setModalOpen(false)}>
+                  انصراف
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .kavenegar-usage-card {
+          background: var(--card-bg, #111827);
+          border: 1px solid var(--border-color, #1f2937);
+          border-radius: 16px;
+          padding: 20px;
+          margin-bottom: 24px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .loading-state {
+          text-align: center;
+          color: #9ca3af;
+          padding: 24px;
+        }
+        .topup-banner {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 10px;
+          margin-bottom: 16px;
+        }
+        .topup-banner.success {
+          background: rgba(16, 185, 129, 0.15);
+          border: 1px solid #10b981;
+          color: #34d399;
+        }
+        .topup-banner.error {
+          background: rgba(239, 68, 68, 0.15);
+          border: 1px solid #ef4444;
+          color: #f87171;
+        }
+        .topup-banner p { flex: 1; margin: 0; font-size: 14px; font-weight: 500; }
+        .topup-banner button { background: none; border: none; color: inherit; cursor: pointer; }
+
+        .kavenegar-usage-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 16px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid var(--border-color, #1f2937);
+        }
+        .kavenegar-info {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+        .kavenegar-badge-icon {
+          font-size: 28px;
+          background: rgba(59, 130, 246, 0.15);
+          padding: 12px;
+          border-radius: 14px;
+        }
+        .kavenegar-title-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .kavenegar-title-row h3 {
+          margin: 0;
+          font-size: 17px;
+          font-weight: 700;
+          color: #f9fafb;
+        }
+        .status-pill {
+          font-size: 11px;
+          padding: 3px 8px;
+          border-radius: 20px;
+          font-weight: 600;
+        }
+        .status-pill.healthy {
+          background: rgba(16, 185, 129, 0.2);
+          color: #34d399;
+        }
+        .status-pill.warning {
+          background: rgba(245, 158, 11, 0.2);
+          color: #fbbf24;
+        }
+        .kavenegar-subtext {
+          margin: 4px 0 0 0;
+          font-size: 13px;
+          color: #9ca3af;
+        }
+        .credit-val {
+          color: #60a5fa;
+        }
+
+        .kavenegar-header-actions {
+          display: flex;
+          gap: 10px;
+        }
+        .btn-logs {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #e5e7eb;
+          padding: 8px 14px;
+          border-radius: 10px;
+          cursor: pointer;
+          font-size: 13px;
+          transition: all 0.2s;
+        }
+        .btn-logs:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .btn-topup {
+          background: linear-gradient(135deg, #2563eb, #1d4ed8);
+          border: none;
+          color: white;
+          padding: 8px 16px;
+          border-radius: 10px;
+          font-weight: 600;
+          cursor: pointer;
+          font-size: 13px;
+          box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+          transition: transform 0.15s;
+        }
+        .btn-topup:hover { transform: translateY(-1px); }
+
+        .kavenegar-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          gap: 12px;
+          margin-top: 16px;
+        }
+        .stat-box {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .stat-label { font-size: 12px; color: #9ca3af; }
+        .stat-value { font-size: 16px; font-weight: 700; color: #f3f4f6; }
+        .stat-value.success { color: #34d399; }
+        .stat-cost { font-size: 12px; color: #3b82f6; }
+
+        .kavenegar-templates-section {
+          margin-top: 20px;
+          padding-top: 14px;
+          border-top: 1px dashed var(--border-color, #1f2937);
+        }
+        .kavenegar-templates-section h4 {
+          margin: 0 0 10px 0;
+          font-size: 13px;
+          color: #d1d5db;
+        }
+        .templates-pills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .tmpl-pill {
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 6px 12px;
+          border-radius: 8px;
+          font-size: 12px;
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+        .tmpl-name { color: #f9fafb; font-weight: 500; }
+        .tmpl-count { color: #9ca3af; }
+        .tmpl-cost { color: #60a5fa; font-weight: 600; }
+
+        .kavenegar-logs-drawer {
+          margin-top: 20px;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 12px;
+          padding: 14px;
+        }
+        .kavenegar-logs-drawer h4 { margin: 0 0 12px 0; font-size: 14px; color: #f3f4f6; }
+        .logs-table-wrapper { overflow-x: auto; }
+        .logs-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .logs-table th, .logs-table td { padding: 8px 12px; text-align: right; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .logs-table th { color: #9ca3af; font-weight: 500; }
+        .log-status.ok { color: #34d399; font-weight: 600; }
+        .log-status.fail { color: #f87171; font-weight: 600; }
+
+        .topup-modal-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          padding: 16px;
+        }
+        .topup-modal {
+          background: #1f2937;
+          border: 1px solid #374151;
+          border-radius: 16px;
+          width: 100%;
+          max-width: 480px;
+          padding: 24px;
+          color: #f9fafb;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-header h3 { margin: 0; font-size: 16px; }
+        .close-btn { background: none; border: none; color: #9ca3af; font-size: 18px; cursor: pointer; }
+        .modal-desc { font-size: 13px; color: #9ca3af; line-height: 1.6; margin-bottom: 20px; }
+        .amount-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .preset-btn {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: white;
+          padding: 10px;
+          border-radius: 10px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: all 0.2s;
+        }
+        .preset-btn.active {
+          background: #2563eb;
+          border-color: #3b82f6;
+        }
+        .custom-input-group { margin-bottom: 20px; }
+        .custom-input-group label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 6px; }
+        .custom-input-group input {
+          width: 100%;
+          background: #111827;
+          border: 1px solid #374151;
+          border-radius: 10px;
+          padding: 10px 12px;
+          color: white;
+        }
+        .modal-actions { display: flex; flex-direction: column; gap: 10px; }
+        .btn-submit-pay {
+          background: #10b981;
+          color: white;
+          border: none;
+          padding: 12px;
+          border-radius: 10px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+        .btn-cancel { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 6px; }
+      `}</style>
+    </div>
+  );
+}
+
 function DailyLiraPurchaseDashboard({ apiBase, setReport }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -5006,6 +5514,8 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
               </section>
             </div>
           )}
+
+          <KavenegarUsageWidget apiBase={apiBase} setReport={setReport} />
 
           {/* Finance bar */}
           <div className="finance-bar">

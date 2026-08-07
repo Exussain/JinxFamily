@@ -16,6 +16,9 @@ def log_notification(
     success: bool = False,
     message: str = "",
     context: Optional[Dict[str, Any]] = None,
+    cost: int = 0,
+    provider_msg_id: Optional[str] = None,
+    segments: int = 1,
 ):
     """
     Store notification delivery result so admins can inspect status in Django admin.
@@ -29,7 +32,11 @@ def log_notification(
             success=success,
             message=message or "",
             context=context or {},
+            cost=int(cost or 0),
+            provider_msg_id=str(provider_msg_id) if provider_msg_id else None,
+            segments=int(segments or 1),
             created_at=timezone.now(),
         )
     except Exception as exc:
         logger.warning("Unable to write NotificationLog: %s", exc)
+

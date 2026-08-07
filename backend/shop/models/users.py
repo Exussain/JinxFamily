@@ -133,6 +133,9 @@ class NotificationLog(models.Model):
     success = models.BooleanField(default=False)
     message = models.TextField(blank=True)
     context = models.JSONField(default=dict, blank=True)
+    cost = models.IntegerField(default=0, help_text="هزینه پیامک به ریال")
+    provider_msg_id = models.CharField(max_length=64, blank=True, null=True, help_text="شناسه پیامک در کاوه‌نگار")
+    segments = models.IntegerField(default=1, help_text="تعداد پارت‌های پیامک")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

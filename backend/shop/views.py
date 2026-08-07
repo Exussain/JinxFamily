@@ -10401,3 +10401,19 @@ def admin_reject_verification(request, profile_id):
     profile.save()
     
     return JsonResponse({"message": "مدارک هویت کاربر رد صلاحیت شد."})
+
+
+@csrf_exempt
+def admin_send_direct_chat(request, tracking):
+    return JsonResponse({"success": False, "detail": "Not implemented"}, status=501)
+
+
+@csrf_exempt
+def admin_create_emergency_ticket(request, tracking):
+    return JsonResponse({"success": False, "detail": "Not implemented"}, status=501)
+
+
+@csrf_exempt
+def admin_verify_ai_info(request, tracking):
+    return JsonResponse({"success": False, "detail": "Not implemented"}, status=501)
+

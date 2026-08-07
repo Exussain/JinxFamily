@@ -7,6 +7,11 @@ from . import blog_views
 from .chat_views import chat_user_api, chat_admin_api, chat_upload_api
 from .ai_playground import ai_playground_api
 from . import marketplace_views
+from .kavenegar_admin_views import (
+    kavenegar_admin_usage,
+    external_zarinpal_topup_request,
+    external_zarinpal_topup_callback,
+)
 
 urlpatterns = [
     path('products', views.products_list),
@@ -54,6 +59,12 @@ urlpatterns = [
     path('admin/orders/custom-dollar', views.admin_create_custom_dollar_order),
     path('admin/notifications', views.admin_notifications),
     path('admin/kavenegar/health', views.admin_kavenegar_health),
+    path('admin/kavenegar/usage', kavenegar_admin_usage),
+    path('admin/kavenegar/usage/', kavenegar_admin_usage),
+    path('admin/kavenegar/topup/request', external_zarinpal_topup_request),
+    path('admin/kavenegar/topup/request/', external_zarinpal_topup_request),
+    path('admin/kavenegar/topup/callback', external_zarinpal_topup_callback),
+    path('admin/kavenegar/topup/callback/', external_zarinpal_topup_callback),
     path('admin/settings', views.admin_settings),
     path('admin/products', views.admin_products),
     path('admin/products/reorder', views.admin_products_reorder),

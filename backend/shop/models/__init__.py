@@ -4,6 +4,11 @@ from .products import (
     SubCategory,
     ProductComment,
     ProductRequest,
+    G4A4Product,
+    G4A4Variation,
+    G4A4MarkupRule,
+    CustomerWalletTxn,
+    WishlistItem,
 )
 from .orders import (
     Order,

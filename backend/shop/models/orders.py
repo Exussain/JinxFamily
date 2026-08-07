@@ -201,7 +201,7 @@ class DiscountCode(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, null=True, blank=True)
     variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, null=True, blank=True)
     name = models.CharField(max_length=200)
     price = models.PositiveIntegerField(default=0)
