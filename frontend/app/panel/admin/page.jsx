@@ -111,7 +111,7 @@ function KavenegarUsageWidget({ apiBase, setReport }) {
     );
   }
 
-  const account = data?.account || {};
+  const debt = data?.debt || {};
   const stats = data?.stats || {};
   const templates = data?.templates || [];
   const logs = data?.recent_logs || [];
@@ -133,12 +133,15 @@ function KavenegarUsageWidget({ apiBase, setReport }) {
           <div>
             <div className="kavenegar-title-row">
               <h3>پنل و میزان مصرف کاوه‌نگار (SMS API)</h3>
-              <span className={`status-pill ${account.is_healthy ? "healthy" : "warning"}`}>
-                {account.is_healthy ? "اتصال سالم" : "نیاز به شارژ"}
+              <span className={`status-pill ${debt.is_settled ? "healthy" : "warning"}`}>
+                {debt.is_settled ? "تسویه‌شده" : `بدهکار: ${formatNum(debt.remaining_debt_toman)} تومان`}
               </span>
             </div>
             <p className="kavenegar-subtext">
-              موجودی کل حساب: <strong className="credit-val">{formatNum(account.credit_toman)} تومان</strong> ({formatNum(account.credit_rial)} ریال)
+              بدهی قابل تسویه جینکس فمیلی: <strong className="credit-val">{formatNum(debt.remaining_debt_toman)} تومان</strong> ({formatNum(debt.remaining_debt_rial)} ریال)
+              <span style={{ fontSize: 11, color: "var(--muted)", marginRight: 8 }}>
+                (کل مصرف: {formatNum(debt.total_consumed_toman)} تومان · واریزی تسویه‌شده: {formatNum(debt.total_settled_toman)} تومان)
+              </span>
             </p>
           </div>
         </div>
@@ -147,8 +150,15 @@ function KavenegarUsageWidget({ apiBase, setReport }) {
           <button type="button" className="btn-logs" onClick={() => setLogsOpen(!logsOpen)}>
             📜 {logsOpen ? "بستن تاریخچه" : "تاریخچه پیامک‌ها"}
           </button>
-          <button type="button" className="btn-topup" onClick={() => setModalOpen(true)}>
-            💳 شارژ کیف پول کاوه‌نگار
+          <button
+            type="button"
+            className="btn-topup"
+            onClick={() => {
+              if (debt.remaining_debt_toman > 0) setTopupAmount(debt.remaining_debt_toman);
+              setModalOpen(true);
+            }}
+          >
+            💳 {debt.is_settled ? "شارژ حساب / تسویه" : "پرداخت و تسویه بدهی"}
           </button>
         </div>
       </div>

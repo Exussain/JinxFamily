@@ -48,7 +48,7 @@ def kavenegar_admin_usage(request):
     start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    qs_sms = NotificationLog.objects.filter(channel="sms").exclude(template__startswith="nubixshop")
+    qs_sms = NotificationLog.objects.filter(channel="sms").exclude(template__startswith="nubixshop").exclude(template="kavenegar-wallet-topup")
 
     # 2. Aggregations
     today_agg = qs_sms.filter(created_at__gte=start_of_today).aggregate(
@@ -77,6 +77,21 @@ def kavenegar_admin_usage(request):
     total_cost_rial = total_agg["total_cost"] or 0
     total_success = total_agg["success_count"] or 0
     success_rate = round((total_success / total_count * 100), 1) if total_count > 0 else 100.0
+
+    # 2.1 Calculate Settled Payments & Remaining Debt
+    topup_logs = NotificationLog.objects.filter(channel="sms", template="kavenegar-wallet-topup", success=True)
+    total_settled_toman = 0
+    for t_log in topup_logs:
+        if isinstance(t_log.context, dict):
+            try:
+                total_settled_toman += int(t_log.context.get("amount_toman", 0))
+            except (ValueError, TypeError):
+                pass
+
+    total_consumed_toman = total_cost_rial // 10
+    remaining_debt_toman = max(0, total_consumed_toman - total_settled_toman)
+    remaining_debt_rial = remaining_debt_toman * 10
+    is_settled = (remaining_debt_toman == 0)
 
     # 3. Breakdown by Template / Message Type
     template_breakdown = []
@@ -134,12 +149,14 @@ def kavenegar_admin_usage(request):
 
     return JsonResponse({
         "ok": True,
-        "account": {
-            "status": health.get("status", "unknown"),
-            "is_healthy": health.get("ok", False),
-            "message": health.get("message", ""),
-            "credit_rial": credit_rial,
-            "credit_toman": credit_toman,
+        "debt": {
+            "status": "settled" if is_settled else "owing",
+            "is_settled": is_settled,
+            "total_consumed_toman": total_consumed_toman,
+            "total_consumed_rial": total_cost_rial,
+            "total_settled_toman": total_settled_toman,
+            "remaining_debt_toman": remaining_debt_toman,
+            "remaining_debt_rial": remaining_debt_rial,
         },
         "stats": {
             "today": {
