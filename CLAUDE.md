@@ -17,6 +17,9 @@ site is RTL Persian (`fa-IR`) throughout — UI copy, AI prompts, and the change
 Both services run live under **pm2** on this box (`pm2 list` → `jinxfamily-backend`, `jinxfamily-frontend`).
 Treat changes as deploying to production, not a sandbox.
 
+All major changes and updates MUST be pushed exclusively to the official GitHub repository:
+[**Exussain/JinxFamily**](https://github.com/Exussain/JinxFamily) (`https://github.com/Exussain/JinxFamily.git`).
+
 ## Repository layout
 
 - `backend/` — Django 4.2 project (`jinxfamily/` settings package + single `shop/` app). Served by
@@ -24,7 +27,7 @@ Treat changes as deploying to production, not a sandbox.
 - `frontend/` — Next.js 16 (App Router, React 19) app, served by `next start` under pm2.
 - `frontend/components/` is also configured as a separate additional working directory — expect to
   edit files there directly.
-- `.agents/AGENTS.md` — legacy rules file (superseded by this CLAUDE.md, kept for reference).
+- `.agents/AGENTS.md` — project rules file.
 
 ## Commands
 
