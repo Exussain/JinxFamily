@@ -21,6 +21,15 @@ import {
 import ReferralNotificationModal from "../../../components/ReferralNotificationModal";
 import { isOutsideWorkingHours } from "../../../lib/workingHours";
 
+function getCleanAvatarUrl(url) {
+  if (!url || typeof url !== "string") return "";
+  if (url.includes("127.0.0.1") || url.includes("localhost")) {
+    const idx = url.indexOf("/media/");
+    if (idx !== -1) return url.slice(idx);
+  }
+  return url;
+}
+
 export default function UserPanelPage() {
   const router = useRouter();
   const { items, total } = useCart();
@@ -38,6 +47,8 @@ export default function UserPanelPage() {
   const [profilePassword, setProfilePassword] = useState("");
   const [profilePassword2, setProfilePassword2] = useState("");
   const [avatarSaving, setAvatarSaving] = useState(false);
+  const [heroAvatarError, setHeroAvatarError] = useState(false);
+  const [orbAvatarError, setOrbAvatarError] = useState(false);
   const [selectedAvatarId, setSelectedAvatarId] = useState(PRESET_AVATARS[0]?.id || "");
   const [cancellingOrder, setCancellingOrder] = useState(null);
   const [activeTab, setActiveTab] = useState("orders");
@@ -705,9 +716,13 @@ export default function UserPanelPage() {
         <section className="account-hero">
           <div className="account-hero__id">
             <div className="account-hero__avatar">
-              {user?.avatar_url ? (
+              {user?.avatar_url && !heroAvatarError ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.avatar_url} alt={displayName || "پروفایل"} />
+                <img
+                  src={getCleanAvatarUrl(user.avatar_url)}
+                  alt={displayName || "پروفایل"}
+                  onError={() => setHeroAvatarError(true)}
+                />
               ) : (
                 <span>{(displayName || user?.name || "شما")?.[0] || "?"}</span>
               )}
@@ -844,9 +859,13 @@ export default function UserPanelPage() {
               <div className="avatar-lab">
                 <div className="avatar-lab__preview">
                   <div className="avatar-lab__orb">
-                    {user?.avatar_url ? (
+                    {user?.avatar_url && !orbAvatarError ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={user.avatar_url} alt={displayName || "آواتار"} />
+                      <img
+                        src={getCleanAvatarUrl(user.avatar_url)}
+                        alt={displayName || "آواتار"}
+                        onError={() => setOrbAvatarError(true)}
+                      />
                     ) : (
                       <span>{(displayName || user?.name || "N")?.[0] || "N"}</span>
                     )}

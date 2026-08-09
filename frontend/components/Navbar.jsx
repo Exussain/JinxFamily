@@ -13,9 +13,19 @@ import { useTheme } from './ThemeProvider';
 import ProductRequestModal from './ProductRequestModal';
 
 
+function getCleanAvatarUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  if (url.includes('127.0.0.1') || url.includes('localhost')) {
+    const idx = url.indexOf('/media/');
+    if (idx !== -1) return url.slice(idx);
+  }
+  return url;
+}
+
 function NavbarContent() {
   const [q, setQ] = useState('');
   const [user, setUser] = useState(null);
+  const [mobileAvatarError, setMobileAvatarError] = useState(false);
   const [showCartPreview, setShowCartPreview] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -991,8 +1001,14 @@ function NavbarContent() {
                 {user ? (
                   <Link href="/panel/user" onClick={closeMobileMenu} className="mobile-menu-user-card" style={{ textDecoration: "none" }}>
                     <span className="mobile-menu-user-avatar">
-                      {user.avatar_url ? (
-                        <img src={user.avatar_url} alt={user.name || 'پروفایل'} width="36" height="36" />
+                      {user.avatar_url && !mobileAvatarError ? (
+                        <img
+                          src={getCleanAvatarUrl(user.avatar_url)}
+                          alt={user.name || 'پروفایل'}
+                          width="36"
+                          height="36"
+                          onError={() => setMobileAvatarError(true)}
+                        />
                       ) : (
                         (user.name || 'شما')?.[0] || '?'
                       )}

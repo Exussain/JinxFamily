@@ -2566,12 +2566,43 @@ def signup(request):
 
     login(request, user)
 
-    avatar_url = ""
-    if getattr(profile, "avatar", None):
-        try:
-            avatar_url = request.build_absolute_uri(profile.avatar.url)
-        except Exception:
-            avatar_url = ""
+def _get_avatar_url(profile_or_avatar, request=None) -> str:
+    if not profile_or_avatar:
+        return ""
+    avatar = getattr(profile_or_avatar, "avatar", profile_or_avatar)
+    if not avatar or not hasattr(avatar, "url"):
+        return ""
+    try:
+        url = avatar.url
+        if not url:
+            return ""
+        site_url = (os.environ.get("PUBLIC_SITE_URL") or "https://jinxfamily.ir").rstrip("/")
+        if url.startswith("http://") or url.startswith("https://"):
+            if "127.0.0.1" in url or "localhost" in url:
+                path_idx = url.find("/media/")
+                if path_idx != -1:
+                    return f"{site_url}{url[path_idx:]}"
+                return url
+            return url
+
+        path = url if url.startswith("/") else f"/{url}"
+        if request:
+            forwarded_host = request.META.get("HTTP_X_FORWARDED_HOST")
+            forwarded_proto = request.META.get("HTTP_X_FORWARDED_PROTO", "https")
+            if forwarded_host and "127.0.0.1" not in forwarded_host and "localhost" not in forwarded_host:
+                return f"{forwarded_proto}://{forwarded_host}{path}"
+            
+            host = request.get_host()
+            if host and "127.0.0.1" not in host and "localhost" not in host:
+                proto = "https" if request.is_secure() or forwarded_proto == "https" else "http"
+                return f"{proto}://{host}{path}"
+
+        return f"{site_url}{path}"
+    except Exception:
+        return ""
+
+
+    avatar_url = _get_avatar_url(profile, request)
 
     return JsonResponse({
         "id": user.id,
@@ -2632,12 +2663,7 @@ def login_view(request):
     except MultipleObjectsReturned:
         profile = UserProfile.objects.filter(user=user).order_by('id').first()
 
-    avatar_url = ""
-    if getattr(profile, "avatar", None):
-        try:
-            avatar_url = request.build_absolute_uri(profile.avatar.url)
-        except Exception:
-            avatar_url = ""
+    avatar_url = _get_avatar_url(profile, request)
 
     return JsonResponse({
         "id": user.id,
@@ -2670,12 +2696,7 @@ def me(request):
     except MultipleObjectsReturned:
         profile = UserProfile.objects.filter(user=user).order_by('id').first()
 
-    avatar_url = ""
-    if getattr(profile, "avatar", None):
-        try:
-            avatar_url = request.build_absolute_uri(profile.avatar.url)
-        except Exception:
-            avatar_url = ""
+    avatar_url = _get_avatar_url(profile, request)
 
     # Determine phone_number from profile or username
     phone_num = profile.phone_number if profile.phone_number else (user.username if user.username.startswith('09') else "")
@@ -2847,12 +2868,7 @@ def update_profile(request):
     except Exception:
         logger.exception("profile completion points failed for user %s", user.id)
 
-    avatar_url = ""
-    if getattr(profile, "avatar", None):
-        try:
-            avatar_url = request.build_absolute_uri(profile.avatar.url)
-        except Exception:
-            avatar_url = ""
+    avatar_url = _get_avatar_url(profile, request)
 
     return JsonResponse({
         "id": user.id,
@@ -2910,12 +2926,7 @@ def upload_avatar(request):
     except Exception:
         logger.exception("profile completion points failed for user %s", user.id)
 
-    avatar_url = ""
-    if getattr(profile, "avatar", None):
-        try:
-            avatar_url = request.build_absolute_uri(profile.avatar.url)
-        except Exception:
-            avatar_url = ""
+    avatar_url = _get_avatar_url(profile, request)
 
     return JsonResponse({
         "avatar_url": avatar_url,
@@ -5066,8 +5077,12 @@ def cart_sync(request):
             price = max(0, int(raw.get("price") or 0))
         except (TypeError, ValueError):
             price = 0
+        try:
+            clean_pid = int(pid)
+        except (TypeError, ValueError):
+            clean_pid = str(pid).strip()[:100]
         clean.append({
-            "product_id": int(pid),
+            "product_id": clean_pid,
             "variant_id": raw.get("variant_id") or None,
             "slug": (raw.get("slug") or "")[:220],
             "name": (raw.get("name") or "")[:200],
@@ -7877,12 +7892,7 @@ def verify_otp_view(request):
         if updated:
             user.save()
 
-        avatar_url = ""
-        if getattr(profile, "avatar", None):
-            try:
-                avatar_url = request.build_absolute_uri(profile.avatar.url)
-            except Exception:
-                avatar_url = ""
+        avatar_url = _get_avatar_url(profile, request)
 
         return JsonResponse({
             "success": True,
@@ -8039,12 +8049,7 @@ def product_comments(request, slug):
                 digits = "".join(ch for ch in raw if ch.isdigit())
                 if len(digits) >= 7:
                     phone_mask = f"{digits[:3]}***{digits[-3:]}"
-            avatar_url = ""
-            if comment.user and hasattr(comment.user, "profile") and getattr(comment.user.profile, "avatar", None):
-                try:
-                    avatar_url = request.build_absolute_uri(comment.user.profile.avatar.url)
-                except Exception:
-                    avatar_url = ""
+            avatar_url = _get_avatar_url(comment.user.profile if (comment.user and hasattr(comment.user, "profile")) else None, request)
             display_name = comment.author_name
             if display_name.startswith("[seed] "):
                 display_name = display_name[len("[seed] "):]
