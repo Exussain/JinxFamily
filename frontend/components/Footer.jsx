@@ -177,12 +177,12 @@ export default function Footer() {
             <div className="footer-credit-text">
               طراحی و توسعه با ❤️ توسط{" "}
               <a
-                href="https://t.me/MortalCompanyIR"
+                href="https://t.me/JinxFamily"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="footer-credit-link"
               >
-                تیم مورتال
+                جینکس فمیلی (JinxFamily)
               </a>
             </div>
           </div>
