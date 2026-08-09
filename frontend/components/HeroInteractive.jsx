@@ -98,7 +98,7 @@ export default function HeroInteractive({ completedCount }) {
       {/* Hidden audio element */}
       <audio
         ref={audioRef}
-        src="/ویس-اصلی.ogg"
+        src="/jinx-voice.ogg"
         preload="none"
         loop
       />
@@ -185,7 +185,7 @@ export default function HeroInteractive({ completedCount }) {
                     })}
                   </div>
                   <div className="player-meta">
-                    <span className="track-name">Jinx Vibe Loop 🎵</span>
+                    <span className="track-name">پیام صوتی جینکس فمیلی 🎙️</span>
                     <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                       <span className="player-timer">
                         {formatTime(currentTime)} / {formatTime(duration)}

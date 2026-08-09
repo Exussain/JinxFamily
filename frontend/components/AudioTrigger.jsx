@@ -10,7 +10,7 @@ export default function AudioTrigger() {
 
   const toggle = () => {
     if (!audioRef.current) {
-      audioRef.current = new Audio('/ویس-اصلی.ogg');
+      audioRef.current = new Audio('/jinx-voice.ogg');
       audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
       audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
       audioRef.current.addEventListener('ended', handleEnded);
