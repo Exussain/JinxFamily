@@ -24,15 +24,22 @@ export default function FloatingCart() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Listen for global open-mini-cart event from Navbar or external buttons
+  // Listen for global open-mini-cart, toggle-mini-cart, and cart:add events
   useEffect(() => {
     const handleOpenCart = () => setIsOpen(true);
     const handleToggleCart = () => setIsOpen((prev) => !prev);
+    const handleCartAdd = () => {
+      if (typeof window !== "undefined" && window.innerWidth <= 900) {
+        setIsOpen(true);
+      }
+    };
     window.addEventListener("open-mini-cart", handleOpenCart);
     window.addEventListener("toggle-mini-cart", handleToggleCart);
+    window.addEventListener("cart:add", handleCartAdd);
     return () => {
       window.removeEventListener("open-mini-cart", handleOpenCart);
       window.removeEventListener("toggle-mini-cart", handleToggleCart);
+      window.removeEventListener("cart:add", handleCartAdd);
     };
   }, []);
 

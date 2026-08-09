@@ -254,13 +254,13 @@ export default function CategoriesSection({
       onMouseMove={handleMouseMove}
       onMouseUp={handleDragEnd}
       onMouseLeave={handleDragEnd}
-      aria-label="دسته‌بندی محصولات نوبیکس شاپ"
+      aria-label="دسته‌بندی محصولات جینکس فمیلی"
     >
       {variant !== 'products' && (
         <div className="section-head">
           <div className="section-title-box">
             <p className="section-subtitle">فورتنایت، هوش مصنوعی، گیفت کارت و بیشتر</p>
-            <h2 className="section-main-title">دسته‌بندی محصولات نوبیکس شاپ</h2>
+            <h2 className="section-main-title">دسته‌بندی محصولات جینکس فمیلی</h2>
           </div>
           <Link
             href="/products"

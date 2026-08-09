@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
             name='TicketMessage',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('sender_type', models.CharField(choices=[('user', 'کاربر'), ('admin', 'پشتیبانی نوبیکس')], default='user', max_length=10)),
+                ('sender_type', models.CharField(choices=[('user', 'کاربر'), ('admin', 'پشتیبانی جینکس فمیلی')], default='user', max_length=10)),
                 ('message', models.TextField()),
                 ('attachment_url', models.CharField(blank=True, default='', max_length=255)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),

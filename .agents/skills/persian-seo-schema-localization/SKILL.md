@@ -13,7 +13,7 @@ This skill provides guidelines for maximizing organic search visibility and sear
 ## Core SEO Requirements
 
 1. **Title & Meta Tags**:
-   - Unique, descriptive Persian titles with brand name (`نوبیکس شاپ | خرید v-bucks فورتنایت و گیفت کارت`).
+   - Unique, descriptive Persian titles with brand name (`جینکس فمیلی | خرید v-bucks فورتنایت و گیفت کارت`).
    - Compelling Persian meta descriptions including targeted keywords (خرید V-Bucks, گیفت کارت, جم فورتنایت, اکانت gta).
 
 2. **Schema.org JSON-LD**:

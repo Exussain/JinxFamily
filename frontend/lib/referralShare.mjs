@@ -7,7 +7,7 @@ export function buildReferralShareText({ link = "", code = "" } = {}) {
   const url = String(link || "").trim();
   const refCode = String(code || "").trim().toUpperCase();
   const lines = [
-    "نوبیکس شاپ — مرجع تمام محصولات دیجیتال شما",
+    "جینکس فمیلی — مرجع تمام محصولات دیجیتال شما",
     "شعبه در ترکیه و ایران | ارزان‌ترین و مقرون‌به‌صرفه‌ترین قیمت 💎",
     "",
     `با عضویت از لینک زیر و وارد کردن کد معرف، ${REFERRAL_MILESTONE_POINTS} الماس و تخفیف بگیرید!`,
@@ -63,7 +63,7 @@ export async function copyText(value) {
  */
 export async function shareReferralInvite({ title, text, url } = {}) {
   const payload = {
-    title: title || "دعوت به نوبیکس شاپ",
+    title: title || "دعوت به جینکس فمیلی",
     text: text || "",
     url: url || undefined,
   };

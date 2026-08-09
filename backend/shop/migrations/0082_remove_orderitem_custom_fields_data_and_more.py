@@ -101,7 +101,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='orderitemaccount',
             name='mode',
-            field=models.CharField(choices=[('existing', 'اکانت موجود مشتری'), ('create_for_me', 'ساخت اکانت توسط نوبیکس')], default='existing', max_length=16),
+            field=models.CharField(choices=[('existing', 'اکانت موجود مشتری'), ('create_for_me', 'ساخت اکانت توسط جینکس فمیلی')], default='existing', max_length=16),
         ),
         migrations.AlterField(
             model_name='product',

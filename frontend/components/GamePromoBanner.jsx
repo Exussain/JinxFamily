@@ -65,7 +65,7 @@ export default function GamePromoBanner() {
         {/* Clean Center Header */}
         <div className="banner-header">
           <h2 className="banner-title">
-            نوبیکس شاپ، فروشگاه محصولات دیجیتال گیمینگ
+            جینکس فمیلی، فروشگاه محصولات دیجیتال گیمینگ
           </h2>
           <p className="banner-subtitle">
             خانه‌ای برای گیمرها و خرید محصولات دیجیتال شما ❤️

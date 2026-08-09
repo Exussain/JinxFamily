@@ -534,7 +534,7 @@ INPUT: Wave 1 + Wave 2 Data Pools.
 No backlink tool available. Use Playwright for what's possible:
 
 1. Search Google for: site:jinxfamily.com → record indexed pages count
-2. Search Google for: "نوبیکس شاپ" → record brand mentions
+2. Search Google for: "جینکس فمیلی" → record brand mentions
 3. Search Google for: "jinxfamily" → record brand mentions
 4. Check if jinxfamily.com appears in any directories, forums,
    or review sites in the search results
@@ -582,7 +582,7 @@ Check:
    - ZarinPal badge
    - Contact page with address/phone
    - About page
-5. Is there a Google Business Profile? (Search "نوبیکس شاپ" on Google Maps)
+5. Is there a Google Business Profile? (Search "جینکس فمیلی" on Google Maps)
 
 RATE LIMIT: 3s between navigations.
 
@@ -765,7 +765,7 @@ MUST GENERATE:
        "price": "9490000",
        "availability": "https://schema.org/InStock",
        "validFrom": "2026-06-01",
-       "seller": {"@type": "Organization", "name": "نوبیکس شاپ"}
+       "seller": {"@type": "Organization", "name": "جینکس فمیلی"}
      }
    }
    NOTE: 949,000 Toman = 9,490,000 IRR (if using IRR)

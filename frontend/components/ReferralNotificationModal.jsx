@@ -57,7 +57,7 @@ export default function ReferralNotificationModal({ notification, onClose }) {
         </button>
 
         <div className="referral-alert__mark" aria-hidden="true">◆</div>
-        <p className="referral-alert__eyebrow">دفتر الماس نوبیکس</p>
+        <p className="referral-alert__eyebrow">دفتر الماس جینکس فمیلی</p>
         <h2 id="referral-alert-title">
           {notification.count === 1
             ? "یک دعوت موفق جدید دارید"

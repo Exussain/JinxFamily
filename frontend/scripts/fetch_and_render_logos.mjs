@@ -29,7 +29,7 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 async function searchWikimediaLogo(query) {
   const apiUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&prop=imageinfo&iiprop=url`;
   try {
-    const res = await fetch(apiUrl, { headers: { 'User-Agent': 'NubixShopBot/1.0' } });
+    const res = await fetch(apiUrl, { headers: { 'User-Agent': 'JinxFamilyBot/1.0' } });
     if (!res.ok) return null;
     const data = await res.json();
     const pages = data?.query?.pages || {};
@@ -66,7 +66,7 @@ async function main() {
 
     try {
       if (imgUrl.endsWith('.svg')) {
-        const svgRes = await fetch(imgUrl, { headers: { 'User-Agent': 'NubixShopBot/1.0' } });
+        const svgRes = await fetch(imgUrl, { headers: { 'User-Agent': 'JinxFamilyBot/1.0' } });
         const svgContent = await svgRes.text();
 
         const html = `
@@ -90,7 +90,7 @@ async function main() {
         await page.screenshot({ path: outPngPath, omitBackground: true });
         console.log(`Rendered SVG to 500x500 PNG: ${outPngPath}`);
       } else {
-        const imgRes = await fetch(imgUrl, { headers: { 'User-Agent': 'NubixShopBot/1.0' } });
+        const imgRes = await fetch(imgUrl, { headers: { 'User-Agent': 'JinxFamilyBot/1.0' } });
         const buf = await imgRes.buffer();
         const html = `
           <!DOCTYPE html>

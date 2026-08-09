@@ -10,7 +10,7 @@ export const metadata = {
     title: 'آموزش غیرفعال کردن تایید دو مرحله‌ای (2FA) اپیک گیمز',
     description: 'مراحل خاموش کردن 2FA در Epic Games، Xbox و PlayStation.',
     locale: 'fa_IR',
-    images: [{ url: '/og-image.webp', width: 1200, height: 630, alt: 'راهنمای 2FA نوبیکس شاپ' }],
+    images: [{ url: '/og-image.webp', width: 1200, height: 630, alt: 'راهنمای 2FA جینکس فمیلی' }],
   },
   twitter: {
     card: 'summary_large_image',

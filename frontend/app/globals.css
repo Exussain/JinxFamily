@@ -9358,13 +9358,21 @@ input, button, select, textarea { font: inherit; }
 }
 
 :root[data-theme="light"] .mini-cart-modal {
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 255, 255, 0.96);
   border-color: rgba(139, 92, 246, 0.3);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 30px rgba(139, 92, 246, 0.15);
 }
 
+:root[data-theme="light"] .mini-cart-header-title h3,
+:root[data-theme="light"] .mini-cart-item-name,
+:root[data-theme="light"] .mini-cart-qty-val,
+:root[data-theme="light"] .mini-cart-qty-btn,
+:root[data-theme="light"] .mini-cart-total-row span {
+  color: #0f172a !important;
+}
+
 :root[data-theme="dark"] .mini-cart-modal {
-  background: rgba(16, 20, 41, 0.92);
+  background: rgba(16, 20, 41, 0.95);
   border-color: rgba(168, 85, 247, 0.4);
   box-shadow: 0 24px 65px rgba(0, 0, 0, 0.75), 0 0 40px rgba(168, 85, 247, 0.3);
 }

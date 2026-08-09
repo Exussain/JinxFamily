@@ -10,7 +10,7 @@ export default function HomeRecentBlogs({ articles = [] }) {
     <section className="home-blogs" aria-labelledby="home-blogs-title">
       <div className="home-blogs__head">
         <div>
-          <span>از مجله نوبیکس</span>
+          <span>از مجله جینکس فمیلی</span>
           <h2 id="home-blogs-title">تازه بخوانید</h2>
           <p>راهنماهای کوتاه، کاربردی و به‌روز برای خرید و استفاده بهتر از سرویس‌های دیجیتال.</p>
         </div>

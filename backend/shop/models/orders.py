@@ -222,7 +222,7 @@ class OrderItem(models.Model):
 class OrderItemAccount(models.Model):
     MODE_CHOICES = [
         ("existing", "اکانت موجود مشتری"),
-        ("create_for_me", "ساخت اکانت توسط نوبیکس"),
+        ("create_for_me", "ساخت اکانت توسط جینکس فمیلی"),
     ]
     STATUS_CHOICES = [
         ("pending", "در انتظار تکمیل مشخصات"),
@@ -359,7 +359,7 @@ class Ticket(models.Model):
 class TicketMessage(models.Model):
     SENDER_CHOICES = [
         ("user", "کاربر"),
-        ("admin", "پشتیبانی نوبیکس"),
+        ("admin", "پشتیبانی جینکس فمیلی"),
     ]
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name="messages")
     sender_type = models.CharField(max_length=10, choices=SENDER_CHOICES, default="user")

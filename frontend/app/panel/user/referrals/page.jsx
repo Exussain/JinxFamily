@@ -86,7 +86,7 @@ function UserReferralsInner() {
   const onShare = async () => {
     setShareStatus("");
     const result = await shareReferralInvite({
-      title: "دعوت به نوبیکس شاپ",
+      title: "دعوت به جینکس فمیلی",
       text: shareText,
       url: link,
     });

@@ -250,7 +250,7 @@ function KavenegarUsageWidget({ apiBase, setReport }) {
             </div>
             <div className="modal-body">
               <p className="modal-desc">
-                مبلغ مورد نظر برای افزایش اعتبار پنل پیامکی کاوه‌نگار را انتخاب یا وارد کنید. پرداخت از طریق درگاه امن زرین‌پال (pay.nubixshop.ir) انجام می‌شود.
+                مبلغ مورد نظر برای افزایش اعتبار پنل پیامکی کاوه‌نگار را انتخاب یا وارد کنید. پرداخت از طریق درگاه امن زرین‌پال (pay.jinxfamily.ir) انجام می‌شود.
               </p>
 
               <div className="amount-presets">

@@ -497,6 +497,9 @@ export default function ProductPageClient({ slug: slugProp, initialProduct = nul
   const displayPrice = Number(selectedVariant?.price ?? product?.price ?? product?.min_price ?? 0);
   const hasPrice = displayPrice > 0;
   const isOutOfStock = !product || !!product.ordering_disabled || !!product.customer_ordering_disabled || !hasPrice || product.purchasable === false;
+  const disable2faText = product?.disable_2fa_text || "آموزش خاموش کردن تایید دو مرحله‌ای (2FA)";
+  const disable2faColor = product?.disable_2fa_color || "amber";
+  const needs2FA = !!product?.disable_2fa_text;
 
   const isFieldRequired = (field) => field.required === true;
 

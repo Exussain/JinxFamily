@@ -11,7 +11,7 @@ export const metadata = {
     title: 'آموزش رفع محدودیت اکانت Epic Games، Xbox و PlayStation',
     description: 'مراحل رفع محدودیت ورود، قفل موقت و خطاهای امنیتی حساب بازی.',
     locale: 'fa_IR',
-    images: [{ url: '/og-image.webp', width: 1200, height: 630, alt: 'راهنمای رفع محدودیت نوبیکس شاپ' }],
+    images: [{ url: '/og-image.webp', width: 1200, height: 630, alt: 'راهنمای رفع محدودیت جینکس فمیلی' }],
   },
   twitter: {
     card: 'summary_large_image',

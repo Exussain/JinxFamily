@@ -8,24 +8,24 @@ import fs from 'fs';
   
   // 1. Fetch robots.txt
   console.log('Fetching robots.txt...');
-  const robotsRes = await page.goto('https://nubixshop.ir/robots.txt');
+  const robotsRes = await page.goto('https://jinxfamily.ir/robots.txt');
   const robotsText = await robotsRes.text();
   console.log('Robots.txt content length:', robotsText.length);
 
   // 2. Fetch sitemap.xml
   console.log('Fetching sitemap.xml...');
-  const sitemapRes = await page.goto('https://nubixshop.ir/sitemap.xml');
+  const sitemapRes = await page.goto('https://jinxfamily.ir/sitemap.xml');
   const sitemapText = await sitemapRes.text();
   const urls = [...sitemapText.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => m[1]);
   console.log(`Found ${urls.length} URLs in sitemap.`);
 
   // 3. Check some key revenue pages for prices and JSON-LD
   const targetUrls = [
-    'https://nubixshop.ir/vbucks',
-    'https://nubixshop.ir/crewpack',
-    'https://nubixshop.ir/product/fortnite-battle-pass',
-    'https://nubixshop.ir/product/chatgpt-subscription',
-    'https://nubixshop.ir/lego'
+    'https://jinxfamily.ir/vbucks',
+    'https://jinxfamily.ir/crewpack',
+    'https://jinxfamily.ir/product/fortnite-battle-pass',
+    'https://jinxfamily.ir/product/chatgpt-subscription',
+    'https://jinxfamily.ir/lego'
   ];
 
   const results = [];

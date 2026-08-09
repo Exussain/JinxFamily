@@ -43,7 +43,7 @@ export default function BlogArchiveClient({ featured = [], items = [] }) {
   return (
     <main className={styles.shell}>
       <div className={styles.page}>
-        <header className={styles.intro}><span className={styles.eyebrow}>مجله نوبیکس</span><h1>راهنماهای روشن برای دنیای دیجیتال</h1><p>مقاله‌های کوتاه و کاربردی برای خرید آگاهانه، مدیریت بهتر حساب‌ها و استفاده مطمئن‌تر از سرویس‌های دیجیتال.</p></header>
+        <header className={styles.intro}><span className={styles.eyebrow}>مجله جینکس فمیلی</span><h1>راهنماهای روشن برای دنیای دیجیتال</h1><p>مقاله‌های کوتاه و کاربردی برای خرید آگاهانه، مدیریت بهتر حساب‌ها و استفاده مطمئن‌تر از سرویس‌های دیجیتال.</p></header>
         {hero && <section className={styles.featured} aria-label="مقاله‌های پیشنهادی">
           <a href={`/blog/${hero.slug}`} className={styles.lead}>
             <div className={styles.leadMedia}>{media(hero) ? <img src={media(hero)} alt="" /> : <span className={styles.fallback} />}</div>

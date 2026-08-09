@@ -29,16 +29,12 @@ function safeParse(json) {
 function normalizeItem(raw) {
   if (!raw || typeof raw !== "object") return null;
   const rawProductId = raw.product_id;
-  // First-party catalogue IDs are numeric, while supplier catalogue IDs use
-  // stable strings such as "g4a4_1006".  Do not discard the latter just
-  // because they cannot be coerced into a number.
+  if (rawProductId === null || rawProductId === undefined || rawProductId === "") return null;
   const numericProductId = Number(rawProductId);
   const product_id = Number.isFinite(numericProductId)
     ? numericProductId
-    : (typeof rawProductId === "string" && /^g4a4_\d+$/i.test(rawProductId.trim())
-      ? rawProductId.trim().toLowerCase()
-      : null);
-  if (product_id === null) return null;
+    : String(rawProductId).trim();
+  if (!product_id) return null;
   if ((raw.slug || "").toString().toLowerCase() === "gta6-instant") return null;
   const quantity = Math.max(0, Number(raw.quantity) || 0);
   if (!quantity) return null;
