@@ -888,11 +888,11 @@ export default function UserPanelPage() {
                   <button
                     type="button"
                     className="avatar-arrow"
-                    onClick={() => shiftAvatar(1)}
+                    onClick={() => shiftAvatar(-1)}
                     disabled={avatarSaving}
-                    aria-label="آواتار بعدی"
+                    aria-label="آواتار قبلی"
                   >
-                    ‹
+                    ›
                   </button>
 
                   <div className="avatar-stage">
@@ -912,11 +912,11 @@ export default function UserPanelPage() {
                   <button
                     type="button"
                     className="avatar-arrow"
-                    onClick={() => shiftAvatar(-1)}
+                    onClick={() => shiftAvatar(1)}
                     disabled={avatarSaving}
-                    aria-label="آواتار قبلی"
+                    aria-label="آواتار بعدی"
                   >
-                    ›
+                    ‹
                   </button>
                 </div>
 
