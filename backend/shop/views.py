@@ -2213,6 +2213,25 @@ def create_order(request):
                     award_points(user, -diamonds_applied, "redeem", related_order=order, note="تبدیل کوین به تخفیف خرید")
     payable = amount - diamond_discount
 
+    # Apply refund credit (اعتبار بازگشتی)
+    refund_credit_used = 0
+    if user is not None and not is_reseller:
+        try:
+            refund_credit_requested = max(0, int(payload.get('refund_credit_use') or 0))
+        except (TypeError, ValueError):
+            refund_credit_requested = 0
+
+        if refund_credit_requested > 0 and payable > 0:
+            from .rewards import spend_refund_credit
+            refund_credit_used = spend_refund_credit(
+                user,
+                min(refund_credit_requested, payable),
+                related_order=order,
+                idempotency_key=f"spend:order:{order.pk}",
+                note=f"مصرف اعتبار بازگشتی برای سفارش {order.tracking_code}",
+            )
+            payable = max(0, payable - refund_credit_used)
+
     # Apply wallet balance deduction
     use_wallet = bool(payload.get('use_wallet', False))
     wallet_applied = 0
@@ -2260,6 +2279,19 @@ def create_order(request):
                         kind="restore",
                         note="بازگرداندن اعتبار بازگشتی به دلیل عدم ثبت سفارش",
                     )
+                # rollback wallet balance if any
+                if wallet_applied > 0 and user is not None:
+                    profile, _ = UserProfile.objects.get_or_create(user=user)
+                    profile.wallet_balance += wallet_applied
+                    profile.save(update_fields=['wallet_balance'])
+                    CustomerWalletTxn.objects.create(
+                        profile=profile,
+                        kind="adjust",
+                        amount=wallet_applied,
+                        balance_after=profile.wallet_balance,
+                        related_order=order,
+                        note=f"بازگرداندن به کیف پول به دلیل عدم ثبت سفارش {order.tracking_code}"
+                    )
                 # rollback discount code used_count if any
                 if order.discount_code:
                     try:
@@ -2304,6 +2336,7 @@ def create_order(request):
         if not customer_name and order.epic_username:
             customer_name = order.epic_username
 
+        from .email_service import _render_items_rows, _send_email
         rows = _render_items_rows(items_for_email)
         html = f"""
 <!DOCTYPE html>

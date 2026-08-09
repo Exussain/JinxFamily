@@ -210,6 +210,10 @@ class OrderItem(models.Model):
     account_type = models.CharField(max_length=32, blank=True, default="")
     account_email = models.CharField(max_length=150, blank=True, default="")
     account_password = models.CharField(max_length=150, blank=True, default="")
+    g4a4_variation = models.ForeignKey('G4A4Variation', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="واریانت G4A4")
+    g4a4_order_id = models.CharField(max_length=100, blank=True, default="", verbose_name="شناسه سفارش G4A4")
+    g4a4_status = models.CharField(max_length=50, blank=True, default="", verbose_name="وضعیت سفارش G4A4")
+    custom_fields_data = models.JSONField(default=dict, blank=True, verbose_name="اطلاعات فیلدهای دلخواه")
 
     def line_total(self):
         return self.price * self.quantity
