@@ -23,6 +23,9 @@ class Product(models.Model):
         ("GIFTCARDS", "گیفت کارت‌ها"),
         ("GAMES", "بازی‌ها"),
         ("SUBSCRIPTIONS", "اشتراک‌ها"),
+        ("ACCOUNTS", "اکانت‌ها"),
+        ("BATTLENET", "بتل‌نت"),
+        ("INGAME", "درون برنامه‌ای"),
     ]
     name_fa = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True)

@@ -26,6 +26,7 @@ export default function StaticProductCard({ product, priority = false }) {
   const original = Number(product.original_price || 0);
   const hasDiscount = original > price && price > 0;
   const discountPercent = hasDiscount ? Math.round(((original - price) / original) * 100) : 0;
+  const isUnavailable = product.purchasable === false || !!product.ordering_disabled || !!product.customer_ordering_disabled || price <= 0;
   
   return (
     <article className={`card product-card jf-product-card static-product-card ${isAccount ? "is-account-card" : ""}`}>
@@ -75,12 +76,18 @@ export default function StaticProductCard({ product, priority = false }) {
           <p>{product.subtitle || 'فعال‌سازی قانونی و تحویل سریع'}</p>
         </div>
         <div className="jf-product-price">
-          {hasDiscount ? <span className="jf-product-old-price">{original.toLocaleString('fa-IR')} تومان</span> : <span className="jf-product-old-price" aria-hidden="true">&nbsp;</span>}
-          <strong className={price > 0 ? "" : "is-unavailable"}>
-            {price > 0 ? <>{price.toLocaleString('fa-IR')} <small>تومان</small></> : 'ناموجود'}
+          {hasDiscount && !isUnavailable ? <span className="jf-product-old-price">{original.toLocaleString('fa-IR')} تومان</span> : <span className="jf-product-old-price" aria-hidden="true">&nbsp;</span>}
+          <strong className={!isUnavailable ? "" : "is-unavailable"}>
+            {!isUnavailable ? <>{price.toLocaleString('fa-IR')} <small>تومان</small></> : 'ناموجود'}
           </strong>
         </div>
-        <Link href={href} prefetch={false} className="jf-cart-button">مشاهده و خرید</Link>
+        {isUnavailable ? (
+          <Link href={href} prefetch={false} className="jf-cart-button is-disabled" style={{ opacity: 0.8, background: "rgba(255, 255, 255, 0.08)", color: "var(--muted)" }}>
+            مشاهده جزییات (ناموجود)
+          </Link>
+        ) : (
+          <Link href={href} prefetch={false} className="jf-cart-button">مشاهده و خرید</Link>
+        )}
       </div>
     </article>
   );

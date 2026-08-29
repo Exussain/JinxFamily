@@ -827,6 +827,9 @@ def _product_to_dict(p: Product, include_content=True):
             or bool(getattr(p, "customer_ordering_disabled", False))
             or not bool(getattr(p, "active", True))
         ),
+        "ordering_disabled": bool(getattr(p, "ordering_disabled", False)),
+        "customer_ordering_disabled": bool(getattr(p, "customer_ordering_disabled", False)),
+        "active": bool(getattr(p, "active", True)),
     }
     if include_content:
         payload.update({
@@ -863,6 +866,9 @@ def _product_card_dict(p: Product):
         "original_price": original_price,
         "discount_percent": max(0, discount_percent),
         "purchasable": bool(full["purchasable"]),
+        "ordering_disabled": bool(getattr(p, "ordering_disabled", False)),
+        "customer_ordering_disabled": bool(getattr(p, "customer_ordering_disabled", False)),
+        "active": bool(getattr(p, "active", True)),
         "display_order": int(full.get("display_order") or 0),
         "has_variants": bool(full.get("variants")),
         "has_required_custom_fields": any(
@@ -3554,10 +3560,14 @@ def my_orders(request):
     if not request.user.is_authenticated:
         return JsonResponse({"detail": "authentication required"}, status=401)
     
-    cutoff_time = timezone.now() - timedelta(hours=72)
-    orders_qs = Order.objects.filter(user=request.user).exclude(status='canceled').filter(
-        Q(status='completed') | Q(created_at__gte=cutoff_time)
-    ).order_by('-created_at')
+    user_phone = getattr(getattr(request.user, "profile", None), "phone_number", None) or request.user.username
+    user_phone_clean = "".join(c for c in str(user_phone or "") if c.isdigit())
+
+    order_filter = Q(user=request.user)
+    if user_phone_clean and len(user_phone_clean) >= 10:
+        order_filter |= Q(phone__endswith=user_phone_clean[-10:])
+
+    orders_qs = Order.objects.filter(order_filter).order_by('-created_at')[:100]
 
     def status_tag(code):
         return dict(Order.STATUS_CHOICES).get(code, code)
@@ -5712,6 +5722,14 @@ def admin_product_detail(request, product_id: int):
             if default_variant and default_variant.price != product.price:
                 default_variant.price = product.price
                 default_variant.save(update_fields=["price"])
+
+        try:
+            cache.delete(f"public-product:v2:{product.slug}")
+            for view_name in ["default", "all", "fortnite", "games", "mobile", ""]:
+                for lim in ["all", "8", "12", "20", "30", "100"]:
+                    cache.delete(f"public-products:v2:{view_name}:{lim}")
+        except Exception:
+            pass
 
         resp = _admin_product_dict(product)
         if variant_errors:

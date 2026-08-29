@@ -138,7 +138,8 @@ function KavenegarUsageWidget({ apiBase, setReport }) {
               </span>
             </div>
             <p className="kavenegar-subtext">
-              بدهی قابل تسویه جینکس فمیلی: <strong className="credit-val">{formatNum(debt.remaining_debt_toman)} تومان</strong> ({formatNum(debt.remaining_debt_rial)} ریال)
+              موجودی واقعی پیامک کاوه‌نگار: <strong className="credit-val" style={{ color: "#10b981" }}>{formatNum(data?.credit?.credit_toman || 0)} تومان</strong>
+              {data?.credit?.is_healthy ? " (سالم و فعال)" : " (نیاز به شارژ)"}
               <span style={{ fontSize: 11, color: "var(--muted)", marginRight: 8 }}>
                 (کل مصرف: {formatNum(debt.total_consumed_toman)} تومان · واریزی تسویه‌شده: {formatNum(debt.total_settled_toman)} تومان)
               </span>
@@ -146,20 +147,22 @@ function KavenegarUsageWidget({ apiBase, setReport }) {
           </div>
         </div>
 
-        <div className="kavenegar-header-actions">
+        <div className="kavenegar-header-actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <button type="button" className="btn-logs" onClick={() => fetchUsage()} title="استعلام آخرین وضعیت از سرور کاوه‌نگار">
+            🔄 استعلام موجودی
+          </button>
           <button type="button" className="btn-logs" onClick={() => setLogsOpen(!logsOpen)}>
             📜 {logsOpen ? "بستن تاریخچه" : "تاریخچه پیامک‌ها"}
           </button>
-          <button
-            type="button"
+          <a
+            href="https://panel.kavenegar.com/client/membership/charge"
+            target="_blank"
+            rel="noopener noreferrer"
             className="btn-topup"
-            onClick={() => {
-              if (debt.remaining_debt_toman > 0) setTopupAmount(debt.remaining_debt_toman);
-              setModalOpen(true);
-            }}
+            style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            💳 {debt.is_settled ? "شارژ حساب / تسویه" : "پرداخت و تسویه بدهی"}
-          </button>
+            🚀 شارژ مستقیم در کاوه‌نگار
+          </a>
         </div>
       </div>
 
@@ -245,48 +248,36 @@ function KavenegarUsageWidget({ apiBase, setReport }) {
         <div className="topup-modal-backdrop" onClick={() => setModalOpen(false)}>
           <div className="topup-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>💳 شارژ کیف پول کاوه‌نگار با درگاه زرین‌پال</h3>
+              <h3>💳 افزایش اعتبار پنل پیامک کاوه‌نگار</h3>
               <button type="button" className="close-btn" onClick={() => setModalOpen(false)}>✕</button>
             </div>
             <div className="modal-body">
-              <p className="modal-desc">
-                مبلغ مورد نظر برای افزایش اعتبار پنل پیامکی کاوه‌نگار را انتخاب یا وارد کنید. پرداخت از طریق درگاه امن زرین‌پال (pay.jinxfamily.ir) انجام می‌شود.
-              </p>
-
-              <div className="amount-presets">
-                {[100000, 250000, 500000, 1000000].map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    className={`preset-btn ${topupAmount === amt && !customAmount ? "active" : ""}`}
-                    onClick={() => { setTopupAmount(amt); setCustomAmount(""); }}
-                  >
-                    {formatNum(amt)} تومان
-                  </button>
-                ))}
+              <div style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.3)", borderRadius: 8, padding: 14, marginBottom: 16 }}>
+                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: "#93c5fd" }}>
+                  💡 <strong>نحوه شارژ موجودی پیامک:</strong> برای اینکه موجودی و شارژ پیامک‌های سایت مستقیماً در کاوه‌نگار شارژ شود، باید از طریق پنل رسمی کاوه‌نگار اقدام نمایید. با کلیک بر روی دکمه زیر مستقیماً وارد صفحه افزایش اعتبار کاوه‌نگار خواهید شد.
+                </p>
               </div>
 
-              <div className="custom-input-group">
-                <label>یا مبلغ دلخواه (تومان):</label>
-                <input
-                  type="number"
-                  placeholder="مثال: 150000"
-                  value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
-                />
-              </div>
-
-              <div className="modal-actions">
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+                <a
+                  href="https://panel.kavenegar.com/client/membership/charge"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-submit-pay"
+                  style={{ textDecoration: "none", textAlign: "center", padding: "12px 18px", fontSize: 14, fontWeight: "bold", display: "block" }}
+                >
+                  🚀 ورود به صفحه افزایش اعتبار در سایت کاوه‌نگار
+                </a>
                 <button
                   type="button"
-                  className="btn-submit-pay"
-                  onClick={handleTopupSubmit}
-                  disabled={submitting}
+                  className="btn-cancel"
+                  style={{ textAlign: "center", padding: "10px" }}
+                  onClick={() => {
+                    setModalOpen(false);
+                    fetchUsage();
+                  }}
                 >
-                  {submitting ? "در حال انتقال به درگاه..." : `انتقال به درگاه و پرداخت ${formatNum(customAmount ? parseInt(customAmount, 10) : topupAmount)} تومان`}
-                </button>
-                <button type="button" className="btn-cancel" onClick={() => setModalOpen(false)}>
-                  انصراف
+                  بستن و بروزرسانی موجودی
                 </button>
               </div>
             </div>
@@ -1933,6 +1924,7 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
   const [newProductCoverFile, setNewProductCoverFile] = useState(null);
   const [newProductCover16_9File, setNewProductCover16_9File] = useState(null);
   const [productCoverFiles, setProductCoverFiles] = useState({});
+  const [productCover16_9Files, setProductCover16_9Files] = useState({});
   const [activeEditProduct, setActiveEditProduct] = useState(null);
   const [activeEditTab, setActiveEditTab] = useState("general");
   const [notifications, setNotifications] = useState([]);
@@ -4696,6 +4688,36 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
     );
   };
 
+  const quickUpdateProduct = async (productId, field, value) => {
+    handleProductChange(productId, field, value);
+    try {
+      const res = await fetch(`${apiBase}/api/admin/products/${productId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.message || "خطا در بروزرسانی وضعیت");
+      }
+      toast({
+        title: "بروزرسانی وضعیت",
+        description: field === "active"
+          ? (value ? "محصول در فروشگاه فعال شد" : "محصول از کل سایت مخفی شد")
+          : (value ? "ثبت سفارش غیرفعال شد (ناموجود)" : "ثبت سفارش فعال شد (موجود)"),
+        kind: "success",
+      });
+    } catch (err) {
+      handleProductChange(productId, field, !value);
+      toast({
+        title: "خطا در ذخیره وضعیت",
+        description: err.message,
+        kind: "error",
+      });
+    }
+  };
+
   const handleNewProductChange = (field, value) => {
     setNewProduct((prev) => ({ ...prev, [field]: value }));
   };
@@ -4955,6 +4977,7 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
       slug: (product.slug || "").trim(),
       subtitle: (product.subtitle || "").trim(),
       category: product.category || "FORTNITE",
+      subcategory: (product.subcategory || "").trim(),
       image_url: (product.image_url || "").trim(),
       cover_16_9: (product.cover_16_9 || "").trim(),
       price: Number(product.price) || 0,
@@ -8855,24 +8878,24 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                               {p.category}
                             </span>
                           </div>
-                          <div className="product-meta">
-                            <label className="status-toggle status-toggle-hidden">
+                          <div className="product-meta" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <label className="status-toggle" title="نمایش یا مخفی بودن در کل فروشگاه">
                               <input
                                 type="checkbox"
                                 checked={!!p.active}
-                                onChange={(e) => handleProductChange(p.id, "active", e.target.checked)}
+                                onChange={(e) => quickUpdateProduct(p.id, "active", e.target.checked)}
                               />
                               <span className="toggle-slider"></span>
-                              <span className="toggle-text">{p.active ? "فعال" : "غیرفعال"}</span>
+                              <span className="toggle-text">{p.active ? "نمایش" : "مخفی"}</span>
                             </label>
-                            <label className={`status-toggle coming-soon-toggle ${p.ordering_disabled ? "on" : ""}`}>
+                            <label className={`status-toggle coming-soon-toggle ${p.ordering_disabled ? "on" : ""}`} title="موجودی و امکان ثبت سفارش">
                               <input
                                 type="checkbox"
-                                checked={!!p.ordering_disabled}
-                                onChange={(e) => handleProductChange(p.id, "ordering_disabled", e.target.checked)}
+                                checked={!p.ordering_disabled}
+                                onChange={(e) => quickUpdateProduct(p.id, "ordering_disabled", !e.target.checked)}
                               />
                               <span className="toggle-slider"></span>
-                              <span className="toggle-text">{p.ordering_disabled ? "به زودی..." : "فعال"}</span>
+                              <span className="toggle-text">{p.ordering_disabled ? "ناموجود" : "موجود"}</span>
                             </label>
                           </div>
                         </div>
@@ -16979,6 +17002,33 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                                       </label>
                                     </div>
                                   </label>
+                                  <label className="product-edit-field">
+                                    <span>✏️ کاور 16:9 (آدرس تصویر افقی)</span>
+                                    <div className="cover-upload-row" style={{ display: "flex", gap: "8px" }}>
+                                      <input
+                                        type="text"
+                                        dir="ltr"
+                                        value={p.cover_16_9 || ""}
+                                        onChange={(e) => handleProductChange(p.id, "cover_16_9", e.target.value)}
+                                        placeholder="/media/products/... (اختیاری)"
+                                        style={{ flex: 1 }}
+                                      />
+                                      <label className={`cover-upload-btn ${productUploading === p.id ? "uploading" : ""}`} style={{ padding: "8px 12px", border: "1px solid var(--line)", borderRadius: 6, cursor: "pointer", whiteSpace: "nowrap" }}>
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          disabled={productSaving === p.id || productUploading === p.id}
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0] || null;
+                                            e.target.value = "";
+                                            setProductCover16_9Files((prev) => ({ ...prev, [p.id]: file }));
+                                          }}
+                                          style={{ display: "none" }}
+                                        />
+                                        {productCover16_9Files[p.id] ? "انتخاب شد" : (productUploading === p.id ? "در حال آپلود..." : "آپلود فایل 16:9")}
+                                      </label>
+                                    </div>
+                                  </label>
                                   <label className="product-edit-field" style={{ gridColumn: "span 2" }}>
                                     <span>✏️ زیرعنوان</span>
                                     <input
@@ -17377,16 +17427,28 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
 
                                   {/* Limits & Disabled */}
                                   <div className="content-subsection" style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: 8, padding: 16 }}>
-                                    <div className="subsection-header"><span>✏️ محدودیت و غیرفعال‌سازی سفارش</span></div>
+                                    <div className="subsection-header"><span>✏️ وضعیت نمایش، موجودی و محدودیت سفارش</span></div>
                                     
-                                    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10, marginBottom: 8 }}>
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                                      <label className="checkbox-label" style={{ marginBottom: 0 }}>
+                                        <input
+                                          type="checkbox"
+                                          checked={!!p.active}
+                                          onChange={(e) => handleProductChange(p.id, "active", e.target.checked)}
+                                        />
+                                        <span style={{ color: p.active ? "#10b981" : "#ef4444", fontSize: 11, fontWeight: "bold" }}>
+                                          {p.active ? "✓ نمایش در فروشگاه (فعال)" : "✕ مخفی از کل سایت (غیرفعال)"}
+                                        </span>
+                                      </label>
                                       <label className="checkbox-label" style={{ marginBottom: 0 }}>
                                         <input
                                           type="checkbox"
                                           checked={!!p.ordering_disabled}
                                           onChange={(e) => handleProductChange(p.id, "ordering_disabled", e.target.checked)}
                                         />
-                                        <span style={{ color: "var(--red)", fontSize: 11 }}>✏️ غیرفعال کردن کامل سفارش (عمومی)</span>
+                                        <span style={{ color: p.ordering_disabled ? "#ef4444" : "#10b981", fontSize: 11 }}>
+                                          {p.ordering_disabled ? "✕ ناموجود (سفارش غیرفعال)" : "✓ موجود برای ثبت سفارش"}
+                                        </span>
                                       </label>
                                     </div>
                                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>

@@ -15,9 +15,9 @@ from .views import _is_admin_user
 
 logger = logging.getLogger(__name__)
 
-# External Zarinpal gateway for Kavenegar Top-Up
-EXTERNAL_ZARINPAL_BASE_URL = "https://pay.nubixshop.ir"
-EXTERNAL_ZARINPAL_MERCHANT_ID = "bcb8cfe3-802c-45b4-87db-e7c80c6a8455"
+# Zarinpal gateway for Kavenegar Top-Up
+EXTERNAL_ZARINPAL_BASE_URL = getattr(settings, "ZARINPAL_PAYMENT_URL", "https://payment.zarinpal.com")
+EXTERNAL_ZARINPAL_MERCHANT_ID = getattr(settings, "ZARINPAL_MERCHANT_ID", "9a1035f4-694c-4c3c-b22d-309037ff330f")
 
 
 def _no_proxy_session() -> requests.Session:
@@ -149,6 +149,12 @@ def kavenegar_admin_usage(request):
 
     return JsonResponse({
         "ok": True,
+        "credit": {
+            "credit_rial": credit_rial,
+            "credit_toman": credit_toman,
+            "status": health.get("status", "unknown"),
+            "is_healthy": health.get("ok", True),
+        },
         "debt": {
             "status": "settled" if is_settled else "owing",
             "is_settled": is_settled,
@@ -184,8 +190,7 @@ def kavenegar_admin_usage(request):
 @csrf_exempt
 def external_zarinpal_topup_request(request):
     """
-    Initiate top-up payment for Kavenegar wallet balance using external Zarinpal gateway
-    (pay.nubixshop.ir with merchant ID bcb8cfe3-802c-45b4-87db-e7c80c6a8455).
+    Initiate top-up payment for Kavenegar wallet balance using Zarinpal gateway.
     """
     if not _is_admin_user(request.user):
         return JsonResponse({"ok": False, "error": "دسترسی غیرمجاز"}, status=403)
@@ -205,8 +210,9 @@ def external_zarinpal_topup_request(request):
             status=400
         )
 
+    frontend_base = getattr(settings, "FRONTEND_URL", "https://jinxfamily.ir").rstrip("/")
     req_url = f"{EXTERNAL_ZARINPAL_BASE_URL}/pg/v4/payment/request.json"
-    callback_url = f"{EXTERNAL_ZARINPAL_BASE_URL}/api/admin/kavenegar/topup/callback/"
+    callback_url = f"{frontend_base}/api/admin/kavenegar/topup/callback/"
 
     payload = {
         "merchant_id": EXTERNAL_ZARINPAL_MERCHANT_ID,
@@ -257,11 +263,13 @@ def external_zarinpal_topup_callback(request):
     authority = request.GET.get("Authority") or request.GET.get("authority")
     status_param = request.GET.get("Status") or request.GET.get("status")
 
+    frontend_base = getattr(settings, "FRONTEND_URL", "https://jinxfamily.ir").rstrip("/")
+
     if not authority:
-        return HttpResponseRedirect("https://jinxfamily.com/panel/admin?topup=failed&msg=no_authority")
+        return HttpResponseRedirect(f"{frontend_base}/panel/admin?topup=failed&msg=no_authority")
 
     if status_param != "OK":
-        return HttpResponseRedirect(f"https://jinxfamily.com/panel/admin?topup=canceled&authority={authority}")
+        return HttpResponseRedirect(f"{frontend_base}/panel/admin?topup=canceled&authority={authority}")
 
     amount_toman = request.session.get(f"topup_amt_{authority}", 0)
 
@@ -278,7 +286,7 @@ def external_zarinpal_topup_callback(request):
         data = res.json()
     except Exception as exc:
         logger.error("Top-up Zarinpal verification exception: %s", exc)
-        return HttpResponseRedirect("https://jinxfamily.com/panel/admin?topup=failed&msg=network_error")
+        return HttpResponseRedirect(f"{frontend_base}/panel/admin?topup=failed&msg=network_error")
 
     res_data = data.get("data", {}) if isinstance(data.get("data"), dict) else {}
     code = res_data.get("code")
@@ -298,7 +306,7 @@ def external_zarinpal_topup_callback(request):
             )
         except Exception:
             pass
-        return HttpResponseRedirect(f"https://jinxfamily.com/panel/admin?topup=success&ref_id={ref_id}&amount={amount_toman}")
+        return HttpResponseRedirect(f"{frontend_base}/panel/admin?topup=success&ref_id={ref_id}&amount={amount_toman}")
     else:
         err_msg = data.get("errors", {}).get("message", "تایید پرداخت ناموفق بود")
-        return HttpResponseRedirect(f"https://jinxfamily.com/panel/admin?topup=failed&msg={err_msg}")
+        return HttpResponseRedirect(f"{frontend_base}/panel/admin?topup=failed&msg={err_msg}")

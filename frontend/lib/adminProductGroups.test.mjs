@@ -26,13 +26,12 @@ assert.deepEqual(groups.map((group) => group.key), [
   "mobile-games",
   "ai",
   "subscriptions",
-  "rocket-league",
-  "giftcards",
-  "games",
+  "accounts",
+  "other-games",
 ]);
 
-assert.deepEqual(groups.map((group) => group.count), [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1]);
-assert.deepEqual(groups.find((group) => group.key === "giftcards").products.map((p) => p.slug), ["steam-gift"]);
+assert.deepEqual(groups.map((group) => group.count), [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 2]);
+assert.deepEqual(groups.find((group) => group.key === "other-games").products.map((p) => p.slug), ["gta6", "steam-gift"]);
 
 const activeSortGroups = groupAdminProducts([
   { id: 10, name_fa: "آیتم غیرفعال الف", slug: "inactive-a", category: "FORTNITE", active: false },
