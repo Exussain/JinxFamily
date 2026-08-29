@@ -925,6 +925,55 @@ class AdminProductManagementTests(TestCase):
         self.assertEqual(product.image_url, "/products/fresh.webp")
         self.assertEqual(product.category, "SUBSCRIPTIONS")
 
+    def test_admin_can_create_product_with_jinx_and_customization(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            "/api/admin/products",
+            data=json.dumps(
+                {
+                    "name_fa": "Jinx Customized Product",
+                    "slug": "jinx-customized-product",
+                    "category": "FORTNITE",
+                    "price": 500000,
+                    "jinx_image": "/images/jinx-custom.png",
+                    "jinx_text": "راهنمای اختصاصی خرید جینکس",
+                    "page_customization": {
+                        "theme": "dark",
+                        "banner_text": "پیشنهاد ویژه",
+                    },
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201, response.content)
+        product = Product.objects.get(slug="jinx-customized-product")
+        self.assertEqual(product.jinx_image, "/images/jinx-custom.png")
+        self.assertEqual(product.jinx_text, "راهنمای اختصاصی خرید جینکس")
+        self.assertEqual(product.page_customization.get("theme"), "dark")
+
+    def test_admin_can_update_product_with_jinx_and_customization(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.patch(
+            f"/api/admin/products/{self.product.id}",
+            data=json.dumps(
+                {
+                    "jinx_image": "/images/jinx-updated.png",
+                    "jinx_text": "متن بروزرسانی شده",
+                    "page_customization": {"banner_color": "purple"},
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.jinx_image, "/images/jinx-updated.png")
+        self.assertEqual(self.product.jinx_text, "متن بروزرسانی شده")
+        self.assertEqual(self.product.page_customization.get("banner_color"), "purple")
+
     def test_admin_products_lists_active_before_inactive(self):
         self.client.force_login(self.admin)
         self.product.active = False

@@ -8,6 +8,7 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
+from django.conf import settings
 import resend
 
 from .notification_logger import log_notification

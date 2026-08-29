@@ -55,6 +55,11 @@ from .models import (
     G4A4Variation,
     CustomerWalletTxn,
     WishlistItem,
+    ZarinpalReconciliation,
+    FinancialWeekClosure,
+    Ticket,
+    TicketMessage,
+    ProductRequest,
 )
 from .zarinpal_service import ZarinPalService
 from .email_service import (
@@ -5281,29 +5286,20 @@ def admin_refund_notify(request, tracking):
     order = get_object_or_404(Order, tracking_code=tracking)
 
     previous_status = order.status
-    if previous_status != "refunded":
+    from .rewards import process_order_refund
+    refund_result = process_order_refund(order, previous_status=previous_status)
+    if refund_result.get("processed"):
         order.status = "refunded"
-        
-        # 1. Update latest payment to refunded
-        latest_payment = order.payments.order_by("-created_at").first()
-        if latest_payment and latest_payment.status != "refunded":
-            latest_payment.status = "refunded"
-            latest_payment.save(update_fields=["status"])
-            
-        # 2. Refund the amount to the user as diamonds (wallet cash-back is retired)
-        total_paid = (order.amount or 0)
-        if total_paid > 0 and order.user:
-            from .rewards import award_points, toman_to_diamonds_ceil
-            award_points(
-                order.user, toman_to_diamonds_ceil(total_paid), "adjust",
-                related_order=order, note=f"استرداد سفارش {order.tracking_code} به کوین",
-            )
-
-        # 3. Maintain global completed orders counter
+        order.save(update_fields=["status"])
         if previous_status == "completed":
             _increment_setting_int("completed_orders_count", delta=-1, default=907)
-            
-        order.save(update_fields=["status"])
+    if refund_result.get("already_processed"):
+        return JsonResponse({
+            "tracking_code": order.tracking_code,
+            "success": True,
+            "refund": refund_result,
+            "message": "این ریفاند قبلاً به اعتبار کیف پول اضافه شده است.",
+        })
 
     # Prepare customer info
     customer_email = ""
@@ -5594,6 +5590,7 @@ def admin_products(request):
             disable_2fa_color=updates.get("disable_2fa_color", "amber"),
             jinx_image=updates.get("jinx_image", ""),
             jinx_text=updates.get("jinx_text", ""),
+            page_customization=updates.get("page_customization", {}),
             display_order=int(max_order) + 1000,
         )
         return JsonResponse(_admin_product_dict(product), status=201)
@@ -6083,7 +6080,7 @@ def _send_account_status_sms_if_changed(account, status, previous_status):
             phone_number=phone,
             customer_name=customer_name,
             status_fa="",
-            template_name="jinxfamily-wrong-details",
+            template_name="jinxfamily-re-wronginfo",
             include_status_token=False,
         )
     elif status in ("needs_2fa", "needs_tr_region"):
@@ -6353,21 +6350,10 @@ def admin_update_order_status(request, tracking):
     elif previous_status == "completed" and status != "completed":
         _increment_setting_int("completed_orders_count", delta=-1, default=907)
 
-    # اگر وضعیت به مسترد شده تغییر کرد:
-    # ۱) آخرین پرداخت را refunded می‌کنیم
-    # ۲) مبلغ سفارش به‌صورت کوین به کاربر برمی‌گردد (کش‌بک کیف پول حذف شده)
-    if status == "refunded":
-        latest_payment = order.payments.order_by("-created_at").first()
-        if latest_payment and latest_payment.status != "refunded":
-            latest_payment.status = "refunded"
-            latest_payment.save(update_fields=["status"])
-        total_paid = (order.amount or 0)
-        if total_paid > 0 and order.user:
-            from .rewards import award_points, toman_to_diamonds_ceil
-            award_points(
-                order.user, toman_to_diamonds_ceil(total_paid), "adjust",
-                related_order=order, note=f"استرداد سفارش {order.tracking_code} به کوین",
-            )
+    refund_result = {"processed": False, "already_processed": False, "credit_added": 0, "diamonds_restored": 0}
+    if status == "refunded" and previous_status != "refunded":
+        from .rewards import process_order_refund
+        refund_result = process_order_refund(order, previous_status=previous_status)
 
     paid_transitioned = previous_status != "paid" and status == "paid"
     email_sent = False

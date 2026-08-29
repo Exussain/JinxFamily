@@ -48,6 +48,16 @@ class UserProfile(models.Model):
         default=0,
         help_text="تعداد دعوت‌های موفقی که اعلان آن‌ها توسط کاربر دیده شده است"
     )
+    VERIFICATION_CHOICES = [
+        ('unverified', 'تایید نشده'),
+        ('pending', 'در انتظار بررسی'),
+        ('verified', 'تایید شده'),
+        ('rejected', 'رد شده'),
+    ]
+    national_card_image = models.ImageField(blank=True, null=True, upload_to='national_cards/')
+    national_code = models.CharField(blank=True, default='', max_length=10)
+    verification_status = models.CharField(choices=VERIFICATION_CHOICES, default='unverified', max_length=20)
+    verification_reject_reason = models.TextField(blank=True, default='')
 
     def __str__(self):
         return f"Profile for {self.user.username}"

@@ -42,6 +42,9 @@ class Product(models.Model):
     requires_2fa = models.BooleanField(default=False, help_text="آیا این محصول نیاز به خاموش کردن 2FA دارد؟")
     disable_2fa_text = models.CharField(max_length=200, blank=True, default="", help_text="متن سفارشی بنر 2FA (اختیاری)")
     disable_2fa_color = models.CharField(max_length=20, default="amber", help_text="رنگ بنر 2FA: amber | blue | gray | red")
+    jinx_image = models.CharField(max_length=500, blank=True, default="", help_text="آدرس تصویر سفارشی جینکس")
+    jinx_text = models.TextField(blank=True, default="", help_text="متن دیالوگ سفارشی جینکس")
+    page_customization = models.JSONField(default=dict, blank=True, help_text="تنظیمات سفارشی‌سازی صفحه محصول")
     display_order = models.PositiveIntegerField(
         default=0,
         help_text="ترتیب نمایش در ویترین/صفحه اصلی (کمتر = بالاتر)",

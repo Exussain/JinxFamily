@@ -4926,9 +4926,9 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
       credentials: "include",
       body: formData,
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error(data?.message || "خطا در آپلود کاور");
+      throw new Error(data?.message || data?.detail || `خطا در آپلود کاور (${res.status})`);
     }
     return data;
   };
@@ -4941,9 +4941,9 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
       credentials: "include",
       body: formData,
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error(data?.message || "خطا در آپلود کاور 16:9");
+      throw new Error(data?.message || data?.detail || `خطا در آپلود کاور 16:9 (${res.status})`);
     }
     return data;
   };
@@ -5016,9 +5016,9 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
         credentials: "include",
         body: JSON.stringify(productPayload(newProduct)),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.message || "خطا در ساخت محصول");
+        throw new Error(data?.message || data?.detail || `خطا در ساخت محصول (${res.status})`);
       }
       let createdProduct = data;
       if (newProductCoverFile) {
@@ -5052,9 +5052,9 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
         credentials: "include",
         body: JSON.stringify(productPayload(product)),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.message || "خطا در بروزرسانی محصول");
+        throw new Error(data?.message || data?.detail || `خطا در بروزرسانی محصول (${res.status})`);
       }
       let savedProduct = data;
       const coverFile = productCoverFiles[product.id];
@@ -5117,8 +5117,8 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
         method: "DELETE",
         credentials: "include",
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || "خطا در حذف محصول");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || data?.detail || `خطا در حذف محصول (${res.status})`);
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
       setReport({ kind: "success", title: "محصول حذف شد", context: "products" });
     } catch (err) {
