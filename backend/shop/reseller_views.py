@@ -344,6 +344,9 @@ def _compute_behavior_discount(profile: ResellerProfile) -> dict:
 # helper ها
 # -----------------------------------------------------------------------
 def _client_ip(request) -> str:
+    cf_ip = (request.META.get("HTTP_CF_CONNECTING_IP") or "").strip()
+    if cf_ip:
+        return cf_ip
     forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
     if forwarded:
         return forwarded.split(",")[0].strip()
@@ -711,6 +714,8 @@ def reseller_phone_verify(request):
                     },
                     status=400,
                 )
+            if phone:
+                cache.delete(f"captcha_risk:ph:{phone}")
         elif _captcha_required(phone, ip):
             return JsonResponse(
                 {

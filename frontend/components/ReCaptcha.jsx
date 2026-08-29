@@ -9,7 +9,10 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 // recaptcha package only peer-supports React <=18).
 
 const SCRIPT_ID = "recaptcha-api-js";
-const SCRIPT_SRC = "https://www.recaptcha.net/recaptcha/api.js?render=explicit&hl=fa";
+const SCRIPT_SRCS = [
+  "https://www.recaptcha.net/recaptcha/api.js?render=explicit&hl=fa",
+  "https://www.google.com/recaptcha/api.js?render=explicit&hl=fa",
+];
 
 let loaderPromise = null;
 
@@ -23,20 +26,33 @@ function loadGrecaptcha() {
   if (loaderPromise) return loaderPromise;
 
   loaderPromise = new Promise((resolve, reject) => {
-    if (!document.getElementById(SCRIPT_ID)) {
+    let srcIndex = 0;
+
+    function tryLoadScript() {
+      const existing = document.getElementById(SCRIPT_ID);
+      if (existing) existing.remove();
+
       const s = document.createElement("script");
       s.id = SCRIPT_ID;
-      s.src = SCRIPT_SRC;
+      s.src = SCRIPT_SRCS[srcIndex];
       s.async = true;
       s.defer = true;
       s.onerror = () => {
-        const scriptEl = document.getElementById(SCRIPT_ID);
-        if (scriptEl) scriptEl.remove();
-        loaderPromise = null;
-        reject(new Error("failed to load reCAPTCHA"));
+        srcIndex++;
+        if (srcIndex < SCRIPT_SRCS.length) {
+          tryLoadScript();
+        } else {
+          loaderPromise = null;
+          reject(new Error("failed to load reCAPTCHA from all sources"));
+        }
       };
       document.head.appendChild(s);
     }
+
+    if (!document.getElementById(SCRIPT_ID)) {
+      tryLoadScript();
+    }
+
     const startedAt = Date.now();
     const poll = setInterval(() => {
       if (window.grecaptcha && typeof window.grecaptcha.render === "function") {
@@ -84,13 +100,17 @@ const ReCaptcha = forwardRef(function ReCaptcha({ sitekey, onChange, provider = 
     loadGrecaptcha()
       .then((grecaptcha) => {
         if (cancelled || !containerRef.current || widgetIdRef.current !== null) return;
-        widgetIdRef.current = grecaptcha.render(containerRef.current, {
-          sitekey,
-          hl: "fa",
-          callback: (token) => onChange?.(token),
-          "expired-callback": () => onChange?.(null),
-          "error-callback": () => onChange?.(null),
-        });
+        try {
+          widgetIdRef.current = grecaptcha.render(containerRef.current, {
+            sitekey,
+            hl: "fa",
+            callback: (token) => onChange?.(token),
+            "expired-callback": () => onChange?.(null),
+            "error-callback": () => onChange?.(null),
+          });
+        } catch (e) {
+          console.warn("grecaptcha.render notice:", e);
+        }
       })
       .catch(() => {
         if (!cancelled) onChange?.(null);

@@ -146,8 +146,8 @@ PASSWORD_HASHERS = [
 ]
 
 # Outbound proxy used to reach hosts blocked by national filtering (Resend, hCaptcha,
-# ipinfo, ...). A local SOCKS5 proxy listens on 127.0.0.1:10808. Set to "" to disable.
-FILTER_BYPASS_PROXY = os.environ.get('FILTER_BYPASS_PROXY', 'socks5h://127.0.0.1:10808')
+# ipinfo, ...). If not configured in environment, defaults to direct connection ("").
+FILTER_BYPASS_PROXY = os.environ.get('FILTER_BYPASS_PROXY', '')
 
 # Google reCAPTCHA v2 secret (server-side). Empty = captcha fully disabled (no-op).
 RECAPTCHA_SECRET = os.environ.get('RECAPTCHA_SECRET', '')
@@ -160,6 +160,7 @@ HCAPTCHA_SITEKEY = os.environ.get('HCAPTCHA_SITEKEY', '10000000-ffff-ffff-ffff-f
 # Risk-based captcha: reCAPTCHA/hCaptcha is only required once a phone/IP exceeds this many
 # tokenless attempts within the rolling window (seconds). Normal users never see it.
 CAPTCHA_RISK_ATTEMPTS = int(os.environ.get('CAPTCHA_RISK_ATTEMPTS', '3'))
+CAPTCHA_RISK_ATTEMPTS_IP = int(os.environ.get('CAPTCHA_RISK_ATTEMPTS_IP', '15'))
 CAPTCHA_RISK_WINDOW = int(os.environ.get('CAPTCHA_RISK_WINDOW', '900'))
 
 # ZarinPal settings

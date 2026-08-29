@@ -225,6 +225,7 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
   };
 
   const sendOTP = async () => {
+    if (loading) return;
     const validation = validatePhoneNumber(phoneNumber);
     if (!validation.valid) {
       setError(validation.message);
@@ -263,8 +264,8 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
 
       if (!res.ok) {
         if (data.captcha_required) {
-          // Backend flagged this attempt as suspicious — reveal the captcha and
-          // ask the user to solve it, then resubmit.
+          // Bring user to step 1 where the captcha widget is visible
+          if (step !== 1) setStep(1);
           setCaptchaRequired(true);
           if (data.captcha_provider) {
             setCaptchaProvider(data.captcha_provider);
@@ -275,9 +276,10 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
           setCaptchaToken(null);
           captchaRef.current?.reset?.();
           setError(
-            captchaToken
+            data.message ||
+            (captchaToken
               ? "تایید کپچا ناموفق بود. لطفاً دوباره تلاش کنید."
-              : "برای ادامه لطفاً کپچا را کامل کنید."
+              : "برای ادامه لطفاً کپچا را کامل کنید.")
           );
           return;
         }
@@ -302,7 +304,7 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
             </span>
           );
           setCaptchaToken(null);
-          captchaRef.current?.reset();
+          captchaRef.current?.reset?.();
           return;
         }
         if (res.status === 429 && (data.remaining_seconds || data.reuse_last_code)) {
@@ -313,7 +315,8 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
           setCanResend(false);
           setError(data.message || "کد قبلی را وارد کنید");
           setCaptchaToken(null);
-          captchaRef.current?.reset();
+          setCaptchaRequired(false);
+          captchaRef.current?.reset?.();
         } else {
           throw new Error(data.message || "خطا در ارسال کد تایید");
         }
@@ -328,7 +331,8 @@ export default function OTPLogin({ mode = "login", onSuccess = null }) {
         // تعیین اینکه آیا کاربر جدید است (برای نمایش فیلدهای ثبت نام)
         setIsNewUser(mode === "reset" ? false : !data.user_exists);
         setCaptchaToken(null);
-        captchaRef.current?.reset();
+        setCaptchaRequired(false);
+        captchaRef.current?.reset?.();
       }
     } catch (e) {
       setError(e.message);

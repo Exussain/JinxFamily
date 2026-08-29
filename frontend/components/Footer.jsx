@@ -175,7 +175,6 @@ export default function Footer() {
               تمامی حقوق مادی و معنوی این سایت متعلق به <strong>فروشگاه جینکس فمیلی</strong> می‌باشد.
             </div>
             <div className="footer-credit-text">
-              طراحی و توسعه با ❤️ توسط{" "}
               <a
                 href="https://t.me/JinxFamily"
                 target="_blank"
@@ -183,6 +182,15 @@ export default function Footer() {
                 className="footer-credit-link"
               >
                 جینکس فمیلی (JinxFamily)
+              </a>{" "}
+              طراحی شده توسط{" "}
+              <a
+                href="https://t.me/MortalCompanyIR"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-credit-link"
+              >
+                مورتال
               </a>
             </div>
           </div>

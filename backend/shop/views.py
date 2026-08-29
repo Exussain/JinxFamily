@@ -420,7 +420,7 @@ ADMIN_PANEL_CACHE_BUST_PATH = f"/panel/admin?cb={ADMIN_PANEL_CACHE_BUSTER}"
 MAX_PANELS_PER_IDENTITY = None
 
 RECAPTCHA_SECRET = getattr(settings, "RECAPTCHA_SECRET", "")
-RECAPTCHA_SITEKEY = getattr(settings, "RECAPTCHA_SITEKEY", "6LdlQyEtAAAAAPmc8sJ-C_FxwUc2tgTJMvju1aTN")
+RECAPTCHA_SITEKEY = getattr(settings, "RECAPTCHA_SITEKEY", "6LfrtFstAAAAAGFN9f1bsaZ3NNBhBMgfsx4ivTyZ")
 HCAPTCHA_SECRET = getattr(settings, "HCAPTCHA_SECRET", "0x0000000000000000000000000000000000000000")
 HCAPTCHA_SITEKEY = getattr(settings, "HCAPTCHA_SITEKEY", "10000000-ffff-ffff-ffff-ffffffffffff")
 
@@ -521,16 +521,21 @@ def _resolve_product_image(p: Product):
 
 
 _RECAPTCHA_VERIFY_ENDPOINTS = (
-    "https://www.recaptcha.net/recaptcha/api/siteverify",  # Iran-reachable Google host
-    "https://www.google.com/recaptcha/api/siteverify",     # fallback host
+    "https://www.google.com/recaptcha/api/siteverify",     # Primary Google host
+    "https://www.recaptcha.net/recaptcha/api/siteverify",  # Fallback host
 )
 
 
 def _verify_recaptcha(token: str) -> bool:
     """
     Validate a Google reCAPTCHA v2 token or hCaptcha token based on captcha_provider setting.
-    Validated via siteverify, routed through the filter-bypass proxy.
+    Direct connection is attempted first (fastest and most reliable on this overseas server),
+    with automatic fallback to FILTER_BYPASS_PROXIES if direct encounters connection errors,
+    and vice versa.
     """
+    if not token or not isinstance(token, str):
+        return False
+    token = token.strip()
     if not token:
         return False
 
@@ -538,53 +543,71 @@ def _verify_recaptcha(token: str) -> bool:
 
     if provider == "hcaptcha":
         secret = HCAPTCHA_SECRET or "0x0000000000000000000000000000000000000000"
-        url = "https://hcaptcha.com/siteverify"
+        urls = [
+            "https://hcaptcha.com/siteverify",
+            "https://api.hcaptcha.com/siteverify",
+        ]
+        proxies_to_try = [None]
+        if FILTER_BYPASS_PROXIES:
+            proxies_to_try.append(FILTER_BYPASS_PROXIES)
+
         last_exc = None
-        for attempt in range(4):
-            try:
-                resp = requests.post(
-                    url,
-                    data={"secret": secret, "response": token},
-                    timeout=6,
-                    proxies=FILTER_BYPASS_PROXIES,
-                )
-                data = resp.json()
-            except Exception as exc:
-                last_exc = exc
-                continue
-            if data.get("success"):
-                return True
-            error_codes = data.get("error-codes") or []
-            if isinstance(error_codes, str):
-                error_codes = [error_codes]
-            logger.warning("hCaptcha verification failed (%s)", error_codes)
-            return False
-        logger.error("hCaptcha unreachable after retries (%s); rejecting", last_exc)
+        for p in proxies_to_try:
+            for url in urls:
+                try:
+                    resp = requests.post(
+                        url,
+                        data={"secret": secret, "response": token},
+                        timeout=5,
+                        proxies=p,
+                    )
+                    data = resp.json()
+                    if data.get("success"):
+                        return True
+                    error_codes = data.get("error-codes") or []
+                    if isinstance(error_codes, str):
+                        error_codes = [error_codes]
+                    logger.warning("hCaptcha verification rejected (%s) [proxy=%s]", error_codes, bool(p))
+                    return False
+                except Exception as exc:
+                    last_exc = exc
+                    continue
+        logger.error("hCaptcha unreachable after all attempts (%s); rejecting", last_exc)
         return False
     else:
         # Default: Google reCAPTCHA
-        last_exc = None
-        for attempt in range(4):
-            url = _RECAPTCHA_VERIFY_ENDPOINTS[attempt % len(_RECAPTCHA_VERIFY_ENDPOINTS)]
-            try:
-                resp = requests.post(
-                    url,
-                    data={"secret": RECAPTCHA_SECRET, "response": token},
-                    timeout=6,
-                    proxies=FILTER_BYPASS_PROXIES,
-                )
-                data = resp.json()
-            except Exception as exc:
-                last_exc = exc
-                continue
-            if data.get("success"):
-                return True
-            error_codes = data.get("error-codes") or []
-            if isinstance(error_codes, str):
-                error_codes = [error_codes]
-            logger.warning("reCAPTCHA verification failed (%s)", error_codes)
+        secret = RECAPTCHA_SECRET
+        if not secret:
+            logger.error("RECAPTCHA_SECRET is not configured; rejecting token")
             return False
-        logger.error("reCAPTCHA unreachable after retries (%s); rejecting", last_exc)
+
+        urls = _RECAPTCHA_VERIFY_ENDPOINTS
+        proxies_to_try = [None]
+        if FILTER_BYPASS_PROXIES:
+            proxies_to_try.append(FILTER_BYPASS_PROXIES)
+
+        last_exc = None
+        for p in proxies_to_try:
+            for url in urls:
+                try:
+                    resp = requests.post(
+                        url,
+                        data={"secret": secret, "response": token},
+                        timeout=5,
+                        proxies=p,
+                    )
+                    data = resp.json()
+                    if data.get("success"):
+                        return True
+                    error_codes = data.get("error-codes") or []
+                    if isinstance(error_codes, str):
+                        error_codes = [error_codes]
+                    logger.warning("reCAPTCHA verification rejected (%s) [proxy=%s, url=%s]", error_codes, bool(p), url)
+                    return False
+                except Exception as exc:
+                    last_exc = exc
+                    continue
+        logger.error("reCAPTCHA unreachable after all attempts (%s); rejecting", last_exc)
         return False
 
 
@@ -605,8 +628,8 @@ def _captcha_attempt_count(scope: str) -> int:
 def _captcha_required(phone_number: str, ip_address: str) -> bool:
     """
     Decide whether this attempt is suspicious enough to demand a captcha.
-    Normal traffic is let through; once a phone or IP exceeds CAPTCHA_RISK_ATTEMPTS
-    tokenless attempts inside the window, the captcha kicks in. A SiteSetting
+    Normal traffic is let through; once a phone or IP exceeds risk limits
+    inside the window, the captcha kicks in. A SiteSetting
     `captcha_mode` ("off" | "always") overrides the heuristic at runtime.
     """
     provider = (_get_setting("captcha_provider", default="recaptcha").value_text or "").strip().lower()
@@ -624,7 +647,9 @@ def _captcha_required(phone_number: str, ip_address: str) -> bool:
         return True
     ip_n = _captcha_attempt_count(f"ip:{ip_address}") if ip_address else 0
     ph_n = _captcha_attempt_count(f"ph:{phone_number}") if phone_number else 0
-    return max(ip_n, ph_n) > CAPTCHA_RISK_ATTEMPTS
+    ip_threshold = getattr(settings, "CAPTCHA_RISK_ATTEMPTS_IP", 15)
+    ph_threshold = CAPTCHA_RISK_ATTEMPTS
+    return (ph_n > ph_threshold) or (ip_n > ip_threshold)
 
 
 def _enforce_captcha(payload, phone_number, ip_address):
@@ -632,7 +657,8 @@ def _enforce_captcha(payload, phone_number, ip_address):
     Risk-based captcha gate for auth endpoints. Returns a JsonResponse to
     short-circuit the request, or None to let it proceed.
 
-    - A supplied reCAPTCHA/hCaptcha token is always validated (verified via the proxy).
+    - A supplied reCAPTCHA/hCaptcha token is always validated.
+    - On successful verification, the phone's risk counter is cleared.
     - With no token, the captcha is only demanded for suspicious attempts; the
       response carries `captcha_required: true` so the client can render the
       widget on demand.
@@ -643,6 +669,8 @@ def _enforce_captcha(payload, phone_number, ip_address):
 
     if token:
         if _verify_recaptcha(token):
+            if phone_number:
+                cache.delete(f"captcha_risk:ph:{phone_number}")
             return None
         return JsonResponse(
             {
@@ -3235,23 +3263,21 @@ def _get_username_by_id(user_id):
     # Check Discord API
     token = os.environ.get("JINXFAMILY_BOT_WEBHOOK_TOKEN")
     if token:
-        try:
-            proxies = {
-                'http': 'socks5h://127.0.0.1:10808',
-                'https': 'socks5h://127.0.0.1:10808'
-            }
-            headers = {
-                'Authorization': token,
-                'User-Agent': 'Mozilla/5.0'
-            }
-            resp = requests.get(f"https://discord.com/api/v10/users/{user_id}", headers=headers, proxies=proxies, timeout=3)
-            if resp.status_code == 200:
-                name = resp.json().get("username")
-                if name:
-                    RESOLVED_USERS_CACHE[user_id] = name
-                    return name
-        except Exception:
-            pass
+        headers = {
+            'Authorization': token,
+            'User-Agent': 'Mozilla/5.0'
+        }
+        for p in (None, FILTER_BYPASS_PROXIES):
+            try:
+                resp = requests.get(f"https://discord.com/api/v10/users/{user_id}", headers=headers, proxies=p, timeout=3)
+                if resp.status_code == 200:
+                    name = resp.json().get("username")
+                    if name:
+                        RESOLVED_USERS_CACHE[user_id] = name
+                        return name
+                break
+            except Exception:
+                continue
 
     return None
 
@@ -3342,22 +3368,23 @@ def discord_admin_messages(request, channel_id: int):
     token = os.environ.get("JINXFAMILY_BOT_WEBHOOK_TOKEN")
     if token:
         try:
-            proxies = {
-                'http': 'socks5h://127.0.0.1:10808',
-                'https': 'socks5h://127.0.0.1:10808'
-            }
             headers = {
                 'Authorization': token,
                 'User-Agent': 'Mozilla/5.0'
             }
-            # Fetch the latest 50 messages from Discord
-            resp = requests.get(
-                f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=50",
-                headers=headers,
-                proxies=proxies,
-                timeout=4
-            )
-            if resp.status_code == 200:
+            resp = None
+            for p in (None, FILTER_BYPASS_PROXIES):
+                try:
+                    resp = requests.get(
+                        f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=50",
+                        headers=headers,
+                        proxies=p,
+                        timeout=4
+                    )
+                    break
+                except Exception:
+                    continue
+            if resp and resp.status_code == 200:
                 from django.utils.dateparse import parse_datetime
                 raw_messages = resp.json()
                 for m in raw_messages:
@@ -7411,8 +7438,11 @@ def payment_inquiry(request, tracking):
 
 def _get_client_ip(request):
     """
-    دریافت آدرس IP کاربر از request
+    دریافت آدرس IP کاربر از request با اولویت هدر Cloudflare و Reverse Proxy
     """
+    cf_ip = (request.META.get('HTTP_CF_CONNECTING_IP') or '').strip()
+    if cf_ip:
+        return cf_ip
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0].strip()

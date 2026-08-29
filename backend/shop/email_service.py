@@ -48,19 +48,28 @@ def _send_email_via_zepto(to_list, subject, html, cc_list=None, text=None):
         msg.set_content(text_body)
         msg.add_alternative(html, subtype='html')
 
-        import socks
-        
-        # Monkey patch socket locally for this block, or use a custom SMTP class
-        # It's safer to use a custom SMTP subclass
-        class SocksSMTP(smtplib.SMTP):
-            def _get_socket(self, host, port, timeout):
-                return socks.create_connection((host, port), timeout, self.source_address,
-                                               proxy_type=socks.SOCKS5, proxy_addr="127.0.0.1", proxy_port=10808)
+        filter_proxy = getattr(settings, "FILTER_BYPASS_PROXY", "") or ""
+        sent_zepto = False
+        if filter_proxy and "127.0.0.1" in filter_proxy:
+            try:
+                import socks
+                class SocksSMTP(smtplib.SMTP):
+                    def _get_socket(self, host, port, timeout):
+                        return socks.create_connection((host, port), timeout, self.source_address,
+                                                       proxy_type=socks.SOCKS5, proxy_addr="127.0.0.1", proxy_port=10808)
+                with SocksSMTP(ZEPTO_SMTP_SERVER, ZEPTO_SMTP_PORT) as server:
+                    server.starttls()
+                    server.login(ZEPTO_USERNAME, ZEPTO_PASSWORD)
+                    server.send_message(msg)
+                sent_zepto = True
+            except Exception:
+                pass
 
-        with SocksSMTP(ZEPTO_SMTP_SERVER, ZEPTO_SMTP_PORT) as server:
-            server.starttls()
-            server.login(ZEPTO_USERNAME, ZEPTO_PASSWORD)
-            server.send_message(msg)
+        if not sent_zepto:
+            with smtplib.SMTP(ZEPTO_SMTP_SERVER, ZEPTO_SMTP_PORT) as server:
+                server.starttls()
+                server.login(ZEPTO_USERNAME, ZEPTO_PASSWORD)
+                server.send_message(msg)
 
         logger.info(f"Email sent via Zepto backup to {to_list}")
         return True
@@ -87,17 +96,23 @@ def _send_email_sync(to_list, subject, html, cc_list=None, text=None):
             params["cc"] = cc_list
         if text_body:
             params["text"] = text_body
-        
-        # Use local proxy specifically for Resend to bypass filtering
-        orig_proxy = os.environ.get("HTTPS_PROXY")
-        os.environ["HTTPS_PROXY"] = "socks5h://127.0.0.1:10808"
+
+        filter_proxy = getattr(settings, "FILTER_BYPASS_PROXY", "") or ""
         try:
             resend.Emails.send(params)
-        finally:
-            if orig_proxy is not None:
-                os.environ["HTTPS_PROXY"] = orig_proxy
+        except Exception as resend_err:
+            if filter_proxy:
+                orig_proxy = os.environ.get("HTTPS_PROXY")
+                os.environ["HTTPS_PROXY"] = filter_proxy
+                try:
+                    resend.Emails.send(params)
+                finally:
+                    if orig_proxy is not None:
+                        os.environ["HTTPS_PROXY"] = orig_proxy
+                    else:
+                        os.environ.pop("HTTPS_PROXY", None)
             else:
-                del os.environ["HTTPS_PROXY"]
+                raise resend_err
                 
         log_notification(
             "email",
