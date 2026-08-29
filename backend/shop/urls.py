@@ -11,6 +11,7 @@ from .kavenegar_admin_views import (
     kavenegar_admin_usage,
     external_zarinpal_topup_request,
     external_zarinpal_topup_callback,
+    kavenegar_admin_manual_record,
 )
 
 urlpatterns = [
@@ -65,6 +66,8 @@ urlpatterns = [
     path('admin/kavenegar/topup/request/', external_zarinpal_topup_request),
     path('admin/kavenegar/topup/callback', external_zarinpal_topup_callback),
     path('admin/kavenegar/topup/callback/', external_zarinpal_topup_callback),
+    path('admin/kavenegar/topup/manual-record', kavenegar_admin_manual_record),
+    path('admin/kavenegar/topup/manual-record/', kavenegar_admin_manual_record),
     path('admin/settings', views.admin_settings),
     path('admin/products', views.admin_products),
     path('admin/products/reorder', views.admin_products_reorder),

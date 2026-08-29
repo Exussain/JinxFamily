@@ -132,37 +132,48 @@ function KavenegarUsageWidget({ apiBase, setReport }) {
           <div className="kavenegar-badge-icon">📱</div>
           <div>
             <div className="kavenegar-title-row">
-              <h3>پنل و میزان مصرف کاوه‌نگار (SMS API)</h3>
+              <h3>پنل و میزان مصرف پیامک (SMS API)</h3>
               <span className={`status-pill ${debt.is_settled ? "healthy" : "warning"}`}>
-                {debt.is_settled ? "تسویه‌شده" : `بدهکار: ${formatNum(debt.remaining_debt_toman)} تومان`}
+                {debt.is_settled
+                  ? (debt.surplus_credit_toman > 0 ? `اعتبار مازاد: ${formatNum(debt.surplus_credit_toman)} تومان` : "تسویه‌شده")
+                  : `بدهکار: ${formatNum(debt.remaining_debt_toman)} تومان`}
               </span>
             </div>
             <p className="kavenegar-subtext">
-              موجودی واقعی پیامک کاوه‌نگار: <strong className="credit-val" style={{ color: "#10b981" }}>{formatNum(data?.credit?.credit_toman || 0)} تومان</strong>
-              {data?.credit?.is_healthy ? " (سالم و فعال)" : " (نیاز به شارژ)"}
+              وضعیت حساب پیامک شاپ:{" "}
+              {debt.is_settled ? (
+                <strong className="credit-val" style={{ color: "#10b981" }}>
+                  تسویه‌شده {debt.surplus_credit_toman > 0 && `(موجودی شارژ: ${formatNum(debt.surplus_credit_toman)} تومان)`}
+                </strong>
+              ) : (
+                <strong className="credit-val" style={{ color: "#ef4444" }}>
+                  بدهی قابل تسویه: {formatNum(debt.remaining_debt_toman)} تومان
+                </strong>
+              )}
               <span style={{ fontSize: 11, color: "var(--muted)", marginRight: 8 }}>
-                (کل مصرف: {formatNum(debt.total_consumed_toman)} تومان · واریزی تسویه‌شده: {formatNum(debt.total_settled_toman)} تومان)
+                (کل هزینه پیامک‌ها: {formatNum(debt.total_consumed_toman)} تومان · کل واریزی‌های ثبت‌شده: {formatNum(debt.total_settled_toman)} تومان)
               </span>
             </p>
           </div>
         </div>
 
         <div className="kavenegar-header-actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <button type="button" className="btn-logs" onClick={() => fetchUsage()} title="استعلام آخرین وضعیت از سرور کاوه‌نگار">
-            🔄 استعلام موجودی
+          <button type="button" className="btn-logs" onClick={() => fetchUsage()} title="بروزرسانی آمار مصرف و واریزی‌ها">
+            🔄 بروزرسانی
           </button>
           <button type="button" className="btn-logs" onClick={() => setLogsOpen(!logsOpen)}>
             📜 {logsOpen ? "بستن تاریخچه" : "تاریخچه پیامک‌ها"}
           </button>
-          <a
-            href="https://panel.kavenegar.com/client/membership/charge"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
             className="btn-topup"
-            style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
+            onClick={() => {
+              if (debt.remaining_debt_toman > 0) setTopupAmount(debt.remaining_debt_toman);
+              setModalOpen(true);
+            }}
           >
-            🚀 شارژ مستقیم در کاوه‌نگار
-          </a>
+            💳 {debt.is_settled ? "افزایش اعتبار پیامک" : "پرداخت و تسویه بدهی پیامک"}
+          </button>
         </div>
       </div>
 
@@ -248,36 +259,54 @@ function KavenegarUsageWidget({ apiBase, setReport }) {
         <div className="topup-modal-backdrop" onClick={() => setModalOpen(false)}>
           <div className="topup-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>💳 افزایش اعتبار پنل پیامک کاوه‌نگار</h3>
+              <h3>💳 {debt.is_settled ? "افزایش اعتبار پیامک" : "پرداخت و تسویه بدهی پیامک"} (درگاه زرین‌پال)</h3>
               <button type="button" className="close-btn" onClick={() => setModalOpen(false)}>✕</button>
             </div>
             <div className="modal-body">
-              <div style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.3)", borderRadius: 8, padding: 14, marginBottom: 16 }}>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: "#93c5fd" }}>
-                  💡 <strong>نحوه شارژ موجودی پیامک:</strong> برای اینکه موجودی و شارژ پیامک‌های سایت مستقیماً در کاوه‌نگار شارژ شود، باید از طریق پنل رسمی کاوه‌نگار اقدام نمایید. با کلیک بر روی دکمه زیر مستقیماً وارد صفحه افزایش اعتبار کاوه‌نگار خواهید شد.
-                </p>
+              <p className="modal-desc">
+                مبلغ مورد نظر برای تسویه بدهی یا افزایش اعتبار پیامک‌های سایت را انتخاب یا وارد کنید. پرداخت به صورت آنلاین از طریق درگاه امن زرین‌پال انجام می‌شود و پس از پرداخت، وضعیت حساب به طور خودکار تسویه و بروزرسانی می‌گردد.
+              </p>
+
+              <div className="amount-presets">
+                {[
+                  ...(debt.remaining_debt_toman > 0 ? [debt.remaining_debt_toman] : []),
+                  50000,
+                  100000,
+                  250000,
+                  500000,
+                ].filter((v, idx, arr) => arr.indexOf(v) === idx).map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    className={`preset-btn ${topupAmount === amt && !customAmount ? "active" : ""}`}
+                    onClick={() => { setTopupAmount(amt); setCustomAmount(""); }}
+                  >
+                    {formatNum(amt)} تومان {amt === debt.remaining_debt_toman ? " (کل بدهی)" : ""}
+                  </button>
+                ))}
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
-                <a
-                  href="https://panel.kavenegar.com/client/membership/charge"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-submit-pay"
-                  style={{ textDecoration: "none", textAlign: "center", padding: "12px 18px", fontSize: 14, fontWeight: "bold", display: "block" }}
-                >
-                  🚀 ورود به صفحه افزایش اعتبار در سایت کاوه‌نگار
-                </a>
+              <div className="custom-input-group">
+                <label>یا مبلغ دلخواه (تومان):</label>
+                <input
+                  type="number"
+                  placeholder="مثال: 150000"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                />
+              </div>
+
+              <div className="modal-actions">
                 <button
                   type="button"
-                  className="btn-cancel"
-                  style={{ textAlign: "center", padding: "10px" }}
-                  onClick={() => {
-                    setModalOpen(false);
-                    fetchUsage();
-                  }}
+                  className="btn-submit-pay"
+                  onClick={handleTopupSubmit}
+                  disabled={submitting}
                 >
-                  بستن و بروزرسانی موجودی
+                  {submitting ? "در حال اتصال به درگاه..." : `انتقال به درگاه و پرداخت ${formatNum(customAmount ? parseInt(customAmount, 10) : topupAmount)} تومان`}
+                </button>
+                <button type="button" className="btn-cancel" onClick={() => setModalOpen(false)}>
+                  انصراف
                 </button>
               </div>
             </div>

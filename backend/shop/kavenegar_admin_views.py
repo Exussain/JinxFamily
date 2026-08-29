@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 # Zarinpal gateway for Kavenegar Top-Up
 EXTERNAL_ZARINPAL_BASE_URL = getattr(settings, "ZARINPAL_PAYMENT_URL", "https://payment.zarinpal.com")
-EXTERNAL_ZARINPAL_MERCHANT_ID = getattr(settings, "ZARINPAL_MERCHANT_ID", "9a1035f4-694c-4c3c-b22d-309037ff330f")
+EXTERNAL_ZARINPAL_MERCHANT_ID = getattr(settings, "KAVENEGAR_TOPUP_MERCHANT_ID", "bcb8cfe3-802c-45b4-87db-e7c80c6a8455")
 
 
 def _no_proxy_session() -> requests.Session:
@@ -91,6 +91,7 @@ def kavenegar_admin_usage(request):
     total_consumed_toman = total_cost_rial // 10
     remaining_debt_toman = max(0, total_consumed_toman - total_settled_toman)
     remaining_debt_rial = remaining_debt_toman * 10
+    surplus_credit_toman = max(0, total_settled_toman - total_consumed_toman)
     is_settled = (remaining_debt_toman == 0)
 
     # 3. Breakdown by Template / Message Type
@@ -163,6 +164,7 @@ def kavenegar_admin_usage(request):
             "total_settled_toman": total_settled_toman,
             "remaining_debt_toman": remaining_debt_toman,
             "remaining_debt_rial": remaining_debt_rial,
+            "surplus_credit_toman": surplus_credit_toman,
         },
         "stats": {
             "today": {
@@ -238,8 +240,22 @@ def external_zarinpal_topup_request(request):
 
     if code == 100 and authority:
         payment_url = f"https://payment.zarinpal.com/pg/StartPay/{authority}"
+        try:
+            NotificationLog.objects.create(
+                channel="sms",
+                target="SYSTEM_TOPUP",
+                template="kavenegar-wallet-topup-pending",
+                success=False,
+                message=f"درخواست شارژ / تسویه هزینه پیامک به مبلغ {amount_toman:,} تومان",
+                context={"authority": str(authority), "amount_toman": amount_toman},
+                cost=0,
+            )
+        except Exception as log_err:
+            logger.warning("Could not persist pending topup log: %s", log_err)
+
         if hasattr(request, "session"):
             request.session[f"topup_amt_{authority}"] = amount_toman
+
         return JsonResponse({
             "ok": True,
             "payment_url": payment_url,
@@ -258,7 +274,7 @@ def external_zarinpal_topup_request(request):
 @csrf_exempt
 def external_zarinpal_topup_callback(request):
     """
-    Handle return callback from external Zarinpal gateway after payment completion.
+    Handle return callback from Zarinpal gateway after payment completion.
     """
     authority = request.GET.get("Authority") or request.GET.get("authority")
     status_param = request.GET.get("Status") or request.GET.get("status")
@@ -271,12 +287,33 @@ def external_zarinpal_topup_callback(request):
     if status_param != "OK":
         return HttpResponseRedirect(f"{frontend_base}/panel/admin?topup=canceled&authority={authority}")
 
-    amount_toman = request.session.get(f"topup_amt_{authority}", 0)
+    amount_toman = 0
+    pending_log = None
+    try:
+        for plog in NotificationLog.objects.filter(channel="sms", template="kavenegar-wallet-topup-pending").order_by("-id")[:100]:
+            if isinstance(plog.context, dict) and str(plog.context.get("authority")) == str(authority):
+                pending_log = plog
+                try:
+                    amount_toman = int(plog.context.get("amount_toman", 0))
+                except (ValueError, TypeError):
+                    pass
+                break
+    except Exception as exc:
+        logger.warning("Error looking up pending topup: %s", exc)
+
+    if amount_toman <= 0 and hasattr(request, "session"):
+        try:
+            amount_toman = int(request.session.get(f"topup_amt_{authority}", 0) or 0)
+        except (ValueError, TypeError):
+            amount_toman = 0
+
+    if amount_toman <= 0:
+        amount_toman = 50000
 
     verify_url = f"{EXTERNAL_ZARINPAL_BASE_URL}/pg/v4/payment/verify.json"
     payload = {
         "merchant_id": EXTERNAL_ZARINPAL_MERCHANT_ID,
-        "amount": amount_toman if amount_toman > 0 else 50000,
+        "amount": amount_toman,
         "authority": authority,
     }
 
@@ -300,13 +337,58 @@ def external_zarinpal_topup_callback(request):
                 target="SYSTEM_TOPUP",
                 template="kavenegar-wallet-topup",
                 success=True,
-                message=f"شارژ کیف پول کاوه‌نگار با موفقیت انجام شد. کد پیگیری: {ref_id}",
-                context={"ref_id": ref_id, "authority": authority, "amount_toman": amount_toman},
+                message=f"شارژ کیف پول و تسویه هزینه پیامک‌ها با موفقیت انجام شد. کد پیگیری: {ref_id}",
+                context={"ref_id": str(ref_id), "authority": str(authority), "amount_toman": amount_toman},
                 cost=0,
             )
-        except Exception:
-            pass
+            if pending_log:
+                pending_log.delete()
+        except Exception as err:
+            logger.error("Error creating topup log: %s", err)
+
         return HttpResponseRedirect(f"{frontend_base}/panel/admin?topup=success&ref_id={ref_id}&amount={amount_toman}")
     else:
         err_msg = data.get("errors", {}).get("message", "تایید پرداخت ناموفق بود")
         return HttpResponseRedirect(f"{frontend_base}/panel/admin?topup=failed&msg={err_msg}")
+
+
+@csrf_exempt
+def kavenegar_admin_manual_record(request):
+    """
+    Allow superadmin to register a previously verified bank payment RefID.
+    """
+    if not _is_admin_user(request.user):
+        return JsonResponse({"ok": False, "error": "دسترسی غیرمجاز"}, status=403)
+
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
+
+    try:
+        data_json = json.loads(request.body.decode("utf-8")) if request.body else {}
+        amount_toman = int(data_json.get("amount", 0))
+        ref_id = str(data_json.get("ref_id", "")).strip()
+    except (TypeError, ValueError, json.JSONDecodeError):
+        amount_toman = 0
+        ref_id = ""
+
+    if amount_toman < 1000 or not ref_id:
+        return JsonResponse({"ok": False, "error": "مبلغ و کد پیگیری الزامی است"}, status=400)
+
+    exists = NotificationLog.objects.filter(
+        channel="sms",
+        template="kavenegar-wallet-topup",
+        context__ref_id=ref_id
+    ).exists()
+    if exists:
+        return JsonResponse({"ok": False, "error": "این کد پیگیری قبلاً ثبت شده است"}, status=400)
+
+    NotificationLog.objects.create(
+        channel="sms",
+        target="SYSTEM_TOPUP",
+        template="kavenegar-wallet-topup",
+        success=True,
+        message=f"شارژ کیف پول و تسویه هزینه پیامک (ثبت دستی). کد پیگیری: {ref_id}",
+        context={"ref_id": ref_id, "amount_toman": amount_toman, "manual": True},
+        cost=0,
+    )
+    return JsonResponse({"ok": True, "message": "پرداخت با موفقیت ثبت و به حساب اضافه شد"})
