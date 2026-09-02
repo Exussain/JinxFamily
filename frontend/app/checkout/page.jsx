@@ -1474,55 +1474,6 @@ function CheckoutPage() {
 
           {/* Sidebar - Order Summary Column (Left in RTL) */}
           <aside className="checkout-sidebar">
-            {/* Rush Order VIP Card */}
-            {!hideRushOption && (
-              <div
-                className={`rush-order-card vip-card instant-card ${rushOrder ? 'active' : ''} ${rushDisabled ? 'disabled' : ''}`}
-                role="button"
-                tabIndex={rushDisabled ? -1 : 0}
-                aria-pressed={rushOrder}
-                aria-disabled={rushDisabled}
-                onClick={() => !rushDisabled && setRushOrder((prev) => !prev)}
-                onKeyDown={(e) => {
-                  if (rushDisabled) return;
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setRushOrder((prev) => !prev);
-                  }
-                }}
-                title={rushDisabled && rushDisabledReason ? rushDisabledReason : "فعال‌سازی فوری سفارش"}
-              >
-                <div className={`rush-ambient ${rushOrder ? 'active' : ''}`} aria-hidden="true" />
-                <div className="rush-order-header">
-                  <div className="rush-icon" aria-hidden="true">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
-                  </div>
-                  <div className="rush-info">
-                    <div className="rush-title-row">
-                      <h3>فعال‌سازی فوری</h3>
-                      <div className="rush-title-actions">
-                        <span className={`rush-fire ${rushOrder ? 'active' : ''}`} aria-hidden="true">🔥</span>
-                      </div>
-                    </div>
-                    <p>زمان تقریبی انجام: ۱۵ تا ۴۵ دقیقه</p>
-                  </div>
-                </div>
-                <div className="rush-order-body">
-                  <div className="rush-price">
-                    <span className="rush-price-value">+{(dynamicFees ?? 89000).toLocaleString('fa-IR')}</span>
-                    <span className="rush-price-unit">تومان</span>
-                  </div>
-                  <label className="rush-toggle" onClick={(e) => e.stopPropagation()}>
-                    <input type="checkbox" checked={rushOrder} onChange={(e) => setRushOrder(e.target.checked)} disabled={rushDisabled} />
-                    <span className="toggle-slider" />
-                    <span className="toggle-label">{rushOrder ? 'فعال' : 'خاموش'}</span>
-                  </label>
-                </div>
-                {rushDisabled && rushDisabledReason && (
-                  <div className="rush-disabled-hint">{rushDisabledReason}</div>
-                )}
-              </div>
-            )}
 
             {/* Simplified Cart items inside Order Summary Card */}
             <div className="cart-summary-card">

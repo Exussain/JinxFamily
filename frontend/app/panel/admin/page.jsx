@@ -1958,6 +1958,8 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
   const [activeEditTab, setActiveEditTab] = useState("general");
   const [updatingProductStockId, setUpdatingProductStockId] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
   
   // Announcements states
   const [announcements, setAnnouncements] = useState([]);
@@ -4100,6 +4102,63 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                   </span>
                 ) : null}
               </div>
+              {/* Custom Fields (Gifting / Tags / Custom details) */}
+              {it.custom_fields_data && Object.keys(it.custom_fields_data).length > 0 && (
+                <div className="item-custom-fields" style={{ padding: "12px", background: "rgba(99, 102, 241, 0.08)", borderRadius: "10px", border: "1px solid rgba(99, 102, 241, 0.25)", marginBottom: "10px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "8px", color: "#a5b4fc", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span>🎁</span>
+                    <span>اطلاعات اختصاصی مشتری (گیفتینگ / فیلدهای سفارشی):</span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "8px" }}>
+                    {Object.entries(it.custom_fields_data).map(([k, val]) => {
+                      const displayVal = String(val ?? "");
+                      return (
+                        <div key={k} style={{ background: "rgba(15, 23, 42, 0.6)", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div>
+                            <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>{k}</span>
+                            <strong style={{ fontSize: "13px", color: "#f8fafc" }}>{displayVal || "—"}</strong>
+                          </div>
+                          {displayVal && (
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(displayVal, `cf_${it.id}_${k}`)}
+                              style={{ background: "rgba(255, 255, 255, 0.08)", border: "none", color: "#e2e8f0", padding: "4px 8px", borderRadius: "4px", fontSize: "11px", cursor: "pointer" }}
+                            >
+                              {copiedField === `cf_${it.id}_${k}` ? "کپی شد ✓" : "کپی"}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Epic Username or Special Notes if present */}
+              {(o.epic_username || o.note) && (
+                <div style={{ padding: "8px 12px", background: "rgba(255, 255, 255, 0.02)", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.06)", marginBottom: "10px", display: "flex", flexWrap: "wrap", gap: "12px", fontSize: "12px" }}>
+                  {o.epic_username && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ color: "#94a3b8" }}>نام کاربری اپیک:</span>
+                      <strong style={{ color: "#38bdf8" }}>{o.epic_username}</strong>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(o.epic_username, `epic_${o.id}`)}
+                        style={{ background: "rgba(255, 255, 255, 0.08)", border: "none", color: "#e2e8f0", padding: "2px 6px", borderRadius: "4px", fontSize: "10px", cursor: "pointer" }}
+                      >
+                        {copiedField === `epic_${o.id}` ? "✓" : "کپی"}
+                      </button>
+                    </div>
+                  )}
+                  {o.note && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ color: "#94a3b8" }}>یادداشت مشتری:</span>
+                      <strong style={{ color: "#fcd34d" }}>{o.note}</strong>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {it.accounts && it.accounts.length > 0 ? (
                 <div className="item-accounts-list" style={{ padding: "12px", background: "rgba(255, 255, 255, 0.03)", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                   <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "10px", color: "#60a5fa", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
@@ -4188,27 +4247,27 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                     />
                   ))}
                 </div>
-              ) : (
+              ) : (it.account_email || it.account_password) ? (
                 <div className="item-accounts-list" style={{ padding: "12px", background: "rgba(255, 255, 255, 0.03)", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
                   <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "10px", color: "#60a5fa", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
                     <span>👤</span>
                     <span>اطلاعات اکانت مشتری:</span>
                   </div>
-                  {!it.account_email && !it.account_password ? (
-                    <div style={{ color: "var(--muted)", fontSize: "12px", fontStyle: "italic", textAlign: "center", padding: "8px 0" }}>
-                      ⚠️ اطلاعات اکانت توسط مشتری ثبت نشده است (یا خالی است).
-                    </div>
-                  ) : (
-                    <AccountDetailsRow
-                      account_email={it.account_email}
-                      account_password={it.account_password}
-                      account_type={it.account_type}
-                      copyToClipboard={copyToClipboard}
-                      copiedField={copiedField}
-                    />
-                  )}
+                  <AccountDetailsRow
+                    account_email={it.account_email}
+                    account_password={it.account_password}
+                    account_type={it.account_type}
+                    copyToClipboard={copyToClipboard}
+                    copiedField={copiedField}
+                  />
                 </div>
-              )}
+              ) : !(it.custom_fields_data && Object.keys(it.custom_fields_data).length > 0) && !o.epic_username && !o.note ? (
+                <div className="item-accounts-list" style={{ padding: "12px", background: "rgba(255, 255, 255, 0.03)", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                  <div style={{ color: "var(--muted)", fontSize: "12px", fontStyle: "italic", textAlign: "center", padding: "8px 0" }}>
+                    ⚠️ اطلاعات اکانت توسط مشتری ثبت نشده است (یا این محصول فاقد اطلاعات لاگین است).
+                  </div>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
@@ -4285,7 +4344,25 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
 
   const productGroups = useMemo(() => groupAdminProducts(products), [products]);
   const selectedProductGroup = productGroups.find((group) => group.key === activeProductGroup) || productGroups[0];
-  const visibleProducts = selectedProductGroup?.products || [];
+  const normalizedProdSearch = productSearchQuery.trim().toLowerCase();
+  const visibleProducts = useMemo(() => {
+    if (!normalizedProdSearch) {
+      return selectedProductGroup?.products || [];
+    }
+    return (products || []).filter((p) => {
+      const hay = `${p.name_fa || ""} ${p.slug || ""} ${p.id || ""} ${p.category || ""} ${p.subcategory || ""} ${p.subtitle || ""}`.toLowerCase();
+      return hay.includes(normalizedProdSearch);
+    });
+  }, [selectedProductGroup, normalizedProdSearch, products]);
+
+  const normalizedUserSearch = userSearchQuery.trim().toLowerCase();
+  const filteredUsers = useMemo(() => {
+    if (!normalizedUserSearch) return users;
+    return users.filter((u) => {
+      const hay = `${u.name || ""} ${u.username || ""} ${u.email || ""} ${u.phone || ""} ${u.tier || ""} ${u.id || ""}`.toLowerCase();
+      return hay.includes(normalizedUserSearch);
+    });
+  }, [users, normalizedUserSearch]);
   const completedOrdersCount = orderCounts.completed ?? previousOrders.length;
   const visibleCompletedOrdersCount = (normalizedOrderSearch || orderTypeFilter !== "all") ? visiblePreviousOrders.length : completedOrdersCount;
 
@@ -8483,34 +8560,66 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                         placeholder="متن کوتاه اختیاری"
                       />
                     </label>
-                    <label className="product-edit-field">
-                      <span>قیمت فعلی</span>
-                      <input
-                        type="number"
-                        min={0}
-                        value={newProduct.price}
-                        onChange={(e) => handleNewProductChange("price", Number(e.target.value || 0))}
-                      />
-                    </label>
-                    <label className="product-edit-field">
-                      <span>قیمت اصلی</span>
-                      <input
-                        type="number"
-                        min={0}
-                        value={newProduct.original_price}
-                        onChange={(e) => handleNewProductChange("original_price", Number(e.target.value || 0))}
-                      />
-                    </label>
-                    <label className="product-edit-field">
-                      <span>قیمت خرید به لیر</span>
-                      <input
-                        type="number"
-                        min={0}
-                        value={newProduct.price_lira || ""}
-                        placeholder="مثلاً 190"
-                        onChange={(e) => handleNewProductChange("price_lira", Number(e.target.value || 0))}
-                      />
-                    </label>
+                    <div style={{ gridColumn: "span 3", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, background: "rgba(255,255,255,0.02)", padding: 12, borderRadius: 8, border: "1px solid var(--line)" }}>
+                      <label className="product-edit-field" style={{ marginBottom: 0 }}>
+                        <span style={{ fontWeight: "bold" }}>قیمت فروش (تومان)</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={newProduct.price}
+                          onChange={(e) => handleNewProductChange("price", Number(e.target.value || 0))}
+                          style={{ fontWeight: "bold" }}
+                        />
+                      </label>
+                      <label className="product-edit-field" style={{ marginBottom: 0 }}>
+                        <span>قیمت اصلی / خط‌خورده</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={newProduct.original_price}
+                          onChange={(e) => handleNewProductChange("original_price", Number(e.target.value || 0))}
+                        />
+                      </label>
+                      <label className="product-edit-field" style={{ marginBottom: 0 }}>
+                        <span style={{ fontWeight: "bold" }}>قیمت به لیر (TL ₺)</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={newProduct.price_lira || ""}
+                          placeholder="مثلاً 190"
+                          onChange={(e) => handleNewProductChange("price_lira", Number(e.target.value || 0))}
+                          style={{ fontWeight: "bold" }}
+                        />
+                      </label>
+                      {liraRateNumber > 0 && (
+                        <div style={{ gridColumn: "span 3", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(52, 211, 153, 0.08)", border: "1px solid rgba(52, 211, 153, 0.25)", padding: "6px 10px", borderRadius: "6px", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+                          <span style={{ fontSize: "11px", color: "#34d399" }}>
+                            نرخ لیر: {liraRateNumber.toLocaleString("fa-IR")} تومان {newProduct.price_lira ? `| ارزش تومانی: ${Math.round((newProduct.price_lira || 0) * liraRateNumber).toLocaleString("fa-IR")} تومان` : ""}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={!newProduct.price_lira}
+                            onClick={() => {
+                              const calcPrice = Math.round((newProduct.price_lira || 0) * liraRateNumber);
+                              handleNewProductChange("price", calcPrice);
+                            }}
+                            style={{
+                              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                              border: "none",
+                              color: "#fff",
+                              padding: "4px 10px",
+                              borderRadius: "4px",
+                              fontSize: "11px",
+                              fontWeight: "bold",
+                              cursor: newProduct.price_lira ? "pointer" : "not-allowed",
+                              opacity: newProduct.price_lira ? 1 : 0.6
+                            }}
+                          >
+                            ⚡ محاسبه قیمت تومانی از لیر
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* ── Product Content Section (new product) ── */}
@@ -8897,6 +9006,30 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                 {products.length === 0 && <div className="empty-state">محصولی یافت نشد.</div>}
                 {products.length > 0 && (
                   <>
+                  {/* Search Products Bar */}
+                  <div className="product-search-bar" style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "16px", background: "var(--card)", padding: "10px 14px", borderRadius: "10px", border: "1px solid var(--line)" }}>
+                    <span style={{ fontSize: "16px" }}>🔍</span>
+                    <input
+                      type="text"
+                      value={productSearchQuery}
+                      onChange={(e) => setProductSearchQuery(e.target.value)}
+                      placeholder="جستجوی سریع در محصولات (نام محصول، اسلاگ، شناسه، دسته‌بندی...)..."
+                      style={{ flex: 1, background: "transparent", border: "none", color: "var(--text)", outline: "none", fontSize: "13px", fontWeight: "500" }}
+                    />
+                    {productSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setProductSearchQuery("")}
+                        style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "var(--text)", padding: "4px 8px", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}
+                      >
+                        ✕ پاک کردن
+                      </button>
+                    )}
+                    <span style={{ fontSize: "12px", color: "var(--muted)", whiteSpace: "nowrap" }}>
+                      {visibleProducts.length.toLocaleString("fa-IR")} محصول
+                    </span>
+                  </div>
+
                   <div className="product-group-tabs" role="tablist" aria-label="دسته‌بندی محصولات">
                     {productGroups.map((group) => (
                       <button
@@ -9824,14 +9957,38 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
           {!loading && activeTab === "users" && (
             <div className="users-content">
               <div className="section-card">
-                <div className="section-header">
-                  <h3>مدیریت کاربران</h3>
-                  <div className="muted">{users.length} کاربر</div>
+                <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                  <div>
+                    <h3>مدیریت کاربران</h3>
+                    <div className="muted">{filteredUsers.length.toLocaleString("fa-IR")} از {users.length.toLocaleString("fa-IR")} کاربر</div>
+                  </div>
+                  <div className="user-search-bar" style={{ display: "flex", gap: "8px", alignItems: "center", background: "var(--card)", padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--line)", width: "min(360px, 100%)" }}>
+                    <span style={{ fontSize: "14px" }}>🔍</span>
+                    <input
+                      type="text"
+                      value={userSearchQuery}
+                      onChange={(e) => setUserSearchQuery(e.target.value)}
+                      placeholder="جستجوی کاربر (نام، نام کاربری، ایمیل، شماره تلفن)..."
+                      style={{ flex: 1, background: "transparent", border: "none", color: "var(--text)", outline: "none", fontSize: "12px" }}
+                    />
+                    {userSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setUserSearchQuery("")}
+                        style={{ background: "transparent", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: "12px" }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {users.length === 0 && (
                   <div className="empty-state">کاربری یافت نشد.</div>
                 )}
-                {users.length > 0 && (
+                {users.length > 0 && filteredUsers.length === 0 && (
+                  <div className="empty-state">هیچ کاربری با عبارت «{userSearchQuery}» پیدا نشد.</div>
+                )}
+                {filteredUsers.length > 0 && (
                   <div className="users-table-container">
                     <table className="users-table">
                       <thead>
@@ -9848,7 +10005,7 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                         </tr>
                       </thead>
                       <tbody>
-                        {users.map((u) => (
+                        {filteredUsers.map((u) => (
                           <tr key={u.id}>
                             <td>
                               <div className="user-cell">
@@ -17115,9 +17272,20 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                                           }}
                                           style={{ display: "none" }}
                                         />
-                                        {productCover16_9Files[p.id] ? "انتخاب شد" : (productUploading === p.id ? "در حال آپلود..." : "آپلود فایل 16:9")}
+                                        {productCover16_9Files[p.id] ? "انتخاب شد ✓" : (productUploading === p.id ? "در حال آپلود..." : "آپلود فایل 16:9")}
                                       </label>
                                     </div>
+                                    {(p.cover_16_9 || productCover16_9Files[p.id]) && (
+                                      <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
+                                        <span style={{ fontSize: 11, color: "var(--muted)" }}>پیش‌نمایش 16:9:</span>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                          src={productCover16_9Files[p.id] ? URL.createObjectURL(productCover16_9Files[p.id]) : resolveAdminImageUrl(p.cover_16_9)}
+                                          alt="پیش‌نمایش 16:9"
+                                          style={{ width: 120, height: 68, objectFit: "cover", borderRadius: 6, border: "1px solid var(--line)" }}
+                                        />
+                                      </div>
+                                    )}
                                   </label>
                                   <label className="product-edit-field" style={{ gridColumn: "span 2" }}>
                                     <span>✏️ زیرعنوان</span>
@@ -17128,46 +17296,83 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                                     />
                                   </label>
                                   
-                                  <div className="price-section" style={{ gridColumn: "span 2", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", background: "rgba(255,255,255,0.02)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                                    <div className="price-group">
-                                      <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: "bold" }}>✏️ قیمت فعلی</label>
-                                      <div className="price-input-wrapper" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                        <input
-                                          type="number"
-                                          value={p.price || 0}
-                                          min={0}
-                                          onChange={(e) => handleProductChange(p.id, "price", Number(e.target.value || 0))}
-                                          style={{ width: "100%", padding: "6px 8px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
-                                        />
-                                        <span className="currency" style={{ fontSize: 12 }}>تومان</span>
+                                  <div className="price-section" style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", gap: "12px", background: "rgba(255,255,255,0.02)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
+                                      <div className="price-group">
+                                        <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: "bold" }}>✏️ قیمت فروش (تومان)</label>
+                                        <div className="price-input-wrapper" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                          <input
+                                            type="number"
+                                            value={p.price || 0}
+                                            min={0}
+                                            onChange={(e) => handleProductChange(p.id, "price", Number(e.target.value || 0))}
+                                            style={{ width: "100%", padding: "8px 10px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: 6, color: "var(--text)", fontWeight: "bold" }}
+                                          />
+                                          <span className="currency" style={{ fontSize: 12 }}>تومان</span>
+                                        </div>
+                                      </div>
+                                      <div className="price-group">
+                                        <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: "bold" }}>✏️ قیمت اصلی / خط‌خورده</label>
+                                        <div className="price-input-wrapper" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                          <input
+                                            type="number"
+                                            value={p.original_price || 0}
+                                            min={0}
+                                            onChange={(e) => handleProductChange(p.id, "original_price", Number(e.target.value || 0))}
+                                            style={{ width: "100%", padding: "8px 10px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: 6, color: "var(--text)" }}
+                                          />
+                                          <span className="currency" style={{ fontSize: 12 }}>تومان</span>
+                                        </div>
+                                      </div>
+                                      <div className="price-group lira">
+                                        <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: "bold" }}>✏️ قیمت پایه لیر (TL)</label>
+                                        <div className="price-input-wrapper" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                          <input
+                                            type="number"
+                                            value={p.price_lira || 0}
+                                            min={0}
+                                            onChange={(e) => handleProductChange(p.id, "price_lira", Number(e.target.value || 0))}
+                                            style={{ width: "100%", padding: "8px 10px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: 6, color: "var(--text)", fontWeight: "bold" }}
+                                          />
+                                          <span className="currency" style={{ fontSize: 12, color: "#34d399", fontWeight: "bold" }}>₺</span>
+                                        </div>
                                       </div>
                                     </div>
-                                    <div className="price-group">
-                                      <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: "bold" }}>✏️ قیمت اصلی</label>
-                                      <div className="price-input-wrapper" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                        <input
-                                          type="number"
-                                          value={p.original_price || 0}
-                                          min={0}
-                                          onChange={(e) => handleProductChange(p.id, "original_price", Number(e.target.value || 0))}
-                                          style={{ width: "100%", padding: "6px 8px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
-                                        />
-                                        <span className="currency" style={{ fontSize: 12 }}>تومان</span>
+
+                                    {/* Lira to Toman Converter Action */}
+                                    {liraRateNumber > 0 && (
+                                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(52, 211, 153, 0.08)", border: "1px solid rgba(52, 211, 153, 0.25)", padding: "8px 12px", borderRadius: "8px", flexWrap: "wrap", gap: 8 }}>
+                                        <span style={{ fontSize: "12px", color: "#34d399" }}>
+                                          🇹🇷 نرخ روز لیر: <strong>{liraRateNumber.toLocaleString("fa-IR")}</strong> تومان | معادل این محصول: <strong>{Math.round((p.price_lira || 0) * liraRateNumber).toLocaleString("fa-IR")}</strong> تومان
+                                        </span>
+                                        <button
+                                          type="button"
+                                          disabled={!p.price_lira}
+                                          onClick={() => {
+                                            const calcPrice = Math.round((p.price_lira || 0) * liraRateNumber);
+                                            handleProductChange(p.id, "price", calcPrice);
+                                            setReport({
+                                              kind: "success",
+                                              title: `قیمت به ${calcPrice.toLocaleString("fa-IR")} تومان بر اساس لیر بروزرسانی شد`,
+                                              context: "products",
+                                            });
+                                          }}
+                                          style={{
+                                            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                            border: "none",
+                                            color: "#fff",
+                                            padding: "6px 14px",
+                                            borderRadius: "6px",
+                                            fontSize: "12px",
+                                            fontWeight: "bold",
+                                            cursor: p.price_lira ? "pointer" : "not-allowed",
+                                            opacity: p.price_lira ? 1 : 0.6
+                                          }}
+                                        >
+                                          ⚡ تنظیم قیمت فروش از نرخ لیر
+                                        </button>
                                       </div>
-                                    </div>
-                                    <div className="price-group lira">
-                                      <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: "bold" }}>✏️ قیمت لیر</label>
-                                      <div className="price-input-wrapper" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                        <input
-                                          type="number"
-                                          value={p.price_lira || 0}
-                                          min={0}
-                                          onChange={(e) => handleProductChange(p.id, "price_lira", Number(e.target.value || 0))}
-                                          style={{ width: "100%", padding: "6px 8px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: 4, color: "var(--text)" }}
-                                        />
-                                        <span className="currency" style={{ fontSize: 12 }}>TL</span>
-                                      </div>
-                                    </div>
+                                    )}
                                   </div>
                                 </div>
                               )}

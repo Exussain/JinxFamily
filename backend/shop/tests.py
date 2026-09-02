@@ -813,6 +813,35 @@ class AdminOrderListTests(TestCase):
         self.assertEqual(len(payload["results"]), 2)
         self.assertEqual(payload["count"], 3)
 
+    def test_admin_order_serialization_includes_custom_fields_data(self):
+        order = Order.objects.create(
+            user=self.user,
+            status="in_progress",
+            amount=250000,
+            epic_username="ProGamer99",
+            note="گیفت اسکین فورتنایت",
+        )
+        order.items.create(
+            product=self.product,
+            name=self.product.name_fa,
+            quantity=1,
+            price=250000,
+            custom_fields_data={"epic_id": "ProGamer99", "friend_code": "JF-777", "gift_type": "Skin"},
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get("/api/admin/orders")
+        self.assertEqual(response.status_code, 200)
+        results = response.json().get("results", [])
+        matched = next((o for o in results if o["id"] == order.id), None)
+        self.assertIsNotNone(matched)
+        self.assertEqual(matched["epic_username"], "ProGamer99")
+        self.assertEqual(matched["note"], "گیفت اسکین فورتنایت")
+        self.assertEqual(len(matched["items"]), 1)
+        self.assertEqual(
+            matched["items"][0]["custom_fields_data"],
+            {"epic_id": "ProGamer99", "friend_code": "JF-777", "gift_type": "Skin"}
+        )
+
 
 class AdminProductManagementTests(TestCase):
     def setUp(self):
@@ -840,11 +869,14 @@ class AdminProductManagementTests(TestCase):
                 {
                     "name_fa": "New Product Title",
                     "image_url": "/products/new-cover.webp",
+                    "cover_16_9": "/media/products/16_9_cover.webp",
                     "subtitle": "New subtitle",
                     "category": "AI",
                     "price": 120000,
                     "original_price": 150000,
                     "price_lira": 20,
+                    "description": "توضیحات تست محصول جدید",
+                    "delivery_text": "مرحله اول\nمرحله دوم",
                     "active": True,
                 }
             ),
@@ -855,7 +887,17 @@ class AdminProductManagementTests(TestCase):
         self.product.refresh_from_db()
         self.assertEqual(self.product.name_fa, "New Product Title")
         self.assertEqual(self.product.image_url, "/products/new-cover.webp")
+        self.assertEqual(self.product.cover_16_9, "/media/products/16_9_cover.webp")
         self.assertEqual(self.product.subtitle, "New subtitle")
+        self.assertEqual(self.product.price, 120000)
+        self.assertEqual(self.product.price_lira, 20)
+        self.assertEqual(self.product.description, "توضیحات تست محصول جدید")
+        self.assertEqual(self.product.delivery_text, "مرحله اول\nمرحله دوم")
+
+        # Verify public API card and detail serialization returns cover_16_9
+        public_resp = self.client.get(f"/api/products/{self.product.slug}")
+        self.assertEqual(public_resp.status_code, 200)
+        self.assertEqual(public_resp.json().get("cover_16_9"), "/media/products/16_9_cover.webp")
     def test_admin_can_toggle_product_stock_status(self):
         self.client.force_login(self.admin)
 

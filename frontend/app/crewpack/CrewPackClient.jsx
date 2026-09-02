@@ -258,10 +258,6 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
                 <span style={{ color: "var(--text)", fontSize: 15 }}>اطلاعات لازم برای فعال‌سازی</span>
               </div>
 
-              <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, marginBottom: 12 }}>
-                بعد از اضافه‌کردن به سبد خرید، در مرحله پرداخت می‌توانید <strong>فعال‌سازی فوری</strong> را هم فعال کنید (اختیاری).
-              </div>
-
               <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
                 <div style={{ display: "grid", gap: 6, fontSize: 13 }}>
                   <span style={{ fontWeight: 700, color: "var(--text)", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>

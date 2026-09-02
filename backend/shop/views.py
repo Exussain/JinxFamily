@@ -802,6 +802,7 @@ def _product_to_dict(p: Product, include_content=True):
         "category_title": dict(Product.CATEGORY_CHOICES).get(p.category, p.category),
         "sub": p.subcategory or _giftcard_sub(p) if p.category == "GIFTCARDS" else "",
         "image_url": main_img,
+        "cover_16_9": getattr(p, "cover_16_9", "") or "",
         "images": images_list,
         "price": base_price,
         "original_price": getattr(p, "original_price", 0),
@@ -860,6 +861,7 @@ def _product_card_dict(p: Product):
         "category_title": full["category_title"],
         "sub": full["sub"],
         "image_url": full["image_url"],
+        "cover_16_9": full.get("cover_16_9") or getattr(p, "cover_16_9", "") or "",
         "images": full.get("images", []),
         "price": current_price,
         "min_price": int(full.get("min_price") or current_price),
@@ -3810,6 +3812,7 @@ def _admin_order_dict(o: Order):
             "account_type": getattr(oi, "account_type", ""),
             "account_email": getattr(oi, "account_email", ""),
             "account_password": getattr(oi, "account_password", ""),
+            "custom_fields_data": getattr(oi, "custom_fields_data", {}) or {},
             "accounts": accounts,
         })
 
@@ -3968,9 +3971,9 @@ def _build_product_updates(payload, require_name=False):
     if "subcategory" in payload:
         updates["subcategory"] = _clean_product_text(payload.get("subcategory"), 50)
     if "image_url" in payload:
-        updates["image_url"] = _clean_product_text(payload.get("image_url"), 200)
+        updates["image_url"] = _clean_product_text(payload.get("image_url"), 500)
     if "cover_16_9" in payload:
-        updates["cover_16_9"] = _clean_product_text(payload.get("cover_16_9"), 200)
+        updates["cover_16_9"] = _clean_product_text(payload.get("cover_16_9"), 500)
     if "category" in payload:
         updates["category"] = _clean_product_category(payload.get("category"))
     if "price" in payload:
@@ -5716,15 +5719,12 @@ def admin_product_detail(request, product_id: int):
                 setattr(product, k, v)
             product.save(update_fields=list(updates.keys()))
 
-        # The Crew Pack storefront always sells a selected duration variant.
-        # Keep its default (one-month/first) variant in sync when an admin
-        # changes the product's base price, including through the full editor.
-        # Other variant-based products deliberately retain their own prices.
-        if product.slug == CREW_SLUG and "price" in updates:
-            default_variant = product.variants.order_by("sort_order", "id").first()
-            if default_variant and default_variant.price != product.price:
-                default_variant.price = product.price
-                default_variant.save(update_fields=["price"])
+        if "price" in updates:
+            if product.slug == CREW_SLUG or product.variants.count() == 1:
+                default_variant = product.variants.order_by("sort_order", "id").first()
+                if default_variant and default_variant.price != product.price:
+                    default_variant.price = product.price
+                    default_variant.save(update_fields=["price"])
 
         try:
             cache.delete(f"public-product:v2:{product.slug}")
@@ -5871,6 +5871,14 @@ def admin_product_cover(request, product_id: int):
     product.image_url = f"{settings.MEDIA_URL}{saved_path}".replace("//", "/")
     product.save(update_fields=["image_url"])
 
+    try:
+        cache.delete(f"public-product:v2:{product.slug}")
+        for view_name in ["default", "all", "card", "fortnite", "games", "mobile", "subscriptions", "giftcards", ""]:
+            for lim in ["all", "8", "12", "20", "30", "100", "300"]:
+                cache.delete(f"public-products:v2:{view_name}:{lim}")
+    except Exception:
+        pass
+
     return JsonResponse(_admin_product_dict(product))
 
 
@@ -5902,6 +5910,14 @@ def admin_product_cover_16_9(request, product_id: int):
     saved_path = default_storage.save(path, uploaded)
     product.cover_16_9 = f"{settings.MEDIA_URL}{saved_path}".replace("//", "/")
     product.save(update_fields=["cover_16_9"])
+
+    try:
+        cache.delete(f"public-product:v2:{product.slug}")
+        for view_name in ["default", "all", "card", "fortnite", "games", "mobile", "subscriptions", "giftcards", ""]:
+            for lim in ["all", "8", "12", "20", "30", "100", "300"]:
+                cache.delete(f"public-products:v2:{view_name}:{lim}")
+    except Exception:
+        pass
 
     return JsonResponse(_admin_product_dict(product))
 

@@ -89,9 +89,11 @@ def kavenegar_admin_usage(request):
                 pass
 
     total_consumed_toman = total_cost_rial // 10
-    remaining_debt_toman = max(0, total_consumed_toman - total_settled_toman)
+    # If the live Kavenegar account has active credit (>0) or topup payments, the provider is funded
+    total_funded_toman = total_settled_toman + (credit_toman if credit_toman > 0 else 0)
+    remaining_debt_toman = max(0, total_consumed_toman - total_funded_toman)
     remaining_debt_rial = remaining_debt_toman * 10
-    surplus_credit_toman = max(0, total_settled_toman - total_consumed_toman)
+    surplus_credit_toman = max(credit_toman, total_funded_toman - total_consumed_toman)
     is_settled = (remaining_debt_toman == 0)
 
     # 3. Breakdown by Template / Message Type
