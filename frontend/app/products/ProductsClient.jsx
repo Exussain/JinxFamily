@@ -74,8 +74,11 @@ export default function ProductsClient({ categories = [] }) {
         const rankDifference = (fortniteOrderMap[a.slug] ?? 999) - (fortniteOrderMap[b.slug] ?? 999);
         if (rankDifference) return rankDifference;
       }
-    }
+      return byShowcase(a, b);
+    });
+  }, [activeCategory, searchQuery, showOutOfStock, sortBy]);
 
+  const styleContent = `
     @media (max-width: 992px) {
       .products-layout-wrapper {
         grid-template-columns: 1fr;

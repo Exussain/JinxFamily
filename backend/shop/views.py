@@ -3982,7 +3982,10 @@ def _build_product_updates(payload, require_name=False):
     if "active" in payload:
         updates["active"] = bool(payload.get("active"))
     if "ordering_disabled" in payload:
-        updates["ordering_disabled"] = bool(payload.get("ordering_disabled"))
+        ordering_disabled_val = bool(payload.get("ordering_disabled"))
+        updates["ordering_disabled"] = ordering_disabled_val
+        if "customer_ordering_disabled" not in payload:
+            updates["customer_ordering_disabled"] = ordering_disabled_val
     if "daily_order_limit" in payload:
         updates["daily_order_limit"] = _clean_daily_limit(payload.get("daily_order_limit"), "محدودیت سفارش روزانه")
     if "reseller_ordering_disabled" in payload:
@@ -5725,8 +5728,8 @@ def admin_product_detail(request, product_id: int):
 
         try:
             cache.delete(f"public-product:v2:{product.slug}")
-            for view_name in ["default", "all", "fortnite", "games", "mobile", ""]:
-                for lim in ["all", "8", "12", "20", "30", "100"]:
+            for view_name in ["default", "all", "card", "fortnite", "games", "mobile", "subscriptions", "giftcards", ""]:
+                for lim in ["all", "8", "12", "20", "30", "100", "300"]:
                     cache.delete(f"public-products:v2:{view_name}:{lim}")
         except Exception:
             pass

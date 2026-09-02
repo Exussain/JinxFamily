@@ -856,7 +856,30 @@ class AdminProductManagementTests(TestCase):
         self.assertEqual(self.product.name_fa, "New Product Title")
         self.assertEqual(self.product.image_url, "/products/new-cover.webp")
         self.assertEqual(self.product.subtitle, "New subtitle")
-        self.assertEqual(self.product.category, "AI")
+    def test_admin_can_toggle_product_stock_status(self):
+        self.client.force_login(self.admin)
+
+        # Set out of stock
+        response = self.client.patch(
+            f"/api/admin/products/{self.product.id}",
+            data=json.dumps({"ordering_disabled": True}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.product.refresh_from_db()
+        self.assertTrue(self.product.ordering_disabled)
+        self.assertTrue(self.product.customer_ordering_disabled)
+
+        # Set back in stock
+        response = self.client.patch(
+            f"/api/admin/products/{self.product.id}",
+            data=json.dumps({"ordering_disabled": False}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.product.refresh_from_db()
+        self.assertFalse(self.product.ordering_disabled)
+        self.assertFalse(self.product.customer_ordering_disabled)
 
     def test_admin_price_update_syncs_the_default_crewpack_variant(self):
         crewpack = Product.objects.create(

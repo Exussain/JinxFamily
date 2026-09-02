@@ -1956,6 +1956,7 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
   const [productCover16_9Files, setProductCover16_9Files] = useState({});
   const [activeEditProduct, setActiveEditProduct] = useState(null);
   const [activeEditTab, setActiveEditTab] = useState("general");
+  const [updatingProductStockId, setUpdatingProductStockId] = useState(null);
   const [notifications, setNotifications] = useState([]);
   
   // Announcements states
@@ -4718,17 +4719,31 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
   };
 
   const quickUpdateProduct = async (productId, field, value) => {
+    setUpdatingProductStockId(productId);
     handleProductChange(productId, field, value);
+    if (field === "ordering_disabled") {
+      handleProductChange(productId, "customer_ordering_disabled", value);
+    }
     try {
+      const payload = { [field]: value };
+      if (field === "ordering_disabled") {
+        payload.customer_ordering_disabled = value;
+      }
       const res = await fetch(`${apiBase}/api/admin/products/${productId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData?.message || "خطا در بروزرسانی وضعیت");
+      }
+      const data = await res.json().catch(() => null);
+      if (data) {
+        setProducts((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, ...data } : p))
+        );
       }
       toast({
         title: "بروزرسانی وضعیت",
@@ -4739,11 +4754,16 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
       });
     } catch (err) {
       handleProductChange(productId, field, !value);
+      if (field === "ordering_disabled") {
+        handleProductChange(productId, "customer_ordering_disabled", !value);
+      }
       toast({
         title: "خطا در ذخیره وضعیت",
         description: err.message,
         kind: "error",
       });
+    } finally {
+      setUpdatingProductStockId(null);
     }
   };
 
@@ -8679,10 +8699,15 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                           <label className="checkbox-label" style={{ marginBottom: 0 }}>
                             <input
                               type="checkbox"
-                              checked={!!newProduct.ordering_disabled}
-                              onChange={(e) => handleNewProductChange("ordering_disabled", e.target.checked)}
+                              checked={!newProduct.ordering_disabled}
+                              onChange={(e) => {
+                                handleNewProductChange("ordering_disabled", !e.target.checked);
+                                handleNewProductChange("customer_ordering_disabled", !e.target.checked);
+                              }}
                             />
-                            <span style={{ color: "var(--red)", fontSize: 11 }}>غیرفعال کردن کامل سفارش (عمومی)</span>
+                            <span style={{ color: !newProduct.ordering_disabled ? "#10b981" : "#ef4444", fontSize: 11, fontWeight: "bold" }}>
+                              {!newProduct.ordering_disabled ? "✓ موجود برای ثبت سفارش (فعال)" : "✕ ناموجود (ثبت سفارش غیرفعال)"}
+                            </span>
                           </label>
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
@@ -8917,14 +8942,19 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                               <span className="toggle-slider"></span>
                               <span className="toggle-text">{p.active ? "نمایش" : "مخفی"}</span>
                             </label>
-                            <label className={`status-toggle coming-soon-toggle ${p.ordering_disabled ? "on" : ""}`} title="موجودی و امکان ثبت سفارش">
+                            <label
+                              className={`status-toggle stock-toggle ${!p.ordering_disabled ? "in-stock" : "out-of-stock"}`}
+                              title={p.ordering_disabled ? "محصول ناموجود است (کلیک برای موجود کردن)" : "محصول موجود است (کلیک برای ناموجود کردن)"}
+                              style={{ opacity: updatingProductStockId === p.id ? 0.6 : 1, cursor: updatingProductStockId === p.id ? "wait" : "pointer" }}
+                            >
                               <input
                                 type="checkbox"
                                 checked={!p.ordering_disabled}
+                                disabled={updatingProductStockId === p.id}
                                 onChange={(e) => quickUpdateProduct(p.id, "ordering_disabled", !e.target.checked)}
                               />
                               <span className="toggle-slider"></span>
-                              <span className="toggle-text">{p.ordering_disabled ? "ناموجود" : "موجود"}</span>
+                              <span className="toggle-text">{!p.ordering_disabled ? "موجود" : "ناموجود"}</span>
                             </label>
                           </div>
                         </div>
@@ -14255,6 +14285,37 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
             color: #10b981;
           }
 
+          /* Stock Toggle: Green when in-stock, Red when out-of-stock */
+          .stock-toggle.in-stock .toggle-slider,
+          .stock-toggle input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+          }
+
+          .stock-toggle.in-stock .toggle-slider::after,
+          .stock-toggle input:checked + .toggle-slider::after {
+            left: 18px !important;
+          }
+
+          .stock-toggle.in-stock .toggle-text,
+          .stock-toggle input:checked ~ .toggle-text {
+            color: #10b981 !important;
+          }
+
+          .stock-toggle.out-of-stock .toggle-slider,
+          .stock-toggle input:not(:checked) + .toggle-slider {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+          }
+
+          .stock-toggle.out-of-stock .toggle-slider::after,
+          .stock-toggle input:not(:checked) + .toggle-slider::after {
+            left: 2px !important;
+          }
+
+          .stock-toggle.out-of-stock .toggle-text,
+          .stock-toggle input:not(:checked) ~ .toggle-text {
+            color: #ef4444 !important;
+          }
+
           /* Coming Soon (به زودی) toggle — amber when active */
           .coming-soon-toggle input:checked + .toggle-slider {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
@@ -17472,11 +17533,14 @@ export default function AdminPanelPage({ initialTab = "orders" } = {}) {
                                       <label className="checkbox-label" style={{ marginBottom: 0 }}>
                                         <input
                                           type="checkbox"
-                                          checked={!!p.ordering_disabled}
-                                          onChange={(e) => handleProductChange(p.id, "ordering_disabled", e.target.checked)}
+                                          checked={!p.ordering_disabled}
+                                          onChange={(e) => {
+                                            handleProductChange(p.id, "ordering_disabled", !e.target.checked);
+                                            handleProductChange(p.id, "customer_ordering_disabled", !e.target.checked);
+                                          }}
                                         />
-                                        <span style={{ color: p.ordering_disabled ? "#ef4444" : "#10b981", fontSize: 11 }}>
-                                          {p.ordering_disabled ? "✕ ناموجود (سفارش غیرفعال)" : "✓ موجود برای ثبت سفارش"}
+                                        <span style={{ color: !p.ordering_disabled ? "#10b981" : "#ef4444", fontSize: 11, fontWeight: "bold" }}>
+                                          {!p.ordering_disabled ? "✓ موجود برای ثبت سفارش" : "✕ ناموجود (ثبت سفارش غیرفعال)"}
                                         </span>
                                       </label>
                                     </div>

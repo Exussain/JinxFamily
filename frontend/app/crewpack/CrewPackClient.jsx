@@ -146,8 +146,13 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
   const currentPlatformLabel = `${currentPlatform.name}${
     currentPlatform.english ? ` (${currentPlatform.english})` : ""
   }`;
+  const isOutOfStock = !crewProduct || !!crewProduct.ordering_disabled || !!crewProduct.customer_ordering_disabled || crewProduct.purchasable === false;
 
   const handleAdd = () => {
+    if (isOutOfStock) {
+      setFormError("این محصول در حال حاضر ناموجود است.");
+      return;
+    }
     setShowValidation(true);
 
     const itemPrice = selectedOption.price;
@@ -358,17 +363,20 @@ export default function CrewPackClient({ initialProduct, initialStats, initialPr
 
                 <button
                   type="button"
-                  className="btn primary"
+                  className={`btn ${isOutOfStock ? "secondary" : "primary"}`}
                   onClick={handleAdd}
+                  disabled={isOutOfStock}
                   style={{
                     width: "100%",
                     padding: "14px 20px",
                     fontSize: "16px",
                     fontWeight: 900,
                     marginTop: 8,
+                    opacity: isOutOfStock ? 0.6 : 1,
+                    cursor: isOutOfStock ? "not-allowed" : "pointer",
                   }}
                 >
-                  افزودن به سبد خرید
+                  {isOutOfStock ? "فعلاً ناموجود" : "افزودن به سبد خرید"}
                 </button>
               </div>
             </div>

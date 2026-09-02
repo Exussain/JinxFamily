@@ -190,8 +190,14 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
     });
   };
 
+  const isOutOfStock = !productData || !!productData.ordering_disabled || !!productData.customer_ordering_disabled || productData.purchasable === false;
+
   const handleAdd = () => {
     if (!selectedOption) return;
+    if (isOutOfStock) {
+      setFormError("این محصول در حال حاضر ناموجود است.");
+      return;
+    }
     setShowValidation(true);
 
     if (!emailIsValid(accountEmail)) {
@@ -342,17 +348,20 @@ export default function VBucksClient({ initialProductData, initialProducts = [],
                 {/* Buy Button Inside Form */}
                 <button
                   type="button"
-                  className="btn primary"
+                  className={`btn ${isOutOfStock ? "secondary" : "primary"}`}
                   onClick={handleAdd}
+                  disabled={isOutOfStock}
                   style={{
                     width: '100%',
                     padding: '14px 20px',
                     fontSize: '16px',
                     fontWeight: 900,
-                    marginTop: 8
+                    marginTop: 8,
+                    opacity: isOutOfStock ? 0.6 : 1,
+                    cursor: isOutOfStock ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  افزودن به سبد خرید
+                  {isOutOfStock ? "فعلاً ناموجود" : "افزودن به سبد خرید"}
                 </button>
               </div>
             </div>
